@@ -41,7 +41,6 @@ def logout():
     return redirect(url_for('main.index'))
 
 @bp.route('/')
-@login_required
 @bp.route('/index')
 def index():
     return render_template('index.html')
