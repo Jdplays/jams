@@ -1,0 +1,20 @@
+services:
+  jams-web:
+    image: ghcr.io/jdplays/jams_master:latest
+    command: ./entrypoint.sh
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - SECRET_KEY=${FLASK_SECREET}
+      - DATABASE_URL=postgresql://${PG_USER}:${PG_PASS}@db:5432/jams-main
+    depends_on:
+      - db
+  jams-db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASS}
+      POSTGRES_DB: jams-main
+    volumes:
+      - /path/to/data:/var/lib/postgresql/data
