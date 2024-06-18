@@ -1,0 +1,25 @@
+# Ignore Python virtual environment
+venv/
+
+# Ignore instance folder (for storing local configuration)
+instance/
+
+# Ignore local development files
+*.sqlite
+
+# Ignore editor specific files
+.vscode/
+.idea/
+
+# Ignore Docker related files (if not versioning Docker configuration)
+docker-compose.yml
+Dockerfile
+
+# Ignore Python bytecode files
+*.pyc
+
+# Ignore log files
+*.log
+
+# Ignore environment configuration file
+.env

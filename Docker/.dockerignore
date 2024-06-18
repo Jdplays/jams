@@ -1,0 +1,29 @@
+# Ignore Python bytecode files
+*.pyc
+
+# Ignore Python virtual environment
+venv/
+
+# Ignore local development files
+instance/
+
+# Ignore Docker related files
+docker-compose.yml
+Dockerfile
+
+# Ignore editor specific files
+.vscode/
+.idea/
+
+# Ignore any other temporary files or build artifacts
+*.log
+*.pot
+*.po
+*.mo
+__pycache__/
+
+# Ignore the docker-compose.yml file in the docker/ directory
+docker-compose.yml
+
+# Ignore the .env.sample file in the docker/ directory
+.env.sample
