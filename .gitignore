@@ -11,10 +11,6 @@ instance/
 .vscode/
 .idea/
 
-# Ignore Docker related files (if not versioning Docker configuration)
-docker-compose.yml
-Dockerfile
-
 # Ignore Python bytecode files
 *.pyc
 
