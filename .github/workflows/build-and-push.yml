@@ -12,7 +12,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: JDPlays/jams_master
+  IMAGE_NAME: jdplays/jams_master
 
 jobs:
   build-and-push:
