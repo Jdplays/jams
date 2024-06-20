@@ -3,17 +3,8 @@
     <head><title>Register</title></head>
     <body>
         <!--Navigation Bar-->
-        <div id="nav-wraper">
+        {% include 'nav.html' %}
 
-        </div>
-
-        <script>
-            $(function() {
-                $("#nav-wraper").load("nav.html")
-            });
-        </script>
-        <!--End of Navigation Bar-->
-        
         <h1>Register</h1>
         <form method="POST" action="{{ url_for('main.register') }}">
             {{ form.hidden_tag() }}

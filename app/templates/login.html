@@ -3,16 +3,7 @@
     <head><title>Login</title></head>
     <body>
         <!--Navigation Bar-->
-        <div id="nav-wraper">
-
-        </div>
-
-        <script>
-            $(function() {
-                $("#nav-wraper").load("nav.html")
-            });
-        </script>
-        <!--End of Navigation Bar-->
+        {% include 'nav.html' %}
 
         <h1>Login</h1>
         <form method="POST" action="{{ url_for('main.login') }}">
