@@ -1,11 +1,34 @@
-<!DOCTYPE html>
-<html>
-    <head><title>Index</title></head>
-    <body>
-        <!--Navigation Bar-->
-        {% include 'nav.html' %}
+{% extends '_layout.html' %}
 
-        <h1>Index</h1>
-        <p>This is the home page!</p>
-    </body>
-</html>
+{% block title %}Home{% endblock %}
+
+{% block content %}
+
+<div class="row row-deck row-cards">
+    <div class="col-4">
+        <div class="card">
+            <div class="card-body" style="height: 10rem">
+                <h1>Index</h1>
+                <p>This is the home page!</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="card">
+            <div class="card-body" style="height: 10rem"></div>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="card">
+            <div class="card-body" style="height: 10rem"></div>
+        </div>
+    </div>
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body" style="height: 10rem"></div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

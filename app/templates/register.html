@@ -1,16 +1,23 @@
-<!DOCTYPE html>
-<html>
-    <head><title>Register</title></head>
-    <body>
-        <!--Navigation Bar-->
-        {% include 'nav.html' %}
+{% extends '_layout.html' %}
 
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="mx-auto col-lg-3 col-md-6 col-sm-12">
+    <div class="card p-2">
         <h1>Register</h1>
         <form method="POST" action="{{ url_for('main.register') }}">
             {{ form.hidden_tag() }}
-            {{ form.username.label }} {{ form.username }}<br>
-            {{ form.password.label }} {{ form.password }}<br>
-            {{ form.submit }}
+            <div class="mb-3">
+                <label class="form-label">{{ form.username.label }}</label>
+                {{ form.username(class_="form-control") }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">{{ form.password.label }}</label>
+                {{ form.password(class_="form-control") }}
+            </div>
+            {{ form.submit(class_="btn btn-primary") }}
         </form>
-    </body>
-</html>
+    </div>
+</div>
+{% endblock %}

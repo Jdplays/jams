@@ -1,0 +1,18 @@
+<!doctype html>
+<head>
+    <title>{% block title %}{% endblock %} - JAMS</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css">
+</head>
+<body>
+    {% include 'nav.html' %}
+    <div class="page">
+        <div class="page-wrapper">
+            <div class="page-body">
+                <div class="container-fluid">
+                    {% block content %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
