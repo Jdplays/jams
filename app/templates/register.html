@@ -3,11 +3,21 @@
 {% block title %}Register{% endblock %}
 
 {% block content %}
-<h1>Register</h1>
-<form method="POST" action="{{ url_for('main.register') }}">
-    {{ form.hidden_tag() }}
-    {{ form.username.label }} {{ form.username }}<br>
-    {{ form.password.label }} {{ form.password }}<br>
-    {{ form.submit }}
-</form>
+<div class="mx-auto col-lg-3 col-md-6 col-sm-12">
+    <div class="card p-2">
+        <h1>Register</h1>
+        <form method="POST" action="{{ url_for('main.register') }}">
+            {{ form.hidden_tag() }}
+            <div class="mb-3">
+                <label class="form-label">{{ form.username.label }}</label>
+                {{ form.username(class_="form-control") }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">{{ form.password.label }}</label>
+                {{ form.password(class_="form-control") }}
+            </div>
+            {{ form.submit(class_="btn btn-primary") }}
+        </form>
+    </div>
+</div>
 {% endblock %}
