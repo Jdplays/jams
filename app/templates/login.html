@@ -1,16 +1,13 @@
-<!DOCTYPE html>
-<html>
-    <head><title>Login</title></head>
-    <body>
-        <!--Navigation Bar-->
-        {% include 'nav.html' %}
+{% extends '_layout.html' %}
 
-        <h1>Login</h1>
-        <form method="POST" action="{{ url_for('main.login') }}">
-            {{ form.hidden_tag() }}
-            {{ form.username.label }} {{ form.username }}<br>
-            {{ form.password.label }} {{ form.password }}<br>
-            {{ form.submit }}
-        </form>
-    </body>
-</html>
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<h1>Login</h1>
+<form method="POST" action="{{ url_for('main.login') }}">
+    {{ form.hidden_tag() }}
+    {{ form.username.label }} {{ form.username }}<br>
+    {{ form.password.label }} {{ form.password }}<br>
+    {{ form.submit }}
+</form>
+{% endblock %}
