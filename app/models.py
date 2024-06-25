@@ -1,5 +1,5 @@
-from .extensions import db, login_manager
-from flask_security import UserMixin, RoleMixin, AsaList
+from .__init__ import db, login_manager
+from flask_security import UserMixin, RoleMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
 # Define the UserRoles association table
@@ -9,7 +9,7 @@ class UserRoles(db.Model):
     user_id = db.Column(db.Integer(), db.ForeignKey('users.id', ondelete='CASCADE'))
     role_id = db.Column(db.Integer(), db.ForeignKey('roles.id', ondelete='CASCADE'))
 
-class Role(db.Model):
+class Role(db.Model, RoleMixin):
     role_id = db.Column(db.Integer, primary_key=True)
     role_name = db.Column(db.String(80), nullable=False)
     role_description = db.Column(db.String(255))
