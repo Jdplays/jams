@@ -15,12 +15,12 @@ def seed_users():
     if not User.query.filter_by(username="admin").first():
         admin_role = Role.query.filter_by(name="Admin").first()
         if admin_role:
-            db.session.add(User(username="admin", password="admin", role=admin_role))
+            db.session.add(User(username="admin", password="admin", role_names=[admin_role]))
     
     # Check if the Volunteer user already exists
     if not User.query.filter_by(username="volunteer").first():
         volunteer_role = Role.query.filter_by(name="Volunteer").first()
         if volunteer_role:
-            db.session.add(User(username="volunteer", password="password123", role=volunteer_role))
+            db.session.add(User(username="volunteer", password="password123", role_names=[volunteer_role]))
     
     db.session.commit()
