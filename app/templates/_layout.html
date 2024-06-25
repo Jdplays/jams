@@ -6,7 +6,13 @@
 </head>
 <body>
     {% include 'nav.html' %}
-    <section class="content">
-        {% block content %}{% endblock %}
-    </section>
+    <div class="page">
+        <div class="page-wrapper">
+            <div class="page-body">
+                <div class="container-fluid">
+                    {% block content %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
