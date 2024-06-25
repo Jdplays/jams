@@ -14,6 +14,9 @@ class Role(db.Model, RoleMixin):
     name = db.Column(db.String(80), nullable=False)
     description = db.Column(db.String(255))
 
+    def __init__(self, name):
+        self.name = name
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     #email = db.Column(db.String(100), unique=True)

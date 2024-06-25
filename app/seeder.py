@@ -3,9 +3,9 @@ from .models import User, Role, db
 def seed_roles():
     roles = ['Attendee', 'Volunteer', 'Trustee', 'Admin']
     for role_name in roles:
-        role = Role.query.filter_by(role_name=role_name).first()
+        role = Role.query.filter_by(name=role_name).first()
         if not role:
-            new_role = Role(role_name)
+            new_role = Role(name=role_name)
             db.session.add(new_role)
     
     db.session.commit()
