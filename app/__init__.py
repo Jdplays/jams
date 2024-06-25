@@ -1,7 +1,7 @@
 
 import os
 from flask import Flask
-from .extensions import db, migrate, login_manager
+from .extensions import db, migrate, login_manager, security, user_datastore
 from .routes import routes
 from .seeder import seed_roles, seed_users
 
@@ -13,6 +13,7 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
+    security.init_app(app, user_datastore)
 
     login_manager.login_view = 'main.login'
 

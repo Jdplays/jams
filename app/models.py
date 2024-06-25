@@ -1,5 +1,5 @@
 from .extensions import db, login_manager
-from flask_login import UserMixin
+from flask_security import UserMixin, RoleMixin, AsaList
 from werkzeug.security import generate_password_hash, check_password_hash
 
 # Define the UserRoles association table
