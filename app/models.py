@@ -30,11 +30,6 @@ class User(UserMixin, db.Model):
         self.username = username
         self.set_roles(role_names)
 
-    def __init__(self, username, password, role_names:list[str]):
-        self.username = username
-        self.password_hash = self.set_password(password)
-        self.set_roles(role_names)
-
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
