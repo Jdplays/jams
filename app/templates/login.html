@@ -10,11 +10,11 @@
             {{ form.hidden_tag() }}
             <div class="mb-3">
                 <label class="form-label">{{ form.username.label }}</label>
-                {{ form.username(class_="form-control") }}
+                {{ form.username() }}
             </div>
             <div class="mb-3">
                 <label class="form-label">{{ form.password.label }}</label>
-                {{ form.password(class_="form-control") }}
+                {{ form.password() }}
             </div>
             {{ form.submit(class_="btn btn-primary") }}
         </form>
