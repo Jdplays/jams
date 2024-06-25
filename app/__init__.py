@@ -4,7 +4,7 @@ from flask import Flask
 from .extensions import db, migrate, login_manager
 from flask_security import Security, SQLAlchemyUserDatastore
 from .models import User, Role
-from .routes import routes
+import routes
 from .seeder import seed_roles, seed_users
 
 
