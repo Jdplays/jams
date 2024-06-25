@@ -1,4 +1,4 @@
-from .__init__ import db, login_manager
+from .extensions import db, login_manager
 from flask_security import UserMixin, RoleMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
