@@ -20,6 +20,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False)
     user_password_hash = db.Column(db.String(256), nullable=False)
     user_roles = db.relationship('Role', secondary='user_roles')
+    fs_uniquifier = db.Column(db.String(64), unique=True, nullable=False)
 
     def __init__(self, username, role_names:list[str]=None):
         self.username = username
