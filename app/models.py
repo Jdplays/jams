@@ -20,14 +20,13 @@ class Role(db.Model, RoleMixin):
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    #email = db.Column(db.String(100), unique=True)
-    username = db.Column(db.String(50), unique=True, nullable=False)
+    email = db.Column(db.String(100), unique=True)
     password_hash = db.Column(db.String(256), nullable=False)
     roles = db.relationship('Role', secondary='user_roles')
     fs_uniquifier = db.Column(db.String(64), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
 
-    def __init__(self, username, role_names:list[str]=None):
-        self.username = username
+    def __init__(self, email, role_names:list[str]=None):
+        self.email = email
         self.set_roles(role_names)
 
     def set_password(self, password):

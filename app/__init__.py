@@ -12,7 +12,6 @@ def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY']= os.getenv('SECRET_KEY', 'jams_database_secret')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://jams:jams@db:5432/jams-main')
-    app.config['SECURITY_USER_IDENTITY_ATTRIBUTES '] = 'username'
 
     db.init_app(app)
     migrate.init_app(app, db)

@@ -9,8 +9,8 @@
         <form method="POST" action="{{ url_for('main.login') }}">
             {{ form.hidden_tag() }}
             <div class="mb-3">
-                <label class="form-label">{{ form.username.label }}</label>
-                {{ form.username(class_="form-control") }}
+                <label class="form-label">{{ form.email.label }}</label>
+                {{ form.email(class_="form-control") }}
             </div>
             <div class="mb-3">
                 <label class="form-label">{{ form.password.label }}</label>

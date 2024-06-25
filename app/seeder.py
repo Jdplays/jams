@@ -12,18 +12,18 @@ def seed_roles():
 
 def seed_users():
     # Check if the Admin user already exists
-    if not User.query.filter_by(username="admin").first():
+    if not User.query.filter_by(email="admin").first():
         admin_role = Role.query.filter_by(name="Admin").first()
         if admin_role:
-            user = User(username='admin', role_names=['Admin'])
+            user = User(email='admin@test.com', role_names=['Admin'])
             user.set_password('admin')
             db.session.add(user)
     
     # Check if the Volunteer user already exists
-    if not User.query.filter_by(username="volunteer").first():
+    if not User.query.filter_by(email="volunteer").first():
         volunteer_role = Role.query.filter_by(name="Volunteer").first()
         if volunteer_role:
-            user = User(username='volunteer', role_names=['volunteer'])
+            user = User(email='volunteer@test.com', role_names=['volunteer'])
             user.set_password('password123')
             db.session.add(user)
     
