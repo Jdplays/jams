@@ -1,6 +1,7 @@
 from .extensions import db, login_manager
 from flask_security import UserMixin, RoleMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+import uuid
 
 # Define the UserRoles association table
 class UserRoles(db.Model):
@@ -23,7 +24,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     roles = db.relationship('Role', secondary='user_roles')
-    fs_uniquifier = db.Column(db.String(64), unique=True, nullable=False)
+    fs_uniquifier = db.Column(db.String(64), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
 
     def __init__(self, username, role_names:list[str]=None):
         self.username = username
