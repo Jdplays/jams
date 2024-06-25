@@ -4,7 +4,7 @@ from flask import Flask
 from .extensions import db, migrate, login_manager
 from flask_security import Security, SQLAlchemyUserDatastore
 from .models import User, Role
-import routes
+from .routes import bp as routes_bp
 from .seeder import seed_roles, seed_users
 
 
@@ -24,7 +24,7 @@ def create_app():
 
     login_manager.login_view = 'main.login'
 
-    app.register_blueprint(routes.bp)
+    app.register_blueprint(routes_bp)
 
     # Create database tables
     with app.app_context():
