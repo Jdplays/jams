@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash
 from flask_security import roles_required, login_required, login_user, logout_user, current_user
 from .extensions import db
 from .models import User
-from .forms import CustomLoginForm, RegisterForm
+from .forms import CustomLoginForm, CustomRegisterForm
 
 bp = Blueprint('main', __name__)
 
@@ -24,7 +24,7 @@ def login():
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
-    form = RegisterForm()
+    form = CustomRegisterForm()
     if form.validate_on_submit():
         user = User(username=form.username.data)
         user.set_password(form.password.data)

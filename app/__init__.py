@@ -6,6 +6,7 @@ from flask_security import Security, SQLAlchemyUserDatastore
 from .models import User, Role
 from .routes import bp as routes_bp
 from .seeder import seed_roles, seed_users
+from .forms import CustomLoginForm, CustomRegisterForm
 
 def create_app():
     app = Flask(__name__)
@@ -20,7 +21,7 @@ def create_app():
     user_datastore = SQLAlchemyUserDatastore(db, User, Role)
     security = Security()
 
-    security.init_app(app, user_datastore)
+    security.init_app(app, user_datastore, login_form=CustomLoginForm, register_form=CustomRegisterForm)
 
     login_manager.login_view = 'main.login'
 
