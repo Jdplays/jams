@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
+from flask_security import roles_required
 from . import db
 from .models import User
 from .forms import LoginForm, RegisterForm
@@ -45,3 +46,17 @@ def logout():
 @login_required
 def index():
     return render_template('index.html')
+
+@bp.route('/')
+@bp.route('/volunteer')
+@login_required
+@roles_required('volunteer')
+def volunteer():
+    return "This is the Volunteer page"
+
+@bp.route('/')
+@bp.route('/admin')
+@login_required
+@roles_required('Admin')
+def admin():
+    return "This is the Admin page"
