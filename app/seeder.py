@@ -11,7 +11,6 @@ def seed_roles():
     db.session.commit()
 
 def seed_users():
-    print("seed Users!")
     # Check if the Admin user already exists
     if not User.query.filter_by(email="admin@test.com").first():
         admin_role = Role.query.filter_by(name="Admin").first()

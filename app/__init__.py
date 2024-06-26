@@ -28,10 +28,11 @@ def create_app():
 
     app.register_blueprint(routes_bp)
 
+    return app
+
+def seed_database(app):
     # Create database tables
     with app.app_context():
         db.create_all()
         seed_roles()
         seed_users()
-
-    return app
