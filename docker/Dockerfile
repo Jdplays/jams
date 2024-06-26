@@ -7,6 +7,9 @@ WORKDIR /app
 # Copy the current directory contents into the container at /app
 COPY . ../app
 
+# Copy the entrypoint.sh file into the container
+COPY entrypoint.sh ../
+
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -20,4 +23,4 @@ EXPOSE 5000
 ENV FLASK_APP=app
 
 # Run flask app with gunicorn
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "app:app"]
+CMD ["/entrypoint.sh"]
