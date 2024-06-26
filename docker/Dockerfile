@@ -2,16 +2,16 @@
 FROM python:3.9-slim
 
 # Set the working directory
-WORKDIR /app
+WORKDIR /jams
 
 # Copy the current directory contents into the container at /app
-COPY /app ../app
+COPY /app ./app
 
 # Copy the entrypoint.sh file into the container
-COPY ./entrypoint.sh ../app
+COPY ./entrypoint.sh .
 
 # Copy the entrypoint.sh file into the container
-COPY ./requirements.txt ../app
+COPY ./requirements.txt .
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
@@ -26,4 +26,4 @@ EXPOSE 5000
 ENV FLASK_APP=app
 
 # Run flask app with gunicorn
-CMD ["./entrypoint.sh"]
+CMD ["bash", "entrypoint.sh"]
