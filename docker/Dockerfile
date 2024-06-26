@@ -13,11 +13,18 @@ COPY ./entrypoint.sh .
 # Copy the entrypoint.sh file into the container
 COPY ./requirements.txt .
 
+# Copy the check_db.py file into the container
+COPY ./check_db.py .
+
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Make entrypoint.sh executable
 RUN chmod +x entrypoint.sh
+
+# Make check_db.py executable
+RUN chmod +x check_db.py
+
 
 # Make port 5000 available to the world outside this container
 EXPOSE 5000
