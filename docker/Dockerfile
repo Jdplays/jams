@@ -19,20 +19,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Make entrypoint.sh executable
 RUN chmod +x entrypoint.sh
 
-# Set the working directory to the Flask application directory
-WORKDIR /jams/app
-
-# Initialize database migrations (only once)
-RUN flask db init
-
 # Make port 5000 available to the world outside this container
 EXPOSE 5000
 
 # Define environment variable
 ENV FLASK_APP=app
-
-# Set the working directory back to the jams root directory
-WORKDIR /jams
 
 # Run flask app with gunicorn
 CMD ["bash", "entrypoint.sh"]
