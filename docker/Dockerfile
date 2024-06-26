@@ -26,4 +26,4 @@ EXPOSE 5000
 ENV FLASK_APP=app
 
 # Run flask app with gunicorn
-CMD ["/entrypoint.sh"]
+CMD ["./entrypoint.sh"]
