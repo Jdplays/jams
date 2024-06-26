@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Check if the migrations directory exists, if not, initialize it
-if [ ! -d "migrations" ]; then
-  flask db init
+if [ ! -d "migrations" ] || [ -z "$(ls -A migrations)" ]; then
+    flask db init
 fi
 
 # Apply database migrations
