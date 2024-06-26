@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Change directory to where the Flask application resides
-cd /app/flask_app
-
 # Check if the migrations directory exists, if not, initialize it
 if [ ! -d "migrations" ]; then
   flask db init

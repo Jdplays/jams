@@ -5,7 +5,13 @@ FROM python:3.9-slim
 WORKDIR /jams
 
 # Copy the current directory contents into the container at /app
-COPY . .
+COPY /app ./app
+
+# Copy the entrypoint.sh file into the container
+COPY ./entrypoint.sh .
+
+# Copy the entrypoint.sh file into the container
+COPY ./requirements.txt .
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
