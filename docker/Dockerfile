@@ -4,14 +4,14 @@ FROM python:3.9-slim
 # Set the working directory
 WORKDIR /app
 
-# Copy the app directory contents into the container at /app
-COPY app/ ./app
+# Copy the current directory contents into the container at /app
+COPY /app ../app
 
-# Copy the requirements.txt file into the container root
-COPY ../requirements.txt /requirements.txt
+# Copy the entrypoint.sh file into the container
+COPY ./entrypoint.sh ../app
 
-# Copy the entrypoint.sh file into the container root
-COPY ../entrypoint.sh /entrypoint.sh
+# Copy the entrypoint.sh file into the container
+COPY ./requirements.txt ../app
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
