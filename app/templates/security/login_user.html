@@ -1,0 +1,24 @@
+{% extends '_layout.html' %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="mx-auto col-lg-3 col-md-6 col-sm-12">
+    <div class="card p-2">
+        <h1>Login</h1>
+        <form method="POST" action="{{ url_for_security('login') }}" name="login_user_form">
+            {{ login_user_form.hidden_tag() }}
+            <div class="mb-3">
+                <label class="form-label">{{ login_user_form.email.label }}</label>
+                {{ login_user_form.email(class_="form-control") }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">{{ login_user_form.password.label }}</label>
+                {{ login_user_form.password(class_="form-control") }}
+            </div>
+            {{ login_user_form.submit(class_="btn btn-primary") }}
+        </form>
+    </div>
+</div>
+{% endblock %}
+

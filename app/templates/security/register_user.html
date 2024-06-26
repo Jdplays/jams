@@ -1,0 +1,23 @@
+{% extends '_layout.html' %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="mx-auto col-lg-3 col-md-6 col-sm-12">
+    <div class="card p-2">
+        <h1>Register</h1>
+        <form method="POST" action="{{ url_for_security('register') }}" name="register_user_form">
+            {{ register_user_form.hidden_tag() }}
+            <div class="mb-3">
+                <label class="form-label">{{ register_user_form.email.label }}</label>
+                {{ register_user_form.email(class_="form-control") }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">{{ register_user_form.password.label }}</label>
+                {{ register_user_form.password(class_="form-control") }}
+            </div>
+            {{ register_user_form.submit(class_="btn btn-primary") }}
+        </form>
+    </div>
+</div>
+{% endblock %}

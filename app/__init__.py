@@ -10,8 +10,12 @@ from .forms import CustomLoginForm, CustomRegisterForm
 
 def create_app():
     app = Flask(__name__)
-    app.config['SECRET_KEY']= os.getenv('SECRET_KEY', 'jams_database_secret')
+    app.config['SECRET_KEY']= os.getenv('SECRET_KEY', 'jams_flask_secret')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://jams:jams@db:5432/jams-main')
+    app.config["SECURITY_PASSWORD_SALT"] = os.environ.get( "SECURITY_PASSWORD_SALT", "ab3d3a0f6984c4f5hkao41509b097a7bd498e903f3c9b2eea667h16")
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["SECURITY_REGISTERABLE"] = True
+    app.config['SECURITY_PASSWORD_HASH'] = 'argon2'
 
     db.init_app(app)
     migrate.init_app(app, db)
@@ -21,8 +25,6 @@ def create_app():
     security = Security()
 
     security.init_app(app, user_datastore, login_form=CustomLoginForm, register_form=CustomRegisterForm)
-
-    login_manager.login_view = 'main.login'
 
     app.register_blueprint(routes_bp)
 

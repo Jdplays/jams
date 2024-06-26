@@ -6,54 +6,18 @@ from .forms import CustomLoginForm, CustomRegisterForm
 
 bp = Blueprint('main', __name__)
 
-@bp.route('/login', methods=['GET', 'POST'])
-def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
-    form = CustomLoginForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
-        if user is None or not user.check_password(form.password.data):
-            flash('Invalid email or password')
-            return redirect(url_for('main.login'))
-        login_user(user)
-        return redirect(url_for('main.index'))
-    return render_template('login.html', form=form)
-
-@bp.route('/register', methods=['GET', 'POST'])
-def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
-    form = CustomRegisterForm()
-    if form.validate_on_submit():
-        user = User(email=form.email.data)
-        user.set_password(form.password.data)
-        db.session.add(user)
-        db.session.commit()
-        flash('Congratulations, You are now a registered user!')
-        return redirect(url_for('main.login'))
-    return render_template('register.html', form=form)
-
-@bp.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return redirect(url_for('main.index'))
-
 @bp.route('/')
 @bp.route('/index')
 @login_required
 def index():
     return render_template('index.html')
 
-@bp.route('/')
 @bp.route('/volunteer')
 @login_required
 @roles_required('volunteer')
 def volunteer():
     return "This is the Volunteer page"
 
-@bp.route('/')
 @bp.route('/admin')
 @login_required
 @roles_required('Admin')

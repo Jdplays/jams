@@ -1,40 +1,41 @@
 from .extensions import db, login_manager
-from flask_security import UserMixin, RoleMixin
+from sqlalchemy  import Column, String, Integer, Boolean, DateTime, ForeignKey
+from sqlalchemy.orm import relationship, backref
+from flask_security import UserMixin, RoleMixin, hash_password
 from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
 
 # Define the UserRoles association table
 class UserRoles(db.Model):
     __tablename__ = 'user_roles'
-    id = db.Column(db.Integer(), primary_key=True)
-    user_id = db.Column(db.Integer(), db.ForeignKey('user.id', ondelete='CASCADE'))
-    role_id = db.Column(db.Integer(), db.ForeignKey('role.id', ondelete='CASCADE'))
+    id = Column(Integer(), primary_key=True)
+    user_id = Column(Integer(), ForeignKey('user.id'))
+    role_id = Column(Integer(), ForeignKey('role.id'))
 
 class Role(db.Model, RoleMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), nullable=False)
-    description = db.Column(db.String(255))
+    __tablename__ = 'role'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(80), nullable=False)
+    description = Column(String(255))
 
     def __init__(self, name):
         self.name = name
 
 class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(100), unique=True)
-    password_hash = db.Column(db.String(256), nullable=False)
-    roles = db.relationship('Role', secondary='user_roles')
-    fs_uniquifier = db.Column(db.String(64), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
+    __tablename__ = 'user'
+    id = Column(Integer, primary_key=True)
+    email = Column(String(255), unique=True)
+    username = Column(String(255), unique=True, nullable=True)
+    password = Column(String(255), nullable=False)
+    last_login = Column(DateTime())
+    active = Column(Boolean())
+    roles = relationship('Role', secondary='user_roles', backref=backref("users", lazy="dynamic"))
+    fs_uniquifier = Column(String(255), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
 
-    def __init__(self, email, role_names:list[str]=None):
+    def __init__(self, email, password, role_names:list[str]=None):
         self.email = email
+        self.password = hash_password(password)
         self.set_roles(role_names)
-
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
     
     def set_roles(self, role_names):
         roles = []
@@ -44,12 +45,8 @@ class User(UserMixin, db.Model):
                 roles.append(role)
 
         self.roles = roles
-    
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
 
 
 class Event(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200), unique=True, nullable=False)
+    id = Column(Integer, primary_key=True)
+    name = Column(String(200), unique=True, nullable=False)

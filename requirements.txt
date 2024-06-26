@@ -2,6 +2,8 @@ Flask
 psycopg2-binary
 Flask-SQLAlchemy
 Flask-Migrate
-flask-security-too[fsqla,common]
+flask-security-too
+passlib[argon2]
 Flask-WTF
 gunicorn
+python-dotenv

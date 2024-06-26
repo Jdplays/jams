@@ -27,7 +27,7 @@
                   </a>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link" href="{{ url_for('main.login')}}">
+                  <a class="nav-link" href="{{ url_for('security.login')}}">
                     <span class="nav-link-title">
                       Login
                     </span>
@@ -40,10 +40,10 @@
                     </span>
                   </a>
                   <div class="dropdown-menu">
-                    <a class="dropdown-item" href="{{ url_for('main.register')}}">
+                    <a class="dropdown-item" href="{{ url_for('security.register')}}">
                       Register
                     </a>
-                    <a class="dropdown-item" href="{{ url_for('main.logout')}}">
+                    <a class="dropdown-item" href="{{ url_for('security.logout')}}">
                       Logout
                     </a>
                   </div>
