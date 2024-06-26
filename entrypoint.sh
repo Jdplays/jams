@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Apply database migrations
+flask db init  # Initialize migrations directory (only once)
 flask db migrate -m "Initial migration"
 flask db upgrade
 
