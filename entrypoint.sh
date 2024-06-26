@@ -4,7 +4,7 @@ python3 check_db.py
 DB_STATUS=$?
 
 # Check if the db is ready
-if [$DB_STATUS -eq 1]; then
+if [ $DB_STATUS -eq 1 ]; then
     echo "Databse is ready. Starting application..."
 
     # Check if the migrations directory exists, if not, initialize it
