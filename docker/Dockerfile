@@ -22,8 +22,5 @@ RUN chmod +x entrypoint.sh
 # Make port 5000 available to the world outside this container
 EXPOSE 5000
 
-# Define environment variable
-ENV FLASK_APP=app
-
 # Run flask app with gunicorn
 CMD ["bash", "entrypoint.sh"]
