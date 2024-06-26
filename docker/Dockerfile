@@ -5,10 +5,10 @@ FROM python:3.9-slim
 WORKDIR /app
 
 # Copy the current directory contents into the container at /app
-COPY . ../app
+COPY app/ ./app
 
 # Copy the entrypoint.sh file into the container
-COPY entrypoint.sh ../
+COPY ../entrypoint.sh /entrypoint.sh
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
