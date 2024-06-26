@@ -4,10 +4,13 @@ FROM python:3.9-slim
 # Set the working directory
 WORKDIR /app
 
-# Copy the current directory contents into the container at /app
+# Copy the app directory contents into the container at /app
 COPY app/ ./app
 
-# Copy the entrypoint.sh file into the container
+# Copy the requirements.txt file into the container root
+COPY ../requirements.txt /requirements.txt
+
+# Copy the entrypoint.sh file into the container root
 COPY ../entrypoint.sh /entrypoint.sh
 
 # Install any needed packages specified in requirements.txt
