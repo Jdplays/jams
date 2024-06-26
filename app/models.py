@@ -55,4 +55,5 @@ class User(UserMixin, db.Model):
 
 class Event(db.Model):
     id = Column(Integer, primary_key=True)
-    name = Column(String(200), unique=True, nullable=False)
+    name = Column(String(80), unique=True, nullable=False)
+    description = Column(String(255), unique=False, nullable=True)
