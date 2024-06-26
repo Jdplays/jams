@@ -1,6 +1,6 @@
 #!/bin/bash
 
-python3 check_db.py
+python3 check_db.py > /dev/null 2>&1
 DB_STATUS=$?
 
 # Check if the db is ready
