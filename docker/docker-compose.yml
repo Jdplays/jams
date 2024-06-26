@@ -9,6 +9,8 @@ services:
       - FLASK_ENV=development
       - SECRET_KEY=${FLASK_SECRET}
       - DATABASE_URL=postgresql://${PG_USER}:${PG_PASS}@jams-db:5432/jams-main
+    volumes:
+      -/path/to/db_migrations:/jams/migrations
     depends_on:
       - jams-db
   jams-db:
@@ -19,4 +21,4 @@ services:
       POSTGRES_PASSWORD: ${PG_PASS}
       POSTGRES_DB: jams-main
     volumes:
-      - /path/to/data:/var/lib/postgresql/data
+      - /path/to/db:/var/lib/postgresql/data
