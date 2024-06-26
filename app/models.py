@@ -36,6 +36,12 @@ class User(UserMixin, db.Model):
         self.email = email
         self.password = hash_password(password)
         self.set_roles(role_names)
+
+    def enable(self):
+        self.active = True
+
+    def disable(self):
+        self.active = False
     
     def set_roles(self, role_names):
         roles = []
