@@ -32,6 +32,7 @@ class User(UserMixin, db.Model):
     first_name = Column(String(50), nullable=True)
     last_name = Column(String(50), nullable=True)
     dob = Column(DateTime())
+    bio = Column(String(255), nullable=True)
     roles = relationship('Role', secondary='user_roles', backref=backref("users", lazy="dynamic"))
     fs_uniquifier = Column(String(255), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
 
