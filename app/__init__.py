@@ -16,6 +16,7 @@ def create_app():
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["SECURITY_REGISTERABLE"] = True
     app.config['SECURITY_PASSWORD_HASH'] = 'argon2'
+    app.config["SECURITY_SEND_REGISTER_EMAIL"] = False
 
     db.init_app(app)
     migrate.init_app(app, db)
