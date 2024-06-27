@@ -9,12 +9,18 @@
         <form method="POST" action="{{ url_for_security('login') }}" name="login_user_form">
             {{ login_user_form.hidden_tag() }}
             <div class="mb-3">
-                <label class="form-label">{{ login_user_form.email.label }}</label>
-                {{ login_user_form.email(class_="form-control") }}
+                <label class="form-label">{{ login_user_form.username.label }}</label>
+                {{ login_user_form.username(class_="form-control") }}
+                {% for error in login_user_form.username.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
             </div>
             <div class="mb-3">
                 <label class="form-label">{{ login_user_form.password.label }}</label>
                 {{ login_user_form.password(class_="form-control") }}
+                {% for error in login_user_form.password.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
             </div>
             {{ login_user_form.submit(class_="btn btn-primary") }}
         </form>
