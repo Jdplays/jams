@@ -6,7 +6,7 @@ from flask_security import Security, SQLAlchemyUserDatastore
 from .models import User, Role
 from .routes import bp as routes_bp
 from .seeder import seed_roles, seed_users
-from .forms import CustomLoginForm, CustomRegisterForm
+from .forms.flask_security import CustomLoginForm, CustomRegisterForm
 
 def create_app():
     app = Flask(__name__)
