@@ -56,6 +56,11 @@ class User(UserMixin, db.Model):
 
         self.roles = roles
 
+    def get_display_name(self):
+        if not self.first_name:
+            return self.username
+        return f"{self.first_name} {self.last_name}"
+
 
 class Event(db.Model):
     id = Column(Integer, primary_key=True)

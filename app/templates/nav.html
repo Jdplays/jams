@@ -1,16 +1,28 @@
 <!-- Navigation Bar -->
+<head>
+  <script src="{{ url_for('static', filename='js/nav.js') }}" defer></script>
+</head>
 <header class="navbar navbar-expand-sm navbar-light d-print-none">
     <div class="container-fluid">
         <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
             <a href="#">JAMS</a>
         </h1>
 
-        <div class="navbar-nav flex-row order-md-last">
+          <div id="nav_logout_button" class="navbar-nav flex-row order-md-last">
+            <div class="nav-item">
+              <a class="nav-link" href="{{ url_for('security.logout')}}">
+                <span class="nav-link-title">
+                  Logout
+                </span>
+              </a>
+            </div>
+        </div>
+        <div id="nav_user_info" class="navbar-nav flex-row order-md-last">
             <div class="nav-item">
             <a href="#" class="nav-link d-flex lh-1 text-end p-0">
                 <div class="d-none d-xl-block ps-2">
-                    <div>Joe Blogs</div>
-                    <div class="mt-1 small text-secondary">Jam Volunteer</div>
+                    <div id="nav_user_name">Joe Blogs</div>
+                    <div id="nav_user_role"class="mt-1 small text-secondary">Jam Volunteer</div>
                 </div>
             </a>
             </div>
@@ -26,27 +38,19 @@
                     </span>
                   </a>
                 </li>
-                <li class="nav-item">
+                <li id="nav_login_button" class="nav-item">
                   <a class="nav-link" href="{{ url_for('security.login')}}">
                     <span class="nav-link-title">
                       Login
                     </span>
                   </a>
                 </li>
-                <li class="nav-item dropdown">
-                  <a class="nav-link dropdown-toggle" href="?" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
+                <li id="nav_register_button" class="nav-item">
+                  <a class="nav-link" href="{{ url_for('security.register')}}">
                     <span class="nav-link-title">
-                        Options 
+                      Register
                     </span>
                   </a>
-                  <div class="dropdown-menu">
-                    <a class="dropdown-item" href="{{ url_for('security.register')}}">
-                      Register
-                    </a>
-                    <a class="dropdown-item" href="{{ url_for('security.logout')}}">
-                      Logout
-                    </a>
-                  </div>
                 </li>
               </ul>
             </div>
