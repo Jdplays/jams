@@ -1,8 +1,7 @@
 from .extensions import db, login_manager
 from sqlalchemy  import Column, String, Integer, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship, backref
-from flask_security import UserMixin, RoleMixin, hash_password
-from werkzeug.security import generate_password_hash, check_password_hash
+from flask_security import UserMixin, RoleMixin
 import uuid
 
 # Define the UserRoles association table
@@ -25,7 +24,7 @@ class User(UserMixin, db.Model):
     __tablename__ = 'user'
     id = Column(Integer, primary_key=True)
     email = Column(String(255), unique=True)
-    username = Column(String(255), unique=True, nullable=True)
+    username = Column(String(255), unique=True, nullable=False)
     password = Column(String(255), nullable=False)
     last_login = Column(DateTime())
     active = Column(Boolean())
@@ -36,10 +35,21 @@ class User(UserMixin, db.Model):
     roles = relationship('Role', secondary='user_roles', backref=backref("users", lazy="dynamic"))
     fs_uniquifier = Column(String(255), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
 
-    def __init__(self, email, password, role_names:list[str]=None):
+    def __init__(self, email, username, password, active=False, roles:list[str]=None, fs_uniquifier=lambda: str(uuid.uuid4())):
         self.email = email
-        self.password = hash_password(password)
-        self.set_roles(role_names)
+        self.username = username
+        self.password = password
+        self.active = active
+        self.set_roles(roles)
+
+    def __init__(self, email, username, password, first_name, last_name, active=False, roles:list[str]=None, fs_uniquifier=lambda: str(uuid.uuid4())):
+        self.email = email
+        self.username = username
+        self.first_name = first_name
+        self.last_name = last_name
+        self.password = password
+        self.active = active
+        self.set_roles(roles)
 
     def enable(self):
         self.active = True
