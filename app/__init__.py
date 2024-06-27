@@ -6,7 +6,7 @@ from flask_security import Security, SQLAlchemyUserDatastore
 from .models import User, Role
 from .routes import bp as routes_bp
 from .seeder import seed_roles, seed_users
-from .forms import CustomLoginForm, CustomRegisterForm
+from .forms.flask_security import CustomLoginForm, CustomRegisterForm
 
 def create_app():
     app = Flask(__name__)
@@ -16,6 +16,7 @@ def create_app():
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["SECURITY_REGISTERABLE"] = True
     app.config['SECURITY_PASSWORD_HASH'] = 'argon2'
+    app.config["SECURITY_SEND_REGISTER_EMAIL"] = False
 
     db.init_app(app)
     migrate.init_app(app, db)

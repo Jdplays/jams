@@ -1,8 +1,5 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, jsonify
-from flask_security import roles_required, login_required, login_user, logout_user, current_user
-from .extensions import db
-from .models import User
-from .forms import CustomLoginForm, CustomRegisterForm
+from flask import Blueprint, render_template, jsonify
+from flask_security import roles_required, login_required, current_user
 
 bp = Blueprint('main', __name__)
 

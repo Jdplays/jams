@@ -11,10 +11,44 @@
             <div class="mb-3">
                 <label class="form-label">{{ register_user_form.email.label }}</label>
                 {{ register_user_form.email(class_="form-control") }}
+                {% for error in register_user_form.email.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">{{ register_user_form.username.label }}</label>
+                {{ register_user_form.username(class_="form-control") }}
+                {% for error in register_user_form.username.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">{{ register_user_form.first_name.label }}</label>
+                {{ register_user_form.first_name(class_="form-control") }}
+                {% for error in register_user_form.first_name.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">{{ register_user_form.last_name.label }}</label>
+                {{ register_user_form.last_name(class_="form-control") }}
+                {% for error in register_user_form.last_name.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
             </div>
             <div class="mb-3">
                 <label class="form-label">{{ register_user_form.password.label }}</label>
                 {{ register_user_form.password(class_="form-control") }}
+                {% for error in register_user_form.password.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">{{ register_user_form.password_confirm.label }}</label>
+                {{ register_user_form.password_confirm(class_="form-control") }}
+                {% for error in register_user_form.password_confirm.errors %}
+                    <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
             </div>
             {{ register_user_form.submit(class_="btn btn-primary") }}
         </form>
