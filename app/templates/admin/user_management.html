@@ -1,0 +1,39 @@
+{% extends '_layout.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+
+<div class="row row-deck row-cards">
+    <div class="col-4">
+        <div class="card">
+            <div class="card-body" style="height: 10rem">
+                <h1>User Management</h1>
+                <p>This is the User Management page!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div>
+    <table id="users-table">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Full Name</th>
+                <th>Last Login</th>
+                <th>Roles</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="table-body">
+            <!-- Data will be dynamically added here -->
+        </tbody>
+    </table>
+</div>
+
+<script src="{{ url_for('static', filename='js/admin/user_management.js') }}" defer></script>
+
+{% endblock %}

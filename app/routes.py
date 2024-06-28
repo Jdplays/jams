@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, jsonify
 from flask_security import roles_required, login_required, current_user
+from .models import User, Role
 
 bp = Blueprint('main', __name__)
 
@@ -19,22 +20,33 @@ def index():
 def volunteer():
     return "This is the Volunteer page"
 
-@bp.route('/admin')
+@bp.route('/admin/user_management')
 @login_required
 @roles_required('Admin')
-def admin():
-    return "This is the Admin page"
+def user_management():
+    return render_template('admin/user_management.html')
 
 
 ## API for AJAX requests ##
-@bp.route('/api/current_user_info', methods=['get'])
+@bp.route('/api/admin/get_user_management_table', methods=['get'])
 @login_required
-def current_user_info():
-    if current_user.is_authenticated:
-        user_roles = current_user.roles
-        first_role = user_roles[0].name if user_roles else 'No Role'
-        return jsonify({
-            'user_name': current_user.get_display_name(),
-            'user_role': first_role
+@roles_required('Admin')
+def get_user_management_table():
+    users = User.query.all()
+    users_data_list = []
+    all_roles = [role.name for role in Role.query.all()]
+    for user in users:
+        full_name = user.get_full_name()
+        role_names = user.get_role_names() if user.get_role_names else []
+        users_data_list.append({
+            'username': user.username,
+            'email': user.email,
+            'full_name': full_name,
+            'last_login': user.last_login_at,
+            'roles': role_names,
+            'status': user.active
         })
-    return jsonify({'error': 'Unauthorized'}), 401
+    return jsonify({
+        'all_roles': all_roles,
+        'users': users_data_list
+    })
