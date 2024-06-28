@@ -1,4 +1,4 @@
-from .extensions import db, login_manager
+from .extensions import db
 from sqlalchemy  import Column, String, Integer, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from flask_security import UserMixin, RoleMixin
@@ -15,10 +15,12 @@ class Role(db.Model, RoleMixin):
     __tablename__ = 'role'
     id = Column(Integer, primary_key=True)
     name = Column(String(80), nullable=False)
-    description = Column(String(255))
+    description = Column(String(255), nullable=True)
 
-    def __init__(self, name):
+    # Requires name to be passed
+    def __init__(self, name, description=None):
         self.name = name
+        self.description = description
 
 class User(UserMixin, db.Model):
     __tablename__ = 'user'
@@ -26,13 +28,14 @@ class User(UserMixin, db.Model):
     email = Column(String(255), unique=True, nullable=False)
     username = Column(String(255), unique=True, nullable=False)
     password = Column(String(255), nullable=False)
-    active = Column(Boolean())
+    active = Column(Boolean(), nullable=False)
     first_name = Column(String(50), nullable=True)
     last_name = Column(String(50), nullable=True)
     dob = Column(DateTime(), nullable=True)
     bio = Column(String(255), nullable=True)
     roles = relationship('Role', secondary='user_roles', backref=backref("users", lazy="dynamic"))
     fs_uniquifier = Column(String(255), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
+    
     # Tracking
     last_login_at = Column(DateTime(), nullable=True)
     current_login_at  = Column(DateTime(), nullable=True)
@@ -40,7 +43,8 @@ class User(UserMixin, db.Model):
     current_login_ip  = Column(String(50), nullable=True)
     login_count = Column(Integer, nullable=True)
 
-    def __init__(self, email, username, password, active=False, first_name=None, last_name=None, dob=None, bio=None, roles:list[str]=None, last_login_at=None, current_login_at=None, last_login_ip=None, current_login_ip=None, login_count=0):
+    # Requires email, username, password to be passed
+    def __init__(self, email, username, password, active=False, first_name=None, last_name=None, dob=None, bio=None, roles:list[str]=None, fs_uniquifier=None, last_login_at=None, current_login_at=None, last_login_ip=None, current_login_ip=None, login_count=0):
         self.email = email
         self.username = username
         self.first_name = first_name
@@ -50,7 +54,7 @@ class User(UserMixin, db.Model):
         self.dob = dob
         self.bio = bio
         self.set_roles(roles)
-        self.fs_uniquifier = str(uuid.uuid4())
+        self.fs_uniquifier = fs_uniquifier if not None else str(uuid.uuid4())
         self.last_login_at = last_login_at
         self.current_login_at = current_login_at
         self.last_login_ip = last_login_ip
