@@ -75,6 +75,12 @@ class User(UserMixin, db.Model):
         if not self.first_name:
             return self.username
         return f"{self.first_name} {self.last_name}"
+    
+    def get_main_role(self):
+        return self.roles[0].name if self.roles else 'No Role'
+    
+    def user_has_role(self, role_name):
+        return any(role_name == role.name for role in self.roles)
 
 
 class Event(db.Model):

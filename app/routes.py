@@ -3,6 +3,10 @@ from flask_security import roles_required, login_required, current_user
 
 bp = Blueprint('main', __name__)
 
+@bp.route('/nav')
+def nav():
+    return render_template('nav.html', current_user=current_user)
+
 @bp.route('/')
 @bp.route('/index')
 @login_required
