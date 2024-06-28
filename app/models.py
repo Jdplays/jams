@@ -29,32 +29,33 @@ class User(UserMixin, db.Model):
     active = Column(Boolean())
     first_name = Column(String(50), nullable=True)
     last_name = Column(String(50), nullable=True)
-    dob = Column(DateTime())
+    dob = Column(DateTime(), nullable=True)
     bio = Column(String(255), nullable=True)
     roles = relationship('Role', secondary='user_roles', backref=backref("users", lazy="dynamic"))
     fs_uniquifier = Column(String(255), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
     # Tracking
-    last_login_at = Column(DateTime())
-    current_login_at  = Column(DateTime())
-    last_login_ip = Column(String(50))
-    current_login_ip  = Column(String(50))
-    login_count = Column(Integer)
+    last_login_at = Column(DateTime(), nullable=True)
+    current_login_at  = Column(DateTime(), nullable=True)
+    last_login_ip = Column(String(50), nullable=True)
+    current_login_ip  = Column(String(50), nullable=True)
+    login_count = Column(Integer, nullable=True)
 
-    def __init__(self, email, username, password, active=False, roles:list[str]=None, fs_uniquifier=lambda: str(uuid.uuid4())):
-        self.email = email
-        self.username = username
-        self.password = password
-        self.active = active
-        self.set_roles(roles)
-
-    def __init__(self, email, username, password, first_name, last_name, active=False, roles:list[str]=None, fs_uniquifier=lambda: str(uuid.uuid4())):
+    def __init__(self, email, username, password, active=False, first_name=None, last_name=None, dob=None, bio=None, roles:list[str]=None, last_login_at=None, current_login_at=None, last_login_ip=None, current_login_ip=None, login_count=0):
         self.email = email
         self.username = username
         self.first_name = first_name
         self.last_name = last_name
         self.password = password
         self.active = active
+        self.dob = dob
+        self.bio = bio
         self.set_roles(roles)
+        self.fs_uniquifier = str(uuid.uuid4())
+        self.last_login_at = last_login_at
+        self.current_login_at = current_login_at
+        self.last_login_ip = last_login_ip
+        self.current_login_ip = current_login_ip
+        self.login_count = login_count
 
     def enable(self):
         self.active = True
