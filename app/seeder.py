@@ -1,4 +1,10 @@
-from .models import User, Role, db
+from .models import User, Role, Workshop, db
+from flask_security.utils import hash_password
+
+def preform_seed():
+    seed_roles()
+    seed_users()
+    seed_workshops()
 
 def seed_roles():
     roles = ['Attendee', 'Volunteer', 'Trustee', 'Admin']

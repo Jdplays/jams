@@ -5,7 +5,7 @@ from .extensions import db, migrate, login_manager
 from flask_security import Security, SQLAlchemyUserDatastore
 from .models import User, Role
 from .routes import bp as routes_bp
-from .seeder import seed_roles, seed_users
+from .seeder import preform_seed
 from .forms.flask_security import CustomLoginForm, CustomRegisterForm
 
 def create_app():
@@ -36,5 +36,4 @@ def seed_database(app):
     # Create database tables
     with app.app_context():
         db.create_all()
-        seed_roles()
-        seed_users()
+        preform_seed()
