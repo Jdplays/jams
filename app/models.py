@@ -23,10 +23,9 @@ class Role(db.Model, RoleMixin):
 class User(UserMixin, db.Model):
     __tablename__ = 'user'
     id = Column(Integer, primary_key=True)
-    email = Column(String(255), unique=True)
+    email = Column(String(255), unique=True, nullable=False)
     username = Column(String(255), unique=True, nullable=False)
     password = Column(String(255), nullable=False)
-    last_login = Column(DateTime())
     active = Column(Boolean())
     first_name = Column(String(50), nullable=True)
     last_name = Column(String(50), nullable=True)
@@ -34,6 +33,12 @@ class User(UserMixin, db.Model):
     bio = Column(String(255), nullable=True)
     roles = relationship('Role', secondary='user_roles', backref=backref("users", lazy="dynamic"))
     fs_uniquifier = Column(String(255), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
+    # Tracking
+    last_login_at = Column(DateTime())
+    current_login_at  = Column(DateTime())
+    last_login_ip = Column(String(50))
+    current_login_ip  = Column(String(50))
+    login_count = Column(Integer)
 
     def __init__(self, email, username, password, active=False, roles:list[str]=None, fs_uniquifier=lambda: str(uuid.uuid4())):
         self.email = email
