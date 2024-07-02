@@ -1,0 +1,104 @@
+{% extends '_layout.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+
+<div class="row row-deck row-cards">
+    <div class="col-4">
+        <div class="card">
+            <div class="card-body" style="height: 10rem">
+                <h1>Locations and Timeslots</h1>
+                <p>This is the Locations and Timeslots page!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h1>Locations</h1>
+<div>
+    <h1>Add a Location</h1>
+    <form id="add-location-form">
+        <label for="name">Name:</label>
+        <input type="text" id="add-location-name" name="name"><br><br>
+        <button type="submit">Submit</button>
+    </form>
+</div>
+
+<div>
+    <table id="location-table">
+        <thead>
+            <tr>
+                <th>Location Name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="table-body">
+            <!-- Data will be dynamically added here -->
+        </tbody>
+    </table>
+</div>
+
+<div id="edit-location-block" style="display: none;">
+    <h1>Edit a Location</h1>
+    <form id="edit-location-form">
+        <input type="hidden" id="edit-location-id" name="location_id"><br><br>
+        <label for="name">Name:</label>
+        <input type="text" id="edit-location-name" name="name"><br><br>
+        <button type="submit">Submit</button>
+        <button type="reset">Cancel</button>
+    </form>
+</div>
+
+<p id="location-request-response"></p>
+
+<h1>Timeslots</h1>
+<div>
+    <h1>Add a Timeslot</h1>
+    <form id="add-timeslot-form">
+        <label for="name">Name:</label>
+        <input type="text" id="add-timeslot-name" name="name"><br><br>
+        <label for="start-time">Start Time:</label>
+        <input type="time" id="add-timeslot-start-time" name="start_time"><br><br>
+        <label for="end-time">End Time:</label>
+        <input type="time" id="add-timeslot-end-time" name="end_time"><br><br>
+        <button type="submit">Submit</button>
+    </form>
+</div>
+
+<div>
+    <table id="timeslot-table">
+        <thead>
+            <tr>
+                <th>Timeslot Name</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="table-body">
+            <!-- Data will be dynamically added here -->
+        </tbody>
+    </table>
+</div>
+
+<div id="edit-timeslot-block" style="display: none;">
+    <h1>Edit a Timeslot</h1>
+    <form id="edit-timeslot-form">
+        <input type="hidden" id="edit-timeslot-id" name="timeslot_id"><br><br>
+        <label for="name">Name:</label>
+        <input type="text" id="edit-timeslot-name" name="name"><br><br>
+        <label for="start-time">Start Time:</label>
+        <input type="time" id="edit-timeslot-start-time" name="start_time"><br><br>
+        <label for="end-time">End Time:</label>
+        <input type="time" id="edit-timeslot-end-time" name="end_time"><br><br>
+        <button type="submit">Submit</button>
+        <button type="reset">Cancel</button>
+    </form>
+</div>
+
+<p id="timeslot-request-response"></p>
+
+<script src="{{ url_for('static', filename='js/management/locations_timeslots.js') }}" defer></script>
+
+{% endblock %}
