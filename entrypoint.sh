@@ -18,13 +18,13 @@ if [ $DB_STATUS -eq 1 ]; then
 
     # Seed the database
     flask shell <<EOF
-from app import create_app, seed_database
+from jams import create_app, seed_database
 app = create_app()
 seed_database(app)
 EOF
 
     # Start Gunicorn
-    exec gunicorn -b 0.0.0.0:5000 "app:create_app()"
+    exec gunicorn -b 0.0.0.0:5000 "jams:create_app()"
 else
     echo "Database is not ready. Waiting 10 seconds..."
     sleep 10

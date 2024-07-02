@@ -1,6 +1,6 @@
-## This is for DEV use
+## Run this is for DEV use
 
-from app import create_app
+from jams import create_app
 
 app = create_app()
 
