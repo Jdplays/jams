@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Define the flask app location
+export FLASK_APP=jams
+
 python3 check_db.py > /dev/null 2>&1
 DB_STATUS=$?
 
