@@ -1,12 +1,11 @@
-
 import os
 from flask import Flask
-from .extensions import db, migrate, login_manager
+from jams.extensions import db, migrate, login_manager
 from flask_security import Security, SQLAlchemyUserDatastore
-from .models import User, Role
-from .routes import bp as routes_bp
-from .seeder import preform_seed
-from .forms.flask_security import CustomLoginForm, CustomRegisterForm
+from jams.models import User, Role
+from jams.routes import routes_bp
+from jams.seeder import preform_seed
+from jams.forms.flask_security import CustomLoginForm, CustomRegisterForm
 
 def create_app():
     app = Flask(__name__)

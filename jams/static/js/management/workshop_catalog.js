@@ -1,6 +1,6 @@
 function fetchDataAndPopulateWorkshopcatalogTable() {
         $.ajax({
-            url: '/api/management/get_workshop_catalog_table',
+            url: '/management/get_workshop_catalog_table',
             type: 'GET',
             success: function(response) {
                 workshops = response.workshops;
@@ -43,7 +43,7 @@ function addNewWorkshopFromForm(event) {
 
     $.ajax({
         type: 'POST',
-        url: '/api/management/add_workshop',
+        url: '/management/add_workshop',
         data: $('#add-workshop-form').serialize(),
         success: function(response) {
             if (response.status === 'success') {
@@ -59,7 +59,7 @@ function prepEditWorkshopForm(workshopID) {
     document.getElementById('edit-workshop-block').style.display = 'block'
 
     $.ajax({
-        url: '/api/management/get_workshop_details/' + workshopID,
+        url: '/management/get_workshop_details/' + workshopID,
         type: 'GET',
         success: function(response) {
             workshopID = response.id;
@@ -88,7 +88,7 @@ function editWorkshopFromForm(event) {
 
     $.ajax({
         type: 'POST',
-        url: '/api/management/edit_workshop',
+        url: '/management/edit_workshop',
         data: JSON.stringify(data),
         contentType: 'application/json',
         success: function(response) {
@@ -108,7 +108,7 @@ function archiveWorkshop(workshopID) {
     }
     $.ajax({
         type: 'POST',
-        url: '/api/management/archive_workshop',
+        url: '/management/archive_workshop',
         data: JSON.stringify(data),
         contentType: 'application/json',
         success: function(response) {
@@ -127,7 +127,7 @@ function activateWorkshop(workshopID) {
     }
     $.ajax({
         type: 'POST',
-        url: '/api/management/activate_workshop',
+        url: '/management/activate_workshop',
         data: JSON.stringify(data),
         contentType: 'application/json',
         success: function(response) {

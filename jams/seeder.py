@@ -1,4 +1,4 @@
-from .models import db, User, Role, Workshop, Event, Location, Timeslot, Session
+from jams.models import db, User, Role, Workshop, Event, Location, Timeslot, Session
 from flask_security.utils import hash_password
 import datetime
 

@@ -32,7 +32,7 @@
               <ul class="navbar-nav">
                 {% if current_user.is_authenticated %}
                   <li class="nav-item">
-                      <a class="nav-link" href="{{ url_for('main.index')}}">
+                      <a class="nav-link" href="{{ url_for('routes.private.general.frontend.index')}}">
                           <span class="nav-link-title">
                               Home
                           </span>
@@ -46,10 +46,10 @@
                               </span>
                           </a>
                           <div class="dropdown-menu">
-                              <a class="dropdown-item" href="{{ url_for('main.workshop_catalog')}}">
+                              <a class="dropdown-item" href="{{ url_for('routes.private.management.frontend.workshop_catalog')}}">
                                   Workshop Catalog
                               </a>
-                              <a class="dropdown-item" href="{{ url_for('main.locations_timeslots')}}">
+                              <a class="dropdown-item" href="{{ url_for('routes.private.management.frontend.locations_timeslots')}}">
                                 Locations and Timeslots
                             </a>
                           </div>
@@ -63,7 +63,7 @@
                               </span>
                           </a>
                           <div class="dropdown-menu">
-                              <a class="dropdown-item" href="{{ url_for('main.user_management')}}">
+                              <a class="dropdown-item" href="{{ url_for('routes.private.admin.frontend.user_management')}}">
                                   User Management
                               </a>
                           </div>
