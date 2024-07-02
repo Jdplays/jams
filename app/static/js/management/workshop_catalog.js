@@ -10,14 +10,14 @@ function fetchDataAndPopulateWorkshopcatalogTable() {
                 workshops.forEach(function(workshop) {
 
                     
-                    actionButtonHtml = ''
+                    actionsButtonHtml = ''
 
-                    if (workshop.active){
-                        actionButtonHtml = '<button onclick="prepEditWorkshopForm(' + workshop.id + ')">Edit</button>' + 
+                    if (workshop.active) {
+                        actionsButtonHtml = '<button onclick="prepEditWorkshopForm(' + workshop.id + ')">Edit</button>' + 
                         '<button onclick="archiveWorkshop(' + workshop.id + ')">Archive</button>'
                     }
                     else {
-                        actionButtonHtml = '<button onclick="prepEditWorkshopForm(' + workshop.id + ')" disabled>Edit</button>' + 
+                        actionsButtonHtml = '<button onclick="prepEditWorkshopForm(' + workshop.id + ')" disabled>Edit</button>' + 
                         '<button onclick="activateWorkshop(' + workshop.id + ')">Activate</button>'
                     }
 
@@ -26,7 +26,7 @@ function fetchDataAndPopulateWorkshopcatalogTable() {
                     '<td>' + workshop.description + '</td>' +
                     '<td>' + workshop.min_volunteers + '</td>' +
                     '<td>' + workshop.active + '</td>' +
-                    '<td>' + actionButtonHtml + '</td>' +
+                    '<td>' + actionsButtonHtml + '</td>' +
                     '</tr>';
 
                     $('#workshop-table').append(row);
