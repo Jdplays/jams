@@ -25,6 +25,8 @@ RUN chmod +x entrypoint.sh
 # Make check_db.py executable
 RUN chmod +x check_db.py
 
+# Define flask app location
+ENV FLASK_APP=jams
 
 # Make port 5000 available to the world outside this container
 EXPOSE 5000
