@@ -1,45 +1,88 @@
 function fetchDataAndPopulateUserManagementTable() {
-    function fetchData() {
-        $.ajax({
-            url: '/api/admin/get_user_management_table',
-            type: 'GET',
-            success: function(response) {
-                allRoles = response.all_roles;
-                users = response.users;
+    $.ajax({
+        url: '/api/admin/get_user_management_table',
+        type: 'GET',
+        success: function(response) {
+            allRoles = response.all_roles;
+            users = response.users;
 
-                $('#users-table tbody').empty();
+            $('#users-table tbody').empty();
 
-                users.forEach(function(user) {
+            users.forEach(function(user) {
 
-                    var selectedRoles = user.roles
+                var selectedRoles = user.roles
 
-                    var dropdownHtml = '<select multiple>';
-                    allRoles.forEach(function(role) {
-                        var selected = selectedRoles.includes(role) ? 'selected' : '';
-                        dropdownHtml += '<option value="' + role + '" ' + selected + '>' + role + '</option>';
-                    })
-                    dropdownHtml += '</select>';
+                actionsButtonHtml = ''
 
-                    var row = '<tr>' + 
-                    '<td>' + user.username + '</td>' +
-                    '<td>' + user.email + '</td>' +
-                    '<td>' + user.full_name + '</td>' +
-                    '<td>' + user.last_login + '</td>' +
-                    '<td>' + dropdownHtml + '</td>' +
-                    '<td>' + user.status + '</td>' +
-                    '<td> Actions WIP (Disable, Delete) </td>' +
-                    '</tr>';
+                if (user.active) {
+                    actionsButtonHtml = '<button onclick="archiveUser(' + user.id + ')">Archive</button>'
+                }
+                else {
+                    actionsButtonHtml = '<button onclick="activateUser(' + user.id + ')">Activate</button>'
+                }
 
-                    $('#users-table').append(row);
-                });
-            },
-            error: function(error) {
-                console.log('Error fetching data:', error);
-            }
-        });
+                var dropdownHtml = '<select multiple>';
+                allRoles.forEach(function(role) {
+                    var selected = selectedRoles.includes(role) ? 'selected' : '';
+                    dropdownHtml += '<option value="' + role + '" ' + selected + '>' + role + '</option>';
+                })
+                dropdownHtml += '</select>';
+
+                var row = '<tr>' + 
+                '<td>' + user.username + '</td>' +
+                '<td>' + user.email + '</td>' +
+                '<td>' + user.full_name + '</td>' +
+                '<td>' + user.last_login + '</td>' +
+                '<td>' + dropdownHtml + '</td>' +
+                '<td>' + user.active + '</td>' +
+                '<td>' + actionsButtonHtml + '</td>' +
+                '</tr>';
+
+                $('#users-table').append(row);
+            });
+        },
+        error: function(error) {
+            console.log('Error fetching data:', error);
+        }
+    });
+}
+
+function archiveUser(userID) {
+    const data = {
+        'user_id': userID
     }
+    $.ajax({
+        type: 'POST',
+        url: '/api/admin/archive_user',
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        success: function(response) {
+            if (response.status === 'success') {
+                fetchDataAndPopulateUserManagementTable();
+            }
 
-    fetchData();
+            document.getElementById('user-request-response').innerHTML = response.message
+        }
+    });
+}
+
+function activateUser(userID) {
+    const data = {
+        'user_id': userID
+    }
+    $.ajax({
+        type: 'POST',
+        url: '/api/admin/activate_user',
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        success: function(response) {
+            if (response.status === 'success') {
+                fetchDataAndPopulateUserManagementTable();
+            }
+
+            document.getElementById('user-request-response').innerHTML = response.message
+        }
+    });
 }
 
 // Event listeners

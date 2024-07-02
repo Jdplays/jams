@@ -61,10 +61,10 @@ class User(UserMixin, db.Model):
         self.current_login_ip = current_login_ip
         self.login_count = login_count
 
-    def enable(self):
+    def activate(self):
         self.active = True
 
-    def disable(self):
+    def archive(self):
         self.active = False
     
     def set_roles(self, role_names):

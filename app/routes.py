@@ -45,17 +45,61 @@ def get_user_management_table():
         full_name = user.get_full_name()
         role_names = user.get_role_names() if user.get_role_names else []
         users_data_list.append({
+            'id': user.id,
             'username': user.username,
             'email': user.email,
             'full_name': full_name,
             'last_login': user.last_login_at,
             'roles': role_names,
-            'status': user.active
+            'active': user.active
         })
     return jsonify({
         'all_roles': all_roles,
         'users': users_data_list
     })
+
+@bp.route('/api/admin/archive_user', methods=['POST'])
+@login_required
+@roles_required('Admin')
+def archive_user():
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        user = User.query.filter_by(id=user_id).first()
+        user.archive()
+        db.session.commit()
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': 'An Error occured when trying to archive user'
+        })
+
+    return jsonify({
+        'status': 'success',
+        'message': 'User has been archived'
+    })
+
+@bp.route('/api/admin/activate_user', methods=['POST'])
+@login_required
+@roles_required('Admin')
+def activate_user():
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        user = User.query.filter_by(id=user_id).first()
+        user.activate()
+        db.session.commit()
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': 'An Error occured when trying to activate user'
+        })
+
+    return jsonify({
+        'status': 'success',
+        'message': 'User has been activated'
+    })
+
 
 @bp.route('/api/management/get_workshop_catalog_table', methods=['GET'])
 @login_required
