@@ -1,6 +1,6 @@
 function fetchDataAndPopulateLocationsTable() {
     $.ajax({
-        url: '/api/management/get_locations_table',
+        url: '/management/get_locations_table',
         type: 'GET',
         success: function(response) {
             locations = response.locations;
@@ -40,7 +40,7 @@ function addNewLocationFromForm(event) {
 
     $.ajax({
         type: 'POST',
-        url: '/api/management/add_location',
+        url: '/management/add_location',
         data: $('#add-location-form').serialize(),
         success: function(response) {
             if (response.status === 'success') {
@@ -56,7 +56,7 @@ function prepEditLocationForm(locationID) {
     document.getElementById('edit-location-block').style.display = 'block'
 
     $.ajax({
-        url: '/api/management/get_location_details/' + locationID,
+        url: '/management/get_location_details/' + locationID,
         type: 'GET',
         success: function(response) {
             locationID = response.id;
@@ -79,7 +79,7 @@ function editLocationFromForm(event) {
 
     $.ajax({
         type: 'POST',
-        url: '/api/management/edit_location',
+        url: '/management/edit_location',
         data: JSON.stringify(data),
         contentType: 'application/json',
         success: function(response) {
@@ -99,7 +99,7 @@ function archiveLocation(locationID) {
     }
     $.ajax({
         type: 'POST',
-        url: '/api/management/archive_location',
+        url: '/management/archive_location',
         data: JSON.stringify(data),
         contentType: 'application/json',
         success: function(response) {
@@ -118,7 +118,7 @@ function activateLocation(locationID) {
     }
     $.ajax({
         type: 'POST',
-        url: '/api/management/activate_location',
+        url: '/management/activate_location',
         data: JSON.stringify(data),
         contentType: 'application/json',
         success: function(response) {
@@ -143,7 +143,7 @@ document.getElementById('edit-location-form').addEventListener('reset', function
 
 function fetchDataAndPopulateTimeslotsTable() {
     $.ajax({
-        url: '/api/management/get_timeslots_table',
+        url: '/management/get_timeslots_table',
         type: 'GET',
         success: function(response) {
             timeslots = response.timeslots;
@@ -185,7 +185,7 @@ function addNewTimeslotFromForm(event) {
 
     $.ajax({
         type: 'POST',
-        url: '/api/management/add_timeslot',
+        url: '/management/add_timeslot',
         data: $('#add-timeslot-form').serialize(),
         success: function(response) {
             if (response.status === 'success') {
@@ -201,7 +201,7 @@ function prepEditTimeslotForm(timeslotID) {
     document.getElementById('edit-timeslot-block').style.display = 'block'
 
     $.ajax({
-        url: '/api/management/get_timeslot_details/' + timeslotID,
+        url: '/management/get_timeslot_details/' + timeslotID,
         type: 'GET',
         success: function(response) {
             timeslotID = response.id;
@@ -230,7 +230,7 @@ function editTimeslotFromForm(event) {
 
     $.ajax({
         type: 'POST',
-        url: '/api/management/edit_timeslot',
+        url: '/management/edit_timeslot',
         data: JSON.stringify(data),
         contentType: 'application/json',
         success: function(response) {
@@ -250,7 +250,7 @@ function archiveTimeslot(timeslotID) {
     }
     $.ajax({
         type: 'POST',
-        url: '/api/management/archive_timeslot',
+        url: '/management/archive_timeslot',
         data: JSON.stringify(data),
         contentType: 'application/json',
         success: function(response) {
@@ -269,7 +269,7 @@ function activateTimeslot(timeslotID) {
     }
     $.ajax({
         type: 'POST',
-        url: '/api/management/activate_timeslot',
+        url: '/management/activate_timeslot',
         data: JSON.stringify(data),
         contentType: 'application/json',
         success: function(response) {

@@ -1,6 +1,6 @@
 function fetchDataAndPopulateUserManagementTable() {
     $.ajax({
-        url: '/api/admin/get_user_management_table',
+        url: '/admin/get_user_management_table',
         type: 'GET',
         success: function(response) {
             allRoles = response.all_roles;
@@ -53,7 +53,7 @@ function archiveUser(userID) {
     }
     $.ajax({
         type: 'POST',
-        url: '/api/admin/archive_user',
+        url: '/admin/archive_user',
         data: JSON.stringify(data),
         contentType: 'application/json',
         success: function(response) {
@@ -72,7 +72,7 @@ function activateUser(userID) {
     }
     $.ajax({
         type: 'POST',
-        url: '/api/admin/activate_user',
+        url: '/admin/activate_user',
         data: JSON.stringify(data),
         contentType: 'application/json',
         success: function(response) {
