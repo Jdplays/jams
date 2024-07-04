@@ -1,0 +1,70 @@
+{% extends '_layout.html' %}
+
+{% block title %}Events{% endblock %}
+
+{% block content %}
+
+<div class="row row-deck row-cards">
+    <div class="col-4">
+        <div class="card">
+            <div class="card-body" style="height: 10rem">
+                <h1>Events</h1>
+                <p>This is the Events page!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div>
+    <h1>Add an Event</h1>
+    <form id="add-event-form">
+        <label for="name">Name:</label>
+        <input type="text" id="add-event-name" name="name"><br><br>
+        <label for="description">Description:</label>
+        <textarea id="add-event-description" name="description"></textarea><br><br>
+        <label for="date">Date:</label>
+        <input type="date" id="add-event-date" name="date"><br><br>
+        <label for="password">password:</label>
+        <input type="text" id="add-event-password" name="password"><br><br>
+        <button type="submit">Submit</button>
+    </form>
+</div>
+
+<div>
+    <table id="events-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Date</th>
+                <th>Passwords</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="table-body">
+            <!-- Data will be dynamically added here -->
+        </tbody>
+    </table>
+</div>
+
+<div id="edit-event-block" style="display: none;">
+    <h1>Edit an Event</h1>
+    <form id="edit-event-form">
+        <input type="hidden" id="edit-event-id" name="event_id"><br><br>
+        <label for="name">Name:</label>
+        <input type="text" id="edit-event-name" name="name"><br><br>
+        <label for="description">Description:</label>
+        <textarea id="edit-event-description" name="description"></textarea><br><br>
+        <label for="date">Date:</label>
+        <input type="date" id="edit-event-date" name="date"><br><br>
+        <label for="password">password:</label>
+        <input type="text" id="edit-event-password" name="password"><br><br>
+        <button type="submit">Submit</button>
+    </form>
+</div>
+
+<p id="events-request-response"></p>
+
+<script src="{{ url_for('static', filename='js/admin/events.js') }}" defer></script>
+
+{% endblock %}
