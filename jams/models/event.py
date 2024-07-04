@@ -9,12 +9,20 @@ class Event(db.Model):
     description = Column(String(255), unique=False, nullable=True)
     date = Column(DATE, nullable=False)
     password = Column(String(50), nullable=False)
+    active = Column(Boolean(), nullable=False, default=True)
 
-    def __init__(self, name, description, date, password):
+    def __init__(self, name, description, date, password, active=True):
         self.name = name
         self.description = description
         self.date = date
         self.password = password
+        self.active = active
+
+    def activate(self):
+        self.active = True
+
+    def archive(self):
+        self.active = False
 
 class Location(db.Model):
     __tablename__ = 'location'
@@ -40,7 +48,7 @@ class Timeslot(db.Model):
     name = Column(String(100), nullable=False)
     start = Column(TIME(), nullable=False)
     end = Column(TIME(), nullable=False)
-    active = Column(Boolean(), nullable=False, default=True)
+    active = Column(Boolean(), default=True)
 
     def __init__(self, name, start, end, active=True):
         self.name = name

@@ -11,3 +11,9 @@ bp = Blueprint('frontend', __name__)
 @roles_required('Admin')
 def user_management():
     return render_template('admin/user_management.html')
+
+@bp.route('/events')
+@login_required
+@roles_required('Volunteer')
+def events():
+    return render_template('admin/events.html')
