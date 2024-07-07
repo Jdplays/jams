@@ -12,13 +12,17 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: jdplays/jams_master
+  IMAGE_NAME: jdplays/jams
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Extract branch name and set as environment variable
+        id: get_branch_name
+        run: echo "BRANCH_NAME=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+
       - name: Checkout code
         uses: actions/checkout@v2
 
@@ -39,8 +43,7 @@ jobs:
           file: ./docker/Dockerfile
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.get_branch_name.outputs.BRANCH_NAME }}
 
       - name: Clean up
         run: |
