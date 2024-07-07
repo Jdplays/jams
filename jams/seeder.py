@@ -9,7 +9,6 @@ def preform_seed():
     seed_events()
     seed_locations()
     seed_timeslots()
-    seed_sessions()
 
 def seed_roles():
     roles = ['Attendee', 'Volunteer', 'Trustee', 'Admin']
@@ -95,18 +94,5 @@ def seed_timeslots():
         end = datetime.time(hour=15)
         timeslot = Timeslot(name="2-3", start=start, end=end)
         db.session.add(timeslot)
-    
-    db.session.commit()
-
-def seed_sessions():
-    # Check if the session for event 1 already exists
-    if not Session.query.filter_by(event_id=1).first():
-        session = Session(event_id=1, location_id=1, timeslot_id=1)
-        db.session.add(session)
-    
-    # Check if the session for event 2 already exists
-    if not Session.query.filter_by(event_id=2).first():
-        session = Session(event_id=2, location_id=2, timeslot_id=1)
-        db.session.add(session)
     
     db.session.commit()
