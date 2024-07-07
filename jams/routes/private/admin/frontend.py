@@ -17,3 +17,9 @@ def user_management():
 @roles_required('Volunteer')
 def events():
     return render_template('admin/events.html')
+
+@bp.route('/event_schedule')
+@login_required
+@roles_required('Volunteer')
+def event_schedule():
+    return render_template('admin/event_schedule.html')
