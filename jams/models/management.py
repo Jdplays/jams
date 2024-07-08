@@ -22,3 +22,12 @@ class Workshop(db.Model):
 
     def activate(self):
         self.active = True
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'min_volunteers': self.min_volunteers,
+            'active': self.active
+        }

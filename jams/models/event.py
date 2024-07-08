@@ -24,6 +24,16 @@ class Event(db.Model):
     def archive(self):
         self.active = False
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'date': str(self.date),
+            'password': self.password,
+            'active': self.active
+        }
+
 
 # The overall locations that can be used across multiple events
 class Location(db.Model):
@@ -42,6 +52,13 @@ class Location(db.Model):
 
     def archive(self):
         self.active = False
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'active': self.active
+        }
 
 # The overall timeslots that can be used across multiple events
 class Timeslot(db.Model):
@@ -65,6 +82,15 @@ class Timeslot(db.Model):
     def archive(self):
         self.active = False
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'start': str(self.start),
+            'end': str(self.end),
+            'active': self.active
+        }
+
 # The EventLocations are locations that are in a specific event and reference one of the overall locations along with an order it should be in (lower = first)
 class EventLocation(db.Model):
     __tablename__ = 'event_location'
@@ -75,6 +101,7 @@ class EventLocation(db.Model):
     order = Column(Integer(), nullable=False, default=0)
     hidden = Column(Boolean(), nullable=False, default=False)
 
+    event = relationship('Event', backref='locations')
     location = relationship('Location')
 
     def __init__(self, event_id, location_id, order=0, hidden=False):
@@ -107,6 +134,7 @@ class EventTimeslot(db.Model):
     timeslot_id = Column(Integer(), ForeignKey('timeslot.id'), nullable=False)
     hidden = Column(Boolean(), nullable=False, default=False)
 
+    event = relationship('Event', backref='timeslots')
     timeslot = relationship('Timeslot')
 
     def __init__(self, event_id, timeslot_id, hidden=False):
