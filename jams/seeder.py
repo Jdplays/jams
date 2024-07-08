@@ -25,7 +25,8 @@ def seed_users():
     if not User.query.filter_by(email="admin@test.com").first():
         admin_role = Role.query.filter_by(name="Admin").first()
         if admin_role:
-            user = User(email='admin@test.com', username="AdminAccount", password=hash_password('admin'), roles=['Admin', 'Volunteer', 'Trustee'])
+            user = User(email='admin@test.com', username="AdminAccount", password=hash_password('admin'))
+            user.set_roles_by_name(['Admin', 'Volunteer', 'Trustee'])
             user.activate()
             db.session.add(user)
     
@@ -33,7 +34,8 @@ def seed_users():
     if not User.query.filter_by(email="volunteer@test.com").first():
         volunteer_role = Role.query.filter_by(name="Volunteer").first()
         if volunteer_role:
-            user = User(email='volunteer@test.com', username="VolunteerAccount", password=hash_password('password123'), roles=['Volunteer'])
+            user = User(email='volunteer@test.com', username="VolunteerAccount", password=hash_password('password123'))
+            user.set_roles_by_name(['Volunteer'])
             user.activate()
             db.session.add(user)
     
