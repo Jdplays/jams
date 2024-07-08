@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template
 from flask_security import roles_required, login_required, current_user
 
-bp = Blueprint('frontend', __name__)
+bp = Blueprint('frontend', __name__, url_prefix='/private')
 
 # URL PREFIX = /
 

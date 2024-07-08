@@ -1,364 +1,352 @@
 # Backend is just for serving data to javascript
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, abort
 from flask_security import roles_required, login_required
 from jams.models import db, Workshop, Location, Timeslot
 
-bp = Blueprint('backend', __name__)
+bp = Blueprint('backend', __name__, url_prefix='/backend')
 
-# URL PREFIX = /admin
+# URL PREFIX = /backend
 
-@bp.route('/get_workshop_catalog_table', methods=['GET'])
+#------------------------------------------ WORKSHOP ------------------------------------------#
+
+@bp.route('/workshops', methods=['GET'])
 @login_required
 @roles_required('Volunteer')
-def get_workshop_catalog_table():
-    workshops = Workshop.query.all()
+def get_workshops():
+    workshops_data_list = [workshop.to_dict() for workshop in Workshop.query.all()]
+    return jsonify({'workshops': workshops_data_list})
+
+
+@bp.route('/workshops/<field>', methods=['GET'])
+@login_required
+@roles_required('Volunteer')
+def get_workshops_field(field):
+    allowed_fields = list(Workshop.query.first_or_404().to_dict().keys())
+    if field not in allowed_fields:
+        abort(404, description=f"Field '{field}' not found or allowed")
+
     workshops_data_list = []
-    for workshop in workshops:
+    for workshop in Workshop.query.all():
         workshops_data_list.append({
             'id': workshop.id,
-            'name': workshop.name,
-            'description': workshop.description,
-            'min_volunteers': workshop.min_volunteers,
-            'active': workshop.active
+            field: getattr(workshop, field)
         })
-    return jsonify({
-        'workshops': workshops_data_list
-    })
+        
+    return jsonify({'workshops': workshops_data_list})
 
-@bp.route('/get_workshop_details/<int:workshop_id>', methods=['GET'])
+
+@bp.route('/workshops/<int:workshop_id>', methods=['GET'])
 @login_required
 @roles_required('Volunteer')
 def get_workshop(workshop_id):
-    workshop = Workshop.query.filter_by(id=workshop_id).first()
-    return jsonify({
-        'id': workshop.id,
-        'name': workshop.name,
-        'description': workshop.description,
-        'min_volunteers': workshop.min_volunteers,
-        'active': workshop.active
-    })
+    workshop = Workshop.query.filter_by(id=workshop_id).first_or_404()
+    return jsonify(workshop.to_dict())
 
-@bp.route('/add_workshop', methods=['POST'])
+
+@bp.route('/workshops/<int:workshop_id>/<field>', methods=['GET'])
+@login_required
+@roles_required('Volunteer')
+def get_workshop_field(workshop_id, field):
+    workshop = Workshop.query.filter_by(id=workshop_id).first_or_404()
+
+    allowed_fields = list(workshop.to_dict().keys())
+    if field not in allowed_fields:
+        abort(404, description=f"Field '{field}' not found or allowed")
+
+    return jsonify({field: getattr(workshop, field)})
+
+
+@bp.route('/workshops', methods=['POST'])
 @login_required
 @roles_required('Volunteer')
 def add_workshop():
-    try:
-        name = request.form.get('name')
-        description = request.form.get('description')
-        min_volunteers = request.form.get('min_volunteers')
-        new_workshop = Workshop(name=name, description=description, min_volunteers=min_volunteers)
-        db.session.add(new_workshop)
-        db.session.commit()
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': 'An Error occured when trying to add new workshop'
-        })
+    if not request.form:
+        abort(400, description="No form data provided")
+
+    name = request.form.get('name')
+    description = request.form.get('description')
+    min_volunteers = request.form.get('min_volunteers')
+
+    if not name or not description or not min_volunteers:
+        abort(400, description="No 'name' or 'description' or 'min_volunteers' provided")
+
+    new_workshop = Workshop(name=name, description=description, min_volunteers=min_volunteers)
+    db.session.add(new_workshop)
+    db.session.commit()
 
     return jsonify({
-        'status': 'success',
-        'message': 'New workshop has been added to the system'
+        'message': 'New workshop has been successfully added',
+        'workshop': new_workshop.to_dict()
     })
 
-@bp.route('/edit_workshop', methods=['POST'])
+
+@bp.route('/workshops/<int:workshop_id>', methods=['PATCH'])
 @login_required
 @roles_required('Volunteer')
-def edit_workshop():
-    try:
-        data = request.get_json()
-        workshop_id = data.get('workshop_id')
-        name = data.get('name')
-        description = data.get('description')
-        min_volunteers = data.get('min_volunteers')
-        workshop = Workshop.query.filter_by(id=workshop_id).first()
-        workshop.name = name
-        workshop.description = description
-        workshop.min_volunteers = min_volunteers
-        db.session.commit()
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': 'An Error occured when trying to edit workshop'
-        })
+def edit_workshop(workshop_id):
+    workshop = Workshop.query.filter_by(id=workshop_id).first_or_404()
+
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
+
+    allowed_fields = list(workshop.to_dict().keys())
+    for field, value in data.items():
+        if field in allowed_fields:
+            setattr(workshop, field, value)
+
+    db.session.commit()
 
     return jsonify({
-        'status': 'success',
-        'message': 'Workshop has been successfuly edited'
+        'message': 'Workshop has be updated successfully',
+        'workshop': workshop.to_dict()
     })
 
-@bp.route('/archive_workshop', methods=['POST'])
+
+@bp.route('/workshops/<int:workshop_id>/archive', methods=['POST'])
 @login_required
 @roles_required('Volunteer')
-def archive_workshop():
-    try:
-        data = request.get_json()
-        workshop_id = data.get('workshop_id')
-        workshop = Workshop.query.filter_by(id=workshop_id).first()
-        workshop.archive()
-        db.session.commit()
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': 'An Error occured when trying to archive workshop'
-        })
+def archive_workshop(workshop_id):
+    workshop = Workshop.query.filter_by(id=workshop_id).first_or_404()
+    workshop.archive()
+    db.session.commit()
 
-    return jsonify({
-        'status': 'success',
-        'message': 'Workshop has been archived'
-    })
+    return jsonify({'message': 'The workshop has been successfully archived'})
 
-@bp.route('/activate_workshop', methods=['POST'])
+@bp.route('/workshops/<int:workshop_id>/activate', methods=['POST'])
 @login_required
 @roles_required('Volunteer')
-def activate_workshop():
-    try:
-        data = request.get_json()
-        workshop_id = data.get('workshop_id')
-        workshop = Workshop.query.filter_by(id=workshop_id).first()
-        workshop.activate()
-        db.session.commit()
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': 'An Error occured when trying to activate workshop'
-        })
+def activate_workshop(workshop_id):
+    workshop = Workshop.query.filter_by(id=workshop_id).first_or_404()
+    workshop.activate()
+    db.session.commit()
 
-    return jsonify({
-        'status': 'success',
-        'message': 'Workshop has been activated'
-    })
+    return jsonify({'message': 'The workshop has been successfully activated'})
 
-@bp.route('/get_locations_table', methods=['GET'])
+#------------------------------------------ LOCATION ------------------------------------------#
+
+@bp.route('/locations', methods=['GET'])
 @login_required
 @roles_required('Volunteer')
-def get_locations_table():
-    locations = Location.query.all()
+def get_locations():
+    locations_data_list = [location.to_dict() for location in Location.query.all()]
+    return jsonify({'locations': locations_data_list})
+
+
+@bp.route('/locations/<field>', methods=['GET'])
+@login_required
+@roles_required('Volunteer')
+def get_locations_field(field):
+    allowed_fields = list(Location.query.first_or_404().to_dict().keys())
+    if field not in allowed_fields:
+        abort(404, description=f"Field '{field}' not found or allowed")
+
     locations_data_list = []
-    for location in locations:
+    for location in Location.query.all():
         locations_data_list.append({
             'id': location.id,
-            'name': location.name,
-            'active': location.active
+            field: getattr(location, field)
         })
-    return jsonify({
-        'locations': locations_data_list
-    })
+        
+    return jsonify({'locations': locations_data_list})
 
-@bp.route('/get_location_details/<int:location_id>', methods=['GET'])
+
+@bp.route('/locations/<int:location_id>', methods=['GET'])
 @login_required
 @roles_required('Volunteer')
 def get_location(location_id):
-    location = Location.query.filter_by(id=location_id).first()
-    return jsonify({
-        'id': location.id,
-        'name': location.name,
-        'active': location.active
-    })
+    location = Location.query.filter_by(id=location_id).first_or_404()
+    return jsonify(location.to_dict())
 
-@bp.route('/add_location', methods=['POST'])
+
+@bp.route('/locations/<int:location_id>/<field>', methods=['GET'])
+@login_required
+@roles_required('Volunteer')
+def get_location_field(location_id, field):
+    location = Location.query.filter_by(id=location_id).first_or_404()
+
+    allowed_fields = list(location.to_dict().keys())
+    if field not in allowed_fields:
+        abort(404, description=f"Field '{field}' not found or allowed")
+
+    return jsonify({field: getattr(location, field)})
+    
+
+@bp.route('/locations', methods=['POST'])
 @login_required
 @roles_required('Volunteer')
 def add_location():
-    try:
-        name = request.form.get('name')
-        new_location = Location(name=name)
-        db.session.add(new_location)
-        db.session.commit()
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': 'An Error occured when trying to add new location'
-        })
+    if not request.form:
+        abort(400, description="No form data provided")
+
+    name = request.form.get('name')
+
+    if not name:
+        abort(400, description="No 'name' provided")
+
+    new_location = Location(name=name)
+    db.session.add(new_location)
+    db.session.commit()
 
     return jsonify({
-        'status': 'success',
-        'message': 'New location has been added to the system'
+        'message': 'New location has been successfully added',
+        'location': new_location.to_dict()
     })
 
-@bp.route('/edit_location', methods=['POST'])
+@bp.route('/locations/<int:location_id>', methods=['PATCH'])
 @login_required
 @roles_required('Volunteer')
-def edit_location():
-    try:
-        data = request.get_json()
-        location_id = data.get('location_id')
-        name = data.get('name')
-        location = Location.query.filter_by(id=location_id).first()
-        location.name = name
-        db.session.commit()
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': 'An Error occured when trying to edit location'
-        })
+def edit_location(location_id):
+    location = Location.query.filter_by(id=location_id).first_or_404()
+
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
+
+    allowed_fields = list(location.to_dict().keys())
+    for field, value in data.items():
+        if field in allowed_fields:
+            setattr(location, field, value)
+
+    db.session.commit()
 
     return jsonify({
-        'status': 'success',
-        'message': 'Location has been successfuly edited'
-    })
+        'message': 'Location has be updated successfully',
+        'location': location.to_dict()
+    }) 
 
-@bp.route('/archive_location', methods=['POST'])
+
+@bp.route('/locations/<int:location_id>/archive', methods=['POST'])
 @login_required
 @roles_required('Volunteer')
-def archive_location():
-    try:
-        data = request.get_json()
-        location_id = data.get('location_id')
-        location = Location.query.filter_by(id=location_id).first()
+def archive_location(location_id):
+        location = Location.query.filter_by(id=location_id).first_or_404()
         location.archive()
         db.session.commit()
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': 'An Error occured when trying to archive location'
-        })
 
-    return jsonify({
-        'status': 'success',
-        'message': 'Location has been archived'
-    })
+        return jsonify({'message': 'The location has been successfully archived'})
 
-@bp.route('/activate_location', methods=['POST'])
+
+@bp.route('/locations/<int:location_id>/activate', methods=['POST'])
 @login_required
 @roles_required('Volunteer')
-def activate_location():
-    try:
-        data = request.get_json()
-        location_id = data.get('location_id')
-        location = Location.query.filter_by(id=location_id).first()
-        location.activate()
-        db.session.commit()
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': 'An Error occured when trying to activate location'
-        })
+def activate_location(location_id):
+    location = Location.query.filter_by(id=location_id).first_or_404()
+    location.activate()
+    db.session.commit()
 
-    return jsonify({
-        'status': 'success',
-        'message': 'Location has been activated'
-    })
+    return jsonify({'message': 'The location has been successfully activated'})
 
-## Timeslots
+#------------------------------------------ TIMESLOT ------------------------------------------#
 
-
-@bp.route('/get_timeslots_table', methods=['GET'])
+@bp.route('/timeslots', methods=['GET'])
 @login_required
 @roles_required('Volunteer')
-def get_timeslots_table():
-    timeslots = Timeslot.query.all()
+def get_timeslots():
+    timeslots_data_list = [timeslot.to_dict() for timeslot in Timeslot.query.all()]
+    return jsonify({'timeslots': timeslots_data_list})
+
+
+@bp.route('/timeslots/<field>', methods=['GET'])
+@login_required
+@roles_required('Volunteer')
+def get_timeslots_field(field):
+    allowed_fields = list(Timeslot.query.first_or_404().to_dict().keys())
+    if field not in allowed_fields:
+        abort(404, description=f"Field '{field}' not found or allowed")
+
     timeslots_data_list = []
-    for timeslot in timeslots:
+    for timeslot in Timeslot.query.all():
         timeslots_data_list.append({
             'id': timeslot.id,
-            'name': timeslot.name,
-            'start': str(timeslot.start),
-            'end': str(timeslot.end),
-            'active': timeslot.active
+            field: getattr(timeslot, field)
         })
-    return jsonify({
-        'timeslots': timeslots_data_list
-    })
+        
+    return jsonify({'timeslots': timeslots_data_list})
 
-@bp.route('/get_timeslot_details/<int:timeslot_id>', methods=['GET'])
+
+@bp.route('/timeslots/<int:timeslot_id>', methods=['GET'])
 @login_required
 @roles_required('Volunteer')
 def get_timeslot(timeslot_id):
-    timeslot = Timeslot.query.filter_by(id=timeslot_id).first()
-    return jsonify({
-        'id': timeslot.id,
-        'name': timeslot.name,
-        'start': str(timeslot.start),
-        'end': str(timeslot.end),
-        'active': timeslot.active
-    })
+    timeslot = Timeslot.query.filter_by(id=timeslot_id).first_or_404()
+    return jsonify(timeslot.to_dict())
 
-@bp.route('/add_timeslot', methods=['POST'])
+
+@bp.route('/timeslots/<int:timeslot_id>/<field>', methods=['GET'])
+@login_required
+@roles_required('Volunteer')
+def get_timeslot_field(timeslot_id, field):
+    timeslot = Timeslot.query.filter_by(id=timeslot_id).first_or_404()
+
+    allowed_fields = list(timeslot.to_dict().keys())
+    if field not in allowed_fields:
+        abort(404, description=f"Field '{field}' not found or allowed")
+
+    return jsonify({field: getattr(timeslot, field)})
+    
+
+@bp.route('/timeslots', methods=['POST'])
 @login_required
 @roles_required('Volunteer')
 def add_timeslot():
-    try:
-        name = request.form.get('name')
-        start = request.form.get('start_time')
-        end = request.form.get('end_time')
-        new_timeslot = Timeslot(name=name, start=start, end=end)
-        db.session.add(new_timeslot)
-        db.session.commit()
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': 'An Error occured when trying to add new timeslot'
-        })
+    if not request.form:
+        abort(400, description="No form data provided")
+
+    name = request.form.get('name')
+
+    if not name:
+        abort(400, description="No 'name' provided")
+
+    new_timeslot = Timeslot(name=name)
+    db.session.add(new_timeslot)
+    db.session.commit()
 
     return jsonify({
-        'status': 'success',
-        'message': 'New timeslot has been added to the system'
+        'message': 'New timeslot has been successfully added',
+        'timeslot': new_timeslot.to_dict()
     })
 
-@bp.route('/edit_timeslot', methods=['POST'])
+@bp.route('/timeslots/<int:timeslot_id>', methods=['PATCH'])
 @login_required
 @roles_required('Volunteer')
-def edit_timeslot():
-    try:
-        data = request.get_json()
-        timeslot_id = data.get('timeslot_id')
-        name = data.get('name')
-        start = data.get('start_time')
-        end = data.get('end_time')
-        timeslot = Timeslot.query.filter_by(id=timeslot_id).first()
-        timeslot.name = name
-        timeslot.start = start
-        timeslot.end = end
-        db.session.commit()
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': 'An Error occured when trying to edit timeslot'
-        })
+def edit_timeslot(timeslot_id):
+    timeslot = Timeslot.query.filter_by(id=timeslot_id).first_or_404()
+
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
+
+    allowed_fields = list(timeslot.to_dict().keys())
+    for field, value in data.items():
+        if field in allowed_fields:
+            setattr(timeslot, field, value)
+
+    db.session.commit()
 
     return jsonify({
-        'status': 'success',
-        'message': 'Timeslot has been successfuly edited'
-    })
+        'message': 'Timeslot has be updated successfully',
+        'timeslot': timeslot.to_dict()
+    }) 
 
-@bp.route('/archive_timeslot', methods=['POST'])
+
+@bp.route('/timeslots/<int:timeslot_id>/archive', methods=['POST'])
 @login_required
 @roles_required('Volunteer')
-def archive_timeslot():
-    try:
-        data = request.get_json()
-        timeslot_id = data.get('timeslot_id')
-        timeslot = Timeslot.query.filter_by(id=timeslot_id).first()
+def archive_timeslot(timeslot_id):
+        timeslot = Timeslot.query.filter_by(id=timeslot_id).first_or_404()
         timeslot.archive()
         db.session.commit()
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': 'An Error occured when trying to archive timeslot'
-        })
 
-    return jsonify({
-        'status': 'success',
-        'message': 'Timeslot has been archived'
-    })
+        return jsonify({'message': 'The timeslot has been successfully archived'})
 
-@bp.route('/activate_timeslot', methods=['POST'])
+
+@bp.route('/timeslots/<int:timeslot_id>/activate', methods=['POST'])
 @login_required
 @roles_required('Volunteer')
-def activate_timeslot():
-    try:
-        data = request.get_json()
-        timeslot_id = data.get('timeslot_id')
-        timeslot = Timeslot.query.filter_by(id=timeslot_id).first()
-        timeslot.activate()
-        db.session.commit()
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': 'An Error occured when trying to activate timeslot'
-        })
+def activate_timeslot(timeslot_id):
+    timeslot = Timeslot.query.filter_by(id=timeslot_id).first_or_404()
+    timeslot.activate()
+    db.session.commit()
 
-    return jsonify({
-        'status': 'success',
-        'message': 'Timeslot has been activated'
-    })
+    return jsonify({'message': 'The timeslot has been successfully activated'})
