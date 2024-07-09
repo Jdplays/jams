@@ -24,6 +24,16 @@ class Event(db.Model):
     def archive(self):
         self.active = False
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'date': str(self.date),
+            'password': self.password,
+            'active': self.active
+        }
+
 
 # The overall locations that can be used across multiple events
 class Location(db.Model):
@@ -42,6 +52,13 @@ class Location(db.Model):
 
     def archive(self):
         self.active = False
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'active': self.active
+        }
 
 # The overall timeslots that can be used across multiple events
 class Timeslot(db.Model):
@@ -65,6 +82,15 @@ class Timeslot(db.Model):
     def archive(self):
         self.active = False
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'start': str(self.start),
+            'end': str(self.end),
+            'active': self.active
+        }
+
 # The EventLocations are locations that are in a specific event and reference one of the overall locations along with an order it should be in (lower = first)
 class EventLocation(db.Model):
     __tablename__ = 'event_location'
@@ -75,6 +101,7 @@ class EventLocation(db.Model):
     order = Column(Integer(), nullable=False, default=0)
     hidden = Column(Boolean(), nullable=False, default=False)
 
+    event = relationship('Event', backref='locations')
     location = relationship('Location')
 
     def __init__(self, event_id, location_id, order=0, hidden=False):
@@ -107,6 +134,7 @@ class EventTimeslot(db.Model):
     timeslot_id = Column(Integer(), ForeignKey('timeslot.id'), nullable=False)
     hidden = Column(Boolean(), nullable=False, default=False)
 
+    event = relationship('Event', backref='timeslots')
     timeslot = relationship('Timeslot')
 
     def __init__(self, event_id, timeslot_id, hidden=False):
@@ -137,16 +165,25 @@ class Session(db.Model):
     event_id = Column(Integer(), ForeignKey('event.id'), nullable=False)
     event_location_id = Column(Integer(), ForeignKey('event_location.id'), nullable=False)
     event_timeslot_id = Column(Integer(), ForeignKey('event_timeslot.id'), nullable=False)
+    workshop_id = Column(Integer(), ForeignKey('workshop.id'))
     active = Column(Boolean(), nullable=False, default=True)
 
     event = relationship('Event', backref='sessions')
     event_location = relationship('EventLocation', backref='sessions')
     event_timeslot = relationship('EventTimeslot', backref='sessions')
+    workshop = relationship('Workshop')
 
-    def __init__(self, event_id, event_location_id, event_timeslot_id, active=True):
+    @property
+    def has_workshop(self):
+        if not self.workshop:
+            return False
+        return True
+
+    def __init__(self, event_id, event_location_id, event_timeslot_id, workshop_id=None, active=True):
         self.event_id = event_id
         self.event_location_id = event_location_id
         self.event_timeslot_id = event_timeslot_id
+        self.workshop_id = workshop_id
         self.active = active
 
     def activate(self):
@@ -161,28 +198,6 @@ class Session(db.Model):
             'event_id': self.event_id,
             'event_location_id': self.event_location_id,
             'event_timeslot_id': self.event_timeslot_id,
+            'has_workshop': self.has_workshop,
             'active': self.active
-        }
-
-
-
-class SessionWorkshop(db.Model):
-    __tablename__ = 'session_workshop'
-
-    id = Column(Integer(), primary_key=True)
-    session_id = Column(Integer(), ForeignKey('session.id'), nullable=False)
-    workshop_id = Column(Integer(), ForeignKey('workshop.id'), nullable=False)
-
-    session = relationship('Session', backref=backref('session_workshop', uselist=False))
-    workshop = relationship('Workshop')
-
-    def __init__(self, session_id, workshop_id):
-        self.session_id = session_id
-        self.workshop_id = workshop_id
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'session_id': self.session_id,
-            'workshop_id': self.workshop_id
         }

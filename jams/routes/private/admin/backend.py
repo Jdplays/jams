@@ -1,548 +1,632 @@
 # Backend is just for serving data to javascript
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, abort
 from flask_security import roles_required, login_required
-from jams.models import db, User, Role, Event, EventLocation, EventTimeslot, Session, SessionWorkshop
+from jams.models import db, User, Role, Event, EventLocation, EventTimeslot, Session
 from jams.util import helper
+from typing import List, Tuple, Dict
 
-bp = Blueprint('backend', __name__)
+bp = Blueprint('backend', __name__, url_prefix='/backend')
 
-# URL PREFIX = /admin
+# URL PREFIX = /backend
 
-@bp.route('/get_user_management_table', methods=['GET'])
+#------------------------------------------ USER ------------------------------------------#
+
+@bp.route('/users', methods=['GET'])
 @login_required
 @roles_required('Admin')
-def get_user_management_table():
-    users = User.query.all()
+def get_users():
+    users_data_list = [user.to_dict() for user in User.query.all()]
+    return jsonify({'users': users_data_list})
+
+
+@bp.route('/users/<field>', methods=['GET'])
+@login_required
+@roles_required('Admin')
+def get_users_field(field):
+    allowed_fields = list(User.query.first_or_404().to_dict().keys())
+    if field not in allowed_fields:
+        abort(404, description=f"Field '{field}' not found or allowed")
     users_data_list = []
-    all_roles = [role.name for role in Role.query.all()]
-    for user in users:
-        full_name = user.get_full_name()
-        role_names = user.get_role_names() if user.get_role_names else []
+    for user in User.query.all():
         users_data_list.append({
             'id': user.id,
-            'username': user.username,
-            'email': user.email,
-            'full_name': full_name,
-            'last_login': user.last_login_at,
-            'roles': role_names,
-            'active': user.active
+            field: getattr(user, field)
         })
-    return jsonify({
-        'all_roles': all_roles,
-        'users': users_data_list
-    })
+    return jsonify({'users': users_data_list})
 
-@bp.route('/archive_user', methods=['POST'])
+
+@bp.route('/users/<int:user_id>', methods=['GET'])
 @login_required
 @roles_required('Admin')
-def archive_user():
-    try:
-        data = request.get_json()
-        user_id = data.get('user_id')
-        user = User.query.filter_by(id=user_id).first()
-        user.archive()
-        db.session.commit()
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': 'An Error occured when trying to archive user'
-        })
+def get_user(user_id):
+    user = User.query.filter_by(id=user_id).first_or_404()
+    return jsonify(user.to_dict())
 
-    return jsonify({
-        'status': 'success',
-        'message': 'User has been archived'
-    })
-
-@bp.route('/activate_user', methods=['POST'])
+@bp.route('/users/<int:user_id>/<field>', methods=['GET'])
 @login_required
 @roles_required('Admin')
-def activate_user():
-    try:
-        data = request.get_json()
-        user_id = data.get('user_id')
-        user = User.query.filter_by(id=user_id).first()
-        user.activate()
-        db.session.commit()
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': 'An Error occured when trying to activate user'
-        })
+def get_user_field(user_id, field):
+    user = User.query.filter_by(id=user_id).first_or_404()
+    allowed_fields = list(user.to_dict().keys())
+    if field not in allowed_fields:
+        abort(404, description=f"Field '{field}' not found or allowed")
+    return jsonify({field: getattr(user, field)})
 
-    return jsonify({
-        'status': 'success',
-        'message': 'User has been activated'
-    })
 
-# Events
-@bp.route('/get_events_table', methods=['GET'])
+@bp.route('/users/<int:user_id>', methods=['PATCH'])
 @login_required
 @roles_required('Admin')
-def get_events_table():
-    events = Event.query.all()
+def edit_user(user_id):
+    user = User.query.filter_by(id=user_id).first_or_404()
+    
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
+    
+    # Update each allowed field
+    allowed_fields = list(user.to_dict().keys())
+    for field, value in data.items():
+        if field in allowed_fields:
+            setattr(user, field, value)
+    
+    db.session.commit()
+
+    return jsonify({
+        'message': 'User has be updated successfully',
+        'user': user.to_dict()
+    })
+
+
+@bp.route('/users/<int:user_id>/add_roles', methods=['PATCH'])
+@login_required
+@roles_required('Admin')
+def user_add_roles(user_id):
+    user = User.query.filter_by(id=user_id).first_or_404()
+
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
+
+    role_ids = data.get('role_ids')
+    if not role_ids:
+        abort(400, description="No 'role_ids' provided")
+    
+    user.add_roles(role_ids)
+    
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Roles have been successfully added to the user',
+        'role_ids': user.role_ids
+    })
+
+
+@bp.route('/users/<int:user_id>/remove_roles', methods=['PATCH'])
+@login_required
+@roles_required('Admin')
+def user_remove_roles(user_id):
+    user = User.query.filter_by(id=user_id).first_or_404()
+
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
+
+    role_ids = data.get('role_ids')
+    if not role_ids:
+        abort(400, description="No 'role_ids' provided")
+    
+    user.remove_roles(role_ids)
+    
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Roles have been successfully removed from the user',
+        'role_ids': user.role_ids
+    })
+
+
+
+@bp.route('/users/<int:user_id>/archive', methods=['POST'])
+@login_required
+@roles_required('Admin')
+def archive_user(user_id):
+    user = User.query.filter_by(id=user_id).first_or_404()
+    user.archive()
+    db.session.commit()
+
+    return jsonify({'message': 'The user has been successfully archived'})
+
+
+@bp.route('/users/<int:user_id>/activate', methods=['POST'])
+@login_required
+@roles_required('Admin')
+def activate_user(user_id):
+    user = User.query.filter_by(id=user_id).first_or_404()
+    user.activate()
+    db.session.commit()
+
+    return jsonify({'message': 'The user has been successfully activated'})
+
+#------------------------------------------ ROLE ------------------------------------------#
+
+@bp.route('/roles', methods=['GET'])
+@login_required
+@roles_required('Admin')
+def get_roles():
+    roles_data_list = [role.to_dict() for role in Role.query.all()]
+    return jsonify({'roles': roles_data_list})
+
+
+@bp.route('/roles/<field>', methods=['GET'])
+@login_required
+@roles_required('Admin')
+def get_roles_field(field):
+    allowed_fields = list(Role.query.first_or_404().to_dict().keys())
+    if field not in allowed_fields:
+        abort(404, description=f"Field '{field}' not found or allowed")
+    roles_data_list = []
+    for role in Role.query.all():
+        roles_data_list.append({
+            'id': role.id,
+            field: getattr(role, field)
+        })
+    return jsonify({'roles': roles_data_list})
+
+
+@bp.route('/roles/<int:role_id>', methods=['GET'])
+@login_required
+@roles_required('Admin')
+def get_role(role_id):
+    role = Role.query.filter_by(id=role_id).first_or_404()
+    return jsonify(role.to_dict())
+
+
+@bp.route('/roles/<int:role_id>/<field>', methods=['GET'])
+@login_required
+@roles_required('Admin')
+def get_role_field(role_id, field):
+    role = Role.query.filter_by(id=role_id).first_or_404()
+    allowed_fields = list(role.to_dict().keys())
+    if field not in allowed_fields:
+        abort(404, description=f"Field '{field}' not found or allowed")
+    return jsonify({field: getattr(role, field)})
+
+
+@bp.route('/roles', methods=['POST'])
+@login_required
+@roles_required('Admin')
+def add_role():
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
+    
+    name = data.get('name')
+    description = data.get('description')
+
+    if not name or not description:
+        abort(400, description="No 'name' or 'description' provided")
+
+    new_role = Role(name=name, description=description)
+    db.session.add(new_role)
+    db.session.commit()
+
+    return jsonify({
+        'message': 'New role has been successfully added',
+        'role': new_role.to_dict()
+    })
+
+
+@bp.route('/roles/<int:role_id>', methods=['PATCH'])
+@login_required
+@roles_required('Admin')
+def edit_role(role_id):
+    role = Role.query.filter_by(id=role_id).first_or_404()
+    
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
+    
+    # Update each allowed field
+    allowed_fields = list(role.to_dict().keys())
+    for field, value in data.items():
+        if field in allowed_fields:
+            setattr(role, field, value)
+    
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Role has be updated successfully',
+        'user': role.to_dict()
+    })
+
+
+@bp.route('/roles/<int:role_id>', methods=['DELETE'])
+@login_required
+@roles_required('Admin')
+def delete_role(role_id):
+    role = Role.query.filter_by(id=role_id).first_or_404()
+    
+    if not helper.prep_delete_role(role):
+        abort(500, description="An error occured when trying to remove role")
+
+    db.session.remove(role)
+    db.session.commit()
+
+    return jsonify({'message': 'Role has be successfully removed'})
+    
+
+#------------------------------------------ EVENT ------------------------------------------#
+
+@bp.route('/events', methods=['GET'])
+@login_required
+@roles_required('Admin')
+def get_events():
+    events_data_list = [event.to_dict() for event in Event.query.all()]
+    return jsonify({'events': events_data_list})
+
+
+@bp.route('/events/<field>', methods=['GET'])
+@login_required
+@roles_required('Admin')
+def get_events_field(field):
+    allowed_fields = list(Event.query.first_or_404().to_dict().keys())
+    if field not in allowed_fields:
+        abort(404, description=f"Field '{field}' not found or allowed")
     events_data_list = []
-    for event in events:
+    for event in Event.query.all():
         events_data_list.append({
             'id': event.id,
-            'name': event.name,
-            'description': event.description,
-            'date': str(event.date),
-            'password': event.password,
-            'active': event.active
+            field: getattr(event, field)
         })
-    return jsonify({
-        'events': events_data_list
-    })
+    
+    return jsonify({'events': events_data_list})
 
-@bp.route('/get_event_details/<int:event_id>', methods=['GET'])
+
+@bp.route('/events/<int:event_id>', methods=['GET'])
 @login_required
 @roles_required('Admin')
 def get_event(event_id):
-    event = Event.query.filter_by(id=event_id).first()
-    return jsonify({
-        'id': event.id,
-        'name': event.name,
-        'description': event.description,
-        'date': str(event.date),
-        'password': event.password,
-        'active': event.active
-    })
+    event = Event.query.filter_by(id=event_id).first_or_404()
+    return jsonify(event.to_dict())
 
-@bp.route('/add_event', methods=['POST'])
+
+@bp.route('/events/<int:event_id>/<field>', methods=['GET'])
+@login_required
+@roles_required('Admin')
+def get_event_field(event_id, field):
+    event = Event.query.filter_by(id=event_id).first_or_404()
+    allowed_fields = list(event.to_dict().keys())
+    if field not in allowed_fields:
+        abort(404, description=f"Field '{field}' not found or allowed")
+    return jsonify({field: getattr(event, field)})
+
+
+@bp.route('/events', methods=['POST'])
 @login_required
 @roles_required('Admin')
 def add_event():
-    try:
-        name = request.form.get('name')
-        description = request.form.get('description')
-        date = request.form.get('date')
-        password = request.form.get('password')
-        new_event = Event(name=name, description=description, date=date, password=password)
-        db.session.add(new_event)
-        db.session.commit()
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': 'An Error occured when trying to add new event'
-        })
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
+
+    name = data.get('name')
+    description = data.get('description')
+    date = data.get('date')
+    password = data.get('password')
+
+    if not name or not description or not date or not password:
+        abort(400, description="No 'name' or'description' or 'date' or 'password' provided")
+
+    new_event = Event(name=name, description=description, date=date, password=password)
+    db.session.add(new_event)
+    db.session.commit()
 
     return jsonify({
-        'status': 'success',
-        'message': 'New event has been added to the system'
+        'message': 'New event has been successfully added',
+        'role': new_event.to_dict()
     })
 
-@bp.route('/edit_event', methods=['POST'])
+
+@bp.route('/events/<int:event_id>', methods=['PATCH'])
 @login_required
 @roles_required('Admin')
-def edit_event():
-    try:
-        data = request.get_json()
-        event_id = data.get('event_id')
-        name = data.get('name')
-        description = data.get('description')
-        date = data.get('date')
-        password = data.get('password')
-        event = Event.query.filter_by(id=event_id).first()
-        event.name = name
-        event.description = description
-        event.date = date
-        event.password = password
-        db.session.commit()
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': 'An Error occured when trying to edit event'
-        })
+def edit_event(event_id):
+    event = Event.query.filter_by(id=event_id).first_or_404()
+
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
+
+    allowed_fields = list(event.to_dict().keys())
+    for field, value in data.items():
+        if field in allowed_fields:
+            setattr(event, field, value)
+    
+    db.session.commit()
 
     return jsonify({
-        'status': 'success',
-        'message': 'Event has been successfuly edited'
+        'message': 'Event has be updated successfully',
+        'user': event.to_dict()
     })
 
-@bp.route('/archive_event', methods=['POST'])
+
+@bp.route('/events/<int:event_id>/archive', methods=['POST'])
 @login_required
 @roles_required('Admin')
-def archive_event():
-    try:
-        data = request.get_json()
-        event_id = data.get('event_id')
-        event = Event.query.filter_by(id=event_id).first()
-        event.archive()
-        db.session.commit()
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': 'An Error occured when trying to archive event'
-        })
+def archive_event(event_id):
+    event = Event.query.filter_by(id=event_id).first_or_404()
+    event.archive()
+    db.session.commit()
 
-    return jsonify({
-        'status': 'success',
-        'message': 'Event has been archived'
-    })
+    return jsonify({'message': 'The event has been successfully archived'})
 
-@bp.route('/activate_event', methods=['POST'])
+
+@bp.route('/events/<int:event_id>/activate', methods=['POST'])
 @login_required
 @roles_required('Admin')
-def activate_event():
-    try:
-        data = request.get_json()
-        event_id = data.get('event_id')
-        event = Event.query.filter_by(id=event_id).first()
-        event.activate()
-        db.session.commit()
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': 'An Error occured when trying to activate event'
-        })
+def activate_event(event_id):
+    event = Event.query.filter_by(id=event_id).first_or_404()
+    event.activate()
+    db.session.commit()
 
-    return jsonify({
-        'status': 'success',
-        'message': 'Event has been activated'
-    })
+    return jsonify({'message': 'The event has been successfully activated'})
 
-# Event schedule
-@bp.route('/get_all_events', methods=['GET'])
-@login_required
-@roles_required('Admin')
-def get_all_events_names():
-    events = Event.query.all()
-    events_data_list = []
-    for event in events:
-        events_data_list.append({
-            'id': event.id,
-            'name': event.name,
-        })
-    return jsonify({
-        'events': events_data_list
-    })
+#------------------------------------------ EVENT LOCATION / TIMESLOT ------------------------------------------#
 
-@bp.route('/get_locations_for_event/<int:event_id>', methods=['GET'])
+@bp.route('/events/<int:event_id>/locations', methods=['GET'])
 @login_required
 @roles_required('Admin')
 def get_event_locations(event_id):
     # Check if the event exists
-    event = Event.query.filter_by(id=event_id).first()
-    if not event:
-        return jsonify({"error": "Event not found"})
+    Event.query.filter_by(id=event_id).first_or_404()
     
-    ordered_event_locations = helper.get_ordered_event_locations(event_id)
-    
-    event_locations_list = []
-    for location in ordered_event_locations:
-        event_locations_list.append(location.to_dict())
+    ordered_event_locations = [location.to_dict() for location in helper.get_ordered_event_locations(event_id)]
 
-    return jsonify({
-        'event_locations': event_locations_list
-    })
+    return jsonify({'event_locations': ordered_event_locations})
 
-@bp.route('/get_timeslots_for_event/<int:event_id>', methods=['GET'])
+
+@bp.route('/events/<int:event_id>/timeslots', methods=['GET'])
 @login_required
 @roles_required('Admin')
 def get_event_timeslots(event_id):
     # Check if the event exists
-    event = Event.query.filter_by(id=event_id).first()
-    if not event:
-        return jsonify({"error": "Event not found"})
+    Event.query.filter_by(id=event_id).first_or_404()
     
-    ordered_event_timeslots = helper.get_ordered_event_timeslots(event_id)
+    ordered_event_timeslots = [timeslot.to_dict() for timeslot in helper.get_ordered_event_timeslots(event_id)]
+
+    return jsonify({'event_timeslots': ordered_event_timeslots})
+
+
+@bp.route('/events/<int:event_id>/locations', methods=['POST'])
+@login_required
+@roles_required('Admin')
+def add_event_location(event_id):
+    Event.query.filter_by(id=event_id).first_or_404()
+
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
+
+    location_id = data.get('location_id')
+    order = data.get('order')
+
+    if not location_id or not order:
+        abort(400, description="No 'location_id' or 'order' provided")
+
+    # Make sure no other session in this event has the same location or order
+    current_event_locations = helper.get_ordered_event_locations(event_id)
     
-    event_timeslots_list = []
-    for timeslot in ordered_event_timeslots:
-        event_timeslots_list.append(timeslot.to_dict())
+    for location in current_event_locations:
+        if location.location_id == int(location_id):
+            abort(400, description="Event already contains location")
+        if location.order == int(order):
+            abort(400, description="Event cannot have two locations with the same order")
+    
+    event_location = EventLocation(event_id=event_id, location_id=location_id, order=order)
+    db.session.add(event_location)
+    db.session.commit()
+
+    # Create all the sessions for this location (over all the timeslots)
+    for timeslot in helper.get_ordered_event_timeslots(event_id):
+        # Make sure the session doesnt already exist
+        if not helper.session_exists(event_location.id, timeslot.id):
+            session = Session(event_id=event_id, event_location_id=event_location.id, event_timeslot_id=timeslot.id)
+            db.session.add(session)
+
+    db.session.commit()
 
     return jsonify({
-        'event_timeslots': event_timeslots_list
+        'message': 'Location has been added to the event',
+        'event_location': event_location.to_dict()
+                    
     })
 
-@bp.route('/get_sessions_for_event/<int:event_id>', methods=['GET'])
+
+@bp.route('/events/<int:event_id>/timeslots', methods=['POST'])
+@login_required
+@roles_required('Admin')
+def add_event_timeslot(event_id):
+    Event.query.filter_by(id=event_id).first_or_404()
+
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
+
+    timeslot_id = data.get('timeslot_id')
+
+    if not timeslot_id:
+        abort(400, description="No 'timeslot_id' provided")
+
+    # Make sure no other session in this event has the same location or order
+    current_event_timeslots = helper.get_ordered_event_timeslots(event_id)
+    
+    for timeslot in current_event_timeslots:
+        if timeslot.timeslot_id == int(timeslot_id):
+            abort(400, description="Event already contains timeslot")
+    
+    event_timeslot = EventTimeslot(event_id=event_id, timeslot_id=timeslot_id)
+    db.session.add(event_timeslot)
+    db.session.commit()
+
+    # Create all the sessions for this timeslot (over all the locations)
+    for location in helper.get_ordered_event_locations(event_id):
+        # Make sure the session doesnt already exist
+        if not helper.session_exists(location.id, event_timeslot.id):
+            session = Session(event_id=event_id, event_location_id=location.id, event_timeslot_id=event_timeslot.id)
+            db.session.add(session)
+
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Timeslot has been added to the event',
+        'event_timeslot': event_timeslot.to_dict()
+    })
+    
+
+@bp.route('/events/<int:event_id>/locations/<int:event_location_id>/update_order', methods=['POST'])
+@login_required
+@roles_required('Admin')
+def update_event_location_order(event_id, event_location_id):
+    Event.query.filter_by(id=event_id).first_or_404()
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
+
+    order = data.get('order')
+
+    if not order:
+        abort(400, description="No'order' provided")
+
+    # Check to see if updating this order will require a cascade update (ie: updating order 4 to be order 2 meaning the current order 2 needs to become 3 and 3 becomes 4)
+    current_event_location_ids = [location.id for location in helper.get_ordered_event_locations(event_id)]
+    
+    updated_event_location_ids = helper.reorder_ids(current_event_location_ids, event_location_id, order)
+
+    if current_event_location_ids == updated_event_location_ids:
+        return 200, "No update needed"
+    
+    for new_order, location_id in updated_event_location_ids:
+        location = EventLocation.query.filter_by(id=location_id).first()
+        location.order = new_order
+        db.session.commit()
+
+    return jsonify({
+        'event_locations': [location.id for location in helper.get_ordered_event_locations(event_id)]
+    })
+
+
+@bp.route('/events/<int:event_id>/locations/<int:event_location_id>', methods=['DELETE'])
+@login_required
+@roles_required('Admin')
+def delete_event_location(event_id, event_location_id):
+    Event.query.filter_by(id=event_id).first_or_404()
+    event_location = EventLocation.query.filter_by(id=event_location_id).first_or_404()
+    
+    if not helper.prep_delete_event_location(event_location_id):
+        abort(500, description="An error occured when trying to remove event_location")
+    
+    db.session.delete(event_location)
+    db.session.commit()
+
+    return jsonify({'message': "Event location has been successfully deleted"})
+
+
+@bp.route('/events/<int:event_id>/timeslots/<int:event_timeslot_id>', methods=['DELETE'])
+@login_required
+@roles_required('Admin')
+def delete_event_timeslot(event_id, event_timeslot_id):
+    Event.query.filter_by(id=event_id).first_or_404()
+    event_timeslot = EventTimeslot.query.filter_by(id=event_timeslot_id).first_or_404()
+
+
+    if not helper.prep_delete_event_Timeslot(event_timeslot_id):
+        abort(500, description="An error occured when trying to remove event_timeslot")
+    
+    db.session.delete(event_timeslot)
+    db.session.commit()
+
+    return jsonify({'message': "Event timeslot has been successfully deleted"})
+
+
+@bp.route('/events/<int:event_id>/sessions', methods=['GET'])
 @login_required
 @roles_required('Admin')
 def get_event_sessions(event_id):
     # Check if the event exists
-    event = Event.query.filter_by(id=event_id).first()
-    if not event:
-        return jsonify({"error": "Event not found"})
+    event = Event.query.filter_by(id=event_id).first_or_404()
     
-    event_sessions_with_order = []
+    event_sessions = []
     for session in event.sessions:
-        # Check if session is active
-        if session.active:
-            workshop_id = None
-            if session.session_workshop:
-                workshop_id = session.session_workshop.workshop.id
-            event_sessions_with_order.append({
-                'id': session.id,
-                'event_location_id': session.event_location_id,
-                'event_timeslot_id': session.event_timeslot_id,
-                'workshop_id': workshop_id
-            })
+        event_sessions.append(session.to_dict())
 
-    return jsonify({
-        'event_sessions': event_sessions_with_order
-    })
+    return jsonify({'sessions': event_sessions})
+
+#------------------------------------------ SESSION ------------------------------------------#
 
 
-@bp.route('/get_session/<int:session_id>', methods=['GET'])
+@bp.route('/sessions/<int:session_id>', methods=['GET'])
 @login_required
 @roles_required('Admin')
 def get_session(session_id):
-    session = Session.query.filter_by(id=session_id).first()
-    if not session:
-        return jsonify({"error": "Session not found"})
-    
-    return jsonify(session.to_dict())
+    session = Session.query.filter_by(id=session_id).first_or_404()
+    return jsonify({
+        'sessions': session.to_dict()
+    })
 
-@bp.route('/get_workshop_for_session/<int:session_id>', methods=['GET'])
+
+@bp.route('/sessions/<int:session_id>/workshop', methods=['GET'])
 @login_required
 @roles_required('Admin')
 def get_workshop_for_session(session_id):
-    session = Session.query.filter_by(id=session_id).first()
-    if not session:
-        return jsonify({"error": "Session not found"})
+    session = Session.query.filter_by(id=session_id).first_or_404()
     
-    session_workshop = session.session_workshop.workshop
-    if not session_workshop:
-        return jsonify({"error": "Session has no workshop"})
+    if not session.has_workshop:
+        abort(400, description="Session has no workshop")
+
+    workshop = session.workshop
     
-    return jsonify(session_workshop.to_dict())
-
-
-@bp.route('/create_event_location', methods=['POST'])
-@login_required
-@roles_required('Admin')
-def create_event_location():
-    try:
-        data = request.get_json()
-        event_id = data.get('event_id')
-        location_id = data.get('location_id')
-        order = data.get('order')
-
-        event = Event.query.filter_by(id=event_id).first()
-        if not event:
-            return jsonify({"error": "Event not found"})
-
-        # Make sure no other session in this event has the same location or order
-        current_event_locations = helper.get_ordered_event_locations(event_id)
-        
-        for location in current_event_locations:
-            if location.location_id == int(location_id):
-                return jsonify({"error": "Event already contains location"})
-            if location.order == int(order):
-                return jsonify({"error": "Event cannot have two locations with the same order"})
-        
-        event_location = EventLocation(event_id=event_id, location_id=location_id, order=order)
-        db.session.add(event_location)
-        db.session.commit()
-
-        # Create all the sessions for this location (over all the timeslots)
-        for timeslot in helper.get_ordered_event_timeslots(event_id):
-            # Make sure the session doesnt already exist
-            if not helper.session_exists(event_location.id, timeslot.id):
-                session = Session(event_id=event_id, event_location_id=event_location.id, event_timeslot_id=timeslot.id)
-                db.session.add(session)
-
-        db.session.commit()
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': 'An Error occured when trying to add the location to the event'
-        })
-
     return jsonify({
-        'status': 'success',
-        'message': 'Location has been added to the event'
+        'workshop': workshop.to_dict()
     })
 
 
-@bp.route('/create_event_timeslot', methods=['POST'])
+@bp.route('/sessions/<int:session_id>/workshop', methods=['POST'])
 @login_required
 @roles_required('Admin')
-def create_event_timeslot():
-    try:
-        data = request.get_json()
-        event_id = data.get('event_id')
-        timeslot_id = data.get('timeslot_id')
+def add_workshop_to_session(session_id):
+    session = Session.query.filter_by(id=session_id).first_or_404()
 
-        event = Event.query.filter_by(id=event_id).first()
-        if not event:
-            return jsonify({"error": "Event not found"})
+    if session.has_workshop:
+        abort(400, description="Session already has a workshop")
 
-        # Make sure no other session in this event has the same location or order
-        current_event_timeslots = helper.get_ordered_event_timeslots(event_id)
-        
-        for timeslot in current_event_timeslots:
-            if timeslot.timeslot_id == int(timeslot_id):
-                return jsonify({"error": "Event already contains timeslot"})
-        
-        event_timeslot = EventTimeslot(event_id=event_id, timeslot_id=timeslot_id)
-        db.session.add(event_timeslot)
-        db.session.commit()
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
 
-        # Create all the sessions for this timeslot (over all the locations)
-        for location in helper.get_ordered_event_locations(event_id):
-            # Make sure the session doesnt already exist
-            if not helper.session_exists(location.id, event_timeslot.id):
-                session = Session(event_id=event_id, event_location_id=location.id, event_timeslot_id=event_timeslot.id)
-                db.session.add(session)
+    workshop_id = data.get('workshop_id')
 
-        db.session.commit()
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': 'An Error occured when trying to add the timeslot to the event'
-        })
+    if not workshop_id:
+        abort(400, description="No 'workshop_id' provided")
+    
+    session.workshop_id = workshop_id
+    db.session.commit()
 
     return jsonify({
-        'status': 'success',
-        'message': 'Timeslot has been added to the event'
-    })
-
-@bp.route('/add_workshop_to_session', methods=['POST'])
-@login_required
-@roles_required('Admin')
-def add_workshop_to_session():
-    try:
-        data = request.get_json()
-        session_id = data.get('session_id')
-        workshop_id = data.get('workshop_id')
-
-        # Check if session exists
-        if not db.session.query(Session.query.filter_by(id=session_id).exists()).scalar():
-            return jsonify({"error": "Session not found"})
-        
-        session_workshop = SessionWorkshop(session_id=session_id, workshop_id=workshop_id)
-        db.session.add(session_workshop)
-        db.session.commit()
-
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': 'An Error occured when trying to add the workshop to session'
-        })
-
-    return jsonify({
-        'status': 'success',
-        'message': 'Workshop has been added to the session'
+        'message': 'Workshop successfully added to session'
     })
 
 
-# Update event_location
-@bp.route('/update_event_location_order', methods=['POST'])
+@bp.route('/sessions/<int:session_id>/workshop', methods=['DELETE'])
 @login_required
 @roles_required('Admin')
-def update_event_location_order():
-    try:
-        data = request.get_json()
-        target_id = data.get('event_location_id')
-        order = data.get('event_location_order')
+def remove_workshop_from_session(session_id):
+    session = Session.query.filter_by(id=session_id).first_or_404()
 
-        # Check to see if updating this order will require a cascade update (ie: updating order 4 to be order 2 meaning the current order 2 needs to become 3 and 3 becomes 4)
-        event = Session.query.filter_by(event_location_id=target_id).first().event
-        ordered_event_locations = helper.get_ordered_event_locations(event.id)
+    if not session.has_workshop:
+        abort(400, description="Session has no workshop")
+    
+    session.workshop_id = None
+    
+    db.session.commit()
 
-        current_event_location_ids = []
-        for location in ordered_event_locations:
-            current_event_location_ids.append(location.id)
-        
-        updated_event_location_ids = helper.reorder_ids(current_event_location_ids, target_id, order)
-
-        if current_event_location_ids == updated_event_location_ids:
-            return jsonify({
-                'status': 'warning',
-                'message': 'No update needed'
-            })
-        
-        for new_order, location_id in updated_event_location_ids:
-            location = EventLocation.query.filter_by(id=location_id).first()
-            location.order = new_order
-            db.session.commit()
-
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': 'An Error occured when trying to update event location\'s order'
-        })
-
-    return jsonify({
-        'status': 'success',
-        'message': 'Event Location\'s order has been updated'
-    })
-
-
-# Remove event_location / event_timeslot
-@bp.route('/delete_event_location', methods=['POST'])
-@login_required
-@roles_required('Admin')
-def delete_event_location():
-    try:
-        data = request.get_json()
-        event_location_id = data.get('event_location_id')
-        
-        event_location = EventLocation.query.filter_by(id=event_location_id).first()
-        
-        helper.prep_delete_event_location(event_location_id)
-        
-        db.session.delete(event_location)
-        db.session.commit()
-
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': 'An Error occured when trying to delete event location'
-        })
-
-    return jsonify({
-        'status': 'success',
-        'message': 'Event Location has been deleted'
-    })
-
-@bp.route('/delete_event_timeslot', methods=['POST'])
-@login_required
-@roles_required('Admin')
-def delete_event_timeslot():
-    try:
-        data = request.get_json()
-        event_timeslot_id = data.get('event_timeslot_id')
-        
-        event_timeslot = EventTimeslot.query.filter_by(id=event_timeslot_id).first()
-        helper.prep_delete_event_Timeslot(event_timeslot_id)
-        
-        db.session.delete(event_timeslot)
-        db.session.commit()
-
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': 'An Error occured when trying to delete event timeslot'
-        })
-
-    return jsonify({
-        'status': 'success',
-        'message': 'Event Timeslot has been deleted'
-    })
-
-# Remove workshop from session
-@bp.route('/remove_worshop_from_session', methods=['POST'])
-@login_required
-@roles_required('Admin')
-def remove_workshop_from_session():
-    try:
-        data = request.get_json()
-        session_id = data.get('session_id')
-        
-        session_workshop = SessionWorkshop.query.filter_by(session_id=session_id).first()
-        
-        db.session.delete(session_workshop)
-        db.session.commit()
-
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': 'An Error occured when trying to remove workshop from session'
-        })
-
-    return jsonify({
-        'status': 'success',
-        'message': 'Workshop has been removed from session'
-    })
+    return jsonify({'message': 'Workshop successfully removed from session'})

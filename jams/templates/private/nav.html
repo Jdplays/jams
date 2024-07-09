@@ -19,8 +19,8 @@
             <div class="nav-item">
             <a href="#" class="nav-link d-flex lh-1 text-end p-0">
                 <div class="d-none d-xl-block ps-2">
-                    <div id="nav_user_name">{{ current_user.get_display_name() }}</div>
-                    <div id="nav_user_role"class="mt-1 small text-secondary">{{ current_user.get_main_role() }}</div>
+                    <div id="nav_user_name">{{ current_user.display_name }}</div>
+                    <div id="nav_user_role"class="mt-1 small text-secondary">{{ current_user.main_role }}</div>
                 </div>
             </a>
             </div>
@@ -32,7 +32,7 @@
               <ul class="navbar-nav">
                 {% if current_user.is_authenticated %}
                   <li class="nav-item">
-                      <a class="nav-link" href="{{ url_for('routes.private.general.frontend.index')}}">
+                      <a class="nav-link" href="{{ url_for('routes.private.general.frontend.dashboard')}}">
                           <span class="nav-link-title">
                               Home
                           </span>

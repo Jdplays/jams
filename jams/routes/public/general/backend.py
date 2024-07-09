@@ -1,4 +1,4 @@
-# Backend is just for serving data to javascript
+# Frontend is just for serving pages
 from flask import Blueprint
 
 bp = Blueprint('backend', __name__, url_prefix='/backend')

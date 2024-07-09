@@ -2,7 +2,9 @@
 from flask import Blueprint, render_template
 from flask_security import roles_required, login_required
 
-bp = Blueprint('frontend', __name__)
+url_prefix = '/private/management'
+
+bp = Blueprint('frontend', __name__, url_prefix=url_prefix)
 
 # URL PREFIX = /management
 
@@ -10,10 +12,10 @@ bp = Blueprint('frontend', __name__)
 @login_required
 @roles_required('Volunteer')
 def workshop_catalog():
-    return render_template('management/workshop_catalog.html')
+    return render_template(f'{url_prefix}/workshop_catalog.html')
 
 @bp.route('/locations_timeslots')
 @login_required
 @roles_required('Volunteer')
 def locations_timeslots():
-    return render_template('management/locations_timeslots.html')
+    return render_template(f'{url_prefix}/locations_timeslots.html')
