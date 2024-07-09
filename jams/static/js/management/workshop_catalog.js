@@ -1,149 +1,187 @@
-function fetchDataAndPopulateWorkshopcatalogTable() {
+function GetWorkshops() {
+    return new Promise((resolve, reject) => {
         $.ajax({
-            url: '/management/get_workshop_catalog_table',
+            url: '/backend/workshops',
             type: 'GET',
             success: function(response) {
-                workshops = response.workshops;
-
-                $('#workshop-table tbody').empty();
-
-                workshops.forEach(function(workshop) {
-
-                    
-                    actionsButtonHtml = ''
-
-                    if (workshop.active) {
-                        actionsButtonHtml = '<button onclick="prepEditWorkshopForm(' + workshop.id + ')">Edit</button>' + 
-                        '<button onclick="archiveWorkshop(' + workshop.id + ')">Archive</button>'
-                    }
-                    else {
-                        actionsButtonHtml = '<button onclick="prepEditWorkshopForm(' + workshop.id + ')" disabled>Edit</button>' + 
-                        '<button onclick="activateWorkshop(' + workshop.id + ')">Activate</button>'
-                    }
-
-                    var row = '<tr>' + 
-                    '<td>' + workshop.name + '</td>' +
-                    '<td>' + workshop.description + '</td>' +
-                    '<td>' + workshop.min_volunteers + '</td>' +
-                    '<td>' + workshop.active + '</td>' +
-                    '<td>' + actionsButtonHtml + '</td>' +
-                    '</tr>';
-
-                    $('#workshop-table').append(row);
-                });
+                resolve(response.workshops);  
             },
             error: function(error) {
                 console.log('Error fetching data:', error);
+                reject(error)
             }
         });
+    });
 }
 
-function addNewWorkshopFromForm(event) {
-    event.preventDefault();
+function GetWorkshop(workshopID) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: '/backend/workshops/' + workshopID,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);  
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
 
+function AddWorkshop(data) {
     $.ajax({
         type: 'POST',
-        url: '/management/add_workshop',
-        data: $('#add-workshop-form').serialize(),
+        url: '/backend/workshops',
+        data: JSON.stringify(data),
+        contentType: 'application/json',
         success: function(response) {
-            if (response.status === 'success') {
-                fetchDataAndPopulateWorkshopcatalogTable();
-            }
-
+            PopulateWorkshopsTable();
             document.getElementById('workshop-request-response').innerHTML = response.message
         }
     });
 }
 
-function prepEditWorkshopForm(workshopID) {
-    document.getElementById('edit-workshop-block').style.display = 'block'
-
+function EditWorkshop(workshopID, data) {
     $.ajax({
-        url: '/management/get_workshop_details/' + workshopID,
-        type: 'GET',
+        type: 'PATCH',
+        url: '/backend/workshops/' + workshopID,
+        data: JSON.stringify(data),
+        contentType: 'application/json',
         success: function(response) {
-            workshopID = response.id;
-            workshopName = response.name;
-            workshopDescription = response.description;
-            workshopMinVolunteers = response.min_volunteers;
-
-            document.getElementById('edit-workshop-id').value = workshopID
-            document.getElementById('edit-workshop-name').value = workshopName
-            document.getElementById('edit-workshop-description').innerText = workshopDescription
-            document.getElementById('edit-workshop-min_volunteers').value = workshopMinVolunteers
+            PopulateWorkshopsTable();
+            document.getElementById('edit-workshop-block').style.display = 'none'
+            document.getElementById('workshop-request-response').innerHTML = response.message
         }
     });
-
 }
 
-function editWorkshopFromForm(event) {
-    event.preventDefault();
 
+function ArchiveWorkshop(workshopID) {
+    $.ajax({
+        type: 'POST',
+        url: '/backend/workshops/' + workshopID + '/archive',
+        success: function(response) {
+            PopulateWorkshopsTable();
+            document.getElementById('workshop-request-response').innerHTML = response.message
+        }
+    });
+}
+
+function ActivateWorkshop(workshopID) {
+    $.ajax({
+        type: 'POST',
+        url: '/backend/workshops/' + workshopID + '/activate',
+        success: function(response) {
+            PopulateWorkshopsTable();
+            document.getElementById('workshop-request-response').innerHTML = response.message
+        }
+    });
+}
+
+function AddWorkshopOnClick(event) {
+    event.preventDefault();
     const data = {
-        'workshop_id': document.getElementById('edit-workshop-id').value,
+        'name': document.getElementById('add-workshop-name').value,
+        'description': document.getElementById('add-workshop-description').value,
+        'min_volunteers': document.getElementById('add-workshop-min_volunteers').value,
+    }
+
+    AddWorkshop(data)
+}
+
+function EditWorkshopOnClick(event) {
+    event.preventDefault();
+    workshopID = document.getElementById('edit-workshop-id').value
+    const data = {
         'name': document.getElementById('edit-workshop-name').value,
         'description': document.getElementById('edit-workshop-description').value,
         'min_volunteers': document.getElementById('edit-workshop-min_volunteers').value,
     }
 
-    $.ajax({
-        type: 'POST',
-        url: '/management/edit_workshop',
-        data: JSON.stringify(data),
-        contentType: 'application/json',
-        success: function(response) {
-            if (response.status === 'success') {
-                fetchDataAndPopulateWorkshopcatalogTable();
-                document.getElementById('edit-workshop-block').style.display = 'none'
-            }
-
-            document.getElementById('workshop-request-response').innerHTML = response.message
-        }
-    });
+    EditWorkshop(workshopID, data)
 }
 
-function archiveWorkshop(workshopID) {
-    const data = {
-        'workshop_id': workshopID
-    }
-    $.ajax({
-        type: 'POST',
-        url: '/management/archive_workshop',
-        data: JSON.stringify(data),
-        contentType: 'application/json',
-        success: function(response) {
-            if (response.status === 'success') {
-                fetchDataAndPopulateWorkshopcatalogTable();
-            }
 
-            document.getElementById('workshop-request-response').innerHTML = response.message
-        }
-    });
+async function prepEditWorkshopForm(workshopID) {
+    let workshop = await GetWorkshop(workshopID)
+    document.getElementById('edit-workshop-block').style.display = 'block'
+
+    document.getElementById('edit-workshop-id').value = workshop.id
+    document.getElementById('edit-workshop-name').value = workshop.name
+    document.getElementById('edit-workshop-description').innerText = workshop.description
+    document.getElementById('edit-workshop-min_volunteers').value = workshop.min_volunteers
+
 }
 
-function activateWorkshop(workshopID) {
-    const data = {
-        'workshop_id': workshopID
-    }
-    $.ajax({
-        type: 'POST',
-        url: '/management/activate_workshop',
-        data: JSON.stringify(data),
-        contentType: 'application/json',
-        success: function(response) {
-            if (response.status === 'success') {
-                fetchDataAndPopulateWorkshopcatalogTable();
-            }
+function CreateAndAppendCell(row, content) {
+    const cell = document.createElement('td');
+    cell.innerHTML = content
+    row.appendChild(cell)
+}
 
-            document.getElementById('workshop-request-response').innerHTML = response.message
+async function PopulateWorkshopsTable() {
+    let allWorkshops = await GetWorkshops();
+
+    $('#workshop-table tbody').empty();
+
+    for (const workshop of allWorkshops) {
+
+        actionsButtons = document.createElement('div')
+
+        if (workshop.active) {
+            // Archive button
+            archiveButton = document.createElement('button')
+            archiveButton.onclick = function () {
+                ArchiveWorkshop(workshop.id)
+            }
+            archiveButton.innerHTML = 'Archive'
+
+            // Edit button
+            editButton = document.createElement('button')
+            editButton.onclick = function () {
+                prepEditWorkshopForm(workshop.id)
+            }
+            editButton.innerHTML = 'Edit'
+            
+            // Add Buttons to div
+            actionsButtons.appendChild(archiveButton)
+            actionsButtons.appendChild(editButton)
         }
-    });
+        else {
+            // Archive button
+            activeateButton = document.createElement('button')
+            activeateButton.onclick = function () {
+                ActivateWorkshop(workshop.id)
+            }
+            activeateButton.innerHTML = 'Activate'
+
+            // Edit button
+            editButton = document.createElement('button')
+            editButton.disabled = true
+            editButton.innerHTML = 'Edit'
+            
+            // Add Buttons to div
+            actionsButtons.appendChild(activeateButton)
+            actionsButtons.appendChild(editButton)
+        }
+
+        var row = document.createElement('tr')
+        CreateAndAppendCell(row, workshop.name)
+        CreateAndAppendCell(row, workshop.description)
+        CreateAndAppendCell(row, workshop.min_volunteers)
+        CreateAndAppendCell(row, workshop.active)
+        row.appendChild(actionsButtons)
+
+        $('#workshop-table').append(row);
+    };
 }
 
 // Event listeners
-document.addEventListener("DOMContentLoaded", fetchDataAndPopulateWorkshopcatalogTable);
-document.getElementById('add-workshop-form').addEventListener('submit', addNewWorkshopFromForm);
-document.getElementById('edit-workshop-form').addEventListener('submit', editWorkshopFromForm);
+document.addEventListener("DOMContentLoaded", PopulateWorkshopsTable);
+document.getElementById('add-workshop-form').addEventListener('submit', AddWorkshopOnClick);
+document.getElementById('edit-workshop-form').addEventListener('submit', EditWorkshopOnClick);
 document.getElementById('edit-workshop-form').addEventListener('reset', function() {
     document.getElementById('edit-workshop-block').style.display = 'none'
 });

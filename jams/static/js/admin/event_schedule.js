@@ -1,10 +1,10 @@
 var EVENTID = 1
 var LocationsLength = 0
 
-function GetEvents() {
+function GetEventNames() {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: '/admin/get_events_table',
+            url: '/backend/events/name',
             type: 'GET',
             success: function(response) {
                 resolve(response.events)
@@ -17,23 +17,26 @@ function GetEvents() {
     });
 }
 
-function GetEventDetails() {
-    $.ajax({
-        url: '/admin/get_event_details/' + EVENTID,
-        type: 'GET',
-        success: function(response) {
-            document.getElementById('event-details').innerHTML = response.name + " | ID: " + response.id
-        },
-        error: function(error) {
-            console.log('Error fetching data:', error);
-        }
+function GetEvent(eventID) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: '/backend/events/' + eventID,
+            type: 'GET',
+            success: function(response) {
+                resolve(response)
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        })
     })
 }
 
 function GetLocationsForEvent(eventID) {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: '/admin/get_locations_for_event/' + eventID,
+            url: '/backend/events/' + eventID + '/locations',
             type: 'GET',
             success: function(response) {
                 resolve(response.event_locations)
@@ -49,7 +52,7 @@ function GetLocationsForEvent(eventID) {
 function GetTimeslotsForEvent(eventID) {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: '/admin/get_timeslots_for_event/' + eventID,
+            url: '/backend/events/' + eventID + '/timeslots',
             type: 'GET',
             success: function(response) {
                 resolve(response.event_timeslots)
@@ -65,10 +68,10 @@ function GetTimeslotsForEvent(eventID) {
 function GetSessionsForEvent(eventID) {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: '/admin/get_sessions_for_event/' + eventID,
+            url: '/backend/events/' + eventID + '/sessions',
             type: 'GET',
             success: function(response) {
-                resolve(response.event_sessions)
+                resolve(response.sessions)
             },
             error: function(error) {
                 console.log('Error fetching data:', error);
@@ -78,15 +81,15 @@ function GetSessionsForEvent(eventID) {
     });
 }
 
-function GetLocationDetails(locationID) {
+function GetWorkshopForSession(sessionID) {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: '/management/get_location_details/' + locationID,
+            url: '/backend/sessions/' + sessionID + '/workshop',
             type: 'GET',
             success: function(response) {
-                resolve(response)
+                resolve(response.workshop)
             },
-            error: function(error) {
+            error: function(error, response) {
                 console.log('Error fetching data:', error);
                 reject(error)
             }
@@ -94,26 +97,10 @@ function GetLocationDetails(locationID) {
     });
 }
 
-function GetTimeslotDetails(timeslotID) {
+function GetLocation(locationID) {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: '/management/get_timeslot_details/' + timeslotID,
-            type: 'GET',
-            success: function(response) {
-                resolve(response)
-            },
-            error: function(error) {
-                console.log('Error fetching data:', error);
-                reject(error)
-            }
-        });
-    });
-}
-
-function GetWorkshopDetails(workshopID) {
-    return new Promise((resolve, reject) => {
-        $.ajax({
-            url: '/management/get_workshop_details/' + workshopID,
+            url: '/backend/locations/' + locationID,
             type: 'GET',
             success: function(response) {
                 resolve(response)
@@ -126,10 +113,42 @@ function GetWorkshopDetails(workshopID) {
     });
 }
 
-function GetAllLocationOptions() {
+function GetTimeslot(timeslotID) {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: '/management/get_locations_table',
+            url: '/backend/timeslots/' + timeslotID,
+            type: 'GET',
+            success: function(response) {
+                resolve(response)
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+function GetWorkshop(workshopID) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: '/backend/workshops/' + workshopID,
+            type: 'GET',
+            success: function(response) {
+                resolve(response)
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+function GetLocationNames() {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: '/backend/locations/name',
             type: 'GET',
             success: function(response) {
                 resolve(response.locations)
@@ -142,10 +161,10 @@ function GetAllLocationOptions() {
     });
 }
 
-function GetAllTimeslotOptions() {
+function GetTimeslotNames() {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: '/management/get_timeslots_table',
+            url: '/backend/timeslots/name',
             type: 'GET',
             success: function(response) {
                 resolve(response.timeslots)
@@ -158,10 +177,10 @@ function GetAllTimeslotOptions() {
     });
 }
 
-function GetAllWorkshopOptions() {
+function GetWorkshopNames() {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: '/management/get_workshop_catalog_table',
+            url: '/backend/workshops/name',
             type: 'GET',
             success: function(response) {
                 resolve(response.workshops)
@@ -175,21 +194,14 @@ function GetAllWorkshopOptions() {
 }
 
 
-
-
-
-
-
-
 function AddLocationToEvent(eventID, location_id, order) {
     const data = {
-        'event_id': eventID,
         'location_id': location_id,
         'order': order
     }
 
     $.ajax({
-        url: '/admin/create_event_location',
+        url: '/backend/events/' + eventID + '/locations',
         type: 'POST',
         data: JSON.stringify(data),
         contentType: 'application/json',
@@ -204,12 +216,11 @@ function AddLocationToEvent(eventID, location_id, order) {
 
 function AddTimeslotToEvent(eventID, timeslot_id) {
     const data = {
-        'event_id': eventID,
-        'timeslot_id': timeslot_id,
+        'timeslot_id': timeslot_id
     }
 
     $.ajax({
-        url: '/admin/create_event_timeslot',
+        url: '/backend/events/' + eventID + '/timeslots',
         type: 'POST',
         data: JSON.stringify(data),
         contentType: 'application/json',
@@ -224,12 +235,11 @@ function AddTimeslotToEvent(eventID, timeslot_id) {
 
 function AddWorkshopToSession(sessionID, workshopID) {
     const data = {
-        'session_id': sessionID,
         'workshop_id': workshopID,
     }
 
     $.ajax({
-        url: '/admin/add_workshop_to_session',
+        url: '/backend/sessions/' + sessionID + '/workshop',
         type: 'POST',
         data: JSON.stringify(data),
         contentType: 'application/json',
@@ -243,15 +253,9 @@ function AddWorkshopToSession(sessionID, workshopID) {
 }
 
 function RemoveWorkshopFromSession(sessionID) {
-    const data = {
-        'session_id': sessionID,
-    }
-
     $.ajax({
-        url: '/admin/remove_worshop_from_session',
-        type: 'POST',
-        data: JSON.stringify(data),
-        contentType: 'application/json',
+        url: '/backend/sessions/' + sessionID + '/workshop',
+        type: 'DELETE',
         success: function(response) {
             BuildSchedule()
         },
@@ -261,16 +265,10 @@ function RemoveWorkshopFromSession(sessionID) {
     });
 }
 
-function RemoveLocationFromEvent(eventLocationID) {
-    const data = {
-        'event_location_id': eventLocationID,
-    }
-
+function RemoveLocationFromEvent(eventID, eventLocationID) {
     $.ajax({
-        url: '/admin/delete_event_location',
-        type: 'POST',
-        data: JSON.stringify(data),
-        contentType: 'application/json',
+        url: '/backend/events/' + eventID + '/locations/' + eventLocationID,
+        type: 'DELETE',
         success: function(response) {
             BuildSchedule()
         },
@@ -280,16 +278,10 @@ function RemoveLocationFromEvent(eventLocationID) {
     });
 }
 
-function RemoveTimeslotFromEvent(eventTimeslotID) {
-    const data = {
-        'event_timeslot_id': eventTimeslotID,
-    }
-
+function RemoveTimeslotFromEvent(eventID, eventTimeslotID) {
     $.ajax({
-        url: '/admin/delete_event_timeslot',
-        type: 'POST',
-        data: JSON.stringify(data),
-        contentType: 'application/json',
+        url: '/backend/events/' + eventID + '/timeslots/' + eventTimeslotID,
+        type: 'DELETE',
         success: function(response) {
             BuildSchedule()
         },
@@ -303,7 +295,7 @@ function RemoveTimeslotFromEvent(eventTimeslotID) {
 function EventSelectionDropdownOnChange(event) {
     const selectedValue = event.target.value
     EVENTID = selectedValue
-    GetEventDetails()
+    GetEvent(EVENTID)
     BuildSchedule()
 }
 
@@ -364,18 +356,23 @@ function CreateWorkshopDropdown(options, sessionID) {
 }
 
 async function PopulateEventSelectionDropdown() {
-    let events = await GetEvents()
+    let events = await GetEventNames()
 
     eventSelectionDropdown = document.getElementById('event-selection')
     eventSelectionDropdown.appendChild(CreateDropdown(await events, await events[0].name, EventSelectionDropdownOnChange))
 } 
+
+async function PopulateEventName() {
+    let event = await GetEvent(EVENTID)
+    document.getElementById('event-details').innerHTML = event.name + " | ID: " + event.id
+}
 
 async function BuildSchedule() {
     // Clear the current table
     $('#event-schedule-table thead').empty();
     $('#event-schedule-table tbody').empty();
 
-    let eventLocations = await GetLocationsForEvent(EVENTID); // TODO: Update the 1 to a dynamic value
+    let eventLocations = await GetLocationsForEvent(EVENTID);
     let eventTimeslots = await GetTimeslotsForEvent(EVENTID);
     let eventSessions = await GetSessionsForEvent(EVENTID);
 
@@ -392,14 +389,14 @@ async function BuildSchedule() {
     if (eventLocations.length > 0) {
         for (const eventLocation of eventLocations) {
             const th = document.createElement('th');
-            let locationDetails = await GetLocationDetails(eventLocation.location_id)
+            let locationDetails = await GetLocation(eventLocation.location_id)
             th.innerText = locationDetails.name;
 
             removeButton = document.createElement('button')
             removeButton.innerHTML = "Remove Location"
             removeButton.onclick = function () {
                 console.log("Remove")
-                RemoveLocationFromEvent(eventLocation.id)
+                RemoveLocationFromEvent(EVENTID, eventLocation.id)
                 return true
             }
 
@@ -410,7 +407,7 @@ async function BuildSchedule() {
 
     // Add a dropdown select at the end of the header row
     const locationsDropdownCell = document.createElement('th');
-    locationsDropdownCell.appendChild(CreateDropdown(await GetAllLocationOptions(), "Add Location", LocationsDropdownOnChange));
+    locationsDropdownCell.appendChild(CreateDropdown(await GetLocationNames(), "Add Location", LocationsDropdownOnChange));
     headerRow.appendChild(locationsDropdownCell);
 
     tableHead.appendChild(headerRow)
@@ -420,13 +417,13 @@ async function BuildSchedule() {
         for (const eventTimeslot of eventTimeslots) {
             const row = document.createElement('tr');
             const th = document.createElement('th')
-            let  timeslotDetails = await GetTimeslotDetails(eventTimeslot.timeslot_id)
+            let  timeslotDetails = await GetTimeslot(eventTimeslot.timeslot_id)
             th.innerText = timeslotDetails.name
 
             removeButton = document.createElement('button')
             removeButton.innerHTML = "Remove Timeslot"
             removeButton.onclick = function () {
-                RemoveTimeslotFromEvent(eventTimeslot.id)
+                RemoveTimeslotFromEvent(EVENTID, eventTimeslot.id)
                 return true
             }
 
@@ -447,7 +444,7 @@ async function BuildSchedule() {
     // Add a dropdown select at the end of the header row
     const row = document.createElement('tr');
     const TimeslotsDropdownCell = document.createElement('th');
-    TimeslotsDropdownCell.appendChild(CreateDropdown(await GetAllTimeslotOptions(), "Add Timeslot", TimeslotsDropdownOnChange));
+    TimeslotsDropdownCell.appendChild(CreateDropdown(await GetTimeslotNames(), "Add Timeslot", TimeslotsDropdownOnChange));
     row.appendChild(TimeslotsDropdownCell);
 
     tableBody.appendChild(row)
@@ -455,17 +452,17 @@ async function BuildSchedule() {
     // Populate the sessions
     if (eventSessions.length > 0) {
         // Pre load this to prevent a load of requests
-        workshopOptions = await GetAllWorkshopOptions();
+        workshopOptions = await GetWorkshopNames();
         for (const session of eventSessions) {
             sessionBlock = document.getElementById(`session-${session.event_location_id}-${session.event_timeslot_id}`)
             
-            if (session.workshop_id == undefined) {
+            if (session.has_workshop == false) {
                 sessionBlock.appendChild(CreateWorkshopDropdown(await workshopOptions, session.id))
             }
             else {
+                workshop = await GetWorkshopForSession(session.id)
                 workshopTitle = document.createElement('p')
-                workshopDetails = await GetWorkshopDetails(session.workshop_id)
-                workshopTitle.innerText = workshopDetails.name
+                workshopTitle.innerText = workshop.name
 
                 removeButton = document.createElement('button')
                 removeButton.innerHTML = "Remove"
@@ -483,5 +480,5 @@ async function BuildSchedule() {
 
 // Event Listeners
 document.addEventListener("DOMContentLoaded", PopulateEventSelectionDropdown);
-document.addEventListener("DOMContentLoaded", GetEventDetails);
+document.addEventListener("DOMContentLoaded", PopulateEventName);
 document.addEventListener("DOMContentLoaded", BuildSchedule);
