@@ -578,12 +578,13 @@ def get_session(session_id):
 def get_workshop_for_session(session_id):
     session = Session.query.filter_by(id=session_id).first_or_404()
     
-    session_workshop = session.session_workshop.workshop
-    if not session_workshop:
+    if not session.has_workshop:
         abort(400, description="Session has no workshop")
+
+    workshop = session.workshop
     
     return jsonify({
-        'workshop': session_workshop.to_dict()
+        'workshop': workshop.to_dict()
     })
 
 
@@ -591,7 +592,10 @@ def get_workshop_for_session(session_id):
 @login_required
 @roles_required('Admin')
 def add_workshop_to_session(session_id):
-    Session.query.filter_by(id=session_id).first_or_404()
+    session = Session.query.filter_by(id=session_id).first_or_404()
+
+    if session.has_workshop:
+        abort(400, description="Session already has a workshop")
 
     data = request.get_json()
     if not data:
@@ -602,13 +606,11 @@ def add_workshop_to_session(session_id):
     if not workshop_id:
         abort(400, description="No 'workshop_id' provided")
     
-    session_workshop = SessionWorkshop(session_id=session_id, workshop_id=workshop_id)
-    db.session.add(session_workshop)
+    session.workshop_id = workshop_id
     db.session.commit()
 
     return jsonify({
-        'message': 'Workshop successfully added to session',
-        'session_workshop': session_workshop.to_dict()
+        'message': 'Workshop successfully added to session'
     })
 
 
@@ -616,11 +618,13 @@ def add_workshop_to_session(session_id):
 @login_required
 @roles_required('Admin')
 def remove_workshop_from_session(session_id):
-    Session.query.filter_by(id=session_id).first_or_404()
+    session = Session.query.filter_by(id=session_id).first_or_404()
+
+    if not session.has_workshop:
+        abort(400, description="Session has no workshop")
     
-    session_workshop = SessionWorkshop.query.filter_by(session_id=session_id).first_or_404()
+    session.workshop_id = None
     
-    db.session.delete(session_workshop)
     db.session.commit()
 
     return jsonify({'message': 'Workshop successfully removed from session'})

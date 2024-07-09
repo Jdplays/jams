@@ -194,23 +194,4 @@ class Session(db.Model):
 
 
 
-class SessionWorkshop(db.Model):
-    __tablename__ = 'session_workshop'
-
-    id = Column(Integer(), primary_key=True)
-    session_id = Column(Integer(), ForeignKey('session.id'), nullable=False)
-    workshop_id = Column(Integer(), ForeignKey('workshop.id'), nullable=False)
-
-    session = relationship('Session', backref=backref('session_workshop', uselist=False))
-    workshop = relationship('Workshop')
-
-    def __init__(self, session_id, workshop_id):
-        self.session_id = session_id
-        self.workshop_id = workshop_id
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'session_id': self.session_id,
-            'workshop_id': self.workshop_id
         }
