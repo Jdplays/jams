@@ -23,7 +23,7 @@ def prep_delete_event_location(event_location_id):
     db.session.commit()
 
     # Check if there are no sessions for this event_location
-    if event_location.sessions is not None:
+    if len(event_location.sessions) > 0:
         # There are still sessions, so return false
         return False
     
@@ -43,7 +43,7 @@ def prep_delete_event_Timeslot(event_timeslot_id):
     db.session.commit()
 
     # Check if there are no sessions for this event_timeslot
-    if event_timeslot.sessions is not None:
+    if len(event_timeslot.sessions) > 0:
         # There are still sessions, so return false
         return False
     
@@ -51,17 +51,10 @@ def prep_delete_event_Timeslot(event_timeslot_id):
     return True
 
 def prep_delete_session(session_id):
+    ############ This is not needed anymore, but will be needed in the future. So will leave it #######
     session = Session.query.filter_by(id=session_id).first()
-    session_workshop = session.session_workshop
-    if session_workshop is not None:
-        db.session.delete(session_workshop)
-        # TODO: Remove anything else here in future (Not needed at the time of writing)
-        db.session.commit()
     
-    # Check if there are workshops assigned to this session
-    if session.session_workshop is not None:
-        # There is still a workshop, so return false
-        return False
+    # TODO: Remove anything else here in future (Not needed at the time of writing)
     
     # Everything is removed, so return true
     return True

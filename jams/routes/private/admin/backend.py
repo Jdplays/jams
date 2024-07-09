@@ -1,7 +1,7 @@
 # Backend is just for serving data to javascript
 from flask import Blueprint, request, jsonify, abort
 from flask_security import roles_required, login_required
-from jams.models import db, User, Role, Event, EventLocation, EventTimeslot, Session, SessionWorkshop
+from jams.models import db, User, Role, Event, EventLocation, EventTimeslot, Session
 from jams.util import helper
 from typing import List, Tuple, Dict
 
@@ -170,7 +170,7 @@ def get_roles_field(field):
             'id': role.id,
             field: getattr(role, field)
         })
-    return jsonify({'users': roles_data_list})
+    return jsonify({'roles': roles_data_list})
 
 
 @bp.route('/roles/<int:role_id>', methods=['GET'])
@@ -196,11 +196,12 @@ def get_role_field(role_id, field):
 @login_required
 @roles_required('Admin')
 def add_role():
-    if not request.form:
-        abort(400, description="No form data provided")
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
     
-    name = request.form.get('name')
-    description = request.form.get('description')
+    name = data.get('name')
+    description = data.get('description')
 
     if not name or not description:
         abort(400, description="No 'name' or 'description' provided")
@@ -304,13 +305,14 @@ def get_event_field(event_id, field):
 @login_required
 @roles_required('Admin')
 def add_event():
-    if not request.form:
-        abort(400, description="No form data provided")
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
 
-    name = request.form.get('name')
-    description = request.form.get('description')
-    date = request.form.get('date')
-    password = request.form.get('password')
+    name = data.get('name')
+    description = data.get('description')
+    date = data.get('date')
+    password = data.get('password')
 
     if not name or not description or not date or not password:
         abort(400, description="No 'name' or'description' or 'date' or 'password' provided")

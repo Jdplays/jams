@@ -3,4 +3,4 @@ from flask import Blueprint
 
 bp = Blueprint('backend', __name__, url_prefix='/backend')
 
-# URL PREFIX = /
+# URL PREFIX = /backend

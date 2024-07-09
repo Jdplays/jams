@@ -60,12 +60,13 @@ def get_workshop_field(workshop_id, field):
 @login_required
 @roles_required('Volunteer')
 def add_workshop():
-    if not request.form:
-        abort(400, description="No form data provided")
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
 
-    name = request.form.get('name')
-    description = request.form.get('description')
-    min_volunteers = request.form.get('min_volunteers')
+    name = data.get('name')
+    description = data.get('description')
+    min_volunteers = data.get('min_volunteers')
 
     if not name or not description or not min_volunteers:
         abort(400, description="No 'name' or 'description' or 'min_volunteers' provided")
@@ -176,10 +177,11 @@ def get_location_field(location_id, field):
 @login_required
 @roles_required('Volunteer')
 def add_location():
-    if not request.form:
-        abort(400, description="No form data provided")
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
 
-    name = request.form.get('name')
+    name = data.get('name')
 
     if not name:
         abort(400, description="No 'name' provided")
@@ -290,15 +292,18 @@ def get_timeslot_field(timeslot_id, field):
 @login_required
 @roles_required('Volunteer')
 def add_timeslot():
-    if not request.form:
-        abort(400, description="No form data provided")
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
 
-    name = request.form.get('name')
+    name = data.get('name')
+    start = data.get('start')
+    end = data.get('end')
 
     if not name:
         abort(400, description="No 'name' provided")
 
-    new_timeslot = Timeslot(name=name)
+    new_timeslot = Timeslot(name=name, start=start, end=end)
     db.session.add(new_timeslot)
     db.session.commit()
 

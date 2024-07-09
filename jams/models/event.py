@@ -165,16 +165,25 @@ class Session(db.Model):
     event_id = Column(Integer(), ForeignKey('event.id'), nullable=False)
     event_location_id = Column(Integer(), ForeignKey('event_location.id'), nullable=False)
     event_timeslot_id = Column(Integer(), ForeignKey('event_timeslot.id'), nullable=False)
+    workshop_id = Column(Integer(), ForeignKey('workshop.id'))
     active = Column(Boolean(), nullable=False, default=True)
 
     event = relationship('Event', backref='sessions')
     event_location = relationship('EventLocation', backref='sessions')
     event_timeslot = relationship('EventTimeslot', backref='sessions')
+    workshop = relationship('Workshop')
 
-    def __init__(self, event_id, event_location_id, event_timeslot_id, active=True):
+    @property
+    def has_workshop(self):
+        if not self.workshop:
+            return False
+        return True
+
+    def __init__(self, event_id, event_location_id, event_timeslot_id, workshop_id=None, active=True):
         self.event_id = event_id
         self.event_location_id = event_location_id
         self.event_timeslot_id = event_timeslot_id
+        self.workshop_id = workshop_id
         self.active = active
 
     def activate(self):
@@ -189,9 +198,6 @@ class Session(db.Model):
             'event_id': self.event_id,
             'event_location_id': self.event_location_id,
             'event_timeslot_id': self.event_timeslot_id,
+            'has_workshop': self.has_workshop,
             'active': self.active
-        }
-
-
-
         }
