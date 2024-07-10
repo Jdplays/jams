@@ -15,24 +15,58 @@
     </div>
 </div>
 
-<div>
-    <h1>Add an Event</h1>
-    <form id="add-event-form">
-        <label for="name">Name:</label>
-        <input type="text" id="add-event-name" name="name"><br><br>
-        <label for="description">Description:</label>
-        <textarea id="add-event-description" name="description"></textarea><br><br>
-        <label for="date">Date:</label>
-        <input type="date" id="add-event-date" name="date"><br><br>
-        <label for="password">password:</label>
-        <input type="text" id="add-event-password" name="password"><br><br>
-        <button type="submit">Submit</button>
-    </form>
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add-event-modal">Add
+    Event</button>
+
+<div class="modal" id="add-event-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">New Event</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Event Name</label>
+                    <input type="text" class="form-control" name="name" id="add-event-name"
+                        placeholder="Your event name" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Event Description</label>
+                    <textarea class="form-control" rows="5" id="add-event-description" name="description"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Date</label>
+                    <input type="date" class="form-control" name="name" id="add-event-date" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Event Password</label>
+                    <input type="text" class="form-control" name="name" id="add-event-password"
+                        placeholder="password123" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
+                    Cancel
+                </a>
+                <a href="#" onclick="AddEventOnClick()" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-plus" width="24"
+                        height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M12 5l0 14"></path>
+                        <path d="M5 12l14 0"></path>
+                    </svg>
+                    Create new Event
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 
-<div>
-    <table id="events-table">
-        <thead>
+<div class="table-responsive">
+    <table id="events-table" class="table table-vcenter">
+        <thead class="sticky-top">
             <tr>
                 <th>Name</th>
                 <th>Description</th>
@@ -47,21 +81,51 @@
     </table>
 </div>
 
-<div id="edit-event-block" style="display: none;">
-    <h1>Edit an Event</h1>
-    <form id="edit-event-form">
-        <input type="hidden" id="edit-event-id" name="event_id"><br><br>
-        <label for="name">Name:</label>
-        <input type="text" id="edit-event-name" name="name"><br><br>
-        <label for="description">Description:</label>
-        <textarea id="edit-event-description" name="description"></textarea><br><br>
-        <label for="date">Date:</label>
-        <input type="date" id="edit-event-date" name="date"><br><br>
-        <label for="password">password:</label>
-        <input type="text" id="edit-event-password" name="password"><br><br>
-        <button type="submit">Submit</button>
-        <button type="reset">Cancel</button>
-    </form>
+<div class="modal" id="edit-event-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Event</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-event-id" name="event_id">
+                <div class="mb-3">
+                    <label class="form-label">Event Name</label>
+                    <input type="text" class="form-control" name="name" id="edit-event-name"
+                        placeholder="Your event name" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Event Description</label>
+                    <textarea class="form-control" rows="5" id="edit-event-description" name="description"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Date</label>
+                    <input type="date" class="form-control" name="name" id="edit-event-date" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Event Password</label>
+                    <input type="text" class="form-control" name="name" id="edit-event-password"
+                        placeholder="password123" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
+                    Cancel
+                </a>
+                <a href="#" onclick="EditEventOnClick()" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-plus" width="24"
+                        height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M12 5l0 14"></path>
+                        <path d="M5 12l14 0"></path>
+                    </svg>
+                    Edit Event
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 
 <p id="events-request-response"></p>
