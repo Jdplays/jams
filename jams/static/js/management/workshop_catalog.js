@@ -51,7 +51,6 @@ function EditWorkshop(workshopID, data) {
         contentType: 'application/json',
         success: function(response) {
             PopulateWorkshopsTable();
-            document.getElementById('edit-workshop-block').style.display = 'none'
             document.getElementById('workshop-request-response').innerHTML = response.message
         }
     });
@@ -80,8 +79,7 @@ function ActivateWorkshop(workshopID) {
     });
 }
 
-function AddWorkshopOnClick(event) {
-    event.preventDefault();
+function AddWorkshopOnClick() {
     const data = {
         'name': document.getElementById('add-workshop-name').value,
         'description': document.getElementById('add-workshop-description').value,
@@ -91,8 +89,7 @@ function AddWorkshopOnClick(event) {
     AddWorkshop(data)
 }
 
-function EditWorkshopOnClick(event) {
-    event.preventDefault();
+function EditWorkshopOnClick() {
     workshopID = document.getElementById('edit-workshop-id').value
     const data = {
         'name': document.getElementById('edit-workshop-name').value,
@@ -106,7 +103,6 @@ function EditWorkshopOnClick(event) {
 
 async function prepEditWorkshopForm(workshopID) {
     let workshop = await GetWorkshop(workshopID)
-    document.getElementById('edit-workshop-block').style.display = 'block'
 
     document.getElementById('edit-workshop-id').value = workshop.id
     document.getElementById('edit-workshop-name').value = workshop.name
@@ -129,6 +125,7 @@ async function PopulateWorkshopsTable() {
     for (const workshop of allWorkshops) {
 
         actionsButtons = document.createElement('div')
+        actionsButtons.className = 'btn-list'
 
         if (workshop.active) {
             // Archive button
@@ -137,35 +134,37 @@ async function PopulateWorkshopsTable() {
                 ArchiveWorkshop(workshop.id)
             }
             archiveButton.innerHTML = 'Archive'
-
-            // Edit button
-            editButton = document.createElement('button')
-            editButton.onclick = function () {
-                prepEditWorkshopForm(workshop.id)
-            }
-            editButton.innerHTML = 'Edit'
+            archiveButton.className  = 'btn btn-danger'
             
-            // Add Buttons to div
+            // Add Button to div
             actionsButtons.appendChild(archiveButton)
-            actionsButtons.appendChild(editButton)
         }
         else {
-            // Archive button
+            // Activate button
             activeateButton = document.createElement('button')
             activeateButton.onclick = function () {
                 ActivateWorkshop(workshop.id)
             }
             activeateButton.innerHTML = 'Activate'
-
-            // Edit button
-            editButton = document.createElement('button')
-            editButton.disabled = true
-            editButton.innerHTML = 'Edit'
+            activeateButton.className  = 'btn btn-success'
             
-            // Add Buttons to div
+            // Add Button to div
             actionsButtons.appendChild(activeateButton)
-            actionsButtons.appendChild(editButton)
+            
         }
+
+        // Edit button
+        editButton = document.createElement('button')
+        editButton.disabled = !workshop.active
+        editButton.innerHTML = 'Edit'
+        editButton.className  = 'btn btn-secondary'
+        editButton.setAttribute('data-bs-toggle', 'modal');
+        editButton.setAttribute('data-bs-target','#edit-workshop-modal')
+        editButton.onclick = function() {
+            prepEditWorkshopForm(workshop.id)
+        }
+        // Add Button to div
+        actionsButtons.appendChild(editButton)
 
         var row = document.createElement('tr')
         CreateAndAppendCell(row, workshop.name)
@@ -180,8 +179,4 @@ async function PopulateWorkshopsTable() {
 
 // Event listeners
 document.addEventListener("DOMContentLoaded", PopulateWorkshopsTable);
-document.getElementById('add-workshop-form').addEventListener('submit', AddWorkshopOnClick);
-document.getElementById('edit-workshop-form').addEventListener('submit', EditWorkshopOnClick);
-document.getElementById('edit-workshop-form').addEventListener('reset', function() {
-    document.getElementById('edit-workshop-block').style.display = 'none'
-});
+  
