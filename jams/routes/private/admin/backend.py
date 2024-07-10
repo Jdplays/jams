@@ -261,7 +261,7 @@ def delete_role(role_id):
 @login_required
 @roles_required('Admin')
 def get_events():
-    events_data_list = [event.to_dict() for event in Event.query.all()]
+    events_data_list = [event.to_dict() for event in Event.query.order_by(Event.id).all()]
     return jsonify({'events': events_data_list})
 
 
