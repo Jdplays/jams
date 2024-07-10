@@ -6,7 +6,7 @@ url_prefix = '/private/management'
 
 bp = Blueprint('frontend', __name__, url_prefix=url_prefix)
 
-# URL PREFIX = /management
+# URL PREFIX = /private/management
 
 @bp.route('/workshop_catalog')
 @login_required
