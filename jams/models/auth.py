@@ -97,48 +97,51 @@ class User(UserMixin, db.Model):
         self.active = False
 
     def set_roles(self, role_ids):
-        # Remove all previous roles
-        for role in self.roles:
-            self.roles.remove(role)
+        if role_ids is not None:
+            # Remove all previous roles
+            for role in self.roles:
+                self.roles.remove(role)
 
-        # Get role objects for each role_id
-        roles = Role.query.filter(Role.id.in_(role_ids)).all()
+            # Get role objects for each role_id
+            roles = Role.query.filter(Role.id.in_(role_ids)).all()
 
-        # Set roles for the user
-        self.roles.extend(roles)
+            # Set roles for the user
+            self.roles.extend(roles)
 
     def add_roles(self, role_ids):
-        # Get the current role id's of the user
-        current_role_ids = [role.id for role in self.roles]
+        if role_ids is not None:
+            # Get the current role id's of the user
+            current_role_ids = [role.id for role in self.roles]
 
-        # Iterate through the role_ids to find roles that need to be added
-        roles_to_add = []
-        for role_id in role_ids:
-            if role_id not in current_role_ids:
-                roles_to_add.append(role_id)
+            # Iterate through the role_ids to find roles that need to be added
+            roles_to_add = []
+            for role_id in role_ids:
+                if role_id not in current_role_ids:
+                    roles_to_add.append(role_id)
 
-        # Get role objects for each role_id
-        roles = Role.query.filter(Role.id.in_(roles_to_add)).all()
+            # Get role objects for each role_id
+            roles = Role.query.filter(Role.id.in_(roles_to_add)).all()
 
-        # Add roles to the user
-        self.roles.extend(roles)
+            # Add roles to the user
+            self.roles.extend(roles)
 
     def remove_roles(self, role_ids):
-        # Get the current role id's of the user
-        current_role_ids = [role.id for role in self.roles]
+        if role_ids is not None:
+            # Get the current role id's of the user
+            current_role_ids = [role.id for role in self.roles]
 
-        # Iterate through the role_ids to find roles that need to be removed
-        roles_to_remove = []
-        for role_id in role_ids:
-            if role_id in current_role_ids:
-                roles_to_remove.append(role_id)
+            # Iterate through the role_ids to find roles that need to be removed
+            roles_to_remove = []
+            for role_id in role_ids:
+                if role_id in current_role_ids:
+                    roles_to_remove.append(role_id)
 
-        # Get role objects for each role_id
-        roles = Role.query.filter(Role.id.in_(roles_to_remove)).all()
+            # Get role objects for each role_id
+            roles = Role.query.filter(Role.id.in_(roles_to_remove)).all()
 
-        # Remove roles from the user
-        for role in roles:
-            self.roles.remove(role)
+            # Remove roles from the user
+            for role in roles:
+                self.roles.remove(role)
 
     
     def set_roles_by_name(self, role_names):
