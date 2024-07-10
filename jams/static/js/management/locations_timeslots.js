@@ -78,8 +78,7 @@ function ActivateLocation(locationID) {
     });
 }
 
-function AddLocationOnClick(event) {
-    event.preventDefault();
+function AddLocationOnClick() {
     const data = {
         'name': document.getElementById('add-location-name').value,
     }
@@ -87,20 +86,17 @@ function AddLocationOnClick(event) {
     AddLocation(data)
 }
 
-function EditLocationOnClick(event) {
-    event.preventDefault();
+function EditLocationOnClick() {
     locationID = document.getElementById('edit-location-id').value
     const data = {
         'name': document.getElementById('edit-location-name').value,
     }
 
     EditLocation(locationID, data)
-    document.getElementById('edit-location-block').style.display = 'none'
 }
 
 async function prepEditLocationForm(locationID) {
     let location = await GetLocation(locationID)
-    document.getElementById('edit-location-block').style.display = 'block'
 
     document.getElementById('edit-location-id').value = location.id
     document.getElementById('edit-location-name').value = location.name
@@ -129,35 +125,36 @@ async function PopulateLocationsTable() {
                 ArchiveLocation(location.id)
             }
             archiveButton.innerHTML = 'Archive'
-
-            // Edit button
-            editButton = document.createElement('button')
-            editButton.onclick = function () {
-                prepEditLocationForm(location.id)
-            }
-            editButton.innerHTML = 'Edit'
+            archiveButton.className  = 'btn btn-danger'
             
-            // Add Buttons to div
+            // Add Button to div
             actionsButtons.appendChild(archiveButton)
-            actionsButtons.appendChild(editButton)
         }
         else {
-            // Archive button
+            // Activate button
             activeateButton = document.createElement('button')
             activeateButton.onclick = function () {
                 ActivateLocation(location.id)
             }
             activeateButton.innerHTML = 'Activate'
-
-            // Edit button
-            editButton = document.createElement('button')
-            editButton.disabled = true
-            editButton.innerHTML = 'Edit'
+            activeateButton.className  = 'btn btn-success'
             
-            // Add Buttons to div
+            // Add Button to div
             actionsButtons.appendChild(activeateButton)
-            actionsButtons.appendChild(editButton)
         }
+
+        // Edit button
+        editButton = document.createElement('button')
+        editButton.onclick = function () {
+            prepEditLocationForm(location.id)
+        }
+        editButton.innerHTML = 'Edit'
+        editButton.className  = 'btn btn-secondary'
+        editButton.setAttribute('data-bs-toggle', 'modal');
+        editButton.setAttribute('data-bs-target','#edit-location-modal')
+        editButton.disabled = !location.active
+
+        actionsButtons.appendChild(editButton)
 
         var row = document.createElement('tr')
         CreateAndAppendCell(row, location.name)
@@ -169,11 +166,6 @@ async function PopulateLocationsTable() {
 
 // Event listeners
 document.addEventListener("DOMContentLoaded", PopulateLocationsTable);
-document.getElementById('add-location-form').addEventListener('submit', AddLocationOnClick);
-document.getElementById('edit-location-form').addEventListener('submit', EditLocationOnClick);
-document.getElementById('edit-location-form').addEventListener('reset', function() {
-    document.getElementById('edit-location-block').style.display = 'none'
-});
 
 
 
@@ -257,8 +249,7 @@ function ActivateTimeslot(timeslotID) {
     });
 }
 
-function AddTimeslotOnClick(event) {
-    event.preventDefault();
+function AddTimeslotOnClick() {
     const data = {
         'name': document.getElementById('add-timeslot-name').value,
         'start': document.getElementById('add-timeslot-start-time').value,
@@ -268,8 +259,7 @@ function AddTimeslotOnClick(event) {
     AddTimeslot(data)
 }
 
-function EditTimeslotOnClick(event) {
-    event.preventDefault();
+function EditTimeslotOnClick() {
     timeslotID = document.getElementById('edit-timeslot-id').value
     const data = {
         'name': document.getElementById('edit-timeslot-name').value,
@@ -278,12 +268,10 @@ function EditTimeslotOnClick(event) {
     }
 
     EditTimeslot(timeslotID, data)
-    document.getElementById('edit-timeslot-block').style.display = 'none'
 }
 
 async function prepEditTimeslotForm(timeslotID) {
     let timeslot = await GetTimeslot(timeslotID)
-    document.getElementById('edit-timeslot-block').style.display = 'block'
 
     document.getElementById('edit-timeslot-id').value = timeslot.id
     document.getElementById('edit-timeslot-name').value = timeslot.name
@@ -314,38 +302,42 @@ async function PopulateTimeslotsTable() {
                 ArchiveTimeslot(timeslot.id)
             }
             archiveButton.innerHTML = 'Archive'
+            archiveButton.className  = 'btn btn-danger'
 
-            // Edit button
-            editButton = document.createElement('button')
-            editButton.onclick = function () {
-                prepEditTimeslotForm(timeslot.id)
-            }
-            editButton.innerHTML = 'Edit'
-            
-            // Add Buttons to div
+            // Add Button to div
             actionsButtons.appendChild(archiveButton)
-            actionsButtons.appendChild(editButton)
         }
         else {
-            // Archive button
+            // Activate button
             activeateButton = document.createElement('button')
             activeateButton.onclick = function () {
                 ActivateTimeslot(timeslot.id)
             }
             activeateButton.innerHTML = 'Activate'
-
-            // Edit button
-            editButton = document.createElement('button')
-            editButton.disabled = true
-            editButton.innerHTML = 'Edit'
+            activeateButton.className  = 'btn btn-success'
             
             // Add Buttons to div
             actionsButtons.appendChild(activeateButton)
-            actionsButtons.appendChild(editButton)
+            
         }
+
+        // Edit button
+        editButton = document.createElement('button')
+        editButton.onclick = function () {
+            prepEditTimeslotForm(timeslot.id)
+        }
+        editButton.disabled = !timeslot.active
+        editButton.innerHTML = 'Edit'
+        editButton.className  = 'btn btn-secondary'
+        editButton.setAttribute('data-bs-toggle', 'modal');
+        editButton.setAttribute('data-bs-target','#edit-timeslot-modal')
+
+        actionsButtons.appendChild(editButton)
 
         var row = document.createElement('tr')
         CreateAndAppendCell(row, timeslot.name)
+        CreateAndAppendCell(row, timeslot.start)
+        CreateAndAppendCell(row, timeslot.end)
         row.appendChild(actionsButtons)
 
         $('#timeslot-table').append(row);
@@ -356,8 +348,3 @@ async function PopulateTimeslotsTable() {
 
 // Event listeners
 document.addEventListener("DOMContentLoaded", PopulateTimeslotsTable);
-document.getElementById('add-timeslot-form').addEventListener('submit', AddTimeslotOnClick);
-document.getElementById('edit-timeslot-form').addEventListener('submit', EditTimeslotOnClick);
-document.getElementById('edit-timeslot-form').addEventListener('reset', function() {
-    document.getElementById('edit-timeslot-block').style.display = 'none'
-});

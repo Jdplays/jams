@@ -16,18 +16,80 @@
 </div>
 
 <h1>Locations</h1>
-<div>
-    <h1>Add a Location</h1>
-    <form id="add-location-form">
-        <label for="name">Name:</label>
-        <input type="text" id="add-location-name" name="name"><br><br>
-        <button type="submit">Submit</button>
-    </form>
+
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add-location-modal">Add
+    Location</button>
+
+<div class="modal" id="add-location-modal" tabindex="-1">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">New Location</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Location Name</label>
+                    <input type="text" class="form-control" name="name" id="add-location-name"
+                        placeholder="Your location name" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
+                    Cancel
+                </a>
+                <a href="#" onclick="AddLocationOnClick()" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-plus" width="24"
+                        height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M12 5l0 14"></path>
+                        <path d="M5 12l14 0"></path>
+                    </svg>
+                    Create new Location
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 
-<div>
-    <table id="location-table">
-        <thead>
+<div class="modal" id="edit-location-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Location</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-location-id" name="location_id">
+                <div class="mb-3">
+                    <label class="form-label">Location Name</label>
+                    <input type="text" class="form-control" name="name" id="edit-location-name"
+                        placeholder="Your location name" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
+                    Cancel
+                </a>
+                <a href="#" onclick="EditLocationOnClick()" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-plus" width="24"
+                        height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M12 5l0 14"></path>
+                        <path d="M5 12l14 0"></path>
+                    </svg>
+                    Edit Location
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table id="location-table" class="table table-vcenter">
+        <thead class="sticky-top">
             <tr>
                 <th>Location Name</th>
                 <th>Actions</th>
@@ -39,36 +101,56 @@
     </table>
 </div>
 
-<div id="edit-location-block" style="display: none;">
-    <h1>Edit a Location</h1>
-    <form id="edit-location-form">
-        <input type="hidden" id="edit-location-id" name="location_id"><br><br>
-        <label for="name">Name:</label>
-        <input type="text" id="edit-location-name" name="name"><br><br>
-        <button type="submit">Submit</button>
-        <button type="reset">Cancel</button>
-    </form>
-</div>
-
 <p id="location-request-response"></p>
 
 <h1>Timeslots</h1>
-<div>
-    <h1>Add a Timeslot</h1>
-    <form id="add-timeslot-form">
-        <label for="name">Name:</label>
-        <input type="text" id="add-timeslot-name" name="name"><br><br>
-        <label for="start-time">Start Time:</label>
-        <input type="time" id="add-timeslot-start-time" name="start_time"><br><br>
-        <label for="end-time">End Time:</label>
-        <input type="time" id="add-timeslot-end-time" name="end_time"><br><br>
-        <button type="submit">Submit</button>
-    </form>
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add-timeslot-modal">Add
+    Timeslots</button>
+
+<div class="modal" id="add-timeslot-modal" tabindex="-1">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">New Timeslot</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Timeslot Name</label>
+                    <input type="text" class="form-control" name="name" id="add-timeslot-name"
+                        placeholder="Your timeslot name" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Start time</label>
+                    <input type="time" class="form-control" name="name" id="add-timeslot-start-time"/>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">End time</label>
+                    <input type="time" class="form-control" name="name" id="add-timeslot-end-time"/>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
+                    Cancel
+                </a>
+                <a href="#" onclick="AddTimeslotOnClick()" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-plus" width="24"
+                        height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M12 5l0 14"></path>
+                        <path d="M5 12l14 0"></path>
+                    </svg>
+                    Create new Timeslot
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 
-<div>
-    <table id="timeslot-table">
-        <thead>
+<div class="table-responsive">
+    <table id="timeslot-table" class="table table-vcenter">
+        <thead class="sticky-top">
             <tr>
                 <th>Timeslot Name</th>
                 <th>Start Time</th>
@@ -82,19 +164,46 @@
     </table>
 </div>
 
-<div id="edit-timeslot-block" style="display: none;">
-    <h1>Edit a Timeslot</h1>
-    <form id="edit-timeslot-form">
-        <input type="hidden" id="edit-timeslot-id" name="timeslot_id"><br><br>
-        <label for="name">Name:</label>
-        <input type="text" id="edit-timeslot-name" name="name"><br><br>
-        <label for="start-time">Start Time:</label>
-        <input type="time" id="edit-timeslot-start-time" name="start_time"><br><br>
-        <label for="end-time">End Time:</label>
-        <input type="time" id="edit-timeslot-end-time" name="end_time"><br><br>
-        <button type="submit">Submit</button>
-        <button type="reset">Cancel</button>
-    </form>
+<div class="modal" id="edit-timeslot-modal" tabindex="-1">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Timeslot</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-timeslot-id" name="timeslot_id">
+                <div class="mb-3">
+                    <label class="form-label">Timeslot Name</label>
+                    <input type="text" class="form-control" name="name" id="edit-timeslot-name"
+                        placeholder="Your timeslot name" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Start time</label>
+                    <input type="time" class="form-control" name="name" id="edit-timeslot-start-time"/>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">End time</label>
+                    <input type="time" class="form-control" name="name" id="edit-timeslot-end-time"/>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
+                    Cancel
+                </a>
+                <a href="#" onclick="EditTimeslotOnClick()" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-plus" width="24"
+                        height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M12 5l0 14"></path>
+                        <path d="M5 12l14 0"></path>
+                    </svg>
+                    Edit Timeslot
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 
 <p id="timeslot-request-response"></p>

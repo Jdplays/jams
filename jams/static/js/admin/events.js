@@ -51,7 +51,6 @@ function EditEvent(eventID, data) {
         contentType: 'application/json',
         success: async function(response) {
             await PopulateEventsTable();
-            document.getElementById('edit-event-block').style.display = 'none'
             document.getElementById('events-request-response').innerHTML = response.message
         }
     });
@@ -80,8 +79,7 @@ function ActivateEvent(eventID) {
 }
 
 
-function AddEventOnClick(event) {
-    event.preventDefault();
+function AddEventOnClick() {
     const data = {
         'name': document.getElementById('add-event-name').value,
         'description': document.getElementById('add-event-description').value,
@@ -92,8 +90,7 @@ function AddEventOnClick(event) {
     AddNewEvent(data)
 }
 
-function EditEventOnClick(event) {
-    event.preventDefault();
+function EditEventOnClick() {
     eventID = document.getElementById('edit-event-id').value
     const data = {
         'name': document.getElementById('edit-event-name').value,
@@ -107,7 +104,6 @@ function EditEventOnClick(event) {
 
 async function PrepEditEventForm(eventID) {
     let event = await GetEvent(eventID)
-    document.getElementById('edit-event-block').style.display = 'block'
 
     document.getElementById('edit-event-id').value = event.id
     document.getElementById('edit-event-name').value = event.name
@@ -138,35 +134,37 @@ async function PopulateEventsTable() {
                 ArchiveEvent(event.id)
             }
             archiveButton.innerHTML = 'Archive'
-
-            // Edit button
-            editButton = document.createElement('button')
-            editButton.onclick = function () {
-                PrepEditEventForm(event.id)
-            }
-            editButton.innerHTML = 'Edit'
+            archiveButton.className  = 'btn btn-danger'
             
-            // Add Buttons to div
+            // Add Buttonsto div
             actionsButtons.appendChild(archiveButton)
-            actionsButtons.appendChild(editButton)
         }
         else {
-            // Archive button
+            // Activate button
             activeateButton = document.createElement('button')
             activeateButton.onclick = function () {
                 ActivateEvent(event.id)
             }
             activeateButton.innerHTML = 'Activate'
-
-            // Edit button
-            editButton = document.createElement('button')
-            editButton.disabled = true
-            editButton.innerHTML = 'Edit'
+            activeateButton.className  = 'btn btn-success'
             
-            // Add Buttons to div
+            // Add Button to div
             actionsButtons.appendChild(activeateButton)
-            actionsButtons.appendChild(editButton)
+            
         }
+
+        // Edit button
+        editButton = document.createElement('button')
+        editButton.disabled = !event.active
+        editButton.innerHTML = 'Edit'
+        editButton.className  = 'btn btn-secondary'
+        editButton.setAttribute('data-bs-toggle', 'modal');
+        editButton.setAttribute('data-bs-target','#edit-event-modal')
+        editButton.onclick = function() {
+            PrepEditEventForm(event.id)
+        }
+
+        actionsButtons.appendChild(editButton)
 
 
         var row = document.createElement('tr')
@@ -182,8 +180,3 @@ async function PopulateEventsTable() {
 
 // Event listeners
 document.addEventListener("DOMContentLoaded", PopulateEventsTable);
-document.getElementById('add-event-form').addEventListener('submit', AddEventOnClick);
-document.getElementById('edit-event-form').addEventListener('submit', EditEventOnClick);
-document.getElementById('edit-event-form').addEventListener('reset', function() {
-    document.getElementById('edit-event-block').style.display = 'none'
-});

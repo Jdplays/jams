@@ -13,7 +13,7 @@ bp = Blueprint('backend', __name__, url_prefix='/backend')
 @login_required
 @roles_required('Volunteer')
 def get_workshops():
-    workshops_data_list = [workshop.to_dict() for workshop in Workshop.query.all()]
+    workshops_data_list = [workshop.to_dict() for workshop in Workshop.query.order_by(Workshop.id).all()]
     return jsonify({'workshops': workshops_data_list})
 
 
@@ -130,7 +130,7 @@ def activate_workshop(workshop_id):
 @login_required
 @roles_required('Volunteer')
 def get_locations():
-    locations_data_list = [location.to_dict() for location in Location.query.all()]
+    locations_data_list = [location.to_dict() for location in Location.query.order_by(Location.id).all()]
     return jsonify({'locations': locations_data_list})
 
 
@@ -245,7 +245,7 @@ def activate_location(location_id):
 @login_required
 @roles_required('Volunteer')
 def get_timeslots():
-    timeslots_data_list = [timeslot.to_dict() for timeslot in Timeslot.query.all()]
+    timeslots_data_list = [timeslot.to_dict() for timeslot in Timeslot.query.order_by(Timeslot.id).all()]
     return jsonify({'timeslots': timeslots_data_list})
 
 
