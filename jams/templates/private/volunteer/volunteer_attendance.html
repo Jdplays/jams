@@ -1,0 +1,55 @@
+{% extends '_layout.html' %}
+
+{% block title %}Volunteer Attendance{% endblock %}
+
+{% block content %}
+
+<div class="row row-deck row-cards">
+    <div class="col-4">
+        <div class="card">
+            <div class="card-body" style="height: 10rem">
+                <h1>Volunteer Attendance</h1>
+                <p>This is the Volunteer Attendance page!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div>
+    <h1 id="update-volunteer-attendance-title">Add Attendance</h1>
+    <form id="update-volunteer-attendanceform">
+        <input type="hidden" id="update-volunteer-attendance-id" name="volunteer_attendance"><br><br>
+        <label for="name">Attending Setup:</label>
+        <input type="checkbox" id="update-volunteer-attendance-setup" name="setup"><br><br>
+        <label for="name">Attending Main Event:</label>
+        <input type="checkbox" id="update-volunteer-attendance-main" name="main"><br><br>
+        <label for="name">Attending Packdown:</label>
+        <input type="checkbox" id="update-volunteer-attendance-packdown" name="packdown"><br><br>
+        <label for="description">Note:</label>
+        <textarea id="update-volunteer-attendance-note" name="note"></textarea><br><br>
+        <button id="update-volunteer-attendance-submit"  type="submit">Submit</button>
+    </form>
+</div>
+
+<div>
+    <table id="volunteer-attendance-table">
+        <thead>
+            <tr>
+                <th>Volunteer Name</th>
+                <th>Attending Setup</th>
+                <th>Attending Main Event</th>
+                <th>Attending Packdown</th>
+                <th>Note</th>
+            </tr>
+        </thead>
+        <tbody id="table-body">
+            <!-- Data will be dynamically added here -->
+        </tbody>
+    </table>
+</div>
+
+<p id="volunteer-attendance-request-response"></p>
+
+<script src="{{ url_for('static', filename='js/volunteer/volunteer_attendance.js') }}" defer></script>
+
+{% endblock %}

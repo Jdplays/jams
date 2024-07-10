@@ -1,3 +1,5 @@
+from flask import abort
+from sqlalchemy.ext.hybrid import hybrid_property
 from jams.models import db, Event, EventLocation, EventTimeslot, Timeslot, Session
 
 
@@ -96,4 +98,20 @@ def reorder_ids(id_list, target_id, new_index):
     id_list.insert(new_index, target_id)
 
     return id_list
+
+
+def build_search_query_filter(model, request_args):
+    query = model.query
+
+    # Check if things are being searched for
+    if request_args:
+        filters = []
+        allowed_fields = list(model.query.first_or_404().to_dict().keys())
+        for search_field, search_value in request_args.items():
+            if search_field not in allowed_fields:
+                abort(404, description=f"Search field '{search_field}' not found or allowed")
+            filters.append(getattr(model, search_field).ilike(f'%{search_value}%'))
+        if filters:
+            query = query.filter(*filters)
+    return query
     

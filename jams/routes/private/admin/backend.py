@@ -3,7 +3,6 @@ from flask import Blueprint, request, jsonify, abort
 from flask_security import roles_required, login_required
 from jams.models import db, User, Role, Event, EventLocation, EventTimeslot, Session
 from jams.util import helper
-from typing import List, Tuple, Dict
 
 bp = Blueprint('backend', __name__, url_prefix='/backend')
 
@@ -15,7 +14,8 @@ bp = Blueprint('backend', __name__, url_prefix='/backend')
 @login_required
 @roles_required('Admin')
 def get_users():
-    users_data_list = [user.to_dict() for user in User.query.all()]
+    query = helper.build_search_query_filter(User, request.args)
+    users_data_list = [user.to_dict() for user in query.all()]
     return jsonify({'users': users_data_list})
 
 
@@ -23,11 +23,13 @@ def get_users():
 @login_required
 @roles_required('Admin')
 def get_users_field(field):
+    query = helper.build_search_query_filter(User, request.args)
+
     allowed_fields = list(User.query.first_or_404().to_dict().keys())
     if field not in allowed_fields:
         abort(404, description=f"Field '{field}' not found or allowed")
     users_data_list = []
-    for user in User.query.all():
+    for user in query.all():
         users_data_list.append({
             'id': user.id,
             field: getattr(user, field)
@@ -153,7 +155,8 @@ def activate_user(user_id):
 @login_required
 @roles_required('Admin')
 def get_roles():
-    roles_data_list = [role.to_dict() for role in Role.query.all()]
+    query = helper.build_search_query_filter(Role, request.args)
+    roles_data_list = [role.to_dict() for role in query.all()]
     return jsonify({'roles': roles_data_list})
 
 
@@ -161,11 +164,12 @@ def get_roles():
 @login_required
 @roles_required('Admin')
 def get_roles_field(field):
+    query = helper.build_search_query_filter(Role, request.args)
     allowed_fields = list(Role.query.first_or_404().to_dict().keys())
     if field not in allowed_fields:
         abort(404, description=f"Field '{field}' not found or allowed")
     roles_data_list = []
-    for role in Role.query.all():
+    for role in query.all():
         roles_data_list.append({
             'id': role.id,
             field: getattr(role, field)
