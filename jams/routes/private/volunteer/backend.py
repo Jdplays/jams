@@ -9,27 +9,6 @@ bp = Blueprint('backend', __name__, url_prefix='/backend')
 
 #------------------------------------------ Volunteer Attendance ------------------------------------------#
 
-
-@bp.route('/roles/<int:role_id>/users/<field>', methods=['GET'])
-@login_required
-@roles_required('Volunteer')
-def get_users_with_role(role_id, field):
-    role = Role.query.filter_by(id=role_id).first_or_404()
-    users = role.users
-
-    allowed_fields = list(User.query.first_or_404().to_dict().keys())
-    if field not in allowed_fields:
-        abort(404, description=f"Field '{field}' not found or allowed")
-
-    users_data_list = []
-    for user in users:
-        users_data_list.append({
-            'id': user.id,
-            field: getattr(user, field)
-        })
-    return jsonify({'users': users_data_list})
-
-
 @bp.route('/users/<int:user_id>/voluteer_attendences/<int:event_id>', methods=['GET'])
 @login_required
 @roles_required('Volunteer')
