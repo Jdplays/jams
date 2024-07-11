@@ -14,8 +14,8 @@ bp = Blueprint('backend', __name__, url_prefix='/backend')
 @login_required
 @roles_required('Admin')
 def get_users():
-    query = helper.build_search_query_filter(User, request.args)
-    users_data_list = [user.to_dict() for user in query.all()]
+    users = helper.filter_model_by_query_and_properties(User, request.args, User.id)
+    users_data_list = [user.to_dict() for user in users]
     return jsonify({'users': users_data_list})
 
 
@@ -23,13 +23,13 @@ def get_users():
 @login_required
 @roles_required('Admin')
 def get_users_field(field):
-    query = helper.build_search_query_filter(User, request.args)
+    users = helper.filter_model_by_query_and_properties(User, request.args, User.id)
 
     allowed_fields = list(User.query.first_or_404().to_dict().keys())
     if field not in allowed_fields:
         abort(404, description=f"Field '{field}' not found or allowed")
     users_data_list = []
-    for user in query.all():
+    for user in users:
         users_data_list.append({
             'id': user.id,
             field: getattr(user, field)
@@ -155,8 +155,8 @@ def activate_user(user_id):
 @login_required
 @roles_required('Admin')
 def get_roles():
-    query = helper.build_search_query_filter(Role, request.args)
-    roles_data_list = [role.to_dict() for role in query.all()]
+    roles = helper.filter_model_by_query_and_properties(Role, request.args, Role.id)
+    roles_data_list = [role.to_dict() for role in roles]
     return jsonify({'roles': roles_data_list})
 
 
@@ -164,12 +164,12 @@ def get_roles():
 @login_required
 @roles_required('Admin')
 def get_roles_field(field):
-    query = helper.build_search_query_filter(Role, request.args)
+    roles = helper.filter_model_by_query_and_properties(Role, request.args, Role.id)
     allowed_fields = list(Role.query.first_or_404().to_dict().keys())
     if field not in allowed_fields:
         abort(404, description=f"Field '{field}' not found or allowed")
     roles_data_list = []
-    for role in query.all():
+    for role in roles:
         roles_data_list.append({
             'id': role.id,
             field: getattr(role, field)

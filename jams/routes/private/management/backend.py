@@ -2,6 +2,7 @@
 from flask import Blueprint, request, jsonify, abort
 from flask_security import roles_required, login_required
 from jams.models import db, Workshop, Location, Timeslot
+from jams.util import helper
 
 bp = Blueprint('backend', __name__, url_prefix='/backend')
 
@@ -13,7 +14,8 @@ bp = Blueprint('backend', __name__, url_prefix='/backend')
 @login_required
 @roles_required('Volunteer')
 def get_workshops():
-    workshops_data_list = [workshop.to_dict() for workshop in Workshop.query.order_by(Workshop.id).all()]
+    workshops = helper.filter_model_by_query_and_properties(Workshop, request.args, Workshop.id)
+    workshops_data_list = [workshop.to_dict() for workshop in workshops]
     return jsonify({'workshops': workshops_data_list})
 
 
@@ -21,12 +23,13 @@ def get_workshops():
 @login_required
 @roles_required('Volunteer')
 def get_workshops_field(field):
+    workshops = helper.filter_model_by_query_and_properties(Workshop, request.args, Workshop.id)
     allowed_fields = list(Workshop.query.first_or_404().to_dict().keys())
     if field not in allowed_fields:
         abort(404, description=f"Field '{field}' not found or allowed")
 
     workshops_data_list = []
-    for workshop in Workshop.query.all():
+    for workshop in workshops:
         workshops_data_list.append({
             'id': workshop.id,
             field: getattr(workshop, field)
