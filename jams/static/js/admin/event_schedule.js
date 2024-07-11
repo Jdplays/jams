@@ -177,10 +177,14 @@ function GetTimeslotNames() {
     });
 }
 
-function GetWorkshopNames() {
+function GetWorkshopNames(queryString=null) {
     return new Promise((resolve, reject) => {
+        url = "/backend/workshops/name"
+        if (queryString != null) {
+            url = url + '?name=' + queryString
+        }
         $.ajax({
-            url: '/backend/workshops/name',
+            url: url,
             type: 'GET',
             success: function(response) {
                 resolve(response.workshops)
@@ -311,6 +315,10 @@ function TimeslotsDropdownOnChange(event) {
 
 function WorkshopDropdownOnChange(sessionID, workshopID) {
     AddWorkshopToSession(sessionID, workshopID)
+}
+
+function WorkshopSearchOnChange() {
+    PopulateWorkshopSidebarList()
 }
 
 function CreateDropdown(options, defualtOptionText, onChangeFunc) {
@@ -484,7 +492,27 @@ async function BuildSchedule() {
     }
 }
 
+async function PopulateWorkshopSidebarList() {
+    let searchBoxValue = document.getElementById('workshop-search-box').value
+    let workshopNames = await GetWorkshopNames(searchBoxValue)
+
+    let workshopList = document.getElementById('workshop-list')
+
+    // Empty the list
+    while (workshopList.firstChild) {
+        workshopList.removeChild(workshopList.firstChild)
+    }
+
+    // Populate the list
+    for (const workshop of workshopNames) {
+        p = document.createElement('p')
+        p.innerHTML = workshop.name
+        workshopList.appendChild(p)
+    }
+}
+
 // Event Listeners
 document.addEventListener("DOMContentLoaded", PopulateEventSelectionDropdown);
 document.addEventListener("DOMContentLoaded", PopulateEventName);
 document.addEventListener("DOMContentLoaded", BuildSchedule);
+document.addEventListener("DOMContentLoaded", PopulateWorkshopSidebarList);
