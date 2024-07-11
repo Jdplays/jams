@@ -36,7 +36,7 @@ function GetRoleIDFromName(roleName) {
 function GetAllUsersNamesWithRole(roleID) {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: '/backend/roles/' + roleID + '/users/display_name',
+            url: '/backend/users/display_name?role_ids=' + roleID,
             type: 'GET',
             success: function(response) {
                 resolve(response.users);  

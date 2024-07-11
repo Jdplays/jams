@@ -37,7 +37,7 @@
           <div class="mb-3">
             <label class="form-label">Minimum Volunteers</label>
             <div class="input-group">
-              <input type="text" class="form-control text-center" value="0" id="add-workshop-min_volunteers"
+              <input type="number" class="form-control text-center" value="0" id="add-workshop-min_volunteers"
                 name="min_volunteers">
             </div>
           </div>
@@ -84,7 +84,7 @@
           <div class="mb-3">
             <label class="form-label">Minimum Volunteers</label>
             <div class="input-group">
-              <input type="text" class="form-control text-center" value="0" id="edit-workshop-min_volunteers"
+              <input type="number" class="form-control text-center" value="0" id="edit-workshop-min_volunteers"
                 name="min_volunteers">
             </div>
           </div>
@@ -127,21 +127,6 @@
         <!-- Data will be dynamically added here -->
       </tbody>
     </table>
-  </div>
-
-  <div id="edit-workshop-block" style="display: none;">
-    <h1>Edit a workshop</h1>
-    <form id="edit-workshop-form">
-      <input type="hidden" id="edit-workshop-id" name="workshop_id"><br><br>
-      <label for="name">Name:</label>
-      <input type="text" id="edit-workshop-name" name="name"><br><br>
-      <label for="description">Description:</label>
-      <textarea id="edit-workshop-description" name="description"></textarea><br><br>
-      <label for="min_volunteers">Minimum Required Volunteers:</label>
-      <input type="number" id="edit-workshop-min_volunteers" name="min_volunteers"><br><br>
-      <button type="submit">Submit</button>
-      <button type="reset">Cancel</button>
-    </form>
   </div>
 
   <p id="workshop-request-response"></p>
