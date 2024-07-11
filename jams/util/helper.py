@@ -1,6 +1,6 @@
 from flask import abort
-from sqlalchemy.ext.hybrid import hybrid_property
 from jams.models import db, Event, EventLocation, EventTimeslot, Timeslot, Session
+from collections.abc import Mapping, Iterable
 
 
 def get_ordered_event_locations(event_id):
@@ -99,19 +99,59 @@ def reorder_ids(id_list, target_id, new_index):
 
     return id_list
 
+def contains_value(obj, value):
+    def recursive_search(obj, value):
+        if isinstance(obj, str) or isinstance(value, str):
+            if str(value).lower() in str(obj).lower():
+                return True
+        elif isinstance(obj, Mapping):
+            for sub_obj in obj.values():
+                if recursive_search(sub_obj, value):
+                    return True
+        elif isinstance(obj, Iterable) and not isinstance(obj, (str, bytes)):
+            for sub_obj in obj:
+                if recursive_search(sub_obj, value):
+                    return True
+        else:
+            if obj == value:
+                return True
+        return False
+    return recursive_search(obj, value)
 
-def build_search_query_filter(model, request_args):
+def filter_model_by_query_and_properties(model, request_args, order_by=None):
     query = model.query
-
+    objects = []
     # Check if things are being searched for
     if request_args:
+        properties_values = {}
         filters = []
         allowed_fields = list(model.query.first_or_404().to_dict().keys())
         for search_field, search_value in request_args.items():
             if search_field not in allowed_fields:
                 abort(404, description=f"Search field '{search_field}' not found or allowed")
+            if isinstance(getattr(model, search_field), property):
+                properties_values.update({search_field: search_value})
+                continue
             filters.append(getattr(model, search_field).ilike(f'%{search_value}%'))
         if filters:
             query = query.filter(*filters)
-    return query
+        
+        if order_by:
+            objects = query.order_by(order_by).all()
+        else:
+            objects = query.all()
+
+        if properties_values:
+            for obj in objects[:]:
+                for prop, value in properties_values.items():
+                    if not contains_value(getattr(obj, prop), value):
+                        objects.remove(obj)
+    else:
+        if order_by:
+            objects = query.order_by(order_by).all()
+        else:
+            objects = query.all()
+
+    return objects
+
     
