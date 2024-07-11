@@ -414,7 +414,7 @@ def add_event_location(event_id):
     location_id = data.get('location_id')
     order = data.get('order')
 
-    if not location_id or not order:
+    if location_id == None or order == None:
         abort(400, description="No 'location_id' or 'order' provided")
 
     # Make sure no other session in this event has the same location or order

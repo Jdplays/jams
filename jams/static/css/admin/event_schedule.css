@@ -1,0 +1,60 @@
+.content-wrapper {
+    display: flex;
+    min-height: 100vh; /* Make sure it takes full height */
+}
+
+.main-content {
+    width: 80%;
+    padding: 20px;
+}
+
+.sidebar {
+    width: 20%;
+    background-color: #f8f9fa; /* Light gray background */
+    padding: 20px;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.1); /* Light shadow on the left side */
+}
+
+table {
+    border-collapse: collapse;
+}
+
+td {
+    border: 1px dashed black;
+    width: 150px; /* Set the width of each cell */
+    height: 150px; /* Set the height of each cell */
+    text-align: center;
+    vertical-align: middle;
+}
+
+th {
+    width: 150px;
+    height: 150px;
+    border: 1px solid black;
+    text-align: center;
+    vertical-align: middle;
+}
+
+th.empty {
+    width: 0px;
+    height: 0px;
+    border: 0px;
+}
+
+th.header-top {
+    height: 75px;
+}
+
+th.header-side{
+    width: 75px;
+}
+
+th.header-top-end {
+    border: 1px dashed black;
+    height: 40px;
+}
+
+th.header-side-end{
+    border: 1px dashed black;
+    height: 40px;
+}

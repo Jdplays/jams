@@ -382,6 +382,7 @@ async function BuildSchedule() {
     // create the header row
     const headerRow = document.createElement('tr');
     const emptyCell = document.createElement('th')
+    emptyCell.className = 'empty'
     headerRow.appendChild(emptyCell)
 
     // Add locations headers
@@ -389,6 +390,7 @@ async function BuildSchedule() {
     if (eventLocations.length > 0) {
         for (const eventLocation of eventLocations) {
             const th = document.createElement('th');
+            th.className = 'header-top'
             let locationDetails = await GetLocation(eventLocation.location_id)
             th.innerText = locationDetails.name;
 
@@ -407,6 +409,7 @@ async function BuildSchedule() {
 
     // Add a dropdown select at the end of the header row
     const locationsDropdownCell = document.createElement('th');
+    locationsDropdownCell.className = 'header-top-end'
     locationsDropdownCell.appendChild(CreateDropdown(await GetLocationNames(), "Add Location", LocationsDropdownOnChange));
     headerRow.appendChild(locationsDropdownCell);
 
@@ -417,6 +420,7 @@ async function BuildSchedule() {
         for (const eventTimeslot of eventTimeslots) {
             const row = document.createElement('tr');
             const th = document.createElement('th')
+            th.className = 'header-side'
             let  timeslotDetails = await GetTimeslot(eventTimeslot.timeslot_id)
             th.innerText = timeslotDetails.name
 
@@ -433,6 +437,7 @@ async function BuildSchedule() {
             // Create cells for each location
             for (const eventLocation of eventLocations) {
                 const td = document.createElement('td');
+                //td.className = 'square-cell'
                 td.id = `session-${eventLocation.id}-${eventTimeslot.id}`
                 row.appendChild(td);
             };
@@ -444,6 +449,7 @@ async function BuildSchedule() {
     // Add a dropdown select at the end of the header row
     const row = document.createElement('tr');
     const TimeslotsDropdownCell = document.createElement('th');
+    TimeslotsDropdownCell.className = 'header-side-end'
     TimeslotsDropdownCell.appendChild(CreateDropdown(await GetTimeslotNames(), "Add Timeslot", TimeslotsDropdownOnChange));
     row.appendChild(TimeslotsDropdownCell);
 

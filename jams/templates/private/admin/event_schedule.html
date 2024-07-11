@@ -4,34 +4,44 @@
 
 {% block content %}
 
-<div class="row row-deck row-cards">
-    <div class="col-4">
-        <div class="card">
-            <div class="card-body" style="height: 10rem">
-                <h1>Event Schedule</h1>
-                <p>This is the Event Schedule page!</p>
+<div class="content-wrapper">
+    <div class="main-content">
+        <div class="row row-deck row-cards">
+            <div class="col-4">
+                <div class="card">
+                    <div class="card-body" style="height: 10rem">
+                        <h1>Event Schedule</h1>
+                        <p>This is the Event Schedule page!</p>
+                    </div>
+                </div>
             </div>
         </div>
+
+        <div id="event-selection">
+            <h1>Select an Event</h1>
+        </div>
+
+        <h2 id="event-details"></h2>
+
+        <div>
+            <table id="event-schedule-table">
+                <thead id="event-schedule-table-head">
+                    <!-- Data will be dynamically added here -->
+                </thead>
+                <tbody id="event-schedule-table-body">
+                    <!-- Data will be dynamically added here -->
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
 
-<div id="event-selection">
-    <h1>Select an Event</h1>
-</div>
+    <aside class="sidebar">
+        <h2>Test Side bar</h2>
+    </aside>
 
-<h2 id="event-details"></h2>
-
-<div>
-    <table id="event-schedule-table">
-        <thead id="event-schedule-table-head">
-            <!-- Data will be dynamically added here -->
-        </thead>
-        <tbody id="event-schedule-table-body">
-            <!-- Data will be dynamically added here -->
-        </tbody>
-    </table>
 </div>
 
 <script src="{{ url_for('static', filename='js/admin/event_schedule.js') }}" defer></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin/event_schedule.css') }}">
 
 {% endblock %}
