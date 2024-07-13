@@ -375,6 +375,25 @@ async function PopulateEventName() {
     document.getElementById('event-details').innerHTML = event.name + " | ID: " + event.id
 }
 
+// Drag and drop
+
+function allowDrop(ev) {
+    ev.preventDefault();
+  }
+
+function drag(ev, value) {
+    ev.dataTransfer.setData("workshop-id", value);
+  }
+
+  async function drop(event) {
+    event.preventDefault();
+    var workshopID = event.dataTransfer.getData("workshop-id");
+    var sessionID = event.target.getAttribute('session-id')
+    AddWorkshopToSession(sessionID, workshopID)
+    console.log(workshopID)
+    console.log(sessionID)
+  }
+
 async function BuildSchedule() {
     // Clear the current table
     $('#event-schedule-table thead').empty();
@@ -402,7 +421,7 @@ async function BuildSchedule() {
             let locationDetails = await GetLocation(eventLocation.location_id)
             th.innerText = locationDetails.name;
 
-            removeButton = document.createElement('button')
+            const removeButton = document.createElement('button')
             removeButton.innerHTML = "Remove Location"
             removeButton.onclick = function () {
                 console.log("Remove")
@@ -418,7 +437,7 @@ async function BuildSchedule() {
     // Add a dropdown select at the end of the header row
     const locationsDropdownCell = document.createElement('th');
     locationsDropdownCell.className = 'header-top-end'
-    locationsDropdownCell.appendChild(CreateDropdown(await GetLocationNames(), "Add Location", LocationsDropdownOnChange));
+    locationsDropdownCell.appendChild(CreateDropdown(await GetLocationNames(), "a", LocationsDropdownOnChange));
     headerRow.appendChild(locationsDropdownCell);
 
     tableHead.appendChild(headerRow)
@@ -432,7 +451,7 @@ async function BuildSchedule() {
             let  timeslotDetails = await GetTimeslot(eventTimeslot.timeslot_id)
             th.innerText = timeslotDetails.name
 
-            removeButton = document.createElement('button')
+            const removeButton = document.createElement('button')
             removeButton.innerHTML = "Remove Timeslot"
             removeButton.onclick = function () {
                 RemoveTimeslotFromEvent(EVENTID, eventTimeslot.id)
@@ -466,19 +485,24 @@ async function BuildSchedule() {
     // Populate the sessions
     if (eventSessions.length > 0) {
         // Pre load this to prevent a load of requests
-        workshopOptions = await GetWorkshopNames();
+        let workshopOptions = await GetWorkshopNames();
         for (const session of eventSessions) {
-            sessionBlock = document.getElementById(`session-${session.event_location_id}-${session.event_timeslot_id}`)
+            const sessionBlock = document.getElementById(`session-${session.event_location_id}-${session.event_timeslot_id}`)
             
             if (session.has_workshop == false) {
-                sessionBlock.appendChild(CreateWorkshopDropdown(await workshopOptions, session.id))
+                sessionBlock.addEventListener('drop', drop);
+                sessionBlock.addEventListener('dragover', allowDrop);
+                sessionBlock.setAttribute('session-id', session.id)
             }
             else {
-                workshop = await GetWorkshopForSession(session.id)
-                workshopTitle = document.createElement('p')
+                let workshop = await GetWorkshopForSession(session.id)
+                const workshopTitle = document.createElement('h4')
                 workshopTitle.innerText = workshop.name
 
-                removeButton = document.createElement('button')
+                const workshopDescription = document.createElement('p')
+                workshopDescription.innerHTML = workshop.description
+
+                const removeButton = document.createElement('button')
                 removeButton.innerHTML = "Remove"
                 removeButton.onclick = function() {
                     RemoveWorkshopFromSession(session.id)
@@ -486,6 +510,7 @@ async function BuildSchedule() {
                 }
 
                 sessionBlock.appendChild(workshopTitle)
+                sessionBlock.append(workshopDescription)
                 sessionBlock.appendChild(removeButton)
             }
         }
@@ -506,6 +531,11 @@ async function PopulateWorkshopSidebarList() {
     // Populate the list
     for (const workshop of workshopNames) {
         p = document.createElement('p')
+        p.id = "drag-drop-workshop-" + workshop.id
+        p.draggable = true
+        p.addEventListener('dragstart', function (event) {
+             drag(event, workshop.id)
+        });
         p.innerHTML = workshop.name
         workshopList.appendChild(p)
     }
