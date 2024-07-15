@@ -1,10 +1,11 @@
-from jams.models import db, User, Role, Workshop, Event, Location, Timeslot, Session
+from jams.models import db, User, Role, Workshop, Event, Location, Timeslot, DifficultyLevel
 from flask_security.utils import hash_password
 import datetime
 
 def preform_seed():
     seed_roles()
     seed_users()
+    seed_difficulty_levels()
     seed_workshops()
     seed_events()
     seed_locations()
@@ -41,15 +42,32 @@ def seed_users():
     
     db.session.commit()
 
+def seed_difficulty_levels():
+    if not DifficultyLevel.query.filter_by(name="Beginner").first():
+        level = DifficultyLevel('Beginner', "#00FF00")
+        db.session.add(level)
+
+    if not DifficultyLevel.query.filter_by(name="Intermediate").first():
+        level = DifficultyLevel('Intermediate', "#FFFF00")
+        db.session.add(level)
+
+    if not DifficultyLevel.query.filter_by(name="Advanced").first():
+        level = DifficultyLevel('Advanced', "#EE4B2B")
+        db.session.add(level)
+    
+    db.session.commit()
+
 def seed_workshops():
     # Check if the AstroPi workshop already exists
     if not Workshop.query.filter_by(name="AstroPi").first():
         workshop = Workshop(name="AstroPi", description="Find out how to run your very own code in space with the European Astro Pi Challenge.")
+        workshop.set_difficulty_by_name('Beginner')
         db.session.add(workshop)
     
     # Check if the Zigbee workshop already exists
     if not Workshop.query.filter_by(name="Zigbee").first():
         workshop = Workshop(name="Zigbee", description="Using Zigbee (A wireless communication protocol) you can control all sorts of tech! This workshop shows how to control RGB lamps using Python")
+        workshop.set_difficulty_by_name('Intermediate')
         db.session.add(workshop)
     
     db.session.commit()
