@@ -1,3 +1,11 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
 .content-wrapper {
     display: flex;
     min-height: 100vh; /* Make sure it takes full height */
@@ -12,6 +20,19 @@
     width: 20%;
     padding: 20px;
     box-shadow: -2px 0 5px rgba(0,0,0,0.1); /* Light shadow on the left side */
+}
+
+.select-event {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+#event-select {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
 }
 
 table {
@@ -30,8 +51,6 @@ th {
     width: 150px;
     height: 150px;
     border: 1px solid black;
-    text-align: center;
-    vertical-align: middle;
 }
 
 th.empty {
@@ -56,4 +75,80 @@ th.header-top-end {
 th.header-side-end{
     border: 1px dashed black;
     height: 40px;
+}
+
+div.workshop-card{
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    vertical-align: middle;
+}
+
+div.workshop-card-list-item{
+    border: 1px dashed black;
+    padding: 20px;
+}
+
+.truncate{
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 4.5em;         /* 3 lines with a line-height of 1.5em */
+    line-height: 1.5em;
+}
+
+
+
+
+.grid-container {
+    display: grid;
+
+    border-radius: 15px; /* Adjust this value to change the roundness */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Adjust these values to change the shadow */
+    padding: 20px; /* Optional: Adjust this value to add padding inside the element */
+    border: 1px solid #ccc;
+}
+
+.session-block {
+    background-color: #fff;
+    text-align: center;
+    border-style: none dashed dashed none;
+    width: 150px;
+    height: 150px;
+}
+
+.header-top {
+    background-color: #f4f4f4;
+    font-weight: bold;
+    border-style: solid none solid solid;
+    width: 150px;
+    height: 100px;
+}
+
+.header-side {
+    background-color: #f4f4f4;
+    font-weight: bold;
+    border-style: solid solid none solid;
+    width: 100px;
+    height: 150px;
+}
+
+.header-top-end {
+    font-weight: bold;
+    border-style: dashed dashed dashed solid;
+    width: 50px;
+    height: 100px;
+}
+
+.header-side-end {
+    font-weight: bold;
+    border-style: solid dashed dashed dashed;
+    width: 100px;
+    height: 50px;
+}
+
+.empty {
+    opacity: 0%;
 }

@@ -177,9 +177,9 @@ function GetTimeslotNames() {
     });
 }
 
-function GetWorkshopNames(queryString=null) {
+function GetWorkshops(queryString=null) {
     return new Promise((resolve, reject) => {
-        url = "/backend/workshops/name"
+        url = "/backend/workshops"
         if (queryString != null) {
             url = url + '?name=' + queryString
         }
@@ -188,6 +188,22 @@ function GetWorkshopNames(queryString=null) {
             type: 'GET',
             success: function(response) {
                 resolve(response.workshops)
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+function GetDifficultyLevel(difficultyLevelID) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: '/backend/difficulty_levels/' + difficultyLevelID,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);  
             },
             error: function(error) {
                 console.log('Error fetching data:', error);
@@ -367,7 +383,9 @@ async function PopulateEventSelectionDropdown() {
     let events = await GetEventNames()
 
     eventSelectionDropdown = document.getElementById('event-selection')
-    eventSelectionDropdown.appendChild(CreateDropdown(await events, await events[0].name, EventSelectionDropdownOnChange))
+    select = CreateDropdown(await events, await events[0].name, EventSelectionDropdownOnChange)
+    select.id = 'event-select'
+    eventSelectionDropdown.appendChild(select)
 } 
 
 async function PopulateEventName() {
@@ -394,124 +412,209 @@ function drag(ev, value) {
     console.log(sessionID)
   }
 
+  function GetIconElement(id) {
+    element = document.getElementById(id)
+    icon = element.cloneNode(true)
+    icon.style.display = 'block'
+    return icon
+  }
+
+  function EmptyElement(element) {
+    while (element.firstChild) {
+        element.removeChild(element.firstChild)
+    }
+  }
+
+
+  async function BuildWorkshopCard(workshop, remove=true, session=null) {
+    let workshopDifficulty = null
+    if (workshop.difficulty_id != null) {
+         workshopDifficulty = await GetDifficultyLevel(workshop.difficulty_id)
+    }
+
+    const workshopCard = document.createElement('div')
+    workshopCard.classList.add('workshop-card')
+    if (workshopDifficulty != null) {
+        workshopCard.style.backgroundColor = hexToRgba(workshopDifficulty.display_colour, 0.5)
+    }
+    workshopCard.style.width = '150px'
+    workshopCard.style.height = '150px'
+
+    const workshopTitle = document.createElement('h4')
+    workshopTitle.innerText = workshop.name
+
+    const workshopDescription = document.createElement('p')
+    workshopDescription.innerHTML = workshop.description
+    workshopDescription.classList.add('truncate')
+
+    workshopCard.appendChild(workshopTitle)
+    workshopCard.append(workshopDescription)
+
+    if (remove) {
+        removeButton = GetIconElement('bin-icon')
+        removeButton.onclick = function() {
+            RemoveWorkshopFromSession(session.id)
+            return true
+        }
+
+        workshopCard.appendChild(removeButton)
+    }
+
+    return workshopCard
+
+  }
+
+  // Function to convert hex to rgba
+  function hexToRgba(hex, alpha) {
+    let r = parseInt(hex.slice(1, 3), 16);
+    let g = parseInt(hex.slice(3, 5), 16);
+    let b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
 async function BuildSchedule() {
-    // Clear the current table
-    $('#event-schedule-table thead').empty();
-    $('#event-schedule-table tbody').empty();
+    const gridContainer = document.getElementById('grid-container');
+    EmptyElement(gridContainer)
 
     let eventLocations = await GetLocationsForEvent(EVENTID);
     let eventTimeslots = await GetTimeslotsForEvent(EVENTID);
     let eventSessions = await GetSessionsForEvent(EVENTID);
 
-    const tableHead = document.getElementById('event-schedule-table-head');
-    const tableBody = document.getElementById('event-schedule-table-body');
+    const columnCount = eventLocations.length + 1; // Extra column for the end button
+    const rowCount = eventTimeslots.length + 1; // Extra row for the end button
+    gridContainer.style.gridTemplateColumns = `100px repeat(${columnCount}, 150px)`;
+    gridContainer.style.gridTemplateRows = `100px repeat(${rowCount}, 150px)`;
 
-    // create the header row
-    const headerRow = document.createElement('tr');
-    const emptyCell = document.createElement('th')
-    emptyCell.className = 'empty'
-    headerRow.appendChild(emptyCell)
+
+    // Add the top-left empty cell
+    let div = document.createElement('div');
+    gridContainer.appendChild(div);
 
     // Add locations headers
     LocationsLength = eventLocations.length
     if (eventLocations.length > 0) {
         for (const eventLocation of eventLocations) {
-            const th = document.createElement('th');
-            th.className = 'header-top'
             let locationDetails = await GetLocation(eventLocation.location_id)
-            th.innerText = locationDetails.name;
+            let div = document.createElement('div');
+            div.className = 'header-top';
+
+            let p = document.createElement('p')
+            p.innerText = locationDetails.name
+            div.appendChild(p)
 
             const removeButton = document.createElement('button')
-            removeButton.innerHTML = "Remove Location"
+            removeButton.innerHTML = "Delete"
             removeButton.onclick = function () {
                 console.log("Remove")
                 RemoveLocationFromEvent(EVENTID, eventLocation.id)
                 return true
             }
 
-            th.appendChild(removeButton)
-            headerRow.appendChild(th)
+            div.appendChild(removeButton)
+            gridContainer.appendChild(div);
         };
     }
 
     // Add a dropdown select at the end of the header row
-    const locationsDropdownCell = document.createElement('th');
-    locationsDropdownCell.className = 'header-top-end'
-    locationsDropdownCell.appendChild(CreateDropdown(await GetLocationNames(), "a", LocationsDropdownOnChange));
-    headerRow.appendChild(locationsDropdownCell);
+    const locationsDropdownCell = document.createElement('div');
+    locationsDropdownCell.className = 'header-top-end dropdown'
+    btn = GetIconElement('table-add-icon')
+    btn.classList.add("btn")
+    btn.setAttribute('data-bs-toggle', 'dropdown');
+    locationsDropdownCell.appendChild(btn)
 
-    tableHead.appendChild(headerRow)
+    let locationNames = await GetLocationNames()
+    dropdownMenu = document.createElement('div')
+    dropdownMenu.className = 'dropdown-menu'
+    for (const location of locationNames) {
+        a = document.createElement('a')
+        a.innerHTML = location.name
+        a.className = "dropdown-item"
+        a.onclick = function() {
+            AddLocationToEvent(EVENTID, location.id, LocationsLength)
+        }
+        dropdownMenu.appendChild(a)
+    }
+
+    locationsDropdownCell.appendChild(dropdownMenu)
+
+    //locationsDropdownCell.appendChild(CreateDropdown(await GetLocationNames(), "+", LocationsDropdownOnChange));
+    gridContainer.appendChild(locationsDropdownCell);
 
     // Add Timeslots headers
     if (eventTimeslots.length > 0) {
         for (const eventTimeslot of eventTimeslots) {
-            const row = document.createElement('tr');
-            const th = document.createElement('th')
-            th.className = 'header-side'
             let  timeslotDetails = await GetTimeslot(eventTimeslot.timeslot_id)
-            th.innerText = timeslotDetails.name
+            let div = document.createElement('div');
+            div.className = 'header-side';
+            
+            let p = document.createElement('p')
+            p.innerText = timeslotDetails.name
+            div.appendChild(p)
+            gridContainer.appendChild(div);
 
             const removeButton = document.createElement('button')
-            removeButton.innerHTML = "Remove Timeslot"
+            removeButton.innerHTML = "Delete"
             removeButton.onclick = function () {
                 RemoveTimeslotFromEvent(EVENTID, eventTimeslot.id)
                 return true
             }
 
-            th.appendChild(removeButton)
-            row.appendChild(th)
+            div.appendChild(removeButton)
 
             // Create cells for each location
             for (const eventLocation of eventLocations) {
-                const td = document.createElement('td');
-                //td.className = 'square-cell'
-                td.id = `session-${eventLocation.id}-${eventTimeslot.id}`
-                row.appendChild(td);
+                const div = document.createElement('div');
+                div.className = 'session-block'
+                div.id = `session-${eventLocation.id}-${eventTimeslot.id}`
+                gridContainer.appendChild(div);
             };
 
-            tableBody.appendChild(row)
+            // Add the row end empty cell
+            let empty = document.createElement('div');
+            empty.className = 'empty'
+            gridContainer.appendChild(empty);
         }
     }
 
     // Add a dropdown select at the end of the header row
-    const row = document.createElement('tr');
-    const TimeslotsDropdownCell = document.createElement('th');
+    const TimeslotsDropdownCell = document.createElement('div');
     TimeslotsDropdownCell.className = 'header-side-end'
-    TimeslotsDropdownCell.appendChild(CreateDropdown(await GetTimeslotNames(), "Add Timeslot", TimeslotsDropdownOnChange));
-    row.appendChild(TimeslotsDropdownCell);
+    btn = GetIconElement('table-add-icon')
+    btn.classList.add("btn")
+    btn.setAttribute('data-bs-toggle', 'dropdown');
+    TimeslotsDropdownCell.appendChild(btn)
 
-    tableBody.appendChild(row)
+    let timeslotNames = await GetTimeslotNames()
+    dropdownMenu = document.createElement('div')
+    dropdownMenu.className = 'dropdown-menu'
+    for (const timeslot of timeslotNames) {
+        a = document.createElement('a')
+        a.innerHTML = timeslot.name
+        a.className = "dropdown-item"
+        a.onclick = function() {
+            AddTimeslotToEvent(EVENTID, timeslot.id)
+        }
+        dropdownMenu.appendChild(a)
+    }
+
+    TimeslotsDropdownCell.appendChild(dropdownMenu)
+    gridContainer.appendChild(TimeslotsDropdownCell);
 
     // Populate the sessions
     if (eventSessions.length > 0) {
-        // Pre load this to prevent a load of requests
-        let workshopOptions = await GetWorkshopNames();
         for (const session of eventSessions) {
             const sessionBlock = document.getElementById(`session-${session.event_location_id}-${session.event_timeslot_id}`)
-            
+            sessionBlock.className = 'session-block'
+
             if (session.has_workshop == false) {
                 sessionBlock.addEventListener('drop', drop);
                 sessionBlock.addEventListener('dragover', allowDrop);
                 sessionBlock.setAttribute('session-id', session.id)
             }
             else {
-                let workshop = await GetWorkshopForSession(session.id)
-                const workshopTitle = document.createElement('h4')
-                workshopTitle.innerText = workshop.name
-
-                const workshopDescription = document.createElement('p')
-                workshopDescription.innerHTML = workshop.description
-
-                const removeButton = document.createElement('button')
-                removeButton.innerHTML = "Remove"
-                removeButton.onclick = function() {
-                    RemoveWorkshopFromSession(session.id)
-                    return true
-                }
-
-                sessionBlock.appendChild(workshopTitle)
-                sessionBlock.append(workshopDescription)
-                sessionBlock.appendChild(removeButton)
+                workshopCard = await BuildWorkshopCard(await GetWorkshopForSession(session.id), true, session)
+                sessionBlock.appendChild(workshopCard)
             }
         }
     }
@@ -519,25 +622,23 @@ async function BuildSchedule() {
 
 async function PopulateWorkshopSidebarList() {
     let searchBoxValue = document.getElementById('workshop-search-box').value
-    let workshopNames = await GetWorkshopNames(searchBoxValue)
+    let workshops = await GetWorkshops(searchBoxValue)
 
     let workshopList = document.getElementById('workshop-list')
 
     // Empty the list
-    while (workshopList.firstChild) {
-        workshopList.removeChild(workshopList.firstChild)
-    }
+    EmptyElement(workshopList)
 
     // Populate the list
-    for (const workshop of workshopNames) {
-        p = document.createElement('p')
-        p.id = "drag-drop-workshop-" + workshop.id
-        p.draggable = true
-        p.addEventListener('dragstart', function (event) {
+    for (const workshop of workshops) {
+        workshopCard = await BuildWorkshopCard(workshop, false)
+        workshopCard.id = "drag-drop-workshop-" + workshop.id
+        workshopCard.classList.add('workshop-card-list-item')
+        workshopCard.draggable = true
+        workshopCard.addEventListener('dragstart', function (event) {
              drag(event, workshop.id)
         });
-        p.innerHTML = workshop.name
-        workshopList.appendChild(p)
+        workshopList.appendChild(workshopCard)
     }
 }
 
@@ -546,3 +647,9 @@ document.addEventListener("DOMContentLoaded", PopulateEventSelectionDropdown);
 document.addEventListener("DOMContentLoaded", PopulateEventName);
 document.addEventListener("DOMContentLoaded", BuildSchedule);
 document.addEventListener("DOMContentLoaded", PopulateWorkshopSidebarList);
+
+
+
+
+
+
