@@ -14,6 +14,8 @@ def create_app():
     app.config["SECURITY_PASSWORD_SALT"] = os.environ.get( "SECURITY_PASSWORD_SALT", "ab3d3a0f6984c4f5hkao41509b097a7bd498e903f3c9b2eea667h16")
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["SECURITY_REGISTERABLE"] = True
+    app.config['SECURITY_POST_REGISTER_VIEW'] = '/private/dashboard'
+    app.config['SECURITY_POST_LOGIN_VIEW'] = '/private/dashboard'
     app.config['SECURITY_PASSWORD_HASH'] = 'argon2'
     app.config["SECURITY_SEND_REGISTER_EMAIL"] = False
     app.config["SECURITY_TRACKABLE"] = True
