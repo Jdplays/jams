@@ -24,7 +24,7 @@ function loadNavigationBar() {
 }
 
 function loadTheme() {
-    let theme = localStorage.getItem("theme");
+    let theme = getTheme()
 
     if(theme === null) {
         const prefersDarkTheme = window.matchMedia('(prefers-color-scheme: dark)');
@@ -40,9 +40,11 @@ function loadTheme() {
     if (theme === "dark") {
         document.body.classList.remove("theme-light");
         document.body.classList.add("theme-dark");
+        document.querySelectorAll(".ag-theme-quartz-dark").forEach((el) => el.classList.replace("ag-theme-quartz-dark","ag-theme-quartz"));
     } else if (theme === "light") {
         document.body.classList.remove("theme-dark");
         document.body.classList.add("theme-light");
+        document.querySelectorAll(".ag-theme-quartz").forEach((el) => el.classList.replace("ag-theme-quartz","ag-theme-quartz-dark"));
     }
 }
 
@@ -51,12 +53,18 @@ function toggleTheme() {
     if (body.classList.contains("theme-dark")) {
         body.classList.remove("theme-dark");
         body.classList.add("theme-light");
+        document.querySelectorAll(".ag-theme-quartz-dark").forEach((el) => el.classList.replace("ag-theme-quartz-dark","ag-theme-quartz"));
         localStorage.setItem("theme", "light");
     } else {
         body.classList.remove("theme-light");
         body.classList.add("theme-dark");
         localStorage.setItem("theme", "dark");
+        document.querySelectorAll(".ag-theme-quartz").forEach((el) => el.classList.replace("ag-theme-quartz","ag-theme-quartz-dark"));
     }
+}
+
+function getTheme() {
+  localStorage.getItem("theme");
 }
 
 // Event listeners
