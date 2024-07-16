@@ -6,7 +6,7 @@ function loadNavigationBar() {
         let navUrl;
 
         // Determine which nav bar to load based on the path
-        if (currentPath.startsWith('/private')) {
+        if (currentPath.startsWith('/private') || currentPath.startsWith('/login') || currentPath.startsWith('/register')) {
             navUrl = '/private/nav';
         } else {
             navUrl = '/nav';
