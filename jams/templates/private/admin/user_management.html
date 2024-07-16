@@ -5,36 +5,70 @@
 {% block content %}
 
 <div class="row row-deck row-cards">
-    <div class="col-4">
+    <div class="col mx-auto">
         <div class="card">
-            <div class="card-body" style="height: 10rem">
-                <h1>User Management</h1>
-                <p>This is the User Management page!</p>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col me-auto">
+                        <h1>User Management</h1>
+                    </div>
+                    <div class="col-2">
+                        <input type="text" class="form-control" name="search-user-input" placeholder="Search..." onkeyup="UpdateSearchTerm(event)"/>
+                    </div>
+                </div>
+                <div id="user-management-grid" class="ag-theme-quartz" style="height: 80vh"></div>
             </div>
         </div>
     </div>
 </div>
 
-<div>
-    <table id="users-table">
-        <thead>
-            <tr>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Full Name</th>
-                <th>Last Login</th>
-                <th>Roles</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody id="table-body">
+<!-- <div class="mt-4"> -->
+<!--     <table id="users-table"> -->
+<!--         <thead> -->
+<!--             <tr> -->
+<!--                 <th>Username</th> -->
+<!--                 <th>Email</th> -->
+<!--                 <th>Full Name</th> -->
+<!--                 <th>Last Login</th> -->
+<!--                 <th>Roles</th> -->
+<!--                 <th>Status</th> -->
+<!--                 <th>Actions</th> -->
+<!--             </tr> -->
+<!--         </thead> -->
+<!--         <tbody id="table-body"> -->
             <!-- Data will be dynamically added here -->
-        </tbody>
-    </table>
+<!--         </tbody> -->
+<!--     </table> -->
+<!-- </div> -->
+
+<!-- <p id="user-request-response"></p> -->
+<div class="modal" id="user-edit-modal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit User</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"/>
+      </div>
+      <div class="modal-body">
+        <div class="col-sm-12 col-6">
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-control" name="example-text-input" placeholder="Your report name" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
+          Cancel
+        </a>
+        <a href="#" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
+          Update User
+        </a>
+      </div>
+  </div>
 </div>
 
-<p id="user-request-response"></p>
+</div>
 
 <script src="{{ url_for('static', filename='js/admin/user_management.js') }}" defer></script>
 
