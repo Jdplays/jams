@@ -73,7 +73,7 @@ class User(UserMixin, db.Model):
         return self.roles[0].name if self.roles else 'No Role'
 
     # Requires email, username, password to be passed
-    def __init__(self, email, username, password, active=False, first_name=None, last_name=None, dob=None, bio=None, role_ids:list[int]=None, fs_uniquifier=None, last_login_at=None, current_login_at=None, last_login_ip=None, current_login_ip=None, login_count=0):
+    def __init__(self, email, username, password, active=False, first_name=None, last_name=None, dob=None, bio=None, roles=None, role_ids:list[int]=None, fs_uniquifier=None, last_login_at=None, current_login_at=None, last_login_ip=None, current_login_ip=None, login_count=0):
         self.email = email
         self.username = username
         self.first_name = first_name
@@ -82,7 +82,10 @@ class User(UserMixin, db.Model):
         self.active = active
         self.dob = dob
         self.bio = bio
-        self.set_roles(role_ids)
+        if roles:
+            self.roles = roles
+        else:
+            self.set_roles(role_ids)
         self.fs_uniquifier = fs_uniquifier if not None else str(uuid.uuid4())
         self.last_login_at = last_login_at
         self.current_login_at = current_login_at
