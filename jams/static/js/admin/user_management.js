@@ -42,46 +42,46 @@ function GetArchiveOrActiveButtonForUser(isUserActivated, userId)
     return `<a class="btn btn-outline-secondary py-1 px-2 mb-1" onclick="ActivateUser(${userId})">Activate</a>`;
 }
 
-let gridoptions = {
-  columndefs: [
+let gridOptions = {
+  columnDefs: [
     { field: "active", width: 100, sort: 'desc'},
-    { field: "display_name", flex: 1, headername: "display name", minwidth: 150 },
-    { field: "email", flex: 1, minwidth: 150},
+    { field: "display_name", flex: 1, headerName: "Display Name", minWidth: 150 },
+    { field: "email", flex: 1, minWidth: 150},
     { 
       field: "last_login", 
-      headername: "last login", 
+      headerName: "Last Login", 
       width: 250, 
       filter: true, 
-      valueformatter: (params) => 
+      valueFormatter: (params) => 
       {
           if (!params.data.last_login) 
           { 
-              return "never logged in"; 
+              return "Never logged in"; 
           }
       }
     },
     { 
       field: "roles", 
-      headername: "roles",
+      headerName: "Roles",
       filter: true, 
-      valueformatter: (params) => 
+      valueFormatter: (params) => 
       { 
           if (params.data.role_ids.length > 1) {
-              return "multiple";
+              return "Multiple";
           }
       }, 
-      cellrenderer: (params) => 
+      cellRenderer: (params) => 
       {
           if (params.data.role_ids.length > 1) 
           {
-              params.settooltip(params.data.role_ids.join(", "));
-              return params.valueformatted;
+              params.setTooltip(params.data.role_ids.join(", "));
+              return params.valueFormatted;
           }
-          return `${params.data.role_ids}` ?? "tle";
+          return `${params.data.role_ids}` ?? "";
       }
     },
-    { field: "options", width: 140,  cellrenderer: (params) => {
-        return `<div>${getarchiveoractivebuttonforuser(params.data.active, params.data.id)}${geteditbuttonforuser(params.data.id)}</div>`;
+    { field: "options", width: 140,  cellRenderer: (params) => {
+        return `<div>${GetArchiveOrActiveButtonForUser(params.data.active, params.data.id)}${GetEditButtonForUser(params.data.id)}</div>`;
     },
     } 
   ]
