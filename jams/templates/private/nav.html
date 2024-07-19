@@ -41,7 +41,7 @@
       <div class="d-flex flex-column flex-md-row flex-fill align-items-stretch align-items-md-center">
         <ul class="navbar-nav">
           {% if current_user.is_authenticated %}
-          {% if current_user.user_has_role("Volunteer") %}
+          {% if user_has_access_to_page('volunteer_attendance') %}
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" data-bs-auto-close="outside"
               role="button" aria-expanded="false">
@@ -50,11 +50,15 @@
               </span>
             </a>
             <div class="dropdown-menu">
+              {% if user_has_access_to_page('volunteer_attendance') %}
               <a class="dropdown-item" href="{{ url_for('routes.private.volunteer.frontend.volunteer_attendance')}}">
                 Volunteer Attendance
               </a>
+              {% endif %}
             </div>
           </li>
+          {% endif %}
+          {% if user_has_access_to_page('workshop_catalog', locations_timeslots) %}
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" data-bs-auto-close="outside"
               role="button" aria-expanded="false">
@@ -63,16 +67,20 @@
               </span>
             </a>
             <div class="dropdown-menu">
+              {% if user_has_access_to_page('workshop_catalog') %}
               <a class="dropdown-item" href="{{ url_for('routes.private.management.frontend.workshop_catalog')}}">
                 Workshop Catalog
               </a>
+              {% endif %}
+              {% if user_has_access_to_page('locations_timeslots') %}
               <a class="dropdown-item" href="{{ url_for('routes.private.management.frontend.locations_timeslots')}}">
                 Locations and Timeslots
               </a>
+              {% endif %}
             </div>
           </li>
           {% endif %}
-          {% if current_user.user_has_role("Admin") %}
+          {% if user_has_access_to_page('user_management', 'events', 'event_schedule') %}
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" data-bs-auto-close="outside"
               role="button" aria-expanded="false">
@@ -81,15 +89,21 @@
               </span>
             </a>
             <div class="dropdown-menu">
+              {% if user_has_access_to_page('user_management') %}
               <a class="dropdown-item" href="{{ url_for('routes.private.admin.frontend.user_management')}}">
                 User Management
               </a>
+              {% endif %}
+              {% if user_has_access_to_page('events') %}
               <a class="dropdown-item" href="{{ url_for('routes.private.admin.frontend.events')}}">
                 Events
               </a>
+              {% endif %}
+              {% if user_has_access_to_page('event_schedule') %}
               <a class="dropdown-item" href="{{ url_for('routes.private.admin.frontend.event_schedule')}}">
                 Event Schedule
               </a>
+              {% endif %}
             </div>
           </li>
           {% endif %}

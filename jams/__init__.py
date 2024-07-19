@@ -6,6 +6,7 @@ from jams.models import User, Role
 from jams.routes import routes_bp
 from jams.seeder import preform_seed
 from jams.forms.flask_security import CustomLoginForm, CustomRegisterForm
+from jams.util import helper
 
 def create_app():
     app = Flask(__name__)
@@ -30,6 +31,11 @@ def create_app():
     security.init_app(app, user_datastore, login_form=CustomLoginForm, register_form=CustomRegisterForm)
 
     app.register_blueprint(routes_bp)
+
+    # Define the context processor within the create_app method
+    @app.context_processor
+    def utility_processor():
+        return dict(user_has_access_to_page=helper.user_has_access_to_page)
 
     return app
 

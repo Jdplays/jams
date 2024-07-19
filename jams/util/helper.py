@@ -192,3 +192,15 @@ def get_endpoint_rule_for_page(endpoint, page_id):
     return query.first()
 
 
+def user_has_access_to_page(*names):
+    user_role_ids = current_user.role_ids
+    for name in names:
+        page = Page.query.filter_by(name=name).first()
+        if not page:
+            return False
+        
+        page_role_ids = [page_role.role_id for page_role in page.role_pages]
+        for role_id in user_role_ids:
+            if role_id in page_role_ids:
+                return True
+    return False
