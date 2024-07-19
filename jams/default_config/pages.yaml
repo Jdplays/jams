@@ -1,0 +1,83 @@
+pages:
+  user_management:
+    endpoint: routes.private.admin.frontend.user_management
+    backend_endpoints:
+      routes.private.admin.backend.get_users:
+      routes.private.admin.backend.archive_user:
+      routes.private.admin.backend.activate_user:
+      routes.private.admin.backend.get_roles_field:
+        allowed_fields: id, name, username
+
+  events:
+    endpoint: routes.private.admin.frontend.events
+    backend_endpoints:
+      routes.private.admin.backend.get_events:
+      routes.private.admin.backend.get_event:
+      routes.private.admin.backend.add_event:
+      routes.private.admin.backend.edit_event:
+      routes.private.admin.backend.archive_event:
+      routes.private.admin.backend.activate_event:
+
+  event_schedule:
+    endpoint: routes.private.admin.frontend.event_schedule
+    backend_endpoints:
+      routes.private.admin.backend.get_events_field:
+        allowed_fields: id, name
+      routes.private.admin.backend.get_event:
+      routes.private.admin.backend.get_event_locations:
+      routes.private.admin.backend.get_event_timeslots:
+      routes.private.admin.backend.get_event_sessions:
+      routes.private.admin.backend.get_workshop_for_session:
+      routes.private.management.backend.get_location_field:
+        allowed_fields: id, name
+      routes.private.management.backend.get_timeslot_field:
+        allowed_fields: id, name
+      routes.private.management.backend.get_locations_field:
+        allowed_fields: id, name
+      routes.private.management.backend.get_timeslots_field:
+        allowed_fields: id, name
+      routes.private.admin.backend.add_event_location:
+      routes.private.admin.backend.add_event_timeslot:
+      routes.private.admin.backend.delete_event_location:
+      routes.private.admin.backend.delete_event_timeslot:
+      routes.private.admin.backend.add_workshop_to_session:
+      routes.private.admin.backend.remove_workshop_to_session:
+
+  workshop_catalog:
+    endpoint: routes.private.management.frontend.workshop_catalog
+    backend_endpoints:
+      routes.private.management.backend.get_workshops:
+      routes.private.management.backend.get_workshop:
+      routes.private.management.backend.add_workshop:
+      routes.private.management.backend.edit_workshop:
+      routes.private.management.backend.archive_workshop:
+      routes.private.management.backend.activate_workshop:
+
+
+  locations_timeslots:
+    endpoint: routes.private.management.frontend.locations_timeslots
+    backend_endpoints:
+      routes.private.management.backend.get_locations:
+      routes.private.management.backend.get_location:
+      routes.private.management.backend.add_location:
+      routes.private.management.backend.edit_location:
+      routes.private.management.backend.archive_location:
+      routes.private.management.backend.activate_location:
+      routes.private.management.backend.get_timeslots:
+      routes.private.management.backend.get_timeslot:
+      routes.private.management.backend.add_timeslot:
+      routes.private.management.backend.edit_timeslot:
+      routes.private.management.backend.archive_timeslot:
+      routes.private.management.backend.activate_timeslot:
+
+  volunteer_attendance:
+    endpoint: routes.private.volunteer.frontend.volunteer_attendance
+    backend_endpoints:
+      routes.private.admin.backend.get_roles_field:
+        allowed_fields: id, name
+      routes.private.admin.backend.get_users_field:
+        allowed_fields: id, display_name, role_ids
+      routes.private.volunteer.backend.get_user_attendance:
+      routes.private.volunteer.backend.add_user_attendance:
+      routes.private.volunteer.backend.edit_user_attendance:
+

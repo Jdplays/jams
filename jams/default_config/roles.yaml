@@ -1,0 +1,13 @@
+roles:
+  Admin:
+    description: The Administrator
+    pages:
+      - user_management
+      - events
+      - event_schedule
+  Volunteer:
+    description: A Helper at the event
+    pages:
+      - volunteer_attendance
+      - workshop_catalog
+      - locations_timeslots
