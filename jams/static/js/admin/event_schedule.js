@@ -97,10 +97,10 @@ function GetWorkshopForSession(sessionID) {
     });
 }
 
-function GetLocation(locationID) {
+function GetLocationName(locationID) {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: '/backend/locations/' + locationID,
+            url: '/backend/locations/' + locationID + '/name',
             type: 'GET',
             success: function(response) {
                 resolve(response)
@@ -113,26 +113,10 @@ function GetLocation(locationID) {
     });
 }
 
-function GetTimeslot(timeslotID) {
+function GetTimeslotName(timeslotID) {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: '/backend/timeslots/' + timeslotID,
-            type: 'GET',
-            success: function(response) {
-                resolve(response)
-            },
-            error: function(error) {
-                console.log('Error fetching data:', error);
-                reject(error)
-            }
-        });
-    });
-}
-
-function GetWorkshop(workshopID) {
-    return new Promise((resolve, reject) => {
-        $.ajax({
-            url: '/backend/workshops/' + workshopID,
+            url: '/backend/timeslots/' + timeslotID + '/name',
             type: 'GET',
             success: function(response) {
                 resolve(response)
@@ -168,22 +152,6 @@ function GetTimeslotNames() {
             type: 'GET',
             success: function(response) {
                 resolve(response.timeslots)
-            },
-            error: function(error) {
-                console.log('Error fetching data:', error);
-                reject(error)
-            }
-        });
-    });
-}
-
-function GetWorkshopNames() {
-    return new Promise((resolve, reject) => {
-        $.ajax({
-            url: '/backend/workshops/name',
-            type: 'GET',
-            success: function(response) {
-                resolve(response.workshops)
             },
             error: function(error) {
                 console.log('Error fetching data:', error);
@@ -389,7 +357,7 @@ async function BuildSchedule() {
     if (eventLocations.length > 0) {
         for (const eventLocation of eventLocations) {
             const th = document.createElement('th');
-            let locationDetails = await GetLocation(eventLocation.location_id)
+            let locationDetails = await GetLocationName(eventLocation.location_id)
             th.innerText = locationDetails.name;
 
             removeButton = document.createElement('button')
@@ -417,7 +385,7 @@ async function BuildSchedule() {
         for (const eventTimeslot of eventTimeslots) {
             const row = document.createElement('tr');
             const th = document.createElement('th')
-            let  timeslotDetails = await GetTimeslot(eventTimeslot.timeslot_id)
+            let  timeslotDetails = await GetTimeslotName(eventTimeslot.timeslot_id)
             th.innerText = timeslotDetails.name
 
             removeButton = document.createElement('button')
@@ -451,8 +419,6 @@ async function BuildSchedule() {
 
     // Populate the sessions
     if (eventSessions.length > 0) {
-        // Pre load this to prevent a load of requests
-        workshopOptions = await GetWorkshopNames();
         for (const session of eventSessions) {
             sessionBlock = document.getElementById(`session-${session.event_location_id}-${session.event_timeslot_id}`)
             

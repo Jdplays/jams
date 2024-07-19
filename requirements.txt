@@ -7,3 +7,4 @@ passlib[argon2]
 Flask-WTF
 gunicorn
 python-dotenv
+pyyaml
