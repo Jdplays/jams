@@ -1,6 +1,8 @@
-from flask import abort
-from jams.models import db, Event, EventLocation, EventTimeslot, Timeslot, Session
+from flask import abort, request
+from jams.models import db, EventLocation, EventTimeslot, Timeslot, Session, EndpointRule, RoleEndpointRule, PageEndpointRule, Page
 from collections.abc import Mapping, Iterable
+from sqlalchemy import nullsfirst
+from flask_security import current_user
 
 
 def get_ordered_event_locations(event_id):
@@ -154,4 +156,39 @@ def filter_model_by_query_and_properties(model, request_args, order_by=None):
 
     return objects
 
+
+def check_roles(user_role_ids, role_id):
+    if role_id in user_role_ids:
+        return True
     
+    return False
+
+def extract_endpoint():
+    endpoint = request.endpoint
+    view_args = request.view_args
+    for key, value in view_args.items():
+        endpoint = endpoint.replace(str(value), f"<{key}>")
+    return endpoint
+
+def get_endpoint_rules_for_roles(endpoint, role_ids):
+    query = (
+        db.session.query(EndpointRule)
+        .join(RoleEndpointRule, EndpointRule.id == RoleEndpointRule.endpoint_rule_id)
+        .filter(EndpointRule.endpoint == endpoint)
+        .filter(RoleEndpointRule.role_id.in_(role_ids))
+        .order_by(nullsfirst(EndpointRule.allowed_fields))
+    )
+
+    return query.all()
+
+def get_endpoint_rule_for_page(endpoint, page_id):
+    query = (
+        db.session.query(EndpointRule)
+        .join(PageEndpointRule, EndpointRule.id == PageEndpointRule.endpoint_rule_id)
+        .filter(EndpointRule.endpoint == endpoint)
+        .filter(PageEndpointRule.page_id == page_id)
+        .order_by(nullsfirst(EndpointRule.allowed_fields))
+    )
+    return query.first()
+
+
