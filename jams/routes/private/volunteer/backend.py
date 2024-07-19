@@ -1,7 +1,8 @@
 # Backend is just for serving data to javascript
 from flask import Blueprint, request, jsonify, abort
-from flask_security import roles_required, login_required, current_user
-from jams.models import db, User, Role, Event, VolunteerAttendance
+from flask_security import login_required
+from jams.decorators import role_based_access_control_be, protect_user_updates
+from jams.models import db, VolunteerAttendance
 
 bp = Blueprint('backend', __name__, url_prefix='/backend')
 
@@ -11,7 +12,7 @@ bp = Blueprint('backend', __name__, url_prefix='/backend')
 
 @bp.route('/users/<int:user_id>/voluteer_attendences/<int:event_id>', methods=['GET'])
 @login_required
-@roles_required('Volunteer')
+@role_based_access_control_be
 def get_user_attendance(user_id, event_id):
     attendance = VolunteerAttendance.query.filter_by(user_id=user_id, event_id=event_id).first_or_404()
     return jsonify({'voluteer_attendence': attendance.to_dict()})
@@ -19,12 +20,9 @@ def get_user_attendance(user_id, event_id):
 
 @bp.route('/users/<int:user_id>/voluteer_attendences/<int:event_id>', methods=['POST'])
 @login_required
-@roles_required('Volunteer')
+@protect_user_updates
+@role_based_access_control_be
 def add_user_attendance(user_id, event_id):
-    if current_user.id is not user_id:
-        abort(400, description="Unable to update another users attendence")
-
-
     att = VolunteerAttendance.query.filter_by(user_id=user_id, event_id=event_id).first()
 
     if att is not None:
@@ -51,11 +49,9 @@ def add_user_attendance(user_id, event_id):
 
 @bp.route('/users/<int:user_id>/voluteer_attendences/<int:event_id>', methods=['PATCH'])
 @login_required
-@roles_required('Volunteer')
+@protect_user_updates
+@role_based_access_control_be
 def edit_user_attendance(user_id, event_id):
-    if current_user.id is not user_id:
-        abort(400, description="Unable to update another users attendence")
-
     attendance = VolunteerAttendance.query.filter_by(user_id=user_id, event_id=event_id).first_or_404()
 
     data = request.get_json()
