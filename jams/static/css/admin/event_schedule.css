@@ -12,12 +12,13 @@ body {
 }
 
 .main-content {
-    width: 80%;
+    width: 100%;
     padding: 20px;
+    text-align: center;
 }
 
 .sidebar {
-    width: 20%;
+    max-width: 20%;
     padding: 20px;
     box-shadow: -2px 0 5px rgba(0,0,0,0.1); /* Light shadow on the left side */
 }
@@ -35,120 +36,325 @@ body {
     border: 1px solid #ccc;
 }
 
-table {
-    border-collapse: collapse;
-}
+/*Schedule Grid*/
 
-td {
-    border: 1px dashed black;
-    width: 150px; /* Set the width of each cell */
-    height: 150px; /* Set the height of each cell */
+.schedule-container {
+    display: inline-block;
     text-align: center;
-    vertical-align: middle;
 }
-
-th {
-    width: 150px;
-    height: 150px;
-    border: 1px solid black;
-}
-
-th.empty {
-    width: 0px;
-    height: 0px;
-    border: 0px;
-}
-
-th.header-top {
-    height: 75px;
-}
-
-th.header-side{
-    width: 75px;
-}
-
-th.header-top-end {
-    border: 1px dashed black;
-    height: 40px;
-}
-
-th.header-side-end{
-    border: 1px dashed black;
-    height: 40px;
-}
-
-div.workshop-card{
-    width: 100%;
-    height: 100%;
-    text-align: center;
-    vertical-align: middle;
-}
-
-div.workshop-card-list-item{
-    border: 1px dashed black;
-    padding: 20px;
-}
-
-.truncate{
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-height: 4.5em;         /* 3 lines with a line-height of 1.5em */
-    line-height: 1.5em;
-}
-
-
-
 
 .grid-container {
     display: grid;
-
-    border-radius: 15px; /* Adjust this value to change the roundness */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Adjust these values to change the shadow */
-    padding: 20px; /* Optional: Adjust this value to add padding inside the element */
-    border: 1px solid #ccc;
+    margin-left: 75px;
+    width: fit-content;
 }
 
-.session-block {
-    background-color: #fff;
+.header {
+    font-weight: bold;
+    font-size: 18;
+    position: relative;
+    align-items: center;
+    justify-items: center;
+}
+
+.header-end {
+    position: relative;
     text-align: center;
-    border-style: none dashed dashed none;
-    width: 150px;
-    height: 150px;
+    align-content: center;
+}
+
+.header::before {
+    content: '';
+    position: absolute;
+    top: -0.5px;
+    left: -0.5px;
+    right: -0.5px;
+    bottom: -0.5px;
+    border: 1px solid black;
+    pointer-events: none;
+    z-index: 2;
 }
 
 .header-top {
-    background-color: #f4f4f4;
-    font-weight: bold;
-    border-style: solid none solid solid;
     width: 150px;
     height: 100px;
 }
 
 .header-side {
-    background-color: #f4f4f4;
-    font-weight: bold;
-    border-style: solid solid none solid;
     width: 100px;
     height: 150px;
 }
 
 .header-top-end {
-    font-weight: bold;
-    border-style: dashed dashed dashed solid;
     width: 50px;
     height: 100px;
 }
 
 .header-side-end {
-    font-weight: bold;
-    border-style: solid dashed dashed dashed;
     width: 100px;
     height: 50px;
 }
 
 .empty {
     opacity: 0%;
+}
+
+.header-container {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    padding-top: 20px;
+    align-items: center;
+}
+
+.header-row {
+    display: flex;
+    flex-direction: row;
+    flex: 1 1 0;
+}
+
+.timeslot-range {
+    font-weight: normal;
+    font-size: 12;
+}
+
+.session-block {
+    width: 150px;
+    height: 150px;
+    position: relative;
+    text-align: center;
+    align-content: center;
+    background-color: rgba(240, 240, 240, 30);
+}
+
+.session-block::before,
+.header-end::before,
+.workshop-list-block::before {
+    content: '';
+    position: absolute;
+    top: -0.5px;
+    left: -0.5px;
+    right: -0.5px;
+    bottom: -0.5px;
+    border-style: dashed;
+    border-image: url('../../images/dashed-border.png') 2 round;
+    border-image-width: 0.5;
+    pointer-events: none;
+}
+
+.workshop-title-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding-top: 10px;
+}
+
+.workshop-title {
+    font-weight: bold;
+    font-size: 16;
+}
+
+.workshop-title-column {
+    display: flex;
+    flex-direction: column;
+    flex-basis: 100%;
+    flex: 1;
+}
+
+.icon-tabler-table-plus {
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+}
+
+.icon-tabler-trash {
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+}
+
+.icon-bin-session {
+    width: 15px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.workshop-card {
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    vertical-align: middle;
+    padding: 5px;
+    transform-origin: center;
+}
+
+.workshop-card-animate-shrink {
+    transform: scale(0);
+}
+
+.workshop-card-animate {
+    transition: transform 0.5s ease;
+}
+
+.workshop-card-animate-grow {
+    transform: scale(1);
+}
+
+.truncate{
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 5;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 6em;         /* 5 lines with a line-height of 1.2em */
+    line-height: 1.2em;
+}
+
+.location-column-grab-container {
+    position: absolute;
+    transform: translateY(-8px);
+    margin-left: 60px;
+    width: 30px;
+    height: 15px;;
+    background-color: white;
+    border: 1px solid black;
+    cursor: move;
+    z-index: 2;
+}
+
+.location-column-grab-icon {
+    padding-left: 5px;
+    padding-bottom: 6px;
+}
+
+.location-column-drop-indicator {
+    position: absolute;
+    width: 4px;
+    background-color: rgba(37, 178, 243, 0.75);
+    height: 100px;
+    top: 0;
+    z-index: 1000;
+}
+
+.workshop-selection-container {
+    display: inline-block;
+    width: 90%;
+    height: 280px;
+    border-radius: 30px;
+    border: 1px solid black;
+    box-shadow: 4px 4px 4px 0px rgba(0, 0, 0, 0.2);
+    background-color: #f2f2f2;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+
+.workshop-selection-tools-container {
+    width: 20%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-radius: 30px 0 0 30px;
+    background-color: white;
+    border-right: 1px solid transparent;
+    border-image: url('../../images/dashed-border.png') 2 round;
+}
+
+.workshop-selection-search-container {
+    text-align: center;
+    width: 80%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 20%;
+    border-radius: 0 30px 30px 0;
+}
+
+.workshop-selection-search {
+    display: inline-block;
+    width: 60%;
+    margin: 10px;
+    box-shadow: 4px 4px 4px 0px rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+.workshop-selection-list-container {
+    position: relative;
+    overflow:hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+.workshop-selection-list-container::before,
+.workshop-selection-list-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.workshop-selection-list-container::before {
+    left: 0;
+    background: linear-gradient(to right, white, rgba(255, 255, 255, 0));
+}
+
+.workshop-selection-list-container::after {
+    right: 0;
+    background: linear-gradient(to left, white, rgba(255, 255, 255, 0));
+}
+
+.workshop-selection-list-content {
+    display: flex;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    width: 100%;
+    padding-left: 40px;
+    padding-right: 40px;
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+}
+
+.workshop-selection-list-content::-webkit-scrollbar {
+    display: none !important;
+  }
+
+.workshop-list-block {
+    width: 150px;
+    height: 150px;
+    margin: 5px;
+    position: relative;
+    text-align: center;
+    align-content: center;
+    cursor: grab;
+}
+
+.workshop-list-block:active {
+    cursor: grabbing;
+    grid-template-rows: 150px, 150px;
+    grid-template-columns: 150px repeat(5), 150px;
+}
+
+.workshop-selection-list-arrows {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    position: absolute;
+    bottom: 10px;
+}
+
+.workshop-selection-list-arrow {
+    padding: 10px;
+    margin-left: 10px;
+    margin-right: 10px;
+    cursor: pointer;
+    z-index: 10;
 }

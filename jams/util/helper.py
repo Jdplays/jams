@@ -88,14 +88,25 @@ def reorder_ids(id_list, target_id, new_index):
     if new_index < 0 or new_index > len(id_list):
         return "New index is out of range"
     
-    current_idex = id_list.index(target_id)
+    id_list_copy = list(id_list)
+    
+    current_idex = id_list_copy.index(target_id)
 
     if current_idex == new_index:
-        return id_list
+        return id_list_copy
 
-    id_list.pop(current_idex)
+    id_list_copy.pop(current_idex)
 
-    id_list.insert(new_index, target_id)
+    id_list_copy.insert(new_index, target_id)
+
+    return id_list_copy
+
+def remove_id_from_list(id_list, target_id):
+    if target_id not in id_list:
+        return "Target ID not in list"
+    
+    current_index = id_list.index(target_id)
+    id_list.pop(current_index)
 
     return id_list
 
