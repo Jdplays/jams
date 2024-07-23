@@ -7,14 +7,17 @@
 <div class="content-wrapper">
     <div class="main-content">
 
+        <h1>Event Schedule Planner</h1>
+
         <div class="select-event" id="event-selection">
-            <h1>Select an Event</h1>
+            <h4 style="margin-right: 10px;">Select Event: </h4>
         </div>
 
-        <h2 id="event-details"></h2>
+        <div id="event-details-container"></div>
 
-        <div class="workshop-selection-container">
-            <div class="workshop-selection-tools-container"></div>
+        <div class="workshop-selection-container workshop-selection-container-style">
+            <div id="workshop-selection-tools-container" class="workshop-selection-tools-container workshop-selection-tools-container-style">
+            </div>
             <div class="workshop-selection-search-container">
                 <div class="input-icon workshop-selection-search">
                     <span class="input-icon-addon">
@@ -92,6 +95,13 @@
         </svg>
     </div>
 
+    
+    <!-- <div class="ts-dropdown multi" style="display: none;">
+        <div role="listbox" tabindex="-1" class="ts-dropdown-content" id="select-tags-ts-dropdown">
+        </div>
+    </div> -->
+    
+
     <div class="modal modal-blur fade" id="mass-place-workshop-modal" tabindex="-1" style="display: none;"
         aria-hidden="true">
         <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
@@ -163,4 +173,6 @@
 <script src="{{ url_for('static', filename='js/admin/event_schedule.js') }}" defer></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/admin/event_schedule.css') }}">
 
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 {% endblock %}
