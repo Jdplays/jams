@@ -15,7 +15,7 @@
     </div>
   </div>
 
-  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add-workshop-modal">Add Workshop</button>
+  <button id="open-add-workshop-modal-button" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add-workshop-modal">Add Workshop</button>
 
   <div class="modal" id="add-workshop-modal" tabindex="-1">
     <div class="modal-dialog modal-lg" role="document">
@@ -40,6 +40,11 @@
               <input type="number" class="form-control text-center" value="0" id="add-workshop-min_volunteers"
                 name="min_volunteers">
             </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Difficulty</label>
+              <select class="form-select" id="add-workshop-difficulty">
+              </select>
           </div>
         </div>
         <div class="modal-footer">
@@ -88,6 +93,11 @@
                 name="min_volunteers">
             </div>
           </div>
+          <div class="mb-3">
+            <label class="form-label">Difficulty</label>
+              <select class="form-select" id="edit-workshop-difficulty">
+              </select>
+          </div>
         </div>
         <div class="modal-footer">
           <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
@@ -119,6 +129,7 @@
           <th>Workshop Name</th>
           <th>Description</th>
           <th>Minimum Required Volunteers</th>
+          <th>Difficulty</th>
           <th>Status</th>
           <th>Actions</th>
         </tr>

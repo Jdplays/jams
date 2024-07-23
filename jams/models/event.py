@@ -70,6 +70,12 @@ class Timeslot(db.Model):
     end = Column(TIME(), nullable=False)
     active = Column(Boolean(), default=True)
 
+    @property
+    def range(self):
+        start_formatted = self.start.strftime('%H:%M') if self.start else 'N/A'
+        end_formatted = self.end.strftime('%H:%M') if self.end else 'N/A'
+        return f"{start_formatted} - {end_formatted}"
+    
     def __init__(self, name, start, end, active=True):
         self.name = name
         self.start = start
@@ -88,6 +94,7 @@ class Timeslot(db.Model):
             'name': self.name,
             'start': str(self.start),
             'end': str(self.end),
+            'range': self.range,
             'active': self.active
         }
 

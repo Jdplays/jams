@@ -1,4 +1,4 @@
-from jams.models import db, User, Role, Workshop, Event, Location, Timeslot, Session
+from jams.models import db, User, Role, Workshop, Event, Location, Timeslot, DifficultyLevel
 from jams.rbac import generate_full_rbac
 from flask_security.utils import hash_password
 import datetime
@@ -6,6 +6,7 @@ import datetime
 def preform_seed():
     generate_full_rbac()
     seed_users()
+    seed_difficulty_levels()
     seed_workshops()
     seed_events()
     seed_locations()
@@ -42,15 +43,32 @@ def seed_users():
     
     db.session.commit()
 
+def seed_difficulty_levels():
+    if not DifficultyLevel.query.filter_by(name="Beginner").first():
+        level = DifficultyLevel('Beginner', "#8cff57")
+        db.session.add(level)
+
+    if not DifficultyLevel.query.filter_by(name="Intermediate").first():
+        level = DifficultyLevel('Intermediate', "#f9ff28")
+        db.session.add(level)
+
+    if not DifficultyLevel.query.filter_by(name="Advanced").first():
+        level = DifficultyLevel('Advanced', "#ff3232")
+        db.session.add(level)
+    
+    db.session.commit()
+
 def seed_workshops():
     # Check if the AstroPi workshop already exists
     if not Workshop.query.filter_by(name="AstroPi").first():
         workshop = Workshop(name="AstroPi", description="Find out how to run your very own code in space with the European Astro Pi Challenge.")
+        workshop.set_difficulty_by_name('Beginner')
         db.session.add(workshop)
     
     # Check if the Zigbee workshop already exists
     if not Workshop.query.filter_by(name="Zigbee").first():
         workshop = Workshop(name="Zigbee", description="Using Zigbee (A wireless communication protocol) you can control all sorts of tech! This workshop shows how to control RGB lamps using Python")
+        workshop.set_difficulty_by_name('Intermediate')
         db.session.add(workshop)
     
     db.session.commit()
@@ -71,6 +89,12 @@ def seed_events():
     db.session.commit()
 
 def seed_locations():
+
+    # Check if the Workshop G-1 location already exists
+    if not Location.query.filter_by(name="Workshop G-1").first():
+        location = Location(name="Workshop G-1")
+        db.session.add(location)
+
     # Check if the workshop g-2 location already exists
     if not Location.query.filter_by(name="Workshop G-2").first():
         location = Location(name="Workshop G-2")
@@ -80,22 +104,34 @@ def seed_locations():
     if not Location.query.filter_by(name="Lecture Theater 1").first():
         location = Location(name="Lecture Theater 1")
         db.session.add(location)
+
+    # Check if the Workshop 1-1 location already exists
+    if not Location.query.filter_by(name="Workshop 1-1").first():
+        location = Location(name="Workshop 1-1")
+        db.session.add(location)
     
     db.session.commit()
 
 def seed_timeslots():
-    # Check if the 1-2 timeslot already exists
-    if not Timeslot.query.filter_by(name="1-2").first():
+    # Check if the Session 1 timeslot already exists
+    if not Timeslot.query.filter_by(name="Session 1").first():
         start = datetime.time(hour=13)
         end = datetime.time(hour=14)
-        timeslot = Timeslot(name="1-2", start=start, end=end)
+        timeslot = Timeslot(name="Session 1", start=start, end=end)
         db.session.add(timeslot)
     
-    # Check if the 2-3 timeslot already exists
-    if not Timeslot.query.filter_by(name="2-3").first():
+    # Check if the Session 2 timeslot already exists
+    if not Timeslot.query.filter_by(name="Session 2").first():
         start = datetime.time(hour=14)
         end = datetime.time(hour=15)
-        timeslot = Timeslot(name="2-3", start=start, end=end)
+        timeslot = Timeslot(name="Session 2", start=start, end=end)
+        db.session.add(timeslot)
+
+     # Check if the Session 3 timeslot already exists
+    if not Timeslot.query.filter_by(name="Session 3").first():
+        start = datetime.time(hour=15)
+        end = datetime.time(hour=16)
+        timeslot = Timeslot(name="Session 3", start=start, end=end)
         db.session.add(timeslot)
     
     db.session.commit()
