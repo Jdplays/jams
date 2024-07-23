@@ -389,6 +389,18 @@ def get_event_locations(event_id):
     return jsonify({'event_locations': ordered_event_locations})
 
 
+@bp.route('/events/<int:event_id>/locations/<int:event_location_id>', methods=['GET'])
+@login_required
+@roles_required('Admin')
+def get_event_location(event_id, event_location_id):
+    # Check if the event exists
+    Event.query.filter_by(id=event_id).first_or_404()
+    
+    event_location = EventLocation.query.filter_by(id=event_location_id).first_or_404()
+
+    return jsonify(event_location.to_dict())
+
+
 @bp.route('/events/<int:event_id>/timeslots', methods=['GET'])
 @login_required
 @roles_required('Admin')
@@ -399,6 +411,17 @@ def get_event_timeslots(event_id):
     ordered_event_timeslots = [timeslot.to_dict() for timeslot in helper.get_ordered_event_timeslots(event_id)]
 
     return jsonify({'event_timeslots': ordered_event_timeslots})
+
+@bp.route('/events/<int:event_id>/timeslots/<int:event_timeslot_id>', methods=['GET'])
+@login_required
+@roles_required('Admin')
+def get_event_timeslot(event_id, event_timeslot_id):
+    # Check if the event exists
+    Event.query.filter_by(id=event_id).first_or_404()
+    
+    event_timeslot = EventTimeslot.query.filter_by(id=event_timeslot_id).first_or_404()
+
+    return jsonify(event_timeslot.to_dict())
 
 
 @bp.route('/events/<int:event_id>/locations', methods=['POST'])
