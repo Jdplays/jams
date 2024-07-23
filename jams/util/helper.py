@@ -1,6 +1,7 @@
 from flask import abort
 from jams.models import db, Event, EventLocation, EventTimeslot, Timeslot, Session
 from collections.abc import Mapping, Iterable
+from sqlalchemy import String, Integer, Boolean, or_
 
 
 def get_ordered_event_locations(event_id):
@@ -88,14 +89,25 @@ def reorder_ids(id_list, target_id, new_index):
     if new_index < 0 or new_index > len(id_list):
         return "New index is out of range"
     
-    current_idex = id_list.index(target_id)
+    id_list_copy = list(id_list)
+    
+    current_idex = id_list_copy.index(target_id)
 
     if current_idex == new_index:
-        return id_list
+        return id_list_copy
 
-    id_list.pop(current_idex)
+    id_list_copy.pop(current_idex)
 
-    id_list.insert(new_index, target_id)
+    id_list_copy.insert(new_index, target_id)
+
+    return id_list_copy
+
+def remove_id_from_list(id_list, target_id):
+    if target_id not in id_list:
+        return "Target ID not in list"
+    
+    current_index = id_list.index(target_id)
+    id_list.pop(current_index)
 
     return id_list
 
@@ -126,13 +138,49 @@ def filter_model_by_query_and_properties(model, request_args, order_by=None):
         properties_values = {}
         filters = []
         allowed_fields = list(model.query.first_or_404().to_dict().keys())
+
         for search_field, search_value in request_args.items():
-            if search_field not in allowed_fields:
-                abort(404, description=f"Search field '{search_field}' not found or allowed")
-            if isinstance(getattr(model, search_field), property):
-                properties_values.update({search_field: search_value})
-                continue
-            filters.append(getattr(model, search_field).ilike(f'%{search_value}%'))
+            field_conditions = []
+
+            # Split the search fields and values on the pipe char '|'
+            search_fields = search_field.split('|')
+            search_values = search_value.split('|')
+
+
+            for field in search_fields:
+                if field == '':
+                    continue
+
+                if field not in allowed_fields:
+                    abort(404, description=f"Search field '{field}' not found or allowed")
+                
+                field_attr = getattr(model, field)
+
+                if isinstance(field_attr, property):
+                    properties_values.update({search_field: search_value})
+                    continue
+                
+                field_type = field_attr.property.columns[0].type
+
+                for value in search_values:
+                    if value == '':
+                        continue
+                    if isinstance(field_type, String):
+                        field_conditions.append(field_attr.ilike(f'%{value}%'))
+                    elif isinstance(field_type, Boolean):
+                        field_conditions.append(field_attr == (value.lower() in ['true', '1', 't', 'y', 'yes']))
+                    elif isinstance(field_type, Integer):
+                        try:
+                            field_conditions.append(field_attr == int(value))
+                        except ValueError:
+                            abort(400, description=f"Invalid value for integer field '{field}': {value}")
+                    else:
+                        # For other types, add appropriate handling if needed
+                        field_conditions.append(field_attr == value)
+
+            if field_conditions:
+                filters.append(or_(*field_conditions))
+        
         if filters:
             query = query.filter(*filters)
         

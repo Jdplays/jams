@@ -1,7 +1,7 @@
 # Backend is just for serving data to javascript
 from flask import Blueprint, request, jsonify, abort
 from flask_security import roles_required, login_required
-from jams.models import db, Workshop, Location, Timeslot
+from jams.models import db, Workshop, Location, Timeslot, DifficultyLevel
 from jams.util import helper
 
 bp = Blueprint('backend', __name__, url_prefix='/backend')
@@ -358,3 +358,22 @@ def activate_timeslot(timeslot_id):
     db.session.commit()
 
     return jsonify({'message': 'The timeslot has been successfully activated'})
+
+
+#------------------------------------------ DIFFICULTY LEVEL ------------------------------------------#
+
+@bp.route('/difficulty_levels', methods=['GET'])
+@login_required
+@roles_required('Volunteer')
+def get_difficulty_levels():
+    difficulty_levels_data_list = [difficulty.to_dict() for difficulty in DifficultyLevel.query.order_by(DifficultyLevel.id).all()]
+    return jsonify({'difficulty_levels': difficulty_levels_data_list})
+
+@bp.route('/difficulty_levels/<int:difficulty_id>', methods=['GET'])
+@login_required
+@roles_required('Volunteer')
+def get_difficulty_level(difficulty_id):
+    difficulty = DifficultyLevel.query.filter_by(id=difficulty_id).first_or_404()
+    return jsonify(difficulty.to_dict())
+
+
