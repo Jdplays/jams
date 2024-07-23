@@ -521,7 +521,7 @@ def update_event_location_order(event_id, event_location_id):
 
     order = data.get('order')
 
-    if not order:
+    if order is None:
         abort(400, description="No'order' provided")
 
     # Check to see if updating this order will require a cascade update (ie: updating order 4 to be order 2 meaning the current order 2 needs to become 3 and 3 becomes 4)
@@ -530,9 +530,9 @@ def update_event_location_order(event_id, event_location_id):
     updated_event_location_ids = helper.reorder_ids(current_event_location_ids, event_location_id, order)
 
     if current_event_location_ids == updated_event_location_ids:
-        return 200, "No update needed"
+        return {'message': 'No update needed'}, 200
     
-    for new_order, location_id in updated_event_location_ids:
+    for new_order, location_id in enumerate(updated_event_location_ids):
         location = EventLocation.query.filter_by(id=location_id).first()
         location.order = new_order
         db.session.commit()
@@ -551,9 +551,18 @@ def delete_event_location(event_id, event_location_id):
     
     if not helper.prep_delete_event_location(event_location_id):
         abort(500, description="An error occured when trying to remove event_location")
+
+    current_event_location_ids = [location.id for location in helper.get_ordered_event_locations(event_id)]
+
+    updated_event_location_ids = helper.remove_id_from_list(current_event_location_ids, event_location_id)
+
+    for new_order, location_id in enumerate(updated_event_location_ids):
+        location = EventLocation.query.filter_by(id=location_id).first()
+        location.order = new_order
     
     db.session.delete(event_location)
     db.session.commit()
+    
 
     return jsonify({'message': "Event location has been successfully deleted"})
 
@@ -623,17 +632,18 @@ def get_workshop_for_session(session_id):
 def add_workshop_to_session(session_id):
     session = Session.query.filter_by(id=session_id).first_or_404()
 
-    if session.has_workshop:
-        abort(400, description="Session already has a workshop")
-
     data = request.get_json()
     if not data:
         abort(400, description="No data provided")
 
     workshop_id = data.get('workshop_id')
+    force = data.get('force')
 
     if not workshop_id:
         abort(400, description="No 'workshop_id' provided")
+    
+    if session.has_workshop and not force:
+        abort(400, description="Session already has a workshop")
     
     session.workshop_id = workshop_id
     db.session.commit()
