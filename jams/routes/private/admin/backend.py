@@ -393,7 +393,7 @@ def get_event_locations(event_id):
 
 @bp.route('/events/<int:event_id>/locations/<int:event_location_id>', methods=['GET'])
 @login_required
-@roles_required('Admin')
+@role_based_access_control_be
 def get_event_location(event_id, event_location_id):
     # Check if the event exists
     Event.query.filter_by(id=event_id).first_or_404()
@@ -416,7 +416,7 @@ def get_event_timeslots(event_id):
 
 @bp.route('/events/<int:event_id>/timeslots/<int:event_timeslot_id>', methods=['GET'])
 @login_required
-@roles_required('Admin')
+@role_based_access_control_be
 def get_event_timeslot(event_id, event_timeslot_id):
     # Check if the event exists
     Event.query.filter_by(id=event_id).first_or_404()

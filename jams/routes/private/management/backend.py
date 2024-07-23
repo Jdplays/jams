@@ -365,14 +365,14 @@ def activate_timeslot(timeslot_id):
 
 @bp.route('/difficulty_levels', methods=['GET'])
 @login_required
-@roles_required('Volunteer')
+@role_based_access_control_be
 def get_difficulty_levels():
     difficulty_levels_data_list = [difficulty.to_dict() for difficulty in DifficultyLevel.query.order_by(DifficultyLevel.id).all()]
     return jsonify({'difficulty_levels': difficulty_levels_data_list})
 
 @bp.route('/difficulty_levels/<int:difficulty_id>', methods=['GET'])
 @login_required
-@roles_required('Volunteer')
+@role_based_access_control_be
 def get_difficulty_level(difficulty_id):
     difficulty = DifficultyLevel.query.filter_by(id=difficulty_id).first_or_404()
     return jsonify(difficulty.to_dict())
