@@ -18,6 +18,10 @@ class Role(db.Model, RoleMixin):
     description = Column(String(255), nullable=True)
     default = Column(Boolean, nullable=False)
 
+    @property
+    def page_ids(self):
+        return [role_page.page_id for role_page in self.role_pages]
+
     # Requires name to be passed
     def __init__(self, name, description=None, default=False):
         self.name = name
@@ -29,6 +33,7 @@ class Role(db.Model, RoleMixin):
             'id': self.id,
             'name': self.name,
             'description': self.description,
+            'page_ids': self.page_ids,
             'default': self.default
         }
 
@@ -43,7 +48,7 @@ class User(UserMixin, db.Model):
     last_name = Column(String(50), nullable=True)
     dob = Column(DateTime(), nullable=True)
     bio = Column(String(255), nullable=True)
-    roles = relationship('Role', secondary='user_roles', backref=backref("users", lazy="dynamic"))
+    roles = relationship('Role', secondary='user_roles', backref='users')
     fs_uniquifier = Column(String(255), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
     
     # Tracking

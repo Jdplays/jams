@@ -9,6 +9,12 @@ bp = Blueprint('frontend', __name__, url_prefix=url_prefix)
 
 # URL PREFIX = /admin
 
+@bp.route('/settings')
+@login_required
+@role_based_access_control_fe
+def settings():
+    return render_template(f'{url_prefix}/settings.html')
+
 @bp.route('/user_management')
 @login_required
 @role_based_access_control_fe

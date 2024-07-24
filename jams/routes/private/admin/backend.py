@@ -2,8 +2,9 @@
 from flask import Blueprint, request, jsonify, abort
 from flask_security import login_required
 from jams.decorators import role_based_access_control_be, protect_user_updates
-from jams.models import db, User, Role, Event, EventLocation, EventTimeslot, Session
+from jams.models import db, User, Role, Event, EventLocation, EventTimeslot, Session, Page
 from jams.util import helper
+from jams.rbac import generate_roles_file_from_db, update_pages_assigned_to_role
 
 bp = Blueprint('backend', __name__, url_prefix='/backend')
 
@@ -208,6 +209,7 @@ def add_role():
     
     name = data.get('name')
     description = data.get('description')
+    page_ids = data.get('page_ids')
 
     if not name or not description:
         abort(400, description="No 'name' or 'description' provided")
@@ -215,6 +217,9 @@ def add_role():
     new_role = Role(name=name, description=description)
     db.session.add(new_role)
     db.session.commit()
+
+    update_pages_assigned_to_role(new_role.id, page_ids)
+    generate_roles_file_from_db()
 
     return jsonify({
         'message': 'New role has been successfully added',
@@ -235,10 +240,16 @@ def edit_role(role_id):
     # Update each allowed field
     allowed_fields = list(role.to_dict().keys())
     for field, value in data.items():
+        if field == 'page_ids':
+            if getattr(role, field) != value:
+                update_pages_assigned_to_role(role_id, value)
+            continue
         if field in allowed_fields:
             setattr(role, field, value)
     
     db.session.commit()
+
+    generate_roles_file_from_db()
 
     return jsonify({
         'message': 'Role has be updated successfully',
@@ -255,8 +266,10 @@ def delete_role(role_id):
     if not helper.prep_delete_role(role):
         abort(500, description="An error occured when trying to remove role")
 
-    db.session.remove(role)
+    db.session.delete(role)
     db.session.commit()
+
+    generate_roles_file_from_db()
 
     return jsonify({'message': 'Role has be successfully removed'})
     
@@ -669,3 +682,31 @@ def remove_workshop_from_session(session_id):
     db.session.commit()
 
     return jsonify({'message': 'Workshop successfully removed from session'})
+
+
+#------------------------------------------ Page ------------------------------------------#
+
+@bp.route('/pages', methods=['GET'])
+@login_required
+@role_based_access_control_be
+def get_pages():
+    pages = helper.filter_model_by_query_and_properties(Page, request.args, Page.id)
+    pages_data_list = [page.to_dict() for page in pages]
+    return jsonify({'pages': pages_data_list})
+
+
+@bp.route('/pages/<field>', methods=['GET'])
+@login_required
+@role_based_access_control_be
+def get_pages_field(field):
+    pages = helper.filter_model_by_query_and_properties(Page, request.args, Page.id)
+    allowed_fields = list(Page.query.first_or_404().to_dict().keys())
+    if field not in allowed_fields:
+        abort(404, description=f"Field '{field}' not found or allowed")
+    pages_data_list = []
+    for page in pages:
+        pages_data_list.append({
+            'id': page.id,
+            field: getattr(page, field)
+        })
+    return jsonify({'pages': pages_data_list})

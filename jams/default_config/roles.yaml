@@ -5,6 +5,7 @@ roles:
       - user_management
       - events
       - event_schedule
+      - settings
   Volunteer:
     description: A Helper at the event
     pages:

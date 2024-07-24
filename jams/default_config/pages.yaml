@@ -1,4 +1,18 @@
 pages:
+
+  # Admin
+  settings:
+    endpoint: routes.private.admin.frontend.settings
+    backend_endpoints:
+      routes.private.admin.backend.get_roles:
+      routes.private.admin.backend.get_role:
+      routes.private.admin.backend.add_role:
+      routes.private.admin.backend.edit_role:
+      routes.private.admin.backend.delete_role:
+      routes.private.admin.backend.get_pages:
+      routes.private.admin.backend.get_pages_field:
+        allowed_fields: id, name
+
   user_management:
     endpoint: routes.private.admin.frontend.user_management
     backend_endpoints:
@@ -52,6 +66,7 @@ pages:
       routes.private.admin.backend.add_workshop_to_session:
       routes.private.admin.backend.remove_workshop_from_session:
 
+  # Management
   workshop_catalog:
     endpoint: routes.private.management.frontend.workshop_catalog
     backend_endpoints:
@@ -79,6 +94,7 @@ pages:
       routes.private.management.backend.archive_timeslot:
       routes.private.management.backend.activate_timeslot:
 
+  # Volunteer
   volunteer_attendance:
     endpoint: routes.private.volunteer.frontend.volunteer_attendance
     backend_endpoints:

@@ -1,5 +1,5 @@
 from flask import abort, request
-from jams.models import db, EventLocation, EventTimeslot, Timeslot, Session, EndpointRule, RoleEndpointRule, PageEndpointRule, Page
+from jams.models import db, EventLocation, EventTimeslot, Timeslot, Session, EndpointRule, RoleEndpointRule, PageEndpointRule, Page, RolePage
 from collections.abc import Mapping, Iterable
 from sqlalchemy import String, Integer, Boolean, or_, nullsfirst
 from flask_security import current_user
@@ -64,18 +64,41 @@ def prep_delete_session(session_id):
     return True
 
 def prep_delete_role(role):
+    # Get all the pages assosiated with the role
+    role_pages = role.role_pages
+
+    for role_page in role_pages:
+        db.session.delete(role_page)
+    
+    db.session.commit()
+
+
+    if len(role.role_pages) > 0:
+        return False
+    
+    role_endpoint_rules = role.role_endpoint_rules
+
+    for role_endpoint_rule in role_endpoint_rules:
+        db.session.delete(role_endpoint_rule)
+    
+    db.session.commit()
+
+
+    if len(role.role_endpoint_rules) > 0:
+        return False
+    
     # Get all the users for a specified role
     users = role.users
 
     # Iterate through each user and remove the role from them
     for user in users:
-        user.remove_roles(role.id)
+        user.remove_roles([role.id])
     
     # Commit the changes to the DB
     db.session.commit()
 
     # Check if no users have the role
-    if role.users is not None:
+    if len(role.users) > 0:
         # Users still have the role, so return false
         return False
     
