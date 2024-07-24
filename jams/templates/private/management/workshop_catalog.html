@@ -3,19 +3,27 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<div class="container">
-  <div class="row row-deck row-cards">
-    <div class="col-4">
-      <div class="card">
-        <div class="card-body" style="height: 10rem">
-          <h1>Workshop catalog</h1>
-          <p>This is the Workshop Catalog page!</p>
+<div class="row row-deck row-cards">
+    <div class="col mx-auto">
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col">
+                        <h1>Workshop Catalogue</h1>
+                    </div>
+                    <div class="col-auto">
+                        <button id="open-add-workshop-modal-button" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add-workshop-modal">Add Workshop</button>
+                    </div>
+                    <div class="col-auto">
+                        <input type="text" class="form-control" name="search-workshop-input" placeholder="Search..." onkeyup="UpdateSearchTerm(event)"/>
+                    </div>
+                </div>
+                <div id="workshop-catalogue-grid" class="ag-theme-quartz" style="height: 80vh"></div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
+</div>
 
-  <button id="open-add-workshop-modal-button" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add-workshop-modal">Add Workshop</button>
 
   <div class="modal" id="add-workshop-modal" tabindex="-1">
     <div class="modal-dialog modal-lg" role="document">
