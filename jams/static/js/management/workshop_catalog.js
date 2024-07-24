@@ -222,6 +222,9 @@ function CreateAndAppendCell(row, content) {
 }
 
 async function PopulateWorkshopsTable() {
+    const response = await GetWorkshops();
+    UpdateGridData(response);
+
     let allWorkshops = await GetWorkshops();
 
     $('#workshop-table tbody').empty();
@@ -308,6 +311,25 @@ function InitaliseAddForm() {
     }
 }
 
+function OpenWorkshopEditModal(id) 
+{
+    prepEditWorkshopForm(id);
+    // TODO: Add bs modal call
+}
+
+function GetEditButtonForWorkshop(workshopId)
+{
+    return `<a class="btn btn-outline-primary py-1 px-2 mb-1 ms-1" onclick="OpenWorkshopEditModal(${workshopId})">Edit</a>`;
+}
+
+function GetArchiveOrActiveButtonForWorkshop(isWorkshopActivated, workshopId) 
+{
+    if (isWorkshopActivated) 
+    {
+        return `<a class="btn btn-outline-danger py-1 px-2 mb-1" onclick="ArchiveWorkshop(${workshopId})">Archive</a>`;
+    }
+    return `<a class="btn btn-outline-secondary py-1 px-2 mb-1" onclick="ActivateWorkshop(${workshopId})">Activate</a>`;
+}
 
 let gridOptions = {
   columnDefs: [
@@ -317,16 +339,36 @@ let gridOptions = {
     { field: "description", flex: 1, minWidth: 250, wrapText: true, autoHeight: true },
     { field: "min_volunteers", headerName: "Min Volunteers", width: 150 },
     { field: "difficulty_id", headerName: "Difficulty", width: 150 },
+    { field: "options", width: 140,  cellRenderer: (params) => {
+        return `<div>${GetArchiveOrActiveButtonForWorkshop(params.data.active, params.data.id)}${params.data.active ? GetEditButtonForWorkshop(params.data.id) : ""}</div>`;
+    },
+    } 
   ]
 };
+
+function UpdateSearchTerm(event) 
+{
+    if(gridApi)
+    {
+        gridApi.setGridOption('quickFilterText', event.target.value);
+    }
+}
+
+function UpdateGridData(newData) 
+{
+    if(gridApi)
+    {
+        gridApi.setGridOption("rowData", newData);
+    }
+}
 
 async function SetupWorkshopCataloguePage() 
 {
     gridElement = document.querySelector('div#workshop-catalogue-grid');
     gridApi = agGrid.createGrid(gridElement, gridOptions);
    
-    PopulateWorkshopsTable()
-    InitaliseAddForm()
+    PopulateWorkshopsTable();
+    InitaliseAddForm();
 }
 
 // Event listeners
