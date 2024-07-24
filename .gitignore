@@ -20,3 +20,4 @@ instance/
 # Ignore environment configuration file
 .env
 migrations
+jams/config

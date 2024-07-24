@@ -2,80 +2,79 @@ import os
 import yaml
 from jams.models import db, Page, EndpointRule, Role, RolePage, RoleEndpointRule, PageEndpointRule
 from jams.util import helper
+from jams.extensions import clear_table
 
 def generate_full_rbac():
     clear_rbac()
     generate_endpoints_structure()
-    generate_roles()
+    load_all_roles()
     generate_role_endpoint_rules()
 
 def clear_rbac():
-    db.session.query(PageEndpointRule).delete()
-    db.session.query(RoleEndpointRule).delete()
-    db.session.query(RolePage).delete()
-    db.session.query(EndpointRule).delete()
-    db.session.query(Page).delete()
+    clear_table(PageEndpointRule)
+    clear_table(RoleEndpointRule)
+    clear_table(RolePage)
+    clear_table(EndpointRule)
+    clear_table(Page)
 
 def generate_endpoints_structure():
     script_dir = os.path.dirname(__file__)
     pages_yaml_path = os.path.join(script_dir, 'default_config', 'pages.yaml')
-    with open(pages_yaml_path) as stream:
-        try:
-            data = yaml.safe_load(stream)
-            pages = data.get('pages', {})
+    data = load_yaml(pages_yaml_path)
+    pages = data.get('pages', {})
 
-            if pages:
-                # Get the first key-value pair from the pages dictionary
-                for page_name, page_data in pages.items():
-                    page_endpoint = page_data.get('endpoint', [])
-                    page = Page.query.filter_by(name=page_name).first()
-                    if not page:
-                        page = Page(name=page_name, endpoint=page_endpoint)
-                        db.session.add(page)
-                    else:
-                        page.endpoint = page_endpoint
+    if pages:
+        # Get the first key-value pair from the pages dictionary
+        for page_name, page_data in pages.items():
+            page_endpoint = page_data.get('endpoint', [])
+            page = Page.query.filter_by(name=page_name).first()
+            if not page:
+                page = Page(name=page_name, endpoint=page_endpoint)
+                db.session.add(page)
+            else:
+                page.endpoint = page_endpoint
+            
+            db.session.commit()
+            
+
+            backend_endpoints = page_data.get('backend_endpoints', [])
+            if backend_endpoints:
+                for endpoint_name, endpoint_data in backend_endpoints.items():
+                    allowed_fields = None
+                    if endpoint_data:
+                        allowed_fields = endpoint_data.get('allowed_fields', [])
+                    endpoint_rule = EndpointRule.query.filter_by(endpoint=endpoint_name, allowed_fields=allowed_fields).first()
+                    if not endpoint_rule:
+                        endpoint_rule = helper.get_endpoint_rule_for_page(endpoint_name, page.id)
+                        if not endpoint_rule:
+                            endpoint_rule = EndpointRule(endpoint=endpoint_name, allowed_fields=allowed_fields)
+                            db.session.add(endpoint_rule)
+                        else:
+                            endpoint_rule.allowed_fields = allowed_fields
+                        
+                    page_endpoint_rule = PageEndpointRule.query.filter_by(page_id=page.id, endpoint_rule_id=endpoint_rule.id).first()
+                    if not page_endpoint_rule:
+                        page_endpoint_rule = PageEndpointRule(page_id=page.id, endpoint_rule_id=endpoint_rule.id)
+                        db.session.add(page_endpoint_rule)
                     
-                    db.session.commit()
-                    
+                    db.session.commit()  
 
-                    backend_endpoints = page_data.get('backend_endpoints', [])
-                    if backend_endpoints:
-                        for endpoint_name, endpoint_data in backend_endpoints.items():
-                            allowed_fields = None
-                            if endpoint_data:
-                                allowed_fields = endpoint_data.get('allowed_fields', [])
-                            endpoint_rule = EndpointRule.query.filter_by(endpoint=endpoint_name, allowed_fields=allowed_fields).first()
-                            if not endpoint_rule:
-                                endpoint_rule = helper.get_endpoint_rule_for_page(endpoint_name, page.id)
-                                if not endpoint_rule:
-                                    endpoint_rule = EndpointRule(endpoint=endpoint_name, allowed_fields=allowed_fields)
-                                    db.session.add(endpoint_rule)
-                                else:
-                                    endpoint_rule.allowed_fields = allowed_fields
-                                
-                            page_endpoint_rule = PageEndpointRule.query.filter_by(page_id=page.id, endpoint_rule_id=endpoint_rule.id).first()
-                            if not page_endpoint_rule:
-                                page_endpoint_rule = PageEndpointRule(page_id=page.id, endpoint_rule_id=endpoint_rule.id)
-                                db.session.add(page_endpoint_rule)
-                            
-                            db.session.commit()  
-        except yaml.YAMLError as e:
-            print(e)
-
-def generate_roles():
+def generate_roles(folder, default=False):
+    added_roles_names = []
     script_dir = os.path.dirname(__file__)
-    pages_yaml_path = os.path.join(script_dir, 'default_config', 'roles.yaml')
-    with open(pages_yaml_path) as stream:
+    roles_yaml_path = os.path.join(script_dir, folder, 'roles.yaml')
+    with open(roles_yaml_path) as stream:
         try:
             data = yaml.safe_load(stream)
             roles = data.get('roles', {})
 
             if roles:
                 for role_name, role_data in roles.items():
+                    added_roles_names.append(role_name)
                     role = Role.query.filter_by(name=role_name).first()
                     role_description = role_data.get('description', [])
                     if not role:
-                        role = Role(name=role_name, description=role_description, default=True)
+                        role = Role(name=role_name, description=role_description, default=default)
                         db.session.add(role)
                     else:
                         role.description = role_description
@@ -89,13 +88,45 @@ def generate_roles():
                             if page:
                                 role_page = RolePage.query.filter_by(role_id=role.id, page_id=page.id).first()
                                 if not role_page:
-                                    role_page = RolePage(role_id=role.id, page_id=page.id, default=True)
+                                    role_page = RolePage(role_id=role.id, page_id=page.id, default=default)
                                     db.session.add(role_page)
                                     db.session.commit()
                             
         except yaml.YAMLError as e:
             print(e)
+    return added_roles_names
 
+def load_all_roles():
+    added_role_names = []
+
+    added_role_names.extend(generate_roles('default_config', True))
+    added_role_names.extend(generate_roles('config'))
+
+    current_roles_in_db = Role.query.all()
+
+    for role in current_roles_in_db:
+        if role.name not in added_role_names:
+            # Delete the role
+            if not helper.prep_delete_role(role):
+                print(f'Error deleting role: {role.name}')
+            else:
+                db.session.delete(role)
+    
+    db.session.commit()
+
+def generate_role_endpoint_rules_for_role(role_id):
+    pages = [Page.query.filter_by(id=role_page.page_id).first() for role_page in RolePage.query.filter_by(role_id=role_id).all()]
+
+    for page in pages:
+        endpoint_rule_ids = [page_endpoint_rule.endpoint_rule_id for page_endpoint_rule in PageEndpointRule.query.filter_by(page_id=page.id).all()]
+
+        for endpoint_rule_id in endpoint_rule_ids:
+            # Check if there is a link between the role and the endpoint. If not, add it
+            role_endpoint_rule = RoleEndpointRule.query.filter_by(role_id=role_id, endpoint_rule_id=endpoint_rule_id).first()
+
+            if not role_endpoint_rule:
+                role_endpoint_rule = RoleEndpointRule(role_id=role_id, endpoint_rule_id=endpoint_rule_id)
+                db.session.add(role_endpoint_rule)
 
 def generate_role_endpoint_rules():
     pages = Page.query.all()
@@ -113,3 +144,72 @@ def generate_role_endpoint_rules():
                     db.session.add(role_endpoint_rule)
     
     db.session.commit()
+
+def generate_roles_file_from_db():
+    script_dir = os.path.dirname(__file__)
+    roles_yaml_path = os.path.join(script_dir, 'config', 'roles.yaml')
+
+    data = {'roles': {}}
+
+    # Assuming you have SQLAlchemy models named Role and RolePage
+    roles_from_db = Role.query.all()
+
+    for role in roles_from_db:
+        pages = RolePage.query.filter_by(role_id=role.id, default=False).all()
+
+        if pages:
+            role_data = {
+                'description': role.description,
+                'pages': [Page.query.filter_by(id=page.page_id).first().name for page in pages]
+            }
+
+            role_data['description'] = role.description
+
+            # Add role data to the 'roles' section
+            
+            data['roles'][role.name] = role_data
+
+    # Save the new data structure to the YAML file
+    save_yaml(roles_yaml_path, data)
+
+
+def load_yaml(file_path):
+    try:
+        with open(file_path, 'r') as file:
+            return yaml.safe_load(file)
+    except FileNotFoundError:
+        return {}
+    
+def save_yaml(file_path, data):
+    with open(file_path, 'w') as file:
+        yaml.dump(data, file, default_flow_style=False)
+
+def ensure_key_exists(data, key):
+    if key not in data:
+        data[key] = {}
+    return data[key]
+
+def remove_pages_from_role(role_id):
+    role_pages = RolePage.query.filter_by(role_id=role_id).all()
+    for role_page in role_pages:
+        if not role_page.default:
+            db.session.delete(role_page)
+    db.session.commit()
+
+
+def update_pages_assigned_to_role(role_id, page_ids):
+    remove_pages_from_role(role_id)
+
+    # Add the pages to the role
+    for page_id in page_ids:
+        # Check if there is a link between the role and the page. If not, add it
+        role_page = RolePage.query.filter_by(role_id=role_id, page_id=page_id).first()
+
+        if not role_page:
+            role_page = RolePage(role_id=role_id, page_id=page_id)
+            db.session.add(role_page)
+    
+    db.session.commit()
+
+    # Generate role endpoint rules
+    generate_role_endpoint_rules_for_role(role_id)
