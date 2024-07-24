@@ -1,3 +1,6 @@
+let gridApi;
+let gridElement;
+
 function GetWorkshops() {
     return new Promise((resolve, reject) => {
         $.ajax({
@@ -305,7 +308,26 @@ function InitaliseAddForm() {
     }
 }
 
+
+let gridOptions = {
+  columnDefs: [
+    { field: "id", hide: true },
+    { field: "active", width: 100, sort: 'desc' },
+    { field: "name", headerName: "Name" },
+    { field: "description", flex: 1, minWidth: 250, wrapText: true, autoHeight: true },
+    { field: "min_volunteers", headerName: "Min Volunteers", width: 150 },
+    { field: "difficulty_id", headerName: "Difficulty", width: 150 },
+  ]
+};
+
+async function SetupWorkshopCataloguePage() 
+{
+    gridElement = document.querySelector('div#workshop-catalogue-grid');
+    gridApi = agGrid.createGrid(gridElement, gridOptions);
+   
+    PopulateWorkshopsTable()
+    InitaliseAddForm()
+}
+
 // Event listeners
-document.addEventListener("DOMContentLoaded", PopulateWorkshopsTable);
-document.addEventListener("DOMContentLoaded", InitaliseAddForm);
-  
+document.addEventListener("DOMContentLoaded", SetupWorkshopCataloguePage);
