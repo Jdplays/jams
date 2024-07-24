@@ -6,7 +6,7 @@ pages:
       routes.private.admin.backend.archive_user:
       routes.private.admin.backend.activate_user:
       routes.private.admin.backend.get_roles_field:
-        allowed_fields: id, name, username
+        allowed_fields: id, name
 
   events:
     endpoint: routes.private.admin.frontend.events
