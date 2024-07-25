@@ -188,7 +188,7 @@ def filter_model_by_query_and_properties(model, request_args, order_by=None):
 
                 for value in search_values:
                     if value == '':
-                        continue
+                        abort(400, description='All query values must have a value')
                     if isinstance(field_type, String):
                         field_conditions.append(field_attr.ilike(f'%{value}%'))
                     elif isinstance(field_type, Boolean):

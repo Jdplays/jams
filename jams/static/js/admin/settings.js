@@ -137,6 +137,9 @@ function CreateAndAppendCell(row, content) {
 }
 
 function BuildPageNamesQueryString(page_ids) {
+    if (page_ids == null || page_ids.length <= 0) {
+        page_ids = [-1]
+    }
     queryString = 'id='
 
     for (i = 0; i < page_ids.length; i++) {

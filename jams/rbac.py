@@ -126,6 +126,7 @@ def generate_role_endpoint_rules_for_role(role_id):
             if not role_endpoint_rule:
                 role_endpoint_rule = RoleEndpointRule(role_id=role_id, endpoint_rule_id=endpoint_rule_id)
                 db.session.add(role_endpoint_rule)
+    db.session.commit()
 
 def generate_role_endpoint_rules():
     pages = Page.query.all()
@@ -193,6 +194,13 @@ def remove_pages_from_role(role_id):
     role_pages = RolePage.query.filter_by(role_id=role_id).all()
     for role_page in role_pages:
         if not role_page.default:
+            role_page_endpoint_rule_ids = [rule.endpoint_rule_id for rule in PageEndpointRule.query.filter_by(page_id=role_page.page_id).all()]
+            for id in role_page_endpoint_rule_ids:
+                role_endpoint = RoleEndpointRule.query.filter_by(endpoint_rule_id=id, role_id=role_id).first()
+                if role_endpoint:
+                    db.session.delete(role_endpoint)
+            
+            db.session.commit()
             db.session.delete(role_page)
     db.session.commit()
 
