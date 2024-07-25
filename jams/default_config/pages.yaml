@@ -76,6 +76,8 @@ pages:
       routes.private.management.backend.edit_workshop:
       routes.private.management.backend.archive_workshop:
       routes.private.management.backend.activate_workshop:
+      routes.private.management.backend.get_difficulty_levels:
+      routes.private.management.backend.get_difficulty_level:
 
 
   locations_timeslots:
