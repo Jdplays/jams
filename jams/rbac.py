@@ -59,10 +59,11 @@ def generate_endpoints_structure():
                     
                     db.session.commit()  
 
-def generate_roles(folder, default=False):
+def generate_roles(folder, parent_folder=None, default=False):
     added_roles_names = []
-    script_dir = os.path.dirname(__file__)
-    roles_yaml_path = os.path.join(script_dir, folder, 'roles.yaml')
+    if not parent_folder:
+        parent_folder = os.path.dirname(__file__)
+    roles_yaml_path = os.path.join(parent_folder, folder, 'roles.yaml')
     data = load_yaml(roles_yaml_path)
     roles = data.get('roles', {})
 
@@ -95,8 +96,10 @@ def generate_roles(folder, default=False):
 def load_all_roles():
     added_role_names = []
 
-    added_role_names.extend(generate_roles('default_config', True))
-    added_role_names.extend(generate_roles('config'))
+    added_role_names.extend(generate_roles(folder='default_config', default=True))
+    script_dir = os.path.dirname(__file__)
+    parent_dir = os.path.abspath(os.path.join(script_dir, os.pardir))
+    added_role_names.extend(generate_roles(folder='config', parent_folder=parent_dir))
 
     current_roles_in_db = Role.query.all()
 

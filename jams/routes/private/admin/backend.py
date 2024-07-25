@@ -166,8 +166,8 @@ def add_role():
     description = data.get('description')
     page_ids = data.get('page_ids')
 
-    if not name or not description:
-        abort(400, description="No 'name' or 'description' provided")
+    if not name:
+        abort(400, description="No 'name' provided")
 
     new_role = Role(name=name, description=description)
     db.session.add(new_role)
