@@ -195,6 +195,9 @@ def edit_role(role_id):
     # Update each allowed field
     allowed_fields = list(role.to_dict().keys())
     for field, value in data.items():
+        if field == 'name' and role.default:
+            # If its a default role, you cannot rename it
+            continue
         if field == 'page_ids':
             if getattr(role, field) != value:
                 update_pages_assigned_to_role(role_id, value)
