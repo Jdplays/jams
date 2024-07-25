@@ -116,7 +116,9 @@ function AddWorkshopOnClick() {
         'name': document.getElementById('add-workshop-name').value,
         'description': document.getElementById('add-workshop-description').value,
         'min_volunteers': document.getElementById('add-workshop-min_volunteers').value,
+        'difficulty_id': document.getElementById('add-workshop-difficulty').value
     }
+    console.log(document.getElementById('add-workshop-difficulty').value)
 
     AddWorkshop(data)
 }
@@ -146,7 +148,8 @@ async function PrepAddWorkshopForm() {
     ClearDropDown(difficultyLevelDropdown)
 
     const defaultOptionsElement = document.createElement('option');
-    defaultOptionsElement.innerText = "Select Difficulty"
+    defaultOptionsElement.text = "Select Difficulty"
+    defaultOptionsElement.value = '-1'
     defaultOptionsElement.disabled = true;
     defaultOptionsElement.selected = true;
     defaultOptionsElement.hidden = true;
@@ -183,11 +186,10 @@ async function prepEditWorkshopForm(workshopID) {
     const difficultyLevelDropdown = document.getElementById('edit-workshop-difficulty')
     ClearDropDown(difficultyLevelDropdown)
 
-    console.log(difficultyLevelDropdown.id)
-
     const defaultOptionsElement = document.createElement('option');
     if (await workshopDifficulty == null) {
-        defaultOptionsElement.innerText = "Select Difficulty"
+        defaultOptionsElement.text = "Select Difficulty"
+        defaultOptionsElement.value = '-1'
     }
     else {
         defaultOptionsElement.innerText = workshopDifficulty.name
