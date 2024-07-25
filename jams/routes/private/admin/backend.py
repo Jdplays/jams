@@ -72,6 +72,9 @@ def edit_user(user_id):
     allowed_fields = list(user.to_dict().keys())
     for field, value in data.items():
         if field in allowed_fields:
+            if field == 'role_ids':
+                user.set_roles(value)
+                continue
             setattr(user, field, value)
     
     db.session.commit()
@@ -79,54 +82,6 @@ def edit_user(user_id):
     return jsonify({
         'message': 'User has be updated successfully',
         'user': user.to_dict()
-    })
-
-
-@bp.route('/users/<int:user_id>/add_roles', methods=['PATCH'])
-@login_required
-@role_based_access_control_be
-def user_add_roles(user_id):
-    user = User.query.filter_by(id=user_id).first_or_404()
-
-    data = request.get_json()
-    if not data:
-        abort(400, description="No data provided")
-
-    role_ids = data.get('role_ids')
-    if not role_ids:
-        abort(400, description="No 'role_ids' provided")
-    
-    user.add_roles(role_ids)
-    
-    db.session.commit()
-
-    return jsonify({
-        'message': 'Roles have been successfully added to the user',
-        'role_ids': user.role_ids
-    })
-
-
-@bp.route('/users/<int:user_id>/remove_roles', methods=['PATCH'])
-@login_required
-@role_based_access_control_be
-def user_remove_roles(user_id):
-    user = User.query.filter_by(id=user_id).first_or_404()
-
-    data = request.get_json()
-    if not data:
-        abort(400, description="No data provided")
-
-    role_ids = data.get('role_ids')
-    if not role_ids:
-        abort(400, description="No 'role_ids' provided")
-    
-    user.remove_roles(role_ids)
-    
-    db.session.commit()
-
-    return jsonify({
-        'message': 'Roles have been successfully removed from the user',
-        'role_ids': user.role_ids
     })
 
 
