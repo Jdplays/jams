@@ -73,8 +73,8 @@ def add_workshop():
     min_volunteers = data.get('min_volunteers')
     difficulty_id = data.get('difficulty_id')
 
-    if not name or not description or not min_volunteers:
-        abort(400, description="No 'name' or 'description' or 'min_volunteers' provided")
+    if not name or not description or not min_volunteers or not difficulty_id or difficulty_id == '-1':
+        abort(400, description="No 'name' or 'description' or 'min_volunteers' or 'difficulty_id' provided")
 
     new_workshop = Workshop(name=name, description=description, min_volunteers=min_volunteers, difficulty_id=difficulty_id)
     db.session.add(new_workshop)
