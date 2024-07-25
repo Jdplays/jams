@@ -16,17 +16,25 @@ class Role(db.Model, RoleMixin):
     id = Column(Integer, primary_key=True)
     name = Column(String(80), nullable=False)
     description = Column(String(255), nullable=True)
+    default = Column(Boolean, nullable=False)
+
+    @property
+    def page_ids(self):
+        return [role_page.page_id for role_page in self.role_pages]
 
     # Requires name to be passed
-    def __init__(self, name, description=None):
+    def __init__(self, name, description=None, default=False):
         self.name = name
         self.description = description
+        self.default = default
 
     def to_dict(self):
         return {
             'id': self.id,
             'name': self.name,
-            'description': self.description
+            'description': self.description,
+            'page_ids': self.page_ids,
+            'default': self.default
         }
 
 class User(UserMixin, db.Model):
@@ -40,7 +48,7 @@ class User(UserMixin, db.Model):
     last_name = Column(String(50), nullable=True)
     dob = Column(DateTime(), nullable=True)
     bio = Column(String(255), nullable=True)
-    roles = relationship('Role', secondary='user_roles', backref=backref("users", lazy="dynamic"))
+    roles = relationship('Role', secondary='user_roles', backref='users')
     fs_uniquifier = Column(String(255), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
     
     # Tracking
@@ -154,6 +162,7 @@ class User(UserMixin, db.Model):
     def user_has_role(self, role_name):
         return any(role_name == role.name for role in self.roles)
     
+    
     def to_dict(self):
         return {
             'id': self.id,
@@ -168,4 +177,109 @@ class User(UserMixin, db.Model):
             'dob': self.dob,
             'bio': self.bio,
             'active': self.active
+        }
+    
+## Role based Auth to pages
+class Page(db.Model):
+    __tablename__ = 'page'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), unique=True, nullable=False)
+    endpoint = Column(String(255), unique=True, nullable=False)
+
+    def __init__(self, name, endpoint):
+        self.name = name
+        self.endpoint = endpoint
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'endpoint': self.endpoint
+        }
+
+
+
+class EndpointRule(db.Model):
+    __tablename__ = 'endpoint_rule'
+
+    id = Column(Integer, primary_key=True)
+    endpoint = Column(String(255), nullable=False)
+    allowed_fields = Column(String(255), nullable=True) # This is a comma seperated list of allowed fields for the endpoint
+
+
+    def __init__(self, endpoint, allowed_fields=None):
+        self.endpoint = endpoint
+        self.allowed_fields = allowed_fields
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'endpoint': self.endpoint,
+            'allowed_fields': self.allowed_fields if self.allowed_fields is not None else ''
+        }
+    
+class RoleEndpointRule(db.Model):
+    __tablename__ = 'role_endpoint_rule'
+
+    id = Column(Integer, primary_key=True)
+    role_id = Column(Integer, ForeignKey('role.id'), nullable=False)
+    endpoint_rule_id = Column(Integer, ForeignKey('endpoint_rule.id'), nullable=False)
+
+    role = relationship('Role', backref='role_endpoint_rules')
+    endpoint_rule = relationship('EndpointRule', backref='role_endpoint_rules')
+
+    def __init__(self, role_id, endpoint_rule_id):
+        self.role_id = role_id
+        self.endpoint_rule_id = endpoint_rule_id
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'role_id': self.role_id,
+            'endpoint_rule_id': self.endpoint_rule_id
+        }
+
+class PageEndpointRule(db.Model):
+    __tablename__ = 'page_endpoint_rule'
+
+    id = Column(Integer, primary_key=True)
+    page_id = Column(Integer, ForeignKey('page.id'), nullable=False)
+    endpoint_rule_id = Column(Integer, ForeignKey('endpoint_rule.id'), nullable=False)
+
+    page = relationship('Page', backref='page_endpoint_rules')
+    endpoint_rule = relationship('EndpointRule', backref='page_endpoint_rules')
+
+    def __init__(self, page_id, endpoint_rule_id):
+        self.page_id = page_id
+        self.endpoint_rule_id = endpoint_rule_id
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'page_id': self.page_id,
+            'endpoint_rule_id': self.endpoint_rule_id
+        }
+        
+class RolePage(db.Model):
+    __tablename__ = 'role_page'
+
+    id = Column(Integer, primary_key=True)
+    role_id = Column(Integer, ForeignKey('role.id'), nullable=False)
+    page_id = Column(Integer, ForeignKey('page.id'), nullable=False)
+    default = Column(Boolean, nullable=False)
+
+    role = relationship('Role', backref='role_pages')
+    page = relationship('Page', backref='role_pages')
+
+    def __init__(self, role_id, page_id, default=False):
+        self.role_id = role_id
+        self.page_id = page_id
+        self.default = default
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'role_id': self.role_id,
+            'page_id': self.page_id
         }

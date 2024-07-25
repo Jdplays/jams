@@ -10,6 +10,7 @@ services:
       - SECRET_KEY=${FLASK_SECRET}
       - DATABASE_URL=postgresql://${PG_USER}:${PG_PASS}@jams-db:5432/jams-main
     volumes:
+      -/path/to/config:/jams/config
       -/path/to/db_migrations:/jams/migrations
     depends_on:
       - jams-db

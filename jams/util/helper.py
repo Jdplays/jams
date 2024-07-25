@@ -1,7 +1,8 @@
-from flask import abort
-from jams.models import db, Event, EventLocation, EventTimeslot, Timeslot, Session
+from flask import abort, request
+from jams.models import db, EventLocation, EventTimeslot, Timeslot, Session, EndpointRule, RoleEndpointRule, PageEndpointRule, Page, RolePage
 from collections.abc import Mapping, Iterable
-from sqlalchemy import String, Integer, Boolean, or_
+from sqlalchemy import String, Integer, Boolean, or_, nullsfirst
+from flask_security import current_user
 
 
 def get_ordered_event_locations(event_id):
@@ -63,18 +64,41 @@ def prep_delete_session(session_id):
     return True
 
 def prep_delete_role(role):
+    # Get all the pages assosiated with the role
+    role_pages = role.role_pages
+
+    for role_page in role_pages:
+        db.session.delete(role_page)
+    
+    db.session.commit()
+
+
+    if len(role.role_pages) > 0:
+        return False
+    
+    role_endpoint_rules = role.role_endpoint_rules
+
+    for role_endpoint_rule in role_endpoint_rules:
+        db.session.delete(role_endpoint_rule)
+    
+    db.session.commit()
+
+
+    if len(role.role_endpoint_rules) > 0:
+        return False
+    
     # Get all the users for a specified role
     users = role.users
 
     # Iterate through each user and remove the role from them
     for user in users:
-        user.remove_roles(role.id)
+        user.remove_roles([role.id])
     
     # Commit the changes to the DB
     db.session.commit()
 
     # Check if no users have the role
-    if role.users is not None:
+    if len(role.users) > 0:
         # Users still have the role, so return false
         return False
     
@@ -202,4 +226,51 @@ def filter_model_by_query_and_properties(model, request_args, order_by=None):
 
     return objects
 
+
+def check_roles(user_role_ids, role_id):
+    if role_id in user_role_ids:
+        return True
     
+    return False
+
+def extract_endpoint():
+    endpoint = request.endpoint
+    view_args = request.view_args
+    for key, value in view_args.items():
+        endpoint = endpoint.replace(str(value), f"<{key}>")
+    return endpoint
+
+def get_endpoint_rules_for_roles(endpoint, role_ids):
+    query = (
+        db.session.query(EndpointRule)
+        .join(RoleEndpointRule, EndpointRule.id == RoleEndpointRule.endpoint_rule_id)
+        .filter(EndpointRule.endpoint == endpoint)
+        .filter(RoleEndpointRule.role_id.in_(role_ids))
+        .order_by(nullsfirst(EndpointRule.allowed_fields))
+    )
+
+    return query.all()
+
+def get_endpoint_rule_for_page(endpoint, page_id):
+    query = (
+        db.session.query(EndpointRule)
+        .join(PageEndpointRule, EndpointRule.id == PageEndpointRule.endpoint_rule_id)
+        .filter(EndpointRule.endpoint == endpoint)
+        .filter(PageEndpointRule.page_id == page_id)
+        .order_by(nullsfirst(EndpointRule.allowed_fields))
+    )
+    return query.first()
+
+
+def user_has_access_to_page(*names):
+    user_role_ids = current_user.role_ids
+    for name in names:
+        page = Page.query.filter_by(name=name).first()
+        if not page:
+            return False
+        
+        page_role_ids = [page_role.role_id for page_role in page.role_pages]
+        for role_id in user_role_ids:
+            if role_id in page_role_ids:
+                return True
+    return False

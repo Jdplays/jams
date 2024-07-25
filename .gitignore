@@ -20,3 +20,6 @@ instance/
 # Ignore environment configuration file
 .env
 migrations
+
+# Ignore user config files
+config/*.yaml

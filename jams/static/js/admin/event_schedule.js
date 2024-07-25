@@ -146,7 +146,7 @@ function GetWorkshopForSession(sessionID) {
 function GetLocation(locationID) {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: '/backend/locations/' + locationID,
+            url: '/backend/locations/' + locationID + '/name',
             type: 'GET',
             success: function (response) {
                 resolve(response)

@@ -16,6 +16,9 @@ COPY ./requirements.txt .
 # Copy the check_db.py file into the container
 COPY ./check_db.py .
 
+# Copy the user config folder into the container
+COPY ./config .
+
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 

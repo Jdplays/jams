@@ -1,6 +1,7 @@
 # Frontend is just for serving pages
 from flask import Blueprint, render_template
-from flask_security import roles_required, login_required
+from flask_security import login_required
+from jams.decorators import role_based_access_control_fe
 
 url_prefix = '/private/management'
 
@@ -10,12 +11,12 @@ bp = Blueprint('frontend', __name__, url_prefix=url_prefix)
 
 @bp.route('/workshop_catalog')
 @login_required
-@roles_required('Volunteer')
+@role_based_access_control_fe
 def workshop_catalog():
     return render_template(f'{url_prefix}/workshop_catalog.html')
 
 @bp.route('/locations_timeslots')
 @login_required
-@roles_required('Volunteer')
+@role_based_access_control_fe
 def locations_timeslots():
     return render_template(f'{url_prefix}/locations_timeslots.html')

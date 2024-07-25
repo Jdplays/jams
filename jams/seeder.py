@@ -1,9 +1,10 @@
 from jams.models import db, User, Role, Workshop, Event, Location, Timeslot, DifficultyLevel
+from jams.rbac import generate_full_rbac
 from flask_security.utils import hash_password
 import datetime
 
 def preform_seed():
-    seed_roles()
+    generate_full_rbac()
     seed_users()
     seed_difficulty_levels()
     seed_workshops()
@@ -27,7 +28,7 @@ def seed_users():
         admin_role = Role.query.filter_by(name="Admin").first()
         if admin_role:
             user = User(email='admin@test.com', username="AdminAccount", password=hash_password('admin'))
-            user.set_roles_by_name(['Admin', 'Volunteer', 'Trustee'])
+            user.set_roles_by_name(['Admin', 'Volunteer'])
             user.activate()
             db.session.add(user)
     

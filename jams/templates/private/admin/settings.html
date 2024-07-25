@@ -1,0 +1,131 @@
+{% extends '_layout.html' %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+
+<div class="row row-deck row-cards">
+    <div class="col-4">
+        <div class="card">
+            <div class="card-body" style="height: 10rem">
+                <h1>Settings</h1>
+                <p>This is the Settings page!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h2>Roles</h2>
+
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add-role-modal" onclick="PrepAddRoleForm()">Add
+    Role</button>
+
+<div class="modal" id="add-role-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">New Role</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Role Name</label>
+                    <input type="text" class="form-control" name="name" id="add-role-name"
+                        placeholder="Your role name" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Role Description</label>
+                    <textarea class="form-control" rows="5" id="add-role-description" name="description"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Allowed Pages</label>
+                    <div id="add-role-pages-container">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
+                    Cancel
+                </a>
+                <a href="#" onclick="AddRoleOnClick()" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-plus" width="24"
+                        height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M12 5l0 14"></path>
+                        <path d="M5 12l14 0"></path>
+                    </svg>
+                    Create new role
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table id="roles-table" class="table table-vcenter">
+        <thead class="sticky-top">
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Pages</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="table-body">
+            <!-- Data will be dynamically added here -->
+        </tbody>
+    </table>
+</div>
+
+<div class="modal" id="edit-role-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Role</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-role-id" name="role_id">
+                <div class="mb-3">
+                    <label class="form-label">Role Name</label>
+                    <input type="text" class="form-control" name="name" id="edit-role-name"
+                        placeholder="Your role name" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Role Description</label>
+                    <textarea class="form-control" rows="5" id="edit-role-description" name="description"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Allowed Pages</label>
+                    <div id="edit-role-pages-container">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
+                    Cancel
+                </a>
+                <a href="#" onclick="EditRoleOnClick()" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-plus" width="24"
+                        height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M12 5l0 14"></path>
+                        <path d="M5 12l14 0"></path>
+                    </svg>
+                    Edit role
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<p id="roles-request-response"></p>
+
+<script src="{{ url_for('static', filename='js/admin/settings.js') }}" defer></script>
+
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+
+{% endblock %}
