@@ -63,37 +63,33 @@ def generate_roles(folder, default=False):
     added_roles_names = []
     script_dir = os.path.dirname(__file__)
     roles_yaml_path = os.path.join(script_dir, folder, 'roles.yaml')
-    with open(roles_yaml_path) as stream:
-        try:
-            data = yaml.safe_load(stream)
-            roles = data.get('roles', {})
+    data = load_yaml(roles_yaml_path)
+    roles = data.get('roles', {})
 
-            if roles:
-                for role_name, role_data in roles.items():
-                    added_roles_names.append(role_name)
-                    role = Role.query.filter_by(name=role_name).first()
-                    role_description = role_data.get('description', [])
-                    if not role:
-                        role = Role(name=role_name, description=role_description, default=default)
-                        db.session.add(role)
-                    else:
-                        role.description = role_description
-                    
-                    db.session.commit()
+    if roles:
+        for role_name, role_data in roles.items():
+            added_roles_names.append(role_name)
+            role = Role.query.filter_by(name=role_name).first()
+            role_description = role_data.get('description', [])
+            if not role:
+                role = Role(name=role_name, description=role_description, default=default)
+                db.session.add(role)
+            else:
+                role.description = role_description
+            
+            db.session.commit()
 
-                    page_names = role_data.get('pages', [])
-                    if page_names:
-                        for page_name in page_names:
-                            page = Page.query.filter_by(name=page_name).first()
-                            if page:
-                                role_page = RolePage.query.filter_by(role_id=role.id, page_id=page.id).first()
-                                if not role_page:
-                                    role_page = RolePage(role_id=role.id, page_id=page.id, default=default)
-                                    db.session.add(role_page)
-                                    db.session.commit()
-                            
-        except yaml.YAMLError as e:
-            print(e)
+            page_names = role_data.get('pages', [])
+            if page_names:
+                for page_name in page_names:
+                    page = Page.query.filter_by(name=page_name).first()
+                    if page:
+                        role_page = RolePage.query.filter_by(role_id=role.id, page_id=page.id).first()
+                        if not role_page:
+                            role_page = RolePage(role_id=role.id, page_id=page.id, default=default)
+                            db.session.add(role_page)
+                            db.session.commit()
+                
     return added_roles_names
 
 def load_all_roles():
