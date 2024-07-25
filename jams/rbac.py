@@ -143,7 +143,8 @@ def generate_role_endpoint_rules():
 
 def generate_roles_file_from_db():
     script_dir = os.path.dirname(__file__)
-    roles_yaml_path = os.path.join(script_dir, 'config', 'roles.yaml')
+    parent_dir = os.path.abspath(os.path.join(script_dir, os.pardir))
+    roles_yaml_path = os.path.join(parent_dir, 'config', 'roles.yaml')
 
     data = {'roles': {}}
 

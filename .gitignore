@@ -20,4 +20,6 @@ instance/
 # Ignore environment configuration file
 .env
 migrations
-jams/config
+
+# Ignore user config files
+config/*.yaml
