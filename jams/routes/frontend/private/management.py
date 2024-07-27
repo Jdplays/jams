@@ -5,7 +5,7 @@ from jams.decorators import role_based_access_control_fe
 
 url_prefix = '/private/management'
 
-bp = Blueprint('management', __name__)
+bp = Blueprint('management', __name__, url_prefix='management')
 
 # URL PREFIX = /private/management
 
