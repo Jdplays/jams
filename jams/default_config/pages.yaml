@@ -2,109 +2,109 @@ pages:
 
   # Admin
   settings:
-    endpoint: routes.private.admin.frontend.settings
+    endpoint: routes.frontend.private.admin.settings
     backend_endpoints:
-      routes.private.admin.backend.get_roles:
-      routes.private.admin.backend.get_role:
-      routes.private.admin.backend.add_role:
-      routes.private.admin.backend.edit_role:
-      routes.private.admin.backend.delete_role:
-      routes.private.admin.backend.get_pages:
-      routes.private.admin.backend.get_pages_field:
+      routes.backend.private.admin.get_roles:
+      routes.backend.private.admin.get_role:
+      routes.backend.private.admin.add_role:
+      routes.backend.private.admin.edit_role:
+      routes.backend.private.admin.delete_role:
+      routes.backend.private.admin.get_pages:
+      routes.backend.private.admin.get_pages_field:
         allowed_fields: id, name
 
   user_management:
-    endpoint: routes.private.admin.frontend.user_management
+    endpoint: routes.frontend.private.admin.user_management
     backend_endpoints:
-      routes.private.admin.backend.get_users:
-      routes.private.admin.backend.archive_user:
-      routes.private.admin.backend.activate_user:
-      routes.private.admin.backend.get_roles_field:
+      routes.backend.private.admin.get_users:
+      routes.backend.private.admin.archive_user:
+      routes.backend.private.admin.activate_user:
+      routes.backend.private.admin.get_roles_field:
         allowed_fields: id, name
 
   events:
-    endpoint: routes.private.admin.frontend.events
+    endpoint: routes.frontend.private.admin.events
     backend_endpoints:
-      routes.private.admin.backend.get_events:
-      routes.private.admin.backend.get_event:
-      routes.private.admin.backend.add_event:
-      routes.private.admin.backend.edit_event:
-      routes.private.admin.backend.archive_event:
-      routes.private.admin.backend.activate_event:
+      routes.backend.private.admin.get_events:
+      routes.backend.private.admin.get_event:
+      routes.backend.private.admin.add_event:
+      routes.backend.private.admin.edit_event:
+      routes.backend.private.admin.archive_event:
+      routes.backend.private.admin.activate_event:
 
   event_schedule:
-    endpoint: routes.private.admin.frontend.event_schedule
+    endpoint: routes.frontend.private.admin.event_schedule
     backend_endpoints:
     # Events
-      routes.private.admin.backend.get_events_field:
+      routes.backend.private.admin.get_events_field:
         allowed_fields: id, name
-      routes.private.admin.backend.get_event:
+      routes.backend.private.admin.get_event:
       # Workshops
-      routes.private.management.backend.get_workshops:
-      routes.private.management.backend.get_workshop:
-      routes.private.management.backend.get_difficulty_levels:
-      routes.private.management.backend.get_difficulty_level:
+      routes.backend.private.management.get_workshops:
+      routes.backend.private.management.get_workshop:
+      routes.backend.private.management.get_difficulty_levels:
+      routes.backend.private.management.get_difficulty_level:
       # Event Locations
-      routes.private.admin.backend.get_event_locations:
-      routes.private.admin.backend.get_event_location:
-      routes.private.admin.backend.add_event_location:
-      routes.private.admin.backend.delete_event_location:
-      routes.private.management.backend.get_locations_field:
+      routes.backend.private.admin.get_event_locations:
+      routes.backend.private.admin.get_event_location:
+      routes.backend.private.admin.add_event_location:
+      routes.backend.private.admin.delete_event_location:
+      routes.backend.private.management.get_locations_field:
         allowed_fields: id, name
-      routes.private.management.backend.get_location_field:
+      routes.backend.private.management.get_location_field:
         allowed_fields: id, name
       # Event Timeslots
-      routes.private.admin.backend.get_event_timeslots:
-      routes.private.admin.backend.add_event_timeslot:
-      routes.private.admin.backend.delete_event_timeslot:
-      routes.private.management.backend.get_timeslots_field:
+      routes.backend.private.admin.get_event_timeslots:
+      routes.backend.private.admin.add_event_timeslot:
+      routes.backend.private.admin.delete_event_timeslot:
+      routes.backend.private.management.get_timeslots_field:
         allowed_fields: id, name
-      routes.private.management.backend.get_timeslot:
+      routes.backend.private.management.get_timeslot:
       # Sessions
-      routes.private.admin.backend.get_event_sessions:
-      routes.private.admin.backend.get_workshop_for_session:
-      routes.private.admin.backend.add_workshop_to_session:
-      routes.private.admin.backend.remove_workshop_from_session:
+      routes.backend.private.admin.get_event_sessions:
+      routes.backend.private.admin.get_workshop_for_session:
+      routes.backend.private.admin.add_workshop_to_session:
+      routes.backend.private.admin.remove_workshop_from_session:
 
   # Management
   workshop_catalog:
-    endpoint: routes.private.management.frontend.workshop_catalog
+    endpoint: routes.frontend.private.management.workshop_catalog
     backend_endpoints:
-      routes.private.management.backend.get_workshops:
-      routes.private.management.backend.get_workshop:
-      routes.private.management.backend.add_workshop:
-      routes.private.management.backend.edit_workshop:
-      routes.private.management.backend.archive_workshop:
-      routes.private.management.backend.activate_workshop:
-      routes.private.management.backend.get_difficulty_levels:
-      routes.private.management.backend.get_difficulty_level:
+      routes.backend.private.management.get_workshops:
+      routes.backend.private.management.get_workshop:
+      routes.backend.private.management.add_workshop:
+      routes.backend.private.management.edit_workshop:
+      routes.backend.private.management.archive_workshop:
+      routes.backend.private.management.activate_workshop:
+      routes.backend.private.management.get_difficulty_levels:
+      routes.backend.private.management.get_difficulty_level:
 
 
   locations_timeslots:
-    endpoint: routes.private.management.frontend.locations_timeslots
+    endpoint: routes.frontend.private.management.locations_timeslots
     backend_endpoints:
-      routes.private.management.backend.get_locations:
-      routes.private.management.backend.get_location:
-      routes.private.management.backend.add_location:
-      routes.private.management.backend.edit_location:
-      routes.private.management.backend.archive_location:
-      routes.private.management.backend.activate_location:
-      routes.private.management.backend.get_timeslots:
-      routes.private.management.backend.get_timeslot:
-      routes.private.management.backend.add_timeslot:
-      routes.private.management.backend.edit_timeslot:
-      routes.private.management.backend.archive_timeslot:
-      routes.private.management.backend.activate_timeslot:
+      routes.backend.private.management.get_locations:
+      routes.backend.private.management.get_location:
+      routes.backend.private.management.add_location:
+      routes.backend.private.management.edit_location:
+      routes.backend.private.management.archive_location:
+      routes.backend.private.management.activate_location:
+      routes.backend.private.management.get_timeslots:
+      routes.backend.private.management.get_timeslot:
+      routes.backend.private.management.add_timeslot:
+      routes.backend.private.management.edit_timeslot:
+      routes.backend.private.management.archive_timeslot:
+      routes.backend.private.management.activate_timeslot:
 
   # Volunteer
   volunteer_attendance:
-    endpoint: routes.private.volunteer.frontend.volunteer_attendance
+    endpoint: routes.frontend.private.volunteer.volunteer_attendance
     backend_endpoints:
-      routes.private.admin.backend.get_roles_field:
+      routes.backend.private.admin.get_roles_field:
         allowed_fields: id, name
-      routes.private.admin.backend.get_users_field:
+      routes.backend.private.admin.get_users_field:
         allowed_fields: id, display_name, role_ids
-      routes.private.volunteer.backend.get_user_attendance:
-      routes.private.volunteer.backend.add_user_attendance:
-      routes.private.volunteer.backend.edit_user_attendance:
+      routes.backend.private.volunteer.get_user_attendance:
+      routes.backend.private.volunteer.add_user_attendance:
+      routes.backend.private.volunteer.edit_user_attendance:
 
