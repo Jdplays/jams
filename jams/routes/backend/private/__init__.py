@@ -1,9 +1,9 @@
 from flask import Blueprint
 
-from jams.routes.private.admin import admin_bp
-from jams.routes.private.management import management_bp
-from jams.routes.private.general import general_bp
-from jams.routes.private.volunteer import volunteer_bp
+from .admin import bp as admin_bp
+from .management import bp as management_bp
+from .general import bp as general_bp
+from .volunteer import bp as volunteer_bp
 
 private_bp = Blueprint('private', __name__)
 

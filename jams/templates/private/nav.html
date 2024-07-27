@@ -2,7 +2,7 @@
 <header class="navbar navbar-expand-sm navbar-light d-print-none">
   <div class="container">
     <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3 me-auto">
-      <a href="{{ url_for('routes.private.general.frontend.dashboard')}}">JAMS</a>
+      <a href="{{ url_for('routes.frontend.private.general.dashboard')}}">JAMS</a>
     </h1>
     <div id="nav_theme_button" class="navbar-nav flex-row order-md-last">
       <div class="nav-item">
@@ -51,7 +51,7 @@
             </a>
             <div class="dropdown-menu">
               {% if user_has_access_to_page('volunteer_attendance') %}
-              <a class="dropdown-item" href="{{ url_for('routes.private.volunteer.frontend.volunteer_attendance')}}">
+              <a class="dropdown-item" href="{{ url_for('routes.frontend.private.volunteer.volunteer_attendance')}}">
                 Volunteer Attendance
               </a>
               {% endif %}
@@ -68,12 +68,12 @@
             </a>
             <div class="dropdown-menu">
               {% if user_has_access_to_page('workshop_catalog') %}
-              <a class="dropdown-item" href="{{ url_for('routes.private.management.frontend.workshop_catalog')}}">
+              <a class="dropdown-item" href="{{ url_for('routes.frontend.private.management.workshop_catalog')}}">
                 Workshop Catalog
               </a>
               {% endif %}
               {% if user_has_access_to_page('locations_timeslots') %}
-              <a class="dropdown-item" href="{{ url_for('routes.private.management.frontend.locations_timeslots')}}">
+              <a class="dropdown-item" href="{{ url_for('routes.frontend.private.management.locations_timeslots')}}">
                 Locations and Timeslots
               </a>
               {% endif %}
@@ -90,22 +90,22 @@
             </a>
             <div class="dropdown-menu">
               {% if user_has_access_to_page('settings') %}
-              <a class="dropdown-item" href="{{ url_for('routes.private.admin.frontend.settings')}}">
+              <a class="dropdown-item" href="{{ url_for('routes.frontend.private.admin.settings')}}">
                 Settings
               </a>
               {% endif %}
               {% if user_has_access_to_page('user_management') %}
-              <a class="dropdown-item" href="{{ url_for('routes.private.admin.frontend.user_management')}}">
+              <a class="dropdown-item" href="{{ url_for('routes.frontend.private.admin.user_management')}}">
                 User Management
               </a>
               {% endif %}
               {% if user_has_access_to_page('events') %}
-              <a class="dropdown-item" href="{{ url_for('routes.private.admin.frontend.events')}}">
+              <a class="dropdown-item" href="{{ url_for('routes.frontend.private.admin.events')}}">
                 Events
               </a>
               {% endif %}
               {% if user_has_access_to_page('event_schedule') %}
-              <a class="dropdown-item" href="{{ url_for('routes.private.admin.frontend.event_schedule')}}">
+              <a class="dropdown-item" href="{{ url_for('routes.frontend.private.admin.event_schedule')}}">
                 Event Schedule
               </a>
               {% endif %}

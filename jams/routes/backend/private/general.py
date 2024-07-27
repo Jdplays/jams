@@ -2,7 +2,7 @@
 from flask import Blueprint, jsonify
 from flask_security import login_required, current_user
 
-bp = Blueprint('backend', __name__, url_prefix='/backend')
+bp = Blueprint('general', __name__)
 
 # URL PREFIX = /backend
 

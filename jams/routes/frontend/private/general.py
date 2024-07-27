@@ -4,7 +4,7 @@ from flask_security import login_required
 
 url_prefix = '/private'
 
-bp = Blueprint('frontend', __name__, url_prefix=url_prefix)
+bp = Blueprint('general', __name__)
 
 # URL PREFIX = /private
 
