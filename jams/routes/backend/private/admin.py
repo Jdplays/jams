@@ -6,7 +6,7 @@ from jams.models import db, User, Role, Event, EventLocation, EventTimeslot, Ses
 from jams.util import helper
 from jams.rbac import generate_roles_file_from_db, update_pages_assigned_to_role
 
-bp = Blueprint('backend', __name__, url_prefix='/backend')
+bp = Blueprint('admin', __name__)
 
 # URL PREFIX = /backend
 

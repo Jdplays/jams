@@ -5,7 +5,7 @@ from flask_security import login_required
 from jams.models import db, Workshop, Location, Timeslot, DifficultyLevel
 from jams.util import helper
 
-bp = Blueprint('backend', __name__, url_prefix='/backend')
+bp = Blueprint('management', __name__)
 
 # URL PREFIX = /backend
 

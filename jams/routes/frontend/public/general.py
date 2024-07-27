@@ -1,7 +1,7 @@
 # Frontend is just for serving pages
 from flask import Blueprint, render_template
 
-bp = Blueprint('frontend', __name__)
+bp = Blueprint('general', __name__)
 
 # URL PREFIX = /public
 

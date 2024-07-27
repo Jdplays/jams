@@ -4,7 +4,7 @@ from flask_security import login_required
 from jams.decorators import role_based_access_control_be, protect_user_updates
 from jams.models import db, VolunteerAttendance
 
-bp = Blueprint('backend', __name__, url_prefix='/backend')
+bp = Blueprint('volunteer', __name__)
 
 # URL PREFIX = /backend
 

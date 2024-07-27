@@ -1,6 +1,6 @@
 # Frontend is just for serving pages
 from flask import Blueprint
 
-bp = Blueprint('backend', __name__, url_prefix='/backend')
+bp = Blueprint('genral', __name__)
 
 # URL PREFIX = /backend
