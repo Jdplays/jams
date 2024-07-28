@@ -1,0 +1,30 @@
+{% extends '_layout.html' %}
+
+{% block title %}Events{% endblock %}
+
+{% block content %}
+
+<div class="row row-deck row-cards">
+    <div class="col-4">
+        <div class="card">
+            <div class="card-body" style="height: 10rem">
+                <h1>Events</h1>
+                <p>This is the Events page!</p>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="file-list">
+
+</div>
+
+<form id="uploadForm">
+    <input type="file" id="fileInput" name="file">
+    <button type="button" onclick="UploadFileOnClick()">Upload</button>
+</form>
+
+<p id="files-request-response"></p>
+
+  <script src="{{ url_for('static', filename='js/resources/files_test.js') }}" defer></script>
+
+  {% endblock %}

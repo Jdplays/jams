@@ -3,7 +3,7 @@ from flask import Blueprint, request, jsonify, abort
 from flask_security import login_required
 from jams.decorators import role_based_access_control_be, protect_user_updates
 from jams.models import db, User, Role, Event, EventLocation, EventTimeslot, Session, Page
-from jams.util import helper
+from jams.util import helper, files
 from jams.rbac import generate_roles_file_from_db, update_pages_assigned_to_role
 
 bp = Blueprint('admin', __name__)
@@ -642,7 +642,7 @@ def remove_workshop_from_session(session_id):
     return jsonify({'message': 'Workshop successfully removed from session'})
 
 
-#------------------------------------------ Page ------------------------------------------#
+#------------------------------------------ PAGE ------------------------------------------#
 
 @bp.route('/pages', methods=['GET'])
 @login_required
@@ -668,3 +668,20 @@ def get_pages_field(field):
             field: getattr(page, field)
         })
     return jsonify({'pages': pages_data_list})
+
+
+#------------------------------------------ FILE TEST ------------------------------------------#
+
+@bp.route('/files', methods=['GET'])
+@login_required
+@role_based_access_control_be
+def get_files():
+    return jsonify({'files': files.get_files_name_list(bucket_name=files.workshop_bucket)})
+
+@bp.route('/files', methods=['POST'])
+@login_required
+@role_based_access_control_be
+def upload_file():
+    file = request.files['file']
+    files.upload_file(bucket_name=files.workshop_bucket, file_name=file.filename, file_data=file.stream)
+    return jsonify({'message': 'File successfully uploaded'})
