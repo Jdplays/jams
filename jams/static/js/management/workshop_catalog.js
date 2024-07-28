@@ -63,28 +63,38 @@ function GetDifficultyLevel(difficultyLevelID) {
 }
 
 function AddWorkshop(data) {
-    $.ajax({
-        type: 'POST',
-        url: '/backend/workshops',
-        data: JSON.stringify(data),
-        contentType: 'application/json',
-        success: function(response) {
-            PopulateWorkshopsTable();
-            document.getElementById('workshop-request-response').innerHTML = response.message
-        }
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: '/backend/workshops',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function(response) {
+                resolve(response);  
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error);
+            }
+        });
     });
 }
 
 function EditWorkshop(workshopID, data) {
-    $.ajax({
-        type: 'PATCH',
-        url: '/backend/workshops/' + workshopID,
-        data: JSON.stringify(data),
-        contentType: 'application/json',
-        success: function(response) {
-            PopulateWorkshopsTable();
-            document.getElementById('workshop-request-response').innerHTML = response.message
-        }
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'PATCH',
+            url: '/backend/workshops/' + workshopID,
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function(response) {
+                resolve(response);  
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error);
+            }
+        });
     });
 }
 
@@ -111,7 +121,40 @@ function ActivateWorkshop(workshopID) {
     });
 }
 
+function GetFileForWorkshop(workshopId) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'GET',
+            url: '/backend/workshops/' + workshopId + '/file',
+            success: function(response) {
+                resolve(response.file);   
+            },
+            error: function(error) {
+                if (error.status === 404) {
+                    resolve(null);
+                } else {
+                    console.log('Error fetching data:', error);
+                    reject(error);
+                }
+            }
+        });
+    });
+}
+
+function UploadFileToWorkshop(workshopId, fileData) {
+    $.ajax({
+        type: 'POST',
+        url: '/backend/workshops/' + workshopId + '/file',
+        data: fileData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+        }
+    });
+}
+
 function AddWorkshopOnClick() {
+    worksheet = document.getElementById('add-workshop-worksheet').files[0]
     const data = {
         'name': document.getElementById('add-workshop-name').value,
         'description': document.getElementById('add-workshop-description').value,
@@ -120,11 +163,25 @@ function AddWorkshopOnClick() {
     }
     console.log(document.getElementById('add-workshop-difficulty').value)
 
-    AddWorkshop(data)
+    AddWorkshop(data).then(response => {
+        workshopId = response.workshop.id
+        if (worksheet != null) {
+            const originalExtension = worksheet.name.split('.').pop();
+            // Define the new name for the file
+            const newFileName = `worksheet.${originalExtension}`;
+            const newFile = new File([worksheet], newFileName, { type: worksheet.type })
+            var fileData = new FormData();
+            fileData.append('file', newFile);
+            UploadFileToWorkshop(workshopId, fileData)
+            PopulateWorkshopsTable()
+        }
+    });
 }
 
 function EditWorkshopOnClick() {
     workshopID = document.getElementById('edit-workshop-id').value
+    worksheet = document.getElementById('edit-workshop-worksheet').files[0]
+
     const data = {
         'name': document.getElementById('edit-workshop-name').value,
         'description': document.getElementById('edit-workshop-description').value,
@@ -132,7 +189,18 @@ function EditWorkshopOnClick() {
         'difficulty_id': document.getElementById('edit-workshop-difficulty').value
     }
 
-    EditWorkshop(workshopID, data)
+    EditWorkshop(workshopID, data).then(response => {
+        if (worksheet != null) {
+            const originalExtension = worksheet.name.split('.').pop();
+            // Define the new name for the file
+            const newFileName = `worksheet.${originalExtension}`;
+            const newFile = new File([worksheet], newFileName, { type: worksheet.type })
+            var fileData = new FormData();
+            fileData.append('file', newFile);
+            UploadFileToWorkshop(workshopID, fileData)
+            PopulateWorkshopsTable()
+        }
+    })
 }
 
 function ClearDropDown(select) {
@@ -177,11 +245,16 @@ async function prepEditWorkshopForm(workshopID) {
     }
     let difficultyLevels = await GetDifficultyLevels()
 
+    let workshopFile = await GetFileForWorkshop(workshop.id)
+
     document.getElementById('edit-workshop-id').value = workshop.id
     document.getElementById('edit-workshop-name').value = workshop.name
     document.getElementById('edit-workshop-description').innerText = workshop.description
     document.getElementById('edit-workshop-min_volunteers').value = workshop.min_volunteers
 
+    if (workshopFile != null) {
+        document.getElementById('edit-workshop-current-file').innerHTML = `Current File: ${workshopFile.name}`
+    }
 
     const difficultyLevelDropdown = document.getElementById('edit-workshop-difficulty')
     ClearDropDown(difficultyLevelDropdown)
@@ -193,6 +266,7 @@ async function prepEditWorkshopForm(workshopID) {
     }
     else {
         defaultOptionsElement.innerText = workshopDifficulty.name
+        defaultOptionsElement.value = workshopDifficulty.id
     }
     defaultOptionsElement.disabled = true;
     defaultOptionsElement.selected = true;
@@ -226,6 +300,18 @@ async function PopulateWorkshopsTable() {
     $('#workshop-table tbody').empty();
 
     for (const workshop of allWorkshops) {
+
+        let workshopFile = await GetFileForWorkshop(workshop.id)
+
+        console.log(workshopFile)
+        let fileLink = document.createElement('a')
+        if (workshopFile != null) {
+            fileLink.innerHTML = workshopFile.name
+            fileLink.href = `/resources/${workshopFile.id}`
+        } else {
+            fileLink.innerHTML = 'No File'
+        }
+        fileLink.style.padding = '5px'
 
         actionsButtons = document.createElement('div')
         actionsButtons.className = 'btn-list'
@@ -293,6 +379,7 @@ async function PopulateWorkshopsTable() {
         CreateAndAppendCell(row, workshop.description)
         CreateAndAppendCell(row, workshop.min_volunteers)
         row.appendChild(difficultyLevelCell)
+        row.appendChild(fileLink)
         CreateAndAppendCell(row, workshop.active)
         row.appendChild(actionsButtons)
 

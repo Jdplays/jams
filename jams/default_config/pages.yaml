@@ -78,6 +78,8 @@ pages:
       routes.backend.private.management.activate_workshop:
       routes.backend.private.management.get_difficulty_levels:
       routes.backend.private.management.get_difficulty_level:
+      routes.backend.private.management.get_workshop_file:
+      routes.backend.private.management.add_workshop_file:
 
 
   locations_timeslots:
@@ -107,4 +109,12 @@ pages:
       routes.backend.private.volunteer.get_user_attendance:
       routes.backend.private.volunteer.add_user_attendance:
       routes.backend.private.volunteer.edit_user_attendance:
+
+  
+  # Testing
+  file_test:
+    endpoint: routes.frontend.resources.files_page
+    backend_endpoints:
+      routes.backend.private.admin.get_files:
+      routes.backend.private.admin.upload_file:
 

@@ -2,8 +2,9 @@
 from flask import Blueprint, request, jsonify, abort
 from jams.decorators import role_based_access_control_be
 from flask_security import login_required
-from jams.models import db, Workshop, Location, Timeslot, DifficultyLevel
+from jams.models import db, Workshop, Location, Timeslot, DifficultyLevel, File, WorkshopFile
 from jams.util import helper
+from jams.util import files
 
 bp = Blueprint('management', __name__)
 
@@ -128,6 +129,37 @@ def activate_workshop(workshop_id):
     db.session.commit()
 
     return jsonify({'message': 'The workshop has been successfully activated'})
+
+@bp.route('/workshops/<int:workshop_id>/file', methods=['POST'])
+@login_required
+@role_based_access_control_be
+def add_workshop_file(workshop_id):
+    workshop = Workshop.query.filter_by(id=workshop_id).first_or_404()
+    file = request.files['file']
+    folder_name = workshop.name.replace(" ", "_")
+    file_path = f'{folder_name}/{file.filename}'
+    file_id = files.upload_file(bucket_name=files.workshop_bucket, file_name=file_path, file_data=file.stream)
+
+    if not file_id:
+        abort(400, description='An error occured while uploading the file')
+    
+    workshop_file = WorkshopFile.query.filter_by(file_id=file_id).first()
+    if not workshop_file:
+        workshop_file = WorkshopFile(workshop_id=workshop_id, file_id=file_id)
+        db.session.add(workshop_file)
+        db.session.commit()
+    return jsonify({'message': 'File successfully uploaded'})
+
+
+@bp.route('/workshops/<int:workshop_id>/file', methods=['GET'])
+@login_required
+@role_based_access_control_be
+def get_workshop_file(workshop_id):
+    file_id = WorkshopFile.query.filter_by(workshop_id=workshop_id).first_or_404().file_id
+
+    file = File.query.filter_by(id=file_id).first_or_404()
+
+    return jsonify({'file': file.to_dict()})
 
 #------------------------------------------ LOCATION ------------------------------------------#
 
