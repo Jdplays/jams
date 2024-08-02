@@ -186,16 +186,21 @@ class Page(db.Model):
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True, nullable=False)
     endpoint = Column(String(255), unique=True, nullable=False)
+    parent_id = Column(Integer, ForeignKey('page.id'), nullable=True)
 
-    def __init__(self, name, endpoint):
+    parent = relationship('Page', remote_side=[id], backref='children')
+
+    def __init__(self, name, endpoint, parent_id=None):
         self.name = name
         self.endpoint = endpoint
+        self.parent_id = parent_id
 
     def to_dict(self):
         return {
             'id': self.id,
             'name': self.name,
-            'endpoint': self.endpoint
+            'endpoint': self.endpoint,
+            'parent_id': self.parent
         }
 
 
