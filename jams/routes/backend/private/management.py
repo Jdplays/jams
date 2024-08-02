@@ -130,36 +130,90 @@ def activate_workshop(workshop_id):
 
     return jsonify({'message': 'The workshop has been successfully activated'})
 
-@bp.route('/workshops/<int:workshop_id>/file', methods=['POST'])
+@bp.route('/workshops/<int:workshop_id>/worksheet', methods=['POST'])
 @login_required
 @role_based_access_control_be
-def add_workshop_file(workshop_id):
+def add_worksheet(workshop_id):
     workshop = Workshop.query.filter_by(id=workshop_id).first_or_404()
     file = request.files['file']
     folder_name = workshop.name.replace(" ", "_")
     file_path = f'{folder_name}/{file.filename}'
-    file_id = files.upload_file(bucket_name=files.workshop_bucket, file_name=file_path, file_data=file.stream)
+    file_db_obj = files.upload_file(bucket_name=files.workshop_bucket, file_name=file_path, file_data=file.stream)
 
-    if not file_id:
+    if not file_db_obj:
         abort(400, description='An error occured while uploading the file')
     
-    workshop_file = WorkshopFile.query.filter_by(file_id=file_id).first()
+    workshop_file = WorkshopFile.query.filter_by(file_id=file_db_obj.id).first()
     if not workshop_file:
-        workshop_file = WorkshopFile(workshop_id=workshop_id, file_id=file_id)
+        workshop_file = WorkshopFile(workshop_id=workshop_id, file_id=file_db_obj.id, type='worksheet')
         db.session.add(workshop_file)
         db.session.commit()
-    return jsonify({'message': 'File successfully uploaded'})
+    return jsonify({
+        'message': 'File successfully uploaded',
+        'file': file_db_obj.to_dict()
+        })
 
 
-@bp.route('/workshops/<int:workshop_id>/file', methods=['GET'])
+@bp.route('/workshops/<int:workshop_id>/files', methods=['GET'])
 @login_required
 @role_based_access_control_be
-def get_workshop_file(workshop_id):
-    file_id = WorkshopFile.query.filter_by(workshop_id=workshop_id).first_or_404().file_id
+def get_files(workshop_id):
+    workshop_files = WorkshopFile.query.filter_by(workshop_id=workshop_id).all()
+    if not workshop_files:
+        abort(404)
+    return_obj = [workshop_file.file.to_dict() for workshop_file in workshop_files]
+    return jsonify({'files':return_obj})
 
+@bp.route('/workshops/<int:workshop_id>/files/<uuid:file_id>/data', methods=['GET'])
+@login_required
+@role_based_access_control_be
+def get_file_data(workshop_id, file_id):
+    workshop_file = WorkshopFile.query.filter_by(workshop_id=workshop_id, file_id=file_id).first_or_404()
+    file = workshop_file.file
+    return jsonify(file.to_dict())
+
+@bp.route('/workshops/<int:workshop_id>/files/<uuid:file_id>/data', methods=['PATCH'])
+@login_required
+@role_based_access_control_be
+def edit_file_data(workshop_id, file_id):
+    workshop_file = WorkshopFile.query.filter_by(workshop_id=workshop_id, file_id=file_id).first_or_404()
+    
+    file = workshop_file.file
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
+    
+    for field, value in data.items():
+        if field == 'current_version_id':
+            setattr(file, field, value)
+        if field == 'public':
+            setattr(file, field, (value == ['True', 'true', 'T', 't', '1']))
+    
+    db.session.commit()
+    
+    return jsonify(file.to_dict())
+
+
+@bp.route('/workshops/<int:workshop_id>/files/<uuid:file_id>/versions', methods=['GET'])
+@login_required
+@role_based_access_control_be
+def get_file_versions(workshop_id, file_id):
+    workshop_file = WorkshopFile.query.filter_by(workshop_id=workshop_id, file_id=file_id).first_or_404()
+    file = workshop_file.file
+    return_obj = [file_version.to_dict() for file_version in file.versions]
+    return jsonify({'file_versions': return_obj})
+
+@bp.route('/workshops/<int:workshop_id>/files/<uuid:file_id>', methods=['GET'])
+@login_required
+@role_based_access_control_be
+def get_workshop_file(workshop_id, file_id):
+    WorkshopFile.query.filter_by(workshop_id=workshop_id, file_id=file_id).first_or_404()
     file = File.query.filter_by(id=file_id).first_or_404()
-
-    return jsonify({'file': file.to_dict()})
+    if request.args:
+        version_id = request.args.get('version_id')
+        if version_id:
+            return helper.get_and_prepare_file(files.workshop_bucket, file.name, version_id)
+    return helper.get_and_prepare_file(files.workshop_bucket, file.name, file.current_version_id)
 
 #------------------------------------------ LOCATION ------------------------------------------#
 

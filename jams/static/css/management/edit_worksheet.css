@@ -1,0 +1,30 @@
+.tool-bar-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin: 20px;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 4px 4px 4px 0px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    justify-content: space-between;
+}
+
+.theme-light .tool-bar-container-style {
+    border: 1px solid black;
+}
+
+.theme-dark .tool-bar-container-style {
+    border: 1px solid white;
+}
+
+.tool-bar-section-container {
+    display: flex;
+    flex-direction: column;
+    margin-right: 20px;
+    padding: 10px;
+}
+
+.tool-bar-section-container-actions {
+    justify-content: space-between;
+}
