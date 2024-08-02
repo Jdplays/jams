@@ -15,6 +15,7 @@ services:
       - /path/to/db_migrations:/jams/migrations
     depends_on:
       - jams-db
+      - jams-minio
   jams-db:
     image: postgres:13
     container_name: jams-db
