@@ -35,6 +35,15 @@ def generate_endpoints_structure():
                 page.endpoint = page_endpoint
             
             db.session.commit()
+
+            # Add any child pages
+            child_page_names = page_data.get('child_pages', [])
+            if child_page_names:
+                for page_name in child_page_names:
+                    child_page = Page.query.filter_by(name=page_name).first()
+                    if child_page:
+                        child_page.parent_id = page.id
+                        db.session.commit()
             
 
             backend_endpoints = page_data.get('backend_endpoints', [])
@@ -57,7 +66,17 @@ def generate_endpoints_structure():
                         page_endpoint_rule = PageEndpointRule(page_id=page.id, endpoint_rule_id=endpoint_rule.id)
                         db.session.add(page_endpoint_rule)
                     
-                    db.session.commit()  
+                    db.session.commit()
+
+def assign_role_to_page_recursive(role, page, default=False):
+    if page:
+        role_page = RolePage.query.filter_by(role_id=role.id, page_id=page.id).first()
+        if not role_page:
+            role_page = RolePage(role_id=role.id, page_id=page.id, default=default)
+            db.session.add(role_page)
+    if page.children:
+        for child in page.children:
+            assign_role_to_page_recursive(role, child, default)
 
 def generate_roles(folder, parent_folder=None, default=False):
     added_roles_names = []
@@ -84,13 +103,9 @@ def generate_roles(folder, parent_folder=None, default=False):
             if page_names:
                 for page_name in page_names:
                     page = Page.query.filter_by(name=page_name).first()
-                    if page:
-                        role_page = RolePage.query.filter_by(role_id=role.id, page_id=page.id).first()
-                        if not role_page:
-                            role_page = RolePage(role_id=role.id, page_id=page.id, default=default)
-                            db.session.add(role_page)
-                            db.session.commit()
-                
+                    assign_role_to_page_recursive(role, page, default)
+                    db.session.commit()
+                    
     return added_roles_names
 
 def load_all_roles():
@@ -204,19 +219,18 @@ def remove_pages_from_role(role_id):
             db.session.delete(role_page)
     db.session.commit()
 
-
 def update_pages_assigned_to_role(role_id, page_ids):
     remove_pages_from_role(role_id)
 
     # Add the pages to the role
     for page_id in page_ids:
-        # Check if there is a link between the role and the page. If not, add it
-        role_page = RolePage.query.filter_by(role_id=role_id, page_id=page_id).first()
+        role = Role.query.filter_by(id=role_id).first()
+        page = Page.query.filter_by(id=page_id).first()
 
-        if not role_page:
-            role_page = RolePage(role_id=role_id, page_id=page_id)
-            db.session.add(role_page)
-    
+        if page.parent_id and page.parent_id not in page_ids:
+            continue
+
+        assign_role_to_page_recursive(role, page)
     db.session.commit()
 
     # Generate role endpoint rules
