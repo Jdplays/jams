@@ -1,0 +1,47 @@
+{% extends '_layout.html' %}
+
+{% block title %}Edit Worksheet{% endblock %}
+
+{% block content %}
+
+<a id="back-to-workshop-catalog" class="btn btn-primary" href="{{ url_for('routes.frontend.private.management.workshop_catalog') }}">Back to workshop Catalog</a>
+
+<div id="file-tool-bar"  class="tool-bar-container tool-bar-container-style">
+    <div id="tool-bar-col-1" class="tool-bar-section-container">
+        <h2 id="tool-bar-title"></h2>
+        <p style="font-weight: bold;">Upload a new file to overwrite the existing one:</p>
+        <input id="tool-bar-upload-file-input" type="file" accept=".md, .pdf" class="form-control" onchange="uploadFileInputOnChange()">
+        <button id="tool-bar-upload-file-button" class="btn btn-primary" onclick="uploadFileButtonOnClick()" disabled>Upload</button>
+        <p id="tool-bar-upload-response"></p>
+    </div>
+    <div id="tool-bar-col-2" class="tool-bar-section-container">
+        <h3>Version</h3>
+        <div class="dropdown">
+            <a href="#" class="btn dropdown-toggle" data-bs-toggle="dropdown">Select Version</a>
+            <div id="version-dropdown" class="dropdown-menu">
+              
+            </div>
+          </div>
+          
+    </div>
+    <div id="tool-bar-col-3" class="tool-bar-section-container tool-bar-section-container-actions">
+        <button id="tool-bar-restore-file" class="btn btn-danger" onclick="restoreButtonOnClick()" disabled>RESTORE</button>
+        <button id="tool-bar-save-file" class="btn btn-primary" onclick="saveButtonOnClick()" disabled>Save</button>
+    </div>
+</div>
+
+<div id="file-container">
+</div>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/management/edit_worksheet.css') }}">
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/libs/tinymce/tinymce.min.js"></script>
+<script src="https://unpkg.com/turndown/dist/turndown.js"></script>
+<script src="{{ url_for('static', filename='js/management/edit_worksheet.js') }}" defer></script>
+<script>
+    const workshopId = '{{ workshop_id }}'
+    const fileUUID = '{{ file_id }}'
+</script>
+
+{% endblock %}

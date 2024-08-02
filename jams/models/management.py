@@ -1,6 +1,6 @@
 from . import db
 from sqlalchemy  import Column, String, Integer, Boolean, ForeignKey
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship
 
 
 class Workshop(db.Model):

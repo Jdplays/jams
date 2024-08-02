@@ -1,8 +1,10 @@
-from flask import abort, request
+from flask import abort, request, send_file
 from jams.models import db, EventLocation, EventTimeslot, Timeslot, Session, EndpointRule, RoleEndpointRule, PageEndpointRule, Page, RolePage
 from collections.abc import Mapping, Iterable
 from sqlalchemy import String, Integer, Boolean, or_, nullsfirst
 from flask_security import current_user
+
+from jams.util import files
 
 
 def get_ordered_event_locations(event_id):
@@ -189,7 +191,9 @@ def filter_model_by_query_and_properties(model, request_args, order_by=None):
                 for value in search_values:
                     if value == '':
                         abort(400, description='All query values must have a value')
-                    if isinstance(field_type, String):
+                    elif value == 'null' or value == 'None':
+                        field_conditions.append(field_attr == None)
+                    elif isinstance(field_type, String):
                         field_conditions.append(field_attr.ilike(f'%{value}%'))
                     elif isinstance(field_type, Boolean):
                         field_conditions.append(field_attr == (value.lower() in ['true', '1', 't', 'y', 'yes']))
@@ -274,3 +278,30 @@ def user_has_access_to_page(*names):
             if role_id in page_role_ids:
                 return True
     return False
+
+def get_and_prepare_file(bucket_name, file_name, version_id):
+    file_data = files.get_file(bucket_name=bucket_name, file_name=file_name, version_id=version_id)
+
+    mime_type = 'application/octet-stream'  # Default MIME type
+    if file_name.endswith('.txt'):
+        mime_type = 'text/plain'
+    elif file_name.endswith('.pdf'):
+        mime_type = 'application/pdf'
+    elif file_name.endswith('.jpg') or file_name.endswith('.jpeg'):
+        mime_type = 'image/jpeg'
+    elif file_name.endswith('.png'):
+        mime_type = 'image/png'
+    elif file_name.endswith('.mp4'):
+        mime_type = 'video/mp4'
+    elif file_name.endswith('.html'):
+        mime_type = 'text/html'
+    elif file_name.endswith('.md'):
+        mime_type = 'text/markdown'
+        
+    # Return the file as an inline response
+    return send_file(
+        file_data,
+        mimetype=mime_type,
+        as_attachment=False,  # This ensures the file is displayed inline
+        download_name=file_name
+    )

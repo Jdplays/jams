@@ -137,10 +137,14 @@ function CreateAndAppendCell(row, content) {
 }
 
 function BuildPageNamesQueryString(page_ids) {
+    let queryString = ''
     if (page_ids == null || page_ids.length <= 0) {
         page_ids = [-1]
+        queryString = 'id='
     }
-    queryString = 'id='
+    else {
+        queryString = 'parent_id=null&id='
+    }
 
     for (i = 0; i < page_ids.length; i++) {
         id = page_ids[i]
@@ -153,6 +157,7 @@ function BuildPageNamesQueryString(page_ids) {
         }
     }
 
+
     return queryString
 }
 
@@ -162,7 +167,7 @@ function GetDifference(list1, list2) {
 }
 
 async function PrepAddRoleForm() {
-    let allPages = await GetPageNames()
+    let allPages = await GetPageNames('parent_id=null')
 
     let addRolePagesContainer = document.getElementById('add-role-pages-container')
     EmptyElement(addRolePagesContainer)
@@ -196,7 +201,7 @@ async function PrepEditRoleForm(roleId) {
     let queryString = BuildPageNamesQueryString(role.page_ids)
     let selectedPages = await GetPageNames(queryString)
 
-    let allPages = await GetPageNames()
+    let allPages = await GetPageNames('parent_id=null')
     let otherPages = GetDifference(allPages, selectedPages)
 
     let editRolePagesContainer = document.getElementById('edit-role-pages-container')

@@ -1,5 +1,17 @@
 pages:
 
+  # Child Pages
+  edit_workshop_worksheet:
+    endpoint: routes.frontend.private.management.edit_workshop_worksheet
+    backend_endpoints:
+      routes.backend.private.management.get_workshop_file:
+      routes.backend.private.management.get_file_data:
+      routes.backend.private.management.edit_file_data:
+      routes.backend.private.management.get_file_versions:
+      routes.backend.private.management.add_worksheet:
+      routes.backend.private.management.get_workshop_field:
+        allowed_fields: id, name
+
   # Admin
   settings:
     endpoint: routes.frontend.private.admin.settings
@@ -11,7 +23,7 @@ pages:
       routes.backend.private.admin.delete_role:
       routes.backend.private.admin.get_pages:
       routes.backend.private.admin.get_pages_field:
-        allowed_fields: id, name
+        allowed_fields: id, name, parent_id
 
   user_management:
     endpoint: routes.frontend.private.admin.user_management
@@ -69,6 +81,8 @@ pages:
   # Management
   workshop_catalog:
     endpoint: routes.frontend.private.management.workshop_catalog
+    child_pages:
+      - edit_workshop_worksheet
     backend_endpoints:
       routes.backend.private.management.get_workshops:
       routes.backend.private.management.get_workshop:
@@ -78,6 +92,8 @@ pages:
       routes.backend.private.management.activate_workshop:
       routes.backend.private.management.get_difficulty_levels:
       routes.backend.private.management.get_difficulty_level:
+      routes.backend.private.management.get_files:
+      routes.backend.private.management.add_worksheet:
 
 
   locations_timeslots:
@@ -96,7 +112,7 @@ pages:
       routes.backend.private.management.archive_timeslot:
       routes.backend.private.management.activate_timeslot:
 
-  # Volunteer
+  # Volunteer`
   volunteer_attendance:
     endpoint: routes.frontend.private.volunteer.volunteer_attendance
     backend_endpoints:
@@ -107,4 +123,12 @@ pages:
       routes.backend.private.volunteer.get_user_attendance:
       routes.backend.private.volunteer.add_user_attendance:
       routes.backend.private.volunteer.edit_user_attendance:
+
+  
+  # Testing
+  file_test:
+    endpoint: routes.frontend.resources.files_page
+    backend_endpoints:
+      routes.backend.private.admin.get_files:
+      routes.backend.private.admin.upload_file:
 

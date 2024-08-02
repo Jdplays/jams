@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 from flask import Flask
 from jams.extensions import db, migrate, login_manager
 from flask_security import Security, SQLAlchemyUserDatastore
@@ -10,6 +11,7 @@ from jams.util import helper
 
 def create_app():
     app = Flask(__name__)
+    load_dotenv()
     app.config['SECRET_KEY']= os.getenv('SECRET_KEY', 'jams_flask_secret')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://jams:jams@db:5432/jams-main')
     app.config["SECURITY_PASSWORD_SALT"] = os.environ.get( "SECURITY_PASSWORD_SALT", "ab3d3a0f6984c4f5hkao41509b097a7bd498e903f3c9b2eea667h16")
@@ -32,7 +34,7 @@ def create_app():
 
     app.register_blueprint(routes_bp)
 
-    # Define the context processor within the create_app method
+    # Define the context processor to register methods for use in templating
     @app.context_processor
     def utility_processor():
         return dict(user_has_access_to_page=helper.user_has_access_to_page)

@@ -8,3 +8,4 @@ Flask-WTF
 gunicorn
 python-dotenv
 pyyaml
+minio

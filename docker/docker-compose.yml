@@ -2,6 +2,7 @@ services:
   jams-web:
     image: ghcr.io/jdplays/jams_master:latest
     container_name: jams-web
+    restart: unless-stopped
     command: ./entrypoint.sh
     ports:
       - "5000:5000"
@@ -10,16 +11,33 @@ services:
       - SECRET_KEY=${FLASK_SECRET}
       - DATABASE_URL=postgresql://${PG_USER}:${PG_PASS}@jams-db:5432/jams-main
     volumes:
-      -/path/to/config:/jams/config
-      -/path/to/db_migrations:/jams/migrations
+      - /path/to/config:/jams/config
+      - /path/to/db_migrations:/jams/migrations
     depends_on:
       - jams-db
   jams-db:
     image: postgres:13
     container_name: jams-db
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${PG_USER}
       POSTGRES_PASSWORD: ${PG_PASS}
       POSTGRES_DB: jams-main
     volumes:
       - /path/to/db:/var/lib/postgresql/data
+  jams-minio:
+    image: "minio/minio:latest"
+    container_name: jams-minio
+    restart: unless-stopped
+    command: minio server /mnt/data --console-address ":9001"
+  
+    volumes:
+      - /path/to/minio_data:/mnt/data
+  
+    environment:
+      - MINIO_ROOT_USER=${MINIO_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_PASS}
+  
+    ports:
+      - 9000:9000
+      - 9001:9001
