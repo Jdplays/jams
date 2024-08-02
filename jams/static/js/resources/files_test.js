@@ -69,7 +69,7 @@ async function PopulateFileList() {
     for (const file of files) {
         let fileData = document.createElement('a')
         fileData.innerHTML = file.name
-        fileData.href = `/resources/${file.id}`
+        fileData.href = `/resources/${file.id}/edit`
         fileData.style.padding = '5px'
         fileList.appendChild(fileData)
     }
