@@ -125,9 +125,9 @@ function GetFileForWorkshop(workshopId) {
     return new Promise((resolve, reject) => {
         $.ajax({
             type: 'GET',
-            url: '/backend/workshops/' + workshopId + '/file',
+            url: '/backend/workshops/' + workshopId + '/files',
             success: function(response) {
-                resolve(response.file);   
+                resolve(response.files);   
             },
             error: function(error) {
                 if (error.status === 404) {
@@ -144,7 +144,7 @@ function GetFileForWorkshop(workshopId) {
 function UploadFileToWorkshop(workshopId, fileData) {
     $.ajax({
         type: 'POST',
-        url: '/backend/workshops/' + workshopId + '/file',
+        url: '/backend/workshops/' + workshopId + '/worksheet',
         data: fileData,
         processData: false,
         contentType: false,
@@ -245,15 +245,19 @@ async function prepEditWorkshopForm(workshopID) {
     }
     let difficultyLevels = await GetDifficultyLevels()
 
-    let workshopFile = await GetFileForWorkshop(workshop.id)
+    let workshopFiles = await GetFileForWorkshop(workshop.id)
 
     document.getElementById('edit-workshop-id').value = workshop.id
     document.getElementById('edit-workshop-name').value = workshop.name
     document.getElementById('edit-workshop-description').innerText = workshop.description
     document.getElementById('edit-workshop-min_volunteers').value = workshop.min_volunteers
 
-    if (workshopFile != null) {
-        document.getElementById('edit-workshop-current-file').innerHTML = `Current File: ${workshopFile.name}`
+    if (workshopFiles != null) {
+        let filesText = ''
+        for (const file of workshopFiles) {
+            filesText += `${file.name} `
+        }
+        document.getElementById('edit-workshop-current-file').innerHTML = `Current File: ${filesText}`
     }
 
     const difficultyLevelDropdown = document.getElementById('edit-workshop-difficulty')
@@ -301,17 +305,25 @@ async function PopulateWorkshopsTable() {
 
     for (const workshop of allWorkshops) {
 
-        let workshopFile = await GetFileForWorkshop(workshop.id)
+        let workshopFiles = await GetFileForWorkshop(workshop.id)
 
-        console.log(workshopFile)
-        let fileLink = document.createElement('a')
-        if (workshopFile != null) {
-            fileLink.innerHTML = workshopFile.name
-            fileLink.href = `/resources/${workshopFile.id}`
+        let filesDiv = document.createElement('div')
+        if (workshopFiles != null) {
+            for (file of workshopFiles) {
+                let fileLink = document.createElement('a')
+                fileLink.innerHTML = file.name
+                fileLink.href = `/private/management/workshops/${workshop.id}/files/${file.id}`
+                fileLink.style.padding = '5px'
+                filesDiv.appendChild(fileLink)
+            }
+            
         } else {
+            let fileLink = document.createElement('a')
             fileLink.innerHTML = 'No File'
+            fileLink.style.padding = '5px'
+            filesDiv.appendChild(fileLink)
         }
-        fileLink.style.padding = '5px'
+        
 
         actionsButtons = document.createElement('div')
         actionsButtons.className = 'btn-list'
@@ -379,7 +391,7 @@ async function PopulateWorkshopsTable() {
         CreateAndAppendCell(row, workshop.description)
         CreateAndAppendCell(row, workshop.min_volunteers)
         row.appendChild(difficultyLevelCell)
-        row.appendChild(fileLink)
+        row.appendChild(filesDiv)
         CreateAndAppendCell(row, workshop.active)
         row.appendChild(actionsButtons)
 
