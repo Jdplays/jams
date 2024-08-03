@@ -112,6 +112,23 @@
             </div>
           </li>
           {% endif %}
+          {% if user_has_access_to_page('private_access_log') %}
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+              role="button" aria-expanded="false">
+              <span class="nav-link-title">
+                Monitoring
+              </span>
+            </a>
+            <div class="dropdown-menu">
+              {% if user_has_access_to_page('private_access_log') %}
+              <a class="dropdown-item" href="{{ url_for('routes.frontend.private.monitoring.private_access_log')}}">
+                Private Access Log
+              </a>
+              {% endif %}
+            </div>
+          </li>
+          {% endif %}
           {% endif %}
           {% if not current_user.is_authenticated %}
           <li id="nav_login_button" class="nav-item">
