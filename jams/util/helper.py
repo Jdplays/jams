@@ -305,3 +305,32 @@ def get_and_prepare_file(bucket_name, file_name, version_id):
         as_attachment=False,  # This ensures the file is displayed inline
         download_name=file_name
     )
+
+
+def get_required_roles_for_endpoint(endpoint):
+    role_names = []
+    endpoint_rule = EndpointRule.query.filter_by(endpoint=endpoint).first()
+    page = Page.query.filter_by(endpoint=endpoint).first()
+    if not endpoint_rule and not page:
+        return role_names
+    
+    if not page:
+        role_endpoint_rules = endpoint_rule.role_endpoint_rules
+
+        if not role_endpoint_rules:
+            return role_names
+        
+        for role_endpoint_rule in role_endpoint_rules:
+            role = role_endpoint_rule.role
+            role_names.append(role.name)
+    else:
+        role_pages = page.role_pages
+
+        if not role_pages:
+            return role_names
+        
+        for role_page in role_pages:
+            role = role_page.role
+            role_names.append(role.name)
+    
+    return role_names
