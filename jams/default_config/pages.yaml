@@ -124,7 +124,13 @@ pages:
       routes.backend.private.volunteer.add_user_attendance:
       routes.backend.private.volunteer.edit_user_attendance:
 
-  
+  # Monitoring
+  private_access_log:
+    endpoint: routes.frontend.private.monitoring.private_access_log
+    backend_endpoints:
+      routes.backend.private.monitoring.get_private_access_logs:
+
+
   # Testing
   file_test:
     endpoint: routes.frontend.resources.files_page
