@@ -29,6 +29,9 @@ pages:
     endpoint: routes.frontend.private.admin.user_management
     backend_endpoints:
       routes.backend.private.admin.get_users:
+      routes.backend.private.admin.get_user_field:
+        allowed_fields: id, role_ids
+      routes.backend.private.admin.edit_user:
       routes.backend.private.admin.archive_user:
       routes.backend.private.admin.activate_user:
       routes.backend.private.admin.get_roles_field:
