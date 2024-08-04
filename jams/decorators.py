@@ -57,7 +57,8 @@ def protect_user_updates(func):
         current_user_id = current_user.id
         user_id = int(kwargs.get('user_id'))
 
-        if current_user_id is not user_id:
+        user_management_request = helper.user_has_access_to_page('user_management')
+        if current_user_id is not user_id and not user_management_request:
             abort(403, description='You do not have access to the requested resource')
         return func(*args, **kwargs)
     return wrapper

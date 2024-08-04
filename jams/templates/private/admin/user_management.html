@@ -15,27 +15,50 @@
     </div>
 </div>
 
-<div>
-    <table id="users-table">
-        <thead>
-            <tr>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Full Name</th>
-                <th>Last Login</th>
-                <th>Roles</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody id="table-body">
-            <!-- Data will be dynamically added here -->
-        </tbody>
-    </table>
+<div id="user-management-data-grid-container">
+    <div id="user-management-data-grid" class="ag-theme-quartz" style="height: 500px"></div>
 </div>
+
+<div class="modal" id="edit-user-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit user</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="edit-user-id" name="user_id">
+            <div class="mb-3">
+                <label class="form-label">Roles</label>
+                <div id="edit-user-roles-container">
+                </div>
+            </div>
+          <div class="modal-footer">
+            <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
+              Cancel
+            </a>
+            <a id="edit-user-button" href="#" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-plus" width="24" height="24"
+                viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M12 5l0 14"></path>
+                <path d="M5 12l14 0"></path>
+              </svg>
+              Edit User
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
 <p id="user-request-response"></p>
 
-<script src="{{ url_for('static', filename='js/admin/user_management.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/admin/user_management.js') }}" type="module"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/general/sweet_alert.css') }}">
+
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 
 {% endblock %}
