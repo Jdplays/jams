@@ -110,7 +110,7 @@ class User(UserMixin, db.Model):
     def set_roles(self, role_ids):
         if role_ids is not None:
             # Remove all previous roles
-            for role in self.roles:
+            for role in self.roles[:]:
                 self.roles.remove(role)
 
             # Get role objects for each role_id
@@ -151,7 +151,7 @@ class User(UserMixin, db.Model):
             roles = Role.query.filter(Role.id.in_(roles_to_remove)).all()
 
             # Remove roles from the user
-            for role in roles:
+            for role in roles[:]:
                 self.roles.remove(role)
 
     
