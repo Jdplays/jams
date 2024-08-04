@@ -1,6 +1,6 @@
 # Backend is just for serving data to javascript
 from flask import Blueprint, request, jsonify, abort
-from flask_security import login_required
+from flask_security import login_required, current_user
 from jams.decorators import role_based_access_control_be, protect_user_updates
 from jams.models import db, User, Role, Event, EventLocation, EventTimeslot, Session, Page
 from jams.util import helper, files
@@ -73,6 +73,8 @@ def edit_user(user_id):
     for field, value in data.items():
         if field in allowed_fields:
             if field == 'role_ids':
+                if current_user.id == user_id:
+                    abort(400, description='User cannot update their own roles')
                 user.set_roles(value)
                 continue
             setattr(user, field, value)
@@ -90,6 +92,8 @@ def edit_user(user_id):
 @login_required
 @role_based_access_control_be
 def archive_user(user_id):
+    if current_user.id == user_id:
+        abort(400, description='User cannot archive themself')
     user = User.query.filter_by(id=user_id).first_or_404()
     user.archive()
     db.session.commit()
