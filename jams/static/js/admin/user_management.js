@@ -248,7 +248,6 @@ function buildActionsButtonsForUser(userId, userActive) {
 function initialiseAgGrid() {
     const gridOptions = {
         columnDefs: [
-            {field: 'id', flex: 1},
             {field: 'username', flex: 1},
             {field: 'email', flex: 1},
             {field: 'display_name', headerName: "Display Name", flex: 1},
