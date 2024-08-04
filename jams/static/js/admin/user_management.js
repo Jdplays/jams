@@ -160,7 +160,7 @@ function EmptyElement(element) {
 }
 
 function editUserOnClick() {
-    userId = document.getElementById('edit-user-id').value
+    let userId = document.getElementById('edit-user-id').value
 
     const data = {
         'role_ids': GetSelectValues(document.getElementById('edit-user-select-roles'))
@@ -198,6 +198,11 @@ async function prepEditUserForm(userId) {
         create: false,
         maxItems: null,
     });
+
+    // Set button on clcik
+    document.getElementById('edit-user-button').onclick = (function () {
+        editUserOnClick()
+    })
 }
 
 function buildEditButtonForUser(userId, isCurrentUser) {
