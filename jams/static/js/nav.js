@@ -40,9 +40,15 @@ function loadTheme() {
     if (theme === "dark") {
         document.body.classList.remove("theme-light");
         document.body.classList.add("theme-dark");
+        document.querySelectorAll('.ag-theme-quartz').forEach(grid => {
+            grid.classList.add('ag-theme-quartz-dark');
+        });
     } else if (theme === "light") {
         document.body.classList.remove("theme-dark");
         document.body.classList.add("theme-light");
+        document.querySelectorAll('.ag-theme-quartz').forEach(grid => {
+            grid.classList.remove('ag-theme-quartz-dark');
+        });
     }
 }
 
@@ -52,10 +58,16 @@ function toggleTheme() {
         body.classList.remove("theme-dark");
         body.classList.add("theme-light");
         localStorage.setItem("theme", "light");
+        document.querySelectorAll('.ag-theme-quartz').forEach(grid => {
+            grid.classList.remove('ag-theme-quartz-dark');
+        });
     } else {
         body.classList.remove("theme-light");
         body.classList.add("theme-dark");
         localStorage.setItem("theme", "dark");
+        document.querySelectorAll('.ag-theme-quartz').forEach(grid => {
+            grid.classList.add('ag-theme-quartz-dark');
+        });
     }
 }
 
