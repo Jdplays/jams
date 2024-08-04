@@ -1,3 +1,5 @@
+import {Toast} from "../global/sweet_alert.js"
+
 let gridApi;
 
 let roleNamesMap = {};
@@ -59,7 +61,17 @@ function editUser(userId, data) {
         contentType: 'application/json',
         success: async function(response) {
             await populateUserManagementTable();
-            document.getElementById('user-request-response').innerHTML = response.message
+            Toast.fire({
+                icon: 'success',
+                title: response.message
+            })
+        },
+        error: function(error) {
+            console.log(error)
+            Toast.fire({
+                icon: 'error',
+                title: 'An Error occurred!'
+            })
         }
     });
 }
@@ -90,7 +102,17 @@ function archiveUser(userID) {
         url: '/backend/users/' + userID + '/archive',
         success: async function(response) {
             await populateUserManagementTable();
-            document.getElementById('user-request-response').innerHTML = response.message
+            Toast.fire({
+                icon: 'success',
+                title: response.message
+            })
+        },
+        error: function(error) {
+            console.log(error)
+            Toast.fire({
+                icon: 'error',
+                title: 'An Error occurred!'
+            })
         }
     });
 }
@@ -101,7 +123,17 @@ function activateUser(userID) {
         url: '/backend/users/' + userID + '/activate',
         success: async function(response) {
             await populateUserManagementTable();
-            document.getElementById('user-request-response').innerHTML = response.message
+            Toast.fire({
+                icon: 'success',
+                title: response.message
+            })
+        },
+        error: function(error) {
+            console.log(error)
+            Toast.fire({
+                icon: 'error',
+                title: 'An Error occurred!'
+            })
         }
     });
 }
