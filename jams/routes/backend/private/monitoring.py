@@ -1,8 +1,9 @@
 # Backend is just for serving data to javascript
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from jams.decorators import role_based_access_control_be
 from flask_security import login_required
 from jams.models import db, PrivateAccessLog
+from jams.util import helper
 
 bp = Blueprint('monitoring', __name__)
 
@@ -10,6 +11,5 @@ bp = Blueprint('monitoring', __name__)
 @login_required
 @role_based_access_control_be
 def get_private_access_logs():
-    private_access_logs = PrivateAccessLog.query.all()
-    private_access_logs_data_list = [log.to_dict() for log in private_access_logs]
-    return jsonify({'private_access_logs': private_access_logs_data_list})
+    private_access_logs = helper.filter_model_by_query_and_properties(PrivateAccessLog, request.args, 'private_access_logs')
+    return jsonify(private_access_logs)
