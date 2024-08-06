@@ -1,8 +1,9 @@
 from flask import abort, request, send_file
 from jams.models import db, EventLocation, EventTimeslot, Timeslot, Session, EndpointRule, RoleEndpointRule, PageEndpointRule, Page, RolePage
 from collections.abc import Mapping, Iterable
-from sqlalchemy import String, Integer, Boolean, or_, nullsfirst
+from sqlalchemy import Date, DateTime, String, Integer, Boolean, or_, nullsfirst, asc, desc
 from flask_security import current_user
+from datetime import datetime, timedelta
 
 from jams.util import files
 
@@ -156,79 +157,137 @@ def contains_value(obj, value):
         return False
     return recursive_search(obj, value)
 
-def filter_model_by_query_and_properties(model, request_args, order_by=None):
+def filter_model_by_query_and_properties(model, request_args, objects_json_key, requested_field=None):
     query = model.query
     objects = []
+    properties_values = {}
+    allowed_fields = list(model.query.first_or_404().to_dict().keys())
+
+    # Default parameters
+    default_field_names = ['$pagination_block_size', '$pagination_start_index', '$order_by', '$order_direction']
+    pagination_block_size = 50
+    pagination_start_index = 0
+    order_by = model.id
+    order_direction = 'ASC'
+
     # Check if things are being searched for
     if request_args:
-        properties_values = {}
         filters = []
-        allowed_fields = list(model.query.first_or_404().to_dict().keys())
 
         for search_field, search_value in request_args.items():
-            field_conditions = []
+            # Check for default fields
+            if search_field in default_field_names:
+                try:
+                    if search_field == '$pagination_block_size':
+                        pagination_block_size = int(search_value)
 
-            # Split the search fields and values on the pipe char '|'
-            search_fields = search_field.split('|')
-            search_values = search_value.split('|')
+                    if search_field == '$pagination_start_index':
+                        pagination_start_index = int(search_value)
+                    
+                    if search_field == '$order_by':
+                        order_by = getattr(model, search_value)
+                    
+                    if search_field == '$order_direction':
+                        order_direction = str(search_value).upper()
+                    
+                except ValueError:
+                    abort(400, description=f"Invalid value for field '{search_field}': {search_value}")
+            else:
+                field_conditions = []
+
+                # Split the search fields and values on the pipe char '|'
+                search_fields = search_field.split('|')
+                search_values = search_value.split('|')
 
 
-            for field in search_fields:
-                if field == '':
-                    continue
+                for field in search_fields:
+                    if field == '':
+                        continue
 
-                if field not in allowed_fields:
-                    abort(404, description=f"Search field '{field}' not found or allowed")
-                
-                field_attr = getattr(model, field)
+                    if field not in allowed_fields:
+                        abort(404, description=f"Search field '{field}' not found or allowed")
+                    
+                    field_attr = getattr(model, field)
 
-                if isinstance(field_attr, property):
-                    properties_values.update({search_field: search_value})
-                    continue
-                
-                field_type = field_attr.property.columns[0].type
+                    if isinstance(field_attr, property):
+                        properties_values.update({search_field: search_value})
+                        continue
+                    
+                    field_type = field_attr.property.columns[0].type
 
-                for value in search_values:
-                    if value == '':
-                        abort(400, description='All query values must have a value')
-                    elif value == 'null' or value == 'None':
-                        field_conditions.append(field_attr == None)
-                    elif isinstance(field_type, String):
-                        field_conditions.append(field_attr.ilike(f'%{value}%'))
-                    elif isinstance(field_type, Boolean):
-                        field_conditions.append(field_attr == (value.lower() in ['true', '1', 't', 'y', 'yes']))
-                    elif isinstance(field_type, Integer):
-                        try:
-                            field_conditions.append(field_attr == int(value))
-                        except ValueError:
-                            abort(400, description=f"Invalid value for integer field '{field}': {value}")
-                    else:
-                        # For other types, add appropriate handling if needed
-                        field_conditions.append(field_attr == value)
+                    for value in search_values:
+                        if value == '':
+                            abort(400, description='All query values must have a value')
+                        elif value == 'null' or value == 'None':
+                            field_conditions.append(field_attr == None)
+                        elif isinstance(field_type, String):
+                            field_conditions.append(field_attr.ilike(f'%{value}%'))
+                        elif isinstance(field_type, Boolean):
+                            field_conditions.append(field_attr == (value.lower() in ['true', '1', 't', 'y', 'yes']))
+                        elif isinstance(field_type, Integer):
+                            try:
+                                field_conditions.append(field_attr == int(value))
+                            except ValueError:
+                                abort(400, description=f"Invalid value for integer field '{field}': {value}")
+                        elif isinstance(field_type, DateTime):
+                            try:
+                                datetime_value = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
+                                date_value = datetime_value.date()
 
-            if field_conditions:
-                filters.append(or_(*field_conditions))
+                                start_datetime = datetime.combine(date_value, datetime.min.time())
+                                end_datetime = start_datetime + timedelta(days=1)
+                                
+                                field_conditions.append(field_attr.between(start_datetime, end_datetime))
+                                #field_conditions.append(field_attr < end_datetime)
+                            except ValueError as e:
+                                abort(400, description=f"Invalid value for DateTime field '{field}': {value}")
+                        else:
+                            # For other types, add appropriate handling if needed
+                            field_conditions.append(field_attr == value)
+
+                if field_conditions:
+                    filters.append(or_(*field_conditions))
         
         if filters:
             query = query.filter(*filters)
         
-        if order_by:
-            objects = query.order_by(order_by).all()
-        else:
-            objects = query.all()
-
-        if properties_values:
-            for obj in objects[:]:
-                for prop, value in properties_values.items():
-                    if not contains_value(getattr(obj, prop), value):
-                        objects.remove(obj)
+    if order_direction == 'ASC':
+        objects = query.order_by(asc(order_by)).all()
+    elif order_direction == 'DESC':
+        objects = query.order_by(desc(order_by)).all()
     else:
-        if order_by:
-            objects = query.order_by(order_by).all()
-        else:
-            objects = query.all()
+        abort(400, description=f"Invalid Order Direction value: {order_direction}")
 
-    return objects
+    if properties_values:
+        for obj in objects[:]:
+            for prop, value in properties_values.items():
+                if not contains_value(getattr(obj, prop), value):
+                    objects.remove(obj)
+    
+    trimmed_objects = objects[pagination_start_index:pagination_start_index+pagination_block_size]
+
+    data_list = []
+
+    if requested_field:
+        if requested_field not in allowed_fields:
+            abort(404, description=f"Field '{requested_field}' not found or allowed")
+        for obj in trimmed_objects:
+            data_list.append({
+                'id': obj.id,
+                requested_field: getattr(obj, requested_field)
+            })
+    else:
+        data_list = [obj.to_dict() for obj in trimmed_objects]
+
+    record_count = query.count()
+    return_obj = {
+        objects_json_key: data_list,
+        'pagination_block_size': pagination_block_size,
+        'pagination_start_index': pagination_start_index,
+        'pagination_total_records': record_count
+    }
+    
+    return return_obj
 
 
 def check_roles(user_role_ids, role_id):
@@ -305,3 +364,32 @@ def get_and_prepare_file(bucket_name, file_name, version_id):
         as_attachment=False,  # This ensures the file is displayed inline
         download_name=file_name
     )
+
+
+def get_required_roles_for_endpoint(endpoint):
+    role_names = []
+    endpoint_rule = EndpointRule.query.filter_by(endpoint=endpoint).first()
+    page = Page.query.filter_by(endpoint=endpoint).first()
+    if not endpoint_rule and not page:
+        return role_names
+    
+    if not page:
+        role_endpoint_rules = endpoint_rule.role_endpoint_rules
+
+        if not role_endpoint_rules:
+            return role_names
+        
+        for role_endpoint_rule in role_endpoint_rules:
+            role = role_endpoint_rule.role
+            role_names.append(role.name)
+    else:
+        role_pages = page.role_pages
+
+        if not role_pages:
+            return role_names
+        
+        for role_page in role_pages:
+            role = role_page.role
+            role_names.append(role.name)
+    
+    return role_names

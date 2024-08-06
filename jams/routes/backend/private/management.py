@@ -16,28 +16,16 @@ bp = Blueprint('management', __name__)
 @login_required
 @role_based_access_control_be
 def get_workshops():
-    workshops = helper.filter_model_by_query_and_properties(Workshop, request.args, Workshop.id)
-    workshops_data_list = [workshop.to_dict() for workshop in workshops]
-    return jsonify({'workshops': workshops_data_list})
+    workshops = helper.filter_model_by_query_and_properties(Workshop, request.args, 'workshops')
+    return jsonify(workshops)
 
 
 @bp.route('/workshops/<field>', methods=['GET'])
 @login_required
 @role_based_access_control_be
 def get_workshops_field(field):
-    workshops = helper.filter_model_by_query_and_properties(Workshop, request.args, Workshop.id)
-    allowed_fields = list(Workshop.query.first_or_404().to_dict().keys())
-    if field not in allowed_fields:
-        abort(404, description=f"Field '{field}' not found or allowed")
-
-    workshops_data_list = []
-    for workshop in workshops:
-        workshops_data_list.append({
-            'id': workshop.id,
-            field: getattr(workshop, field)
-        })
-        
-    return jsonify({'workshops': workshops_data_list})
+    workshops = helper.filter_model_by_query_and_properties(Workshop, request.args, 'workshops', field)
+    return jsonify(workshops)
 
 
 @bp.route('/workshops/<int:workshop_id>', methods=['GET'])

@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template
 from flask_security import login_required
 from jams.decorators import role_based_access_control_fe
-from jams.models.files import WorkshopFile
+from jams.models import WorkshopFile
 
 url_prefix = '/private/management'
 

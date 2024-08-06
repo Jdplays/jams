@@ -16,27 +16,16 @@ bp = Blueprint('admin', __name__)
 @login_required
 @role_based_access_control_be
 def get_users():
-    users = helper.filter_model_by_query_and_properties(User, request.args, User.id)
-    users_data_list = [user.to_dict() for user in users]
-    return jsonify({'users': users_data_list})
+    users = helper.filter_model_by_query_and_properties(User, request.args, 'users')
+    return jsonify(users)
 
 
 @bp.route('/users/<field>', methods=['GET'])
 @login_required
 @role_based_access_control_be
 def get_users_field(field):
-    users = helper.filter_model_by_query_and_properties(User, request.args, User.id)
-
-    allowed_fields = list(User.query.first_or_404().to_dict().keys())
-    if field not in allowed_fields:
-        abort(404, description=f"Field '{field}' not found or allowed")
-    users_data_list = []
-    for user in users:
-        users_data_list.append({
-            'id': user.id,
-            field: getattr(user, field)
-        })
-    return jsonify({'users': users_data_list})
+    users = helper.filter_model_by_query_and_properties(User, request.args, 'users', field)
+    return jsonify(users)
 
 
 @bp.route('/users/<int:user_id>', methods=['GET'])
@@ -117,26 +106,16 @@ def activate_user(user_id):
 @login_required
 @role_based_access_control_be
 def get_roles():
-    roles = helper.filter_model_by_query_and_properties(Role, request.args, Role.id)
-    roles_data_list = [role.to_dict() for role in roles]
-    return jsonify({'roles': roles_data_list})
+    roles = helper.filter_model_by_query_and_properties(Role, request.args, 'roles')
+    return jsonify(roles)
 
 
 @bp.route('/roles/<field>', methods=['GET'])
 @login_required
 @role_based_access_control_be
 def get_roles_field(field):
-    roles = helper.filter_model_by_query_and_properties(Role, request.args, Role.id)
-    allowed_fields = list(Role.query.first_or_404().to_dict().keys())
-    if field not in allowed_fields:
-        abort(404, description=f"Field '{field}' not found or allowed")
-    roles_data_list = []
-    for role in roles:
-        roles_data_list.append({
-            'id': role.id,
-            field: getattr(role, field)
-        })
-    return jsonify({'roles': roles_data_list})
+    roles = helper.filter_model_by_query_and_properties(Role, request.args, 'roles', field)
+    return jsonify(roles)
 
 
 @bp.route('/roles/<int:role_id>', methods=['GET'])
@@ -652,26 +631,16 @@ def remove_workshop_from_session(session_id):
 @login_required
 @role_based_access_control_be
 def get_pages():
-    pages = helper.filter_model_by_query_and_properties(Page, request.args, Page.id)
-    pages_data_list = [page.to_dict() for page in pages]
-    return jsonify({'pages': pages_data_list})
+    pages = helper.filter_model_by_query_and_properties(Page, request.args, 'pages')
+    return jsonify(pages)
 
 
 @bp.route('/pages/<field>', methods=['GET'])
 @login_required
 @role_based_access_control_be
 def get_pages_field(field):
-    pages = helper.filter_model_by_query_and_properties(Page, request.args, Page.id)
-    allowed_fields = list(Page.query.first_or_404().to_dict().keys())
-    if field not in allowed_fields:
-        abort(404, description=f"Field '{field}' not found or allowed")
-    pages_data_list = []
-    for page in pages:
-        pages_data_list.append({
-            'id': page.id,
-            field: getattr(page, field)
-        })
-    return jsonify({'pages': pages_data_list})
+    pages = helper.filter_model_by_query_and_properties(Page, request.args, 'pages', field)
+    return jsonify(pages)
 
 
 #------------------------------------------ FILE TEST ------------------------------------------#

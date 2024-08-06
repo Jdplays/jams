@@ -1,6 +1,6 @@
 from . import db
 from sqlalchemy  import Column, String, Integer, Boolean, DateTime, ForeignKey
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship
 from flask_security import UserMixin, RoleMixin
 import uuid
 
@@ -211,7 +211,6 @@ class EndpointRule(db.Model):
     id = Column(Integer, primary_key=True)
     endpoint = Column(String(255), nullable=False)
     allowed_fields = Column(String(255), nullable=True) # This is a comma seperated list of allowed fields for the endpoint
-
 
     def __init__(self, endpoint, allowed_fields=None):
         self.endpoint = endpoint

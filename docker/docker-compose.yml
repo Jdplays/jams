@@ -24,6 +24,8 @@ services:
       POSTGRES_USER: ${PG_USER}
       POSTGRES_PASSWORD: ${PG_PASS}
       POSTGRES_DB: jams-main
+      TZ: 'UTC'
+      PGTZ: 'UTC'
     volumes:
       - /path/to/db:/var/lib/postgresql/data
   jams-minio:
