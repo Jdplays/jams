@@ -157,10 +157,11 @@ def contains_value(obj, value):
         return False
     return recursive_search(obj, value)
 
-def filter_model_by_query_and_properties(model, request_args, objects_json_key):
+def filter_model_by_query_and_properties(model, request_args, objects_json_key, requested_field=None):
     query = model.query
     objects = []
     properties_values = {}
+    allowed_fields = list(model.query.first_or_404().to_dict().keys())
 
     # Default parameters
     default_field_names = ['$pagination_block_size', '$pagination_start_index', '$order_by', '$order_direction']
@@ -172,7 +173,6 @@ def filter_model_by_query_and_properties(model, request_args, objects_json_key):
     # Check if things are being searched for
     if request_args:
         filters = []
-        allowed_fields = list(model.query.first_or_404().to_dict().keys())
 
         for search_field, search_value in request_args.items():
             # Check for default fields
@@ -266,9 +266,22 @@ def filter_model_by_query_and_properties(model, request_args, objects_json_key):
     
     trimmed_objects = objects[pagination_start_index:pagination_start_index+pagination_block_size]
 
+    data_list = []
+
+    if requested_field:
+        if requested_field not in allowed_fields:
+            abort(404, description=f"Field '{requested_field}' not found or allowed")
+        for obj in trimmed_objects:
+            data_list.append({
+                'id': obj.id,
+                requested_field: getattr(obj, requested_field)
+            })
+    else:
+        data_list = [obj.to_dict() for obj in trimmed_objects]
+
     record_count = query.count()
     return_obj = {
-        objects_json_key: [obj.to_dict() for obj in trimmed_objects],
+        objects_json_key: data_list,
         'pagination_block_size': pagination_block_size,
         'pagination_start_index': pagination_start_index,
         'pagination_total_records': record_count
