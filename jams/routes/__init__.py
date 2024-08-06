@@ -20,7 +20,6 @@ def before_all_requests(response):
         endpoint = helper.extract_endpoint()
         user_roles = [role.name for role in current_user.roles]
         required_roles = helper.get_required_roles_for_endpoint(endpoint)
-        print(status_code)
 
         # Create Audit log entry
         log_entry = PrivateAccessLog(

@@ -20,6 +20,14 @@ class PrivateAccessLog(db.Model):
     def user_display_name(self):
         return self.user.display_name
     
+    @property
+    def username(self):
+        return self.user.username
+    
+    @property
+    def user_email(self):
+        return self.user.email
+    
     def __int__(self, url, internal_endpoint, user_id, user_role_names, required_role_names, status_code):
         self.url = url
         self.internal_endpoint = internal_endpoint
@@ -36,6 +44,8 @@ class PrivateAccessLog(db.Model):
             'internal_endpoint': self.internal_endpoint,
             'user_id': self.user_id,
             'user_display_name': self.user_display_name,
+            'username': self.username,
+            'user_email': self.user_email,
             'user_role_names': self.user_role_names,
             'required_role_names': self.required_role_names,
             'status_code': self.status_code,
