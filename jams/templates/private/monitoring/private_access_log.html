@@ -4,10 +4,10 @@
 
 {% block content %}
 
-<div class="row row-deck row-cards">
+<div class="row row-deck row-cards" style="margin-bottom: 20px;">
     <div class="col-4">
         <div class="card">
-            <div class="card-body" style="height: 10rem">
+            <div class="card-body" style="height: 10rem;">
                 <h1>Private Access Log</h1>
                 <p>This is the Private Access Log page!</p>
             </div>
@@ -15,28 +15,11 @@
     </div>
 </div>
 
-<div class="table-responsive">
-    <table id="private-access-log-table" class="table table-vcenter">
-        <thead class="sticky-top">
-            <tr>
-                <th>ID</th>
-                <th>Date</th>
-                <th>URL</th>
-                <th>Internal Endpoint</th>
-                <th>User ID</th>
-                <th>User Display Name</th>
-                <th>User Roles</th>
-                <th>Required Roles</th>
-                <th>Status Code</th>
-            </tr>
-        </thead>
-        <tbody id="table-body">
-            <!-- Data will be dynamically added here -->
-        </tbody>
-    </table>
+<div id="private-access-log-data-grid-container">
+    <div id="private-access-log-data-grid" class="ag-theme-quartz"></div>
 </div>
 
-<script src="{{ url_for('static', filename='js/monitoring/private_access_log.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/monitoring/private_access_log.js') }}" type="module" defer></script>
 
 
 {% endblock %}
