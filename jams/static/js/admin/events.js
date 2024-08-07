@@ -178,5 +178,22 @@ async function PopulateEventsTable() {
     };
 }
 
+function SetupEventsPage() {
+  
+    const cssForDatepicker = ['https://cdn.jsdelivr.net/npm/@easepick/bundle@1.2.1/dist/index.css'];
+
+    const addEventDatepicker = new easepick.create({
+        element: document.querySelector('input#add-event-date'),
+        css: cssForDatepicker
+    });
+    
+    const editEventDatePicker = new easepick.create({
+        element: document.querySelector('input#edit-event-date'),
+        css: cssForDatepicker
+    });
+    
+    PopulateEventsTable()
+}
+
 // Event listeners
-document.addEventListener("DOMContentLoaded", PopulateEventsTable);
+document.addEventListener("DOMContentLoaded", SetupEventsPage);
