@@ -1,4 +1,4 @@
-import {buildQueryString, isEmptyOrSpaces} from '../global/helper.js'
+import {buildQueryString, isNullEmptyOrSpaces} from '../global/helper.js'
 
 let gridApi;
 
@@ -157,7 +157,7 @@ function populatePrivateAccessLogsTable() {
                     filter = value.filter
                 }
                 if (typeof filter === 'string') {
-                    if (isEmptyOrSpaces(filter)) {
+                    if (isNullEmptyOrSpaces(filter)) {
                         continue
                     }
                 }
