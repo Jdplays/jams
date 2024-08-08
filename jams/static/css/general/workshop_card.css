@@ -1,0 +1,47 @@
+.workshop-title-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding-top: 10px;
+}
+
+.workshop-title {
+    font-weight: bold;
+    font-size: 16;
+}
+
+.workshop-title-column {
+    display: flex;
+    flex-direction: column;
+    flex-basis: 100%;
+    flex: 1;
+}
+
+.workshop-card {
+    text-align: center;
+    vertical-align: middle;
+    padding: 5px;
+    transform-origin: center;
+}
+
+.workshop-card-animate-shrink {
+    transform: scale(0);
+}
+
+.workshop-card-animate {
+    transition: transform 0.5s ease;
+}
+
+.workshop-card-animate-grow {
+    transform: scale(1);
+}
+
+.truncate{
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 5;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 6em;         /* 5 lines with a line-height of 1.2em */
+    line-height: 1.2em;
+}

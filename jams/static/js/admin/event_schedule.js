@@ -1,7 +1,16 @@
 // Event Schedule Page
 
+import {
+    buildQueryString,
+    emptyElement,
+    hexToRgba,
+    getIconData
+} from '../global/helper.js'
+
+import {ScheduleGrid} from '../global/schedule_grid.js'
+
 // Variables
-var EVENTID = 1
+var EventId = 1
 var LocationIds = []
 var LocationsLength = 0
 var TimeslotsIds = []
@@ -12,8 +21,17 @@ var selectDifficultyIds = []
 var selectedTags = []
 var currentSearchQuery = ''
 
+// Schedule Grid
+const scheduleGridOptions = {
+    eventId: EventId,
+    edit: true,
+    size: 150
+}
+
+const scheduleGrid = new ScheduleGrid('schedule-container', scheduleGridOptions)
+
 // Backend API Calls
-function GetEventNames() {
+function getEventNames() {
     return new Promise((resolve, reject) => {
         $.ajax({
             url: '/backend/events/name',
@@ -29,7 +47,7 @@ function GetEventNames() {
     });
 }
 
-function GetEvent(eventID) {
+function getEvent(eventID) {
     return new Promise((resolve, reject) => {
         $.ajax({
             url: '/backend/events/' + eventID,
@@ -45,56 +63,8 @@ function GetEvent(eventID) {
     })
 }
 
-function GetLocationsForEvent(eventID) {
-    return new Promise((resolve, reject) => {
-        $.ajax({
-            url: '/backend/events/' + eventID + '/locations',
-            type: 'GET',
-            success: function (response) {
-                resolve(response.event_locations)
-            },
-            error: function (error) {
-                console.log('Error fetching data:', error);
-                reject(error);
-            }
-        });
-    });
-}
 
-function GetTimeslotsForEvent(eventID) {
-    return new Promise((resolve, reject) => {
-        $.ajax({
-            url: '/backend/events/' + eventID + '/timeslots',
-            type: 'GET',
-            success: function (response) {
-                resolve(response.event_timeslots)
-            },
-            error: function (error) {
-                console.log('Error fetching data:', error);
-                reject(error)
-            }
-        });
-    });
-}
-
-function GetSessionsForEvent(eventID) {
-    return new Promise((resolve, reject) => {
-        $.ajax({
-            url: '/backend/events/' + eventID + '/sessions',
-            type: 'GET',
-            success: function (response) {
-                resolve(response.sessions)
-            },
-            error: function (error) {
-                console.log('Error fetching data:', error);
-                reject(error)
-            }
-        });
-    });
-}
-
-
-function GetEventLocation(eventID, eventLocationID) {
+function getEventLocation(eventID, eventLocationID) {
     return new Promise((resolve, reject) => {
         $.ajax({
             url: '/backend/events/' + eventID + '/locations/' + eventLocationID,
@@ -111,7 +81,7 @@ function GetEventLocation(eventID, eventLocationID) {
 }
 
 
-function GetEventTimeslot(eventID, eventTimeslotID) {
+function getEventTimeslot(eventID, eventTimeslotID) {
     return new Promise((resolve, reject) => {
         $.ajax({
             url: '/backend/events/' + eventID + '/timeslots/' + eventTimeslotID,
@@ -127,7 +97,7 @@ function GetEventTimeslot(eventID, eventTimeslotID) {
     });
 }
 
-function GetWorkshopForSession(sessionID) {
+function getWorkshopForSession(sessionID) {
     return new Promise((resolve, reject) => {
         $.ajax({
             url: '/backend/sessions/' + sessionID + '/workshop',
@@ -143,7 +113,7 @@ function GetWorkshopForSession(sessionID) {
     });
 }
 
-function GetLocation(locationID) {
+function getLocation(locationID) {
     return new Promise((resolve, reject) => {
         $.ajax({
             url: '/backend/locations/' + locationID + '/name',
@@ -159,7 +129,7 @@ function GetLocation(locationID) {
     });
 }
 
-function GetTimeslot(timeslotID) {
+function getTimeslot(timeslotID) {
     return new Promise((resolve, reject) => {
         $.ajax({
             url: '/backend/timeslots/' + timeslotID,
@@ -175,7 +145,7 @@ function GetTimeslot(timeslotID) {
     });
 }
 
-function GetWorkshop(workshopID) {
+function getWorkshop(workshopID) {
     return new Promise((resolve, reject) => {
         $.ajax({
             url: '/backend/workshops/' + workshopID,
@@ -191,43 +161,11 @@ function GetWorkshop(workshopID) {
     });
 }
 
-function GetLocationNames() {
+function getWorkshops(queryString = null) {
     return new Promise((resolve, reject) => {
-        $.ajax({
-            url: '/backend/locations/name',
-            type: 'GET',
-            success: function (response) {
-                resolve(response.locations)
-            },
-            error: function (error) {
-                console.log('Error fetching data:', error);
-                reject(error)
-            }
-        });
-    });
-}
-
-function GetTimeslotNames() {
-    return new Promise((resolve, reject) => {
-        $.ajax({
-            url: '/backend/timeslots/name',
-            type: 'GET',
-            success: function (response) {
-                resolve(response.timeslots)
-            },
-            error: function (error) {
-                console.log('Error fetching data:', error);
-                reject(error)
-            }
-        });
-    });
-}
-
-function GetWorkshops(queryString = null) {
-    return new Promise((resolve, reject) => {
-        url = "/backend/workshops"
+        let url = "/backend/workshops"
         if (queryString != null) {
-            url = url + '?' + queryString
+            url += `?${queryString}`
         }
         $.ajax({
             url: url,
@@ -243,7 +181,7 @@ function GetWorkshops(queryString = null) {
     });
 }
 
-function GetDifficultyLevels() {
+function getDifficultyLevels() {
     return new Promise((resolve, reject) => {
         $.ajax({
             url: '/backend/difficulty_levels',
@@ -259,7 +197,7 @@ function GetDifficultyLevels() {
     });
 }
 
-function GetDifficultyLevel(difficultyLevelID) {
+function getDifficultyLevel(difficultyLevelID) {
     return new Promise((resolve, reject) => {
         $.ajax({
             url: '/backend/difficulty_levels/' + difficultyLevelID,
@@ -276,7 +214,7 @@ function GetDifficultyLevel(difficultyLevelID) {
 }
 
 
-function AddLocationToEvent(eventID, location_id, order) {
+function addLocationToEvent(eventID, location_id, order) {
     const data = {
         'location_id': location_id,
         'order': order
@@ -288,7 +226,7 @@ function AddLocationToEvent(eventID, location_id, order) {
         data: JSON.stringify(data),
         contentType: 'application/json',
         success: function (response) {
-            UpdateSchedule()
+            updateSchedule()
         },
         error: function (error) {
             console.log('Error fetching data:', error);
@@ -296,7 +234,7 @@ function AddLocationToEvent(eventID, location_id, order) {
     });
 }
 
-function UpdateEventLocationOrder(eventID, eventLocationID, order) {
+function updateEventLocationOrder(eventID, eventLocationID, order) {
     const data = {
         'order': order
     }
@@ -307,7 +245,7 @@ function UpdateEventLocationOrder(eventID, eventLocationID, order) {
         data: JSON.stringify(data),
         contentType: 'application/json',
         success: function (response) {
-            UpdateSchedule()
+            updateSchedule()
         },
         error: function (error) {
             console.log('Error fetching data:', error);
@@ -315,7 +253,7 @@ function UpdateEventLocationOrder(eventID, eventLocationID, order) {
     });
 }
 
-function AddTimeslotToEvent(eventID, timeslot_id) {
+function addTimeslotToEvent(eventID, timeslot_id) {
     const data = {
         'timeslot_id': timeslot_id
     }
@@ -326,7 +264,7 @@ function AddTimeslotToEvent(eventID, timeslot_id) {
         data: JSON.stringify(data),
         contentType: 'application/json',
         success: function (response) {
-            UpdateSchedule()
+            updateSchedule()
         },
         error: function (error) {
             console.log('Error fetching data:', error);
@@ -334,54 +272,12 @@ function AddTimeslotToEvent(eventID, timeslot_id) {
     });
 }
 
-function AddWorkshopToSession(sessionID, workshopID, force = false) {
-    return new Promise((resolve) => {
-        const data = {
-            'workshop_id': workshopID,
-        }
-
-        if (force) {
-            data['force'] = force
-        }
-
-        $.ajax({
-            url: '/backend/sessions/' + sessionID + '/workshop',
-            type: 'POST',
-            data: JSON.stringify(data),
-            contentType: 'application/json',
-            success: function (response) {
-                resolve(true)
-            },
-            error: function (error) {
-                console.log('Error fetching data:', error);
-                resolve(false)
-            }
-        });
-    });
-}
-
-function RemoveWorkshopFromSession(sessionID) {
-    return new Promise((resolve) => {
-        $.ajax({
-            url: '/backend/sessions/' + sessionID + '/workshop',
-            type: 'DELETE',
-            success: function (response) {
-                resolve(true)
-            },
-            error: function (error) {
-                console.log('Error fetching data:', error);
-                resolve(false)
-            }
-        });
-    });
-}
-
-function RemoveLocationFromEvent(eventID, eventLocationID) {
+function removeLocationFromEvent(eventID, eventLocationID) {
     $.ajax({
         url: '/backend/events/' + eventID + '/locations/' + eventLocationID,
         type: 'DELETE',
         success: function (response) {
-            UpdateSchedule()
+            updateSchedule()
         },
         error: function (error) {
             console.log('Error fetching data:', error);
@@ -389,12 +285,12 @@ function RemoveLocationFromEvent(eventID, eventLocationID) {
     });
 }
 
-function RemoveTimeslotFromEvent(eventID, eventTimeslotID) {
+function removeTimeslotFromEvent(eventID, eventTimeslotID) {
     $.ajax({
         url: '/backend/events/' + eventID + '/timeslots/' + eventTimeslotID,
         type: 'DELETE',
         success: function (response) {
-            UpdateSchedule()
+            updateSchedule()
         },
         error: function (error) {
             console.log('Error fetching data:', error);
@@ -407,29 +303,52 @@ function RemoveTimeslotFromEvent(eventID, eventTimeslotID) {
 // Event Selection
 
 // Populates the Event selection dropdown with all of the events
-async function PopulateEventSelectionDropdown() {
-    let events = await GetEventNames()
+async function populateEventSelectionDropdown() {
+    let events = await getEventNames()
 
-    eventSelectionDropdown = document.getElementById('event-selection')
-    select = CreateDropdown(await events, await events[0].name, EventSelectionDropdownOnChange)
+    let eventSelectionDropdown = document.getElementById('event-selection')
+    let select = createDropdown(await events, await events[0].name, eventSelectionDropdownOnChange)
     select.id = 'event-select'
     select.classList.add('select-event-dropdown', 'form-control')
     eventSelectionDropdown.appendChild(select)
 }
 
 // Handles the onchange event for the Event selction dropdown 
-function EventSelectionDropdownOnChange(event) {
+function eventSelectionDropdownOnChange(event) {
     const selectedValue = event.target.value
-    EVENTID = selectedValue
-    GetEvent(EVENTID)
-    UpdateSchedule()
-    PopulateEventDetails()
+    EventId = selectedValue
+    getEvent(EventId)
+    updateSchedule()
+    populateEventDetails()
 }
+
+// Grid Events
+
+function locationAddOnClick(locationId, order) {
+    addLocationToEvent(EventId, locationId, order)
+}
+
+function timeslotAddOnClick(timeslotID) {
+    addTimeslotToEvent(EventId, timeslotID)
+}
+
+function locationRemoveOnClick(locationId) {
+    removeLocationFromEvent(EventId, locationId)
+}
+
+function timeslotRemoveOnClick(timeslotID) {
+    removeTimeslotFromEvent(EventId, timeslotID)
+}
+
+function removeWorkshopFromSessionOnClick(sessionId) {
+    removeWorkshopFromSession(sessionId)
+}
+
 
 // Event Details
 // Populates the selected events details (name and date)
-async function PopulateEventDetails() {
-    let event = await GetEvent(EVENTID)
+async function populateEventDetails() {
+    let event = await getEvent(EventId)
     let eventDetailsContainer = document.getElementById('event-details-container')
     eventDetailsContainer.classList.add('event-details')
     
@@ -441,7 +360,7 @@ async function PopulateEventDetails() {
     date.innerHTML = formatDate(event.date)
     title.classList.add('event-details-element')
 
-    EmptyElement(eventDetailsContainer)
+    emptyElement(eventDetailsContainer)
     eventDetailsContainer.appendChild(title)
     eventDetailsContainer.appendChild(date)
 }
@@ -451,10 +370,15 @@ async function PopulateEventDetails() {
 
 // Workshop Selction
 // Populates the list of workshop cards
-async function PopulateWorkshopList() {
-    
-    let queryString = BuildWorkshopSearchQueryString()
-    let workshops = await GetWorkshops(queryString)
+async function populateWorkshopList() {
+    let queryData = {
+        name: currentSearchQuery,
+        description: '$~name',
+        difficulty_id: selectDifficultyIds,
+        tag_ids: selectedTags
+    }
+    let queryString = buildQueryString(queryData)
+    let workshops = await getWorkshops(queryString)
 
     let workshopList = document.getElementById('workshop-selection-list')
 
@@ -464,7 +388,7 @@ async function PopulateWorkshopList() {
     for (const workshop of workshops) {
         const workshopListBlock = document.createElement('div')
         workshopListBlock.classList.add('workshop-list-block')
-        workshopCard = await BuildWorkshopCard(workshop, false)
+        let workshopCard = await buildWorkshopCard(workshop, false)
         workshopCard.id = "drag-drop-workshop-" + workshop.id
         workshopCard.draggable = true
         workshopCard.addEventListener('dragstart', function (event) {
@@ -475,24 +399,24 @@ async function PopulateWorkshopList() {
     }
 
     // Empty the list
-    EmptyElement(workshopList)
+    emptyElement(workshopList)
 
-    for (element of elementList) {
+    for (const element of elementList) {
         workshopList.append(element)
     }
 
 }
 
 // Handles updating the global reference of the selected difficulty ids
-function UpdateDifficultyIdsList(checked, id) {
+function updateDifficultyIdsList(checked, id) {
     if (checked) {
-        // Add To list
+        // add To list
         if (!selectDifficultyIds.includes(id)) {
             selectDifficultyIds.push(id)
         }
     }
     else {
-        // Remove from list
+        // remove from list
         const index = selectDifficultyIds.indexOf(id)
         if (index > -1) {
             selectDifficultyIds.splice(index, 1)
@@ -501,9 +425,9 @@ function UpdateDifficultyIdsList(checked, id) {
 }
 
 // Populates the workshop selection tools (difficulties, tags)
-async function PopulateWorkshopSelectionTools() {
+async function populateWorkshopSelectionTools() {
     const workshopSelectionToolsContainer = document.getElementById('workshop-selection-tools-container')
-    const difficultyLevels = await GetDifficultyLevels()
+    const difficultyLevels = await getDifficultyLevels()
 
     // Difficulty
     let difficultyContainer = document.createElement('div')
@@ -529,8 +453,8 @@ async function PopulateWorkshopSelectionTools() {
             if (!input.checked) {
                 input.selected = false
             }
-            UpdateDifficultyIdsList(input.checked, level.id)
-            PopulateWorkshopList()
+            updateDifficultyIdsList(input.checked, level.id)
+            populateWorkshopList()
         }
 
         let text = document.createElement('span')
@@ -564,7 +488,7 @@ async function PopulateWorkshopSelectionTools() {
     tagsSelect.multiple = 'multiple'
     tagsSelect.placeholder = 'Select tags'
 
-    for(i=0; i < 5; i++) {
+    for(let i=0; i < 5; i++) {
         let option = document.createElement('option')
         option.value = i
         option.text = 'tag ' + i
@@ -573,7 +497,7 @@ async function PopulateWorkshopSelectionTools() {
 
     tagsContainer.appendChild(tagsSelect)
 
-    EmptyElement(workshopSelectionToolsContainer)
+    emptyElement(workshopSelectionToolsContainer)
     workshopSelectionToolsContainer.appendChild(difficultyContainer)
     workshopSelectionToolsContainer.appendChild(tagsContainer)
 
@@ -591,7 +515,7 @@ async function PopulateWorkshopSelectionTools() {
 }
 
 // Handles the event for when either of the workshop list scroll arrows are pressed
-function HandleWorkshopSelectionArrows() {
+function handleWorkshopSelectionArrows() {
     const scrollContainer = document.getElementById('workshop-selection-list');
     const leftArrow = document.getElementById('workshop-selection-list-left-arrow');
     const rightArrow = document.getElementById('workshop-selection-list-right-arrow');
@@ -599,8 +523,8 @@ function HandleWorkshopSelectionArrows() {
     function updateArrows() {
         const scrollLeft = scrollContainer.scrollLeft;
         const maxScrollLeft = scrollContainer.scrollWidth - scrollContainer.clientWidth;
-        const leftIcon = leftArrow.querySelector('#icon')
-        const rightIcon = rightArrow.querySelector('#icon')
+        const leftIcon = leftArrow.querySelector('svg')
+        const rightIcon = rightArrow.querySelector('svg')
 
         if (scrollLeft === 0) {
             leftIcon.style.display = 'none';
@@ -630,13 +554,13 @@ function HandleWorkshopSelectionArrows() {
 }
 
 // Handles the event for when the workshop selection search bar's input is updated
-function WorkshopSearchOnChange() {
+function workshopSearchOnChange() {
     let tmp = document.getElementById('workshop-search-box').value
     let filtered = tmp.replace(/[?&|=\/\\]/g, '');
 
     currentSearchQuery = filtered
 
-    PopulateWorkshopList()
+    populateWorkshopList()
 }
 
 
@@ -651,7 +575,7 @@ function allowDrop(ev) {
 function drag(ev, value) {
     ev.dataTransfer.setData("workshop-id", value);
     ev.dataTransfer.setData("drag-type", "blah");
-    currentDragType = 'workshop-add'
+    scheduleGrid.currentDragType = 'workshop-add'
 }
 
 // Handles the drop event
@@ -660,8 +584,8 @@ async function drop(event) {
         event.preventDefault();
         var workshopID = event.dataTransfer.getData("workshop-id");
         var sessionID = event.target.getAttribute('session-id')
-        if (await AddWorkshopToSession(sessionID, workshopID)) {
-            await AnimateWorkshopDrop(event.target.id, workshopID)
+        if (await addWorkshopToSession(sessionID, workshopID)) {
+            await animateWorkshopDrop(event.target.id, workshopID)
         }
     }
     currentDragType = ''
@@ -678,9 +602,9 @@ async function BuildSchedule() {
     gridContainer.id = 'grid-container'
     gridContainer.classList.add('grid-container')
 
-    let eventLocations = await GetLocationsForEvent(EVENTID);
-    let eventTimeslots = await GetTimeslotsForEvent(EVENTID);
-    let eventSessions = await GetSessionsForEvent(EVENTID);
+    let eventLocations = await getLocationsForEvent(EventId);
+    let eventTimeslots = await getTimeslotsForEvent(EventId);
+    let eventSessions = await getSessionsForEvent(EventId);
 
     const columnCount = eventLocations.length + 1; // Extra column for the end button
     const rowCount = eventTimeslots.length + 1; // Extra row for the end button
@@ -688,17 +612,17 @@ async function BuildSchedule() {
     gridContainer.style.gridTemplateRows = `100px repeat(${rowCount}, 150px)`;
 
 
-    // Add the top-left empty cell
+    // add the top-left empty cell
     let div = document.createElement('div');
     div.classList.add('header')
     gridContainer.appendChild(div);
 
-    // Add locations headers
+    // add locations headers
     LocationsLength = eventLocations.length
     if (LocationsLength > 0) {
         for (const eventLocation of eventLocations) {
             LocationIds.push(eventLocation.id)
-            let locationDetails = await GetLocation(eventLocation.location_id)
+            let locationDetails = await getLocation(eventLocation.location_id)
             let div = document.createElement('div');
             div.setAttribute('event-location-id', eventLocation.id)
             div.setAttribute('data-index', eventLocation.order)
@@ -713,10 +637,12 @@ async function BuildSchedule() {
             locationName.innerText = locationDetails.name
             locationContainer.appendChild(locationName)
 
-            const removeButton = GetIconElement('bin-icon')
+            const removeButton = document.createElement('div')
+            let removeIconData = await getIconData('remove')
+            removeButton.innerHTML = removeIconData
             removeButton.classList.add('header-row')
             removeButton.onclick = function () {
-                confirmDeleteModal = $('#confirm-delete')
+                let confirmDeleteModal = $('#confirm-delete')
                 confirmDeleteModal.modal('show')
 
                 confirmDeleteModal.find('#confirm-delete-text').text(`
@@ -726,7 +652,7 @@ async function BuildSchedule() {
                 confirmDeleteModal.find('#confirm-delete-button').off('click');
 
                 confirmDeleteModal.find('#confirm-delete-button').click(function () {
-                    RemoveLocationFromEvent(EVENTID, eventLocation.id)
+                    removeLocationFromEvent(EventId, eventLocation.id)
                 });
 
                 return true
@@ -734,7 +660,9 @@ async function BuildSchedule() {
 
             locationContainer.appendChild(removeButton)
 
-            let grabHandle = GetIconElement('column-move')
+            let grabHandle = document.createElement('div')
+            let grabIconData = await getIconData('grab-point')
+            grabHandle.innerHTML = grabIconData
             grabHandle.classList.add('location-column-grab-container', 'location-column-grab-container-style')
             grabHandle.style.display = 'none'
 
@@ -752,37 +680,39 @@ async function BuildSchedule() {
         };
     }
 
-    // Add a dropdown select at the end of the header row
+    // add a dropdown select at the end of the header row
     const locationsDropdownCell = document.createElement('div');
     locationsDropdownCell.classList.add('header-end', 'header-top-end', 'dropdown')
-    btn = GetIconElement('table-add-icon')
+    let btn = document.createElement('div')
+    let iconData = await getIconData('table-add')
+    btn.innerHTML = iconData
     btn.setAttribute('data-bs-toggle', 'dropdown');
     locationsDropdownCell.appendChild(btn)
 
-    let locationNames = await GetLocationNames()
-    dropdownMenu = document.createElement('div')
+    let locationNames = await getLocationNames()
+    let dropdownMenu = document.createElement('div')
     dropdownMenu.className = 'dropdown-menu'
     for (const location of locationNames) {
-        a = document.createElement('a')
+        let a = document.createElement('a')
         a.innerHTML = location.name
         a.className = "dropdown-item"
         a.onclick = function () {
-            AddLocationToEvent(EVENTID, location.id, LocationsLength)
+            addLocationToEvent(EventId, location.id, LocationsLength)
         }
         dropdownMenu.appendChild(a)
     }
 
     locationsDropdownCell.appendChild(dropdownMenu)
 
-    //locationsDropdownCell.appendChild(CreateDropdown(await GetLocationNames(), "+", LocationsDropdownOnChange));
+    //locationsDropdownCell.appendChild(CreateDropdown(await getLocationNames(), "+", LocationsDropdownOnChange));
     gridContainer.appendChild(locationsDropdownCell);
 
-    // Add Timeslots headers
+    // add Timeslots headers
     TimeslotsLength = eventTimeslots.length;
     if (TimeslotsLength > 0) {
         for (const eventTimeslot of eventTimeslots) {
             TimeslotsIds.push(eventTimeslot.id)
-            let timeslotDetails = await GetTimeslot(eventTimeslot.timeslot_id)
+            let timeslotDetails = await getTimeslot(eventTimeslot.timeslot_id)
             let div = document.createElement('div');
             div.classList.add('header', 'header-side');
 
@@ -799,12 +729,14 @@ async function BuildSchedule() {
             timeslotRange.innerText = timeslotDetails.range
             timeslotContainer.appendChild(timeslotRange)
 
-            emptyTimeslotRow = document.createElement('div')
+            let emptyTimeslotRow = document.createElement('div')
             emptyTimeslotRow.classList.add('header-row', 'header-row-spacer')
             timeslotContainer.appendChild(emptyTimeslotRow)
 
 
-            const removeButton = GetIconElement('bin-icon')
+            const removeButton = document.createElement('div')
+            let removeIconData = await getIconData('remove')
+            removeButton.innerHTML = removeIconData
             removeButton.classList.add('header-row')
             removeButton.onclick = function () {
                 confirmDeleteModal = $('#confirm-delete')
@@ -817,7 +749,7 @@ async function BuildSchedule() {
                 confirmDeleteModal.find('#confirm-delete-button').off('click');
 
                 confirmDeleteModal.find('#confirm-delete-button').click(function () {
-                    RemoveTimeslotFromEvent(EVENTID, eventTimeslot.id)
+                    removeTimeslotFromEvent(EventId, eventTimeslot.id)
                 });
 
                 return true
@@ -835,29 +767,30 @@ async function BuildSchedule() {
                 gridContainer.appendChild(div);
             };
 
-            // Add the row end empty cell
+            // add the row end empty cell
             let empty = document.createElement('div');
             empty.className = 'empty'
             gridContainer.appendChild(empty);
         }
     }
 
-    // Add a dropdown select at the end of the header row
+    // add a dropdown select at the end of the header row
     const TimeslotsDropdownCell = document.createElement('div');
     TimeslotsDropdownCell.classList.add('header-end', 'header-side-end')
-    btn = GetIconElement('table-add-icon')
-    btn.setAttribute('data-bs-toggle', 'dropdown');
+    btn = document.createElement('div')
+    let addIconData = await getIconData('table-add')
+    btn.innerHTML = addIconData
     TimeslotsDropdownCell.appendChild(btn)
 
-    let timeslotNames = await GetTimeslotNames()
+    let timeslotNames = await getTimeslotNames()
     dropdownMenu = document.createElement('div')
     dropdownMenu.className = 'dropdown-menu'
     for (const timeslot of timeslotNames) {
-        a = document.createElement('a')
+        let a = document.createElement('a')
         a.innerHTML = timeslot.name
         a.className = "dropdown-item"
         a.onclick = function () {
-            AddTimeslotToEvent(EVENTID, timeslot.id)
+            addTimeslotToEvent(EventId, timeslot.id)
         }
         dropdownMenu.appendChild(a)
     }
@@ -877,8 +810,8 @@ async function BuildSchedule() {
                 sessionBlock.setAttribute('session-id', session.id)
             }
             else {
-                let workshop = await GetWorkshopForSession(session.id)
-                workshopCard = await BuildWorkshopCard(workshop, true, session)
+                let workshop = await getWorkshopForSession(session.id)
+                let workshopCard = await buildWorkshopCard(workshop, true, session)
                 sessionBlock.appendChild(workshopCard)
                 sessionBlock.setAttribute('session-id', session.id)
                 sessionBlock.setAttribute('workshop-id', workshop.id)
@@ -889,76 +822,10 @@ async function BuildSchedule() {
     return gridContainer
 }
 
-// Updates the schedule using either a provided gridContainer or by generating its own with BuildSchedule()
-async function UpdateSchedule(gridContainer=null) {
-    if (gridContainer == null) {
-        gridContainer = await BuildSchedule()
-    }
-    const scheduleContainer = document.getElementById('schedule-container')
-    EmptyElement(scheduleContainer)
-    scheduleContainer.appendChild(gridContainer)
 
-    // Setup the event listeners to allow columns to be dragged
-    SetUpColumnDragEventListeners()
-}
-
-// Handles the animation for when a workshop is dropped onto the scheudle
-async function AnimateWorkshopDrop(sessionBlockId, workshopId, buildSchedule=true) {
-    let schedulePromise
-    if (buildSchedule) {
-        schedulePromise = BuildSchedule()
-    }
-    
-    const sessionBlock = document.getElementById(sessionBlockId)
-    let workshop = await GetWorkshop(workshopId)
-    let workshopCard = await BuildWorkshopCard(workshop)
-
-    workshopCard.classList.add('workshop-card-animate-shrink', 'workshop-card-animate')
-    EmptyElement(sessionBlock)
-    sessionBlock.appendChild(workshopCard)
-
-    // Trigger a reflow to ensure initial styles are applied
-    workshopCard.offsetHeight; // Forces a reflow
-
-    requestAnimationFrame(() => {
-        workshopCard.classList.add('workshop-card-animate-grow')
-    })
-
-    await waitForTransitionEnd(workshopCard);
-
-    if (buildSchedule) {
-        const schedule = await schedulePromise;
-        UpdateSchedule(schedule)
-    }
-}
-
-// Handles the animation for when a workshop is deleted from the schedule
-async function AnimateWorkshopDelete(workshopCardId, buildSchedule=true) {
-    let schedulePromise
-    if (buildSchedule) {
-        schedulePromise = BuildSchedule()
-    }
-    
-    const workshopCard = document.getElementById(workshopCardId)
-    workshopCard.classList.add('workshop-card-animate')
-
-    // Trigger a reflow to ensure initial styles are applied
-    workshopCard.offsetHeight; // Forces a reflow
-
-    requestAnimationFrame(() => {
-        workshopCard.classList.add('workshop-card-animate-shrink')
-    })
-
-    await waitForTransitionEnd(workshopCard);
-
-    if (buildSchedule) {
-        const schedule = await schedulePromise;
-        UpdateSchedule(schedule)
-    }
-}
 
 // Sets up the event listeners to allow columns (locations) to be dragged
-function SetUpColumnDragEventListeners() {
+function setUpColumnDragEventListeners() {
     const gridContainer = document.getElementById('grid-container');
     let draggedColumn = null;
     let draggedIndex = null;
@@ -1008,12 +875,12 @@ function SetUpColumnDragEventListeners() {
 
                     let eventLocationId = e.dataTransfer.getData('event-location-id')
 
-                    LocationColumnOnDrop(eventLocationId, newIndex);
+                    locationColumnOnDrop(eventLocationId, newIndex);
                     currentDragType = ''
                 }
             }
             else if (currentDragType === 'workshop-add') {
-                // TODO: Add logic to assign workshop to location across all timeslots
+                // TODO: add logic to assign workshop to location across all timeslots
                 const target = e.target.closest('.header-top');
                 let workshopId = e.dataTransfer.getData("workshop-id");
                 let eventLocationId = Number(target.getAttribute('event-location-id'))
@@ -1036,10 +903,10 @@ function SetUpColumnDragEventListeners() {
                 }
 
                 if (sessionWorkshopIds.length > 0) {
-                    ShowMassPlaceWorkshopModal(sessionBlockIds, sessionIds, eventLocationId, workshopId)
+                    showMassPlaceWorkshopModal(sessionBlockIds, sessionIds, eventLocationId, workshopId)
                 }
                 else {
-                    AddWorkshopToMultipleSessions(sessionBlockIds, sessionIds, workshopId, false)
+                    addWorkshopToMultipleSessions(sessionBlockIds, sessionIds, workshopId, false)
                 }
             }
         });
@@ -1048,85 +915,85 @@ function SetUpColumnDragEventListeners() {
 }
 
 // Shows a modal warning the user about placing a workshop across a location
-async function ShowMassPlaceWorkshopModal(sessionBlockIds, sessionIds, eventLocationId, workshopId) {
-    dangerModal = $('#mass-place-workshop-modal')
+async function showMassPlaceWorkshopModal(sessionBlockIds, sessionIds, eventLocationId, workshopId) {
+    const dangerModal = $('#mass-place-workshop-modal')
     dangerModal.modal('show')
 
-    let eventLocation = await GetEventLocation(EVENTID, eventLocationId)
-    let location = await GetLocation(eventLocation.location_id)
-    let workshop = await GetWorkshop(workshopId)
+    let eventLocation = await getEventLocation(EventId, eventLocationId)
+    let location = await getLocation(eventLocation.location_id)
+    let workshop = await getWorkshop(workshopId)
 
     dangerModal.find('.text-secondary').text(`
         ${location.name} already has workshops assigned to it. Do you want to overwrite them with ${workshop.name} or place ${workshop.name} around them?
     `);
 
-    // Remove existing event listeners to prevent duplicates
+    // remove existing event listeners to prevent duplicates
     dangerModal.find('#mass-place-workshop-overwrite').off('click');
     dangerModal.find('#mass-place-workshop-around').off('click');
 
     dangerModal.find('#mass-place-workshop-overwrite').click(function () {
-        AddWorkshopToMultipleSessions(sessionBlockIds, sessionIds, workshopId, true)
+        addWorkshopToMultipleSessions(sessionBlockIds, sessionIds, workshopId, true)
     })
 
     dangerModal.find('#mass-place-workshop-around').click(function () {
-        AddWorkshopToMultipleSessions(sessionBlockIds, sessionIds, workshopId, false)
+        addWorkshopToMultipleSessions(sessionBlockIds, sessionIds, workshopId, false)
     })
 }
 
 // Handles adding a workshop to multiple sessions
-async function AddWorkshopToMultipleSessions(sessionBlockIds, sessionIds, workshopId, force) {
+async function addWorkshopToMultipleSessions(sessionBlockIds, sessionIds, workshopId, force) {
     const addPromises = [];
     const dropPromises = [];
     let schedulePromise;
 
     for (let i = 0; i < sessionIds.length; i++) {
         addPromises.push(
-            AddWorkshopToSession(sessionIds[i], workshopId, force).then(result => ({ result, index: i }))
+            addWorkshopToSession(sessionIds[i], workshopId, force).then(result => ({ result, index: i }))
         );
     }
 
-    // Wait for all AddWorkshopToSession promises to complete
-    results = await Promise.all(addPromises);
+    // Wait for all addWorkshopToSession promises to complete
+    let results = await Promise.all(addPromises);
     
     schedulePromise = BuildSchedule();
 
-    // Execute the specific line of code after AddWorkshopToSession calls are done
-    console.log("All AddWorkshopToSession calls completed");
+    // Execute the specific line of code after addWorkshopToSession calls are done
+    console.log("All addWorkshopToSession calls completed");
 
     // Now handle AnimateWorkshopDrop based on the results
     for (const { result, index } of results) {
         if (result) {
-            dropPromises.push(AnimateWorkshopDrop(sessionBlockIds[index], workshopId, false));
+            dropPromises.push(animateWorkshopDrop(sessionBlockIds[index], workshopId, false));
         }
     }
 
     // Wait for all AnimateWorkshopDrop promises to complete
     await Promise.all(dropPromises);
     const schedule = await schedulePromise;
-    UpdateSchedule(schedule)
+    updateSchedule(schedule)
 }
 
 // Handles the event for when the locations selection dropdown is changed (ie: adds a location)
 function LocationsDropdownOnChange(event) {
     const selectedValue = event.target.value
-    AddLocationToEvent(EVENTID, selectedValue, LocationsLength)
+    addLocationToEvent(EventId, selectedValue, LocationsLength)
 }
 
 // Handles the event for when the timeslots selection dropdown is changed (ie: adds a timeslot)
-function TimeslotsDropdownOnChange(event) {
+function timeslotsDropdownOnChange(event) {
     const selectedValue = event.target.value
-    AddTimeslotToEvent(EVENTID, selectedValue, LocationsLength)
+    addTimeslotToEvent(EventId, selectedValue, LocationsLength)
 }
 
 // Handles the event for when a location column has been dropped to a new order
-function LocationColumnOnDrop(eventLocationId, newOrder) {
-    UpdateEventLocationOrder(EVENTID, eventLocationId, newOrder)
+function locationColumnOnDrop(eventLocationId, newOrder) {
+    updateEventLocationOrder(EventId, eventLocationId, newOrder)
 }
 
 
 // Helper functions
 // Creates a generic dropdown based on inputs
-function CreateDropdown(options, defualtOptionText, onChangeFunc) {
+function createDropdown(options, defualtOptionText, onChangeFunc) {
     const select = document.createElement('select')
     const defaultOptionsElement = document.createElement('option');
     defaultOptionsElement.innerText = defualtOptionText
@@ -1146,26 +1013,11 @@ function CreateDropdown(options, defualtOptionText, onChangeFunc) {
     return select
 }
 
-// Gets an icon element from the DOM based on a html ID
-function GetIconElement(id) {
-    element = document.getElementById(id)
-    icon = element.cloneNode(true)
-    icon.style.display = 'block'
-    return icon
-}
-
-// Empties all children from a html element
-function EmptyElement(element) {
-    while (element.firstChild) {
-        element.removeChild(element.firstChild)
-    }
-}
-
 // Builds a workshop card which is used to display workshops
-async function BuildWorkshopCard(workshop, remove = true, session = null) {
+async function buildWorkshopCard(workshop, remove = true, session = null) {
     let workshopDifficulty = null
     if (workshop.difficulty_id != null) {
-        workshopDifficulty = await GetDifficultyLevel(workshop.difficulty_id)
+        workshopDifficulty = await getDifficultyLevel(workshop.difficulty_id)
     }
 
     const workshopCard = document.createElement('div')
@@ -1192,16 +1044,18 @@ async function BuildWorkshopCard(workshop, remove = true, session = null) {
     const workshopTitleContianerRemove = document.createElement('div')
     workshopTitleContianerRemove.classList.add('workshop-title-column')
     if (remove) {
-        removeButton = GetIconElement('bin-icon')
-        icon = removeButton.querySelector('#icon')
+        let removeButton = document.createElement('div')
+        let removeIconData = await getIconData('remove')
+        removeButton.innerHTML = removeIconData
+        let icon = removeButton.querySelector('svg')
         icon.classList.remove('icon-tabler-trash')
         icon.classList.add('icon-bin-session')
         if (session != null) {
             workshopCard.id = `session-${session.id}-workshop-${workshop.id}`
         
             removeButton.onclick = async function () {
-                if (await RemoveWorkshopFromSession(session.id)) {
-                    AnimateWorkshopDelete(workshopCard.id)
+                if (await removeWorkshopFromSession(session.id)) {
+                    animateWorkshopDelete(workshopCard.id)
                 }
                 return true
             }
@@ -1221,73 +1075,6 @@ async function BuildWorkshopCard(workshop, remove = true, session = null) {
 
     return workshopCard
 
-}
-
-// Function to convert hex to rgba
-function hexToRgba(hex, alpha) {
-    let r = parseInt(hex.slice(1, 3), 16);
-    let g = parseInt(hex.slice(3, 5), 16);
-    let b = parseInt(hex.slice(5, 7), 16);
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
-// Creates a promise that only resolves when an element animation is done
-function waitForTransitionEnd(element) {
-    return new Promise(resolve => {
-        const handler = () => {
-            element.removeEventListener('transitionend', handler);
-            resolve();
-        };
-        element.addEventListener('transitionend', handler);
-    });
-}
-
-// Builds a workshop search query based on various inputs
-function BuildWorkshopSearchQueryString() {
-    queryString = ''
-    if (currentSearchQuery != '') {
-        queryString += `name|description=${currentSearchQuery}`
-    }
-
-    if (selectDifficultyIds.length > 0) {
-        stringToAdd = 'difficulty_id='
-        if (queryString != '') {
-            stringToAdd = '&difficulty_id='
-        }
-
-        for(i = 0; i < selectDifficultyIds.length; i++) {
-            id = selectDifficultyIds[i]
-
-            if (i == 0){
-                stringToAdd += id
-            }
-            else {
-                stringToAdd += `|${id}`
-            }
-        }
-        queryString += stringToAdd
-    }
-
-    if (selectedTags.length > 0) {
-        stringToAdd = 'tag_ids='
-        if (queryString != '') {
-            stringToAdd = '&tag_ids='
-        }
-
-        for(i = 0; i < selectedTags.length; i++) {
-            id = selectedTags[i]
-
-            if (i == 0){
-                stringToAdd += id
-            }
-            else {
-                stringToAdd += `|${id}`
-            }
-        }
-        queryString += stringToAdd
-    }
-
-    return queryString
 }
 
 // Formats a date from numbers to words (24-09-15 to 15th Spetember 2024)
@@ -1314,11 +1101,26 @@ function formatDate(dateString) {
 }
 
 // Event Listeners
-document.addEventListener("DOMContentLoaded", PopulateEventSelectionDropdown);
-document.addEventListener("DOMContentLoaded", PopulateEventDetails);
-document.addEventListener("DOMContentLoaded", function() {
-    UpdateSchedule()
+document.addEventListener("DOMContentLoaded", populateEventSelectionDropdown);
+document.addEventListener("DOMContentLoaded", populateEventDetails);
+document.addEventListener("DOMContentLoaded", populateWorkshopList);
+document.addEventListener("DOMContentLoaded", populateWorkshopSelectionTools);
+document.addEventListener("DOMContentLoaded", function () {
+    let search = document.getElementById('workshop-search-box')
+    search.oninput = workshopSearchOnChange
 });
-document.addEventListener("DOMContentLoaded", PopulateWorkshopList);
-document.addEventListener("DOMContentLoaded", HandleWorkshopSelectionArrows);
-document.addEventListener("DOMContentLoaded", PopulateWorkshopSelectionTools);
+
+// Load in workshop search arrow icons
+document.addEventListener("DOMContentLoaded", async function () {
+    // Left
+    const leftArrowContainer = document.getElementById('workshop-selection-list-left-arrow')
+    let leftIconData = await getIconData('left-arrow')
+    leftArrowContainer.innerHTML = leftIconData
+
+    // Right
+    const rightArrowContainer = document.getElementById('workshop-selection-list-right-arrow')
+    let rightIconData = await getIconData('right-arrow')
+    rightArrowContainer.innerHTML = rightIconData
+
+    handleWorkshopSelectionArrows()
+})
