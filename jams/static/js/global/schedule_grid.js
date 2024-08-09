@@ -600,6 +600,9 @@ export class ScheduleGrid {
                 }
                 else if (this.currentDragType === 'workshop-add') {
                     const target = e.target.closest('.header-top');
+                    if (!target) {
+                        return
+                    }
                     let workshopId = e.dataTransfer.getData("workshop-id");
                     let eventLocationId = Number(target.getAttribute('event-location-id'))
 

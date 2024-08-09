@@ -145,7 +145,7 @@ export function waitForTransitionEnd(element) {
 }
 
 // Builds a workshop card from some inputs and options
-export async function buildWorkshopCard(workshop, sessionId, difficultyLevels=null, cardOptions=null) {
+export async function buildWorkshopCard(workshop, sessionId=null, difficultyLevels=null, cardOptions=null) {
     // Set options (use defaults for options not provided)
     let {
         size = 150,
@@ -169,8 +169,8 @@ export async function buildWorkshopCard(workshop, sessionId, difficultyLevels=nu
         scheduleGrid
     }
 
-    // If the workshop or sessionId weren't passed it, return null as we can't create a card without them
-    if (!workshop || !sessionId) {
+    // If the workshop wasn't passed it, return null as we can't create a card without them
+    if (!workshop) {
         return null
     }
 
