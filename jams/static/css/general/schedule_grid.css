@@ -156,3 +156,31 @@
     top: 0;
     z-index: 1000;
 }
+
+.session-block::before,
+.header-end::before {
+    content: '';
+    position: absolute;
+    top: -0.5px;
+    left: -0.5px;
+    right: -0.5px;
+    bottom: -0.5px;
+    border-style: dashed;
+    border-image: url('../../images/dashed-border.png') 2 round;
+    border-image-width: 0.5;
+    pointer-events: none;
+}
+
+.theme-dark .session-block::before,
+.theme-dark .header-end::before {
+    content: '';
+    position: absolute;
+    top: -0.5px;
+    left: -0.5px;
+    right: -0.5px;
+    bottom: -0.5px;
+    border-style: dashed;
+    border-image: url('../../images/dashed-border-dm.png') 2 round;
+    border-image-width: 0.5;
+    pointer-events: none;
+}
