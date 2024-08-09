@@ -26,7 +26,8 @@ export class ScheduleGrid {
             size = 150,
             edit = false,
             updateInterval = 1,
-            workshopCardOptions = null
+            workshopCardOptions = null,
+            autoScale = false
         } = options
        
         this.options = {
@@ -34,7 +35,8 @@ export class ScheduleGrid {
             size,
             edit,
             updateInterval,
-            workshopCardOptions
+            workshopCardOptions,
+            autoScale
         }
 
         // Set the schedule container element from html
@@ -44,6 +46,8 @@ export class ScheduleGrid {
         this.icons = {}
         this.sessionCount = 0
         this.currentDragType = ''
+        this.eventLocations = null
+        this.eventTimeslots = null
 
         // Initialise the grid
         this.initialiseScheduleGrid()
@@ -68,6 +72,11 @@ export class ScheduleGrid {
 
         // Build the grid
         await this.updateSchedule()
+
+        // Set the update grid size function to run on window resize
+        window.onresize = () => {
+            this.updateGridSize(this)
+        }
     }
 
     // Setup the options object for workshop cards within the grid
@@ -106,15 +115,18 @@ export class ScheduleGrid {
     // Do a full update of the schedule grid
     async updateSchedule() {
         // Get the locations and timeslots assigned to the event
-        const eventLocations = await getLocationsForEvent(this.options.eventId)
-        const eventTimeslots = await getTimeslotsForEvent(this.options.eventId)
+        this.eventLocations = await getLocationsForEvent(this.options.eventId)
+        this.eventTimeslots = await getTimeslotsForEvent(this.options.eventId)
+
+        // Update the grid size variables
+        this.updateGridSize()
 
         // Rebuild the base grid
-        await this.rebuildGrid(eventLocations, eventTimeslots)
+        await this.rebuildGrid()
 
         // If this is an editable grid, setup the column drag events
         if (this.options.edit) {
-            this.setUpColumnDragEventListeners(eventTimeslots)
+            this.setUpColumnDragEventListeners()
         }
 
         // Populate the session blocks with any workshops
@@ -122,17 +134,17 @@ export class ScheduleGrid {
     }
 
     // This preps all of the data required to build the grid
-    async rebuildGrid(eventLocations, eventTimeslots) {
+    async rebuildGrid() {
         // Make a map of the id's
-        let eventLocationIds = new Set(eventLocations.map(location => location.location_id))
-        let eventTimeslotIds = new Set(eventTimeslots.map(timeslot => timeslot.timeslot_id))
+        let eventLocationIds = new Set(this.eventLocations.map(location => location.location_id))
+        let eventTimeslotIds = new Set(this.eventTimeslots.map(timeslot => timeslot.timeslot_id))
 
         // Get all the locations and timeslots
         const locations = await getLocations()
         const timeslots = await getTimeslots()
 
         // Build objects that combine the locations and event locations to avoid extra unnessesary server calls
-        const locationsInEvent = eventLocations
+        const locationsInEvent = this.eventLocations
         .map(eventLocation => {
             for (const location of locations) {
                 if (eventLocation.location_id === location.id) {
@@ -147,7 +159,7 @@ export class ScheduleGrid {
         })
         .filter(eventLocation => eventLocation !== null)
     
-        const timeslotsInEvent = eventTimeslots
+        const timeslotsInEvent = this.eventTimeslots
             .map(eventTimeslot => {
                 for (const timeslot of timeslots) {
                     if (eventTimeslot.timeslot_id === timeslot.id) {
@@ -530,9 +542,9 @@ export class ScheduleGrid {
     }
 
     // Sets up the event listeners to allow columns (locations) to be dragged
-    setUpColumnDragEventListeners(eventTimeslots) {
+    setUpColumnDragEventListeners() {
         // Make a map of the id's
-        let eventTimeslotIds = new Set(eventTimeslots.map(timeslot => timeslot.id))
+        let eventTimeslotIds = new Set(this.eventTimeslots.map(timeslot => timeslot.id))
 
         let draggedColumn = null;
         let draggedIndex = null;
@@ -747,5 +759,36 @@ export class ScheduleGrid {
         await Promise.all(addPromises);
 
         this.populateSessions()
+    }
+
+    // Update the grid size variables basied on the widnow size
+    updateGridSize(scheduleGrid=this) {
+        // If auto scale is enabled. Calculate the width and height params
+        if (scheduleGrid.options.autoScale) {
+            let oldSize = scheduleGrid.options.size
+            let windowWidth = window.innerWidth
+            let windowHeight = window.innerHeight
+            
+            // Round the width to the nearest 50px. Then take 50 px away for side padding
+            let roundedWindowWidth = (50 * Math.round(windowWidth / 50)) - 50
+            let roundedWindowHeight = (50 * Math.round(windowHeight / 50)) - 50
+
+            let blockWidth = Math.round(roundedWindowWidth / scheduleGrid.eventLocations.length) - 100
+            let blockHeight = Math.round(roundedWindowHeight / scheduleGrid.eventTimeslots.length) - 100
+
+            if (scheduleGrid.options.edit) {
+                blockWidth -= 100
+                blockHeight -= 100
+            }
+
+            let usableWindowSize = blockWidth < blockHeight ? blockWidth : blockHeight
+
+            scheduleGrid.options.size = usableWindowSize
+            scheduleGrid.options.workshopCardOptions.size = scheduleGrid.options.size
+
+            if (oldSize !== usableWindowSize) {
+                scheduleGrid.updateSchedule()
+            }
+        }
     }
 }
