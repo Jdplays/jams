@@ -63,6 +63,7 @@ pages:
       routes.backend.private.admin.get_event_locations:
       routes.backend.private.admin.get_event_location:
       routes.backend.private.admin.add_event_location:
+      routes.backend.private.admin.update_event_location_order:
       routes.backend.private.admin.delete_event_location:
       routes.backend.private.management.get_locations_field:
         allowed_fields: id, name
