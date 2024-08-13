@@ -79,7 +79,7 @@ export class ScheduleGrid {
         if (this.options.autoRefresh) {
             // Run populate sessions x seconds
             window.setInterval(() => {
-                //this.populateSessions()
+                this.populateSessions()
             }, this.options.updateInterval * 1000)
         }
     }
