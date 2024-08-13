@@ -1,10 +1,14 @@
 // Event Schedule Page
 
 import {
+    getIconData
+} from '../global/endpoints.js'
+
+import {
     buildQueryString,
     emptyElement,
-    getIconData,
-    buildWorkshopCard
+    buildWorkshopCard,
+    createDropdown
 } from '../global/helper.js'
 
 import {getDifficultyLevels} from '../global/endpoints.js'

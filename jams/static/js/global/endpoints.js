@@ -254,3 +254,21 @@ export function removeTimeslotFromEvent(eventId, eventTimeslotId) {
         });
     });
 }
+
+export function getIconData(filename) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `/assets/icons/${filename}.svg`,
+            type: 'GET',
+            dataType: 'xml',
+            success: function (response) {
+                const svgContent = new XMLSerializer().serializeToString(response.documentElement);
+                resolve(svgContent)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        })
+    })
+}

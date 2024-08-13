@@ -1,3 +1,7 @@
+import {
+    getIconData
+} from './endpoints.js'
+
 export function buildQueryString(params) {
     // Make sure params have a value
     if (params === null || params === undefined) {
@@ -107,26 +111,6 @@ export function hexToRgba(hex, alpha) {
     let b = parseInt(hex.slice(5, 7), 16);
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
-
-export function getIconData(filename) {
-    return new Promise((resolve, reject) => {
-        $.ajax({
-            url: `/assets/icons/${filename}.svg`,
-            type: 'GET',
-            dataType: 'xml',
-            success: function (response) {
-                const svgContent = new XMLSerializer().serializeToString(response.documentElement);
-                resolve(svgContent)
-            },
-            error: function (error) {
-                console.log('Error fetching data:', error);
-                reject(error)
-            }
-        })
-    })
-}
-
-
 
 // Can be added to an element to allow drop
 export function allowDrop(ev) {
@@ -243,4 +227,25 @@ export async function buildWorkshopCard(workshop, sessionId=null, difficultyLeve
     workshopCard.appendChild(workshopDescription)
 
     return workshopCard
+}
+
+// Creates a generic dropdown based on inputs
+export function createDropdown(options, defualtOptionText, onChangeFunc) {
+    const select = document.createElement('select')
+    const defaultOptionsElement = document.createElement('option');
+    defaultOptionsElement.innerText = defualtOptionText
+    defaultOptionsElement.disabled = true;
+    defaultOptionsElement.selected = true;
+    defaultOptionsElement.hidden = true;
+    select.appendChild(defaultOptionsElement)
+    for (const option of options) {
+        const optionElement = document.createElement('option');
+        optionElement.value = option.id;
+        optionElement.innerText = option.name;
+        select.appendChild(optionElement);
+    }
+
+    select.onchange = onChangeFunc
+
+    return select
 }

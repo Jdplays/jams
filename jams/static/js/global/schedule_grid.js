@@ -12,11 +12,12 @@ import {
     updateEventLocationOrder,
     addTimeslotToEvent,
     removeLocationFromEvent,
-    removeTimeslotFromEvent
+    removeTimeslotFromEvent,
+    getIconData
 } from './endpoints.js'
 
-import {buildQueryString, emptyElement, getIconData, allowDrop, waitForTransitionEnd, buildWorkshopCard} from './helper.js'
-//import '../../css/general/schedule_grid.css'
+import {buildQueryString, emptyElement, allowDrop, waitForTransitionEnd} from './helper.js'
+import {WorkshopCard} from './workshop_card.js'
 
 export class ScheduleGrid {
     constructor(scheduleContainerId, options = {}) {
@@ -27,7 +28,8 @@ export class ScheduleGrid {
             edit = false,
             updateInterval = 1,
             workshopCardOptions = null,
-            autoScale = false
+            autoScale = false,
+            autoRefresh = true
         } = options
        
         this.options = {
@@ -36,7 +38,8 @@ export class ScheduleGrid {
             edit,
             updateInterval,
             workshopCardOptions,
-            autoScale
+            autoScale,
+            autoRefresh
         }
 
         // Set the schedule container element from html
@@ -51,11 +54,6 @@ export class ScheduleGrid {
 
         // Initialise the grid
         this.initialiseScheduleGrid()
-
-        // Run populate sessions x seconds
-        window.setInterval(() => {
-            this.populateSessions()
-        }, this.options.updateInterval * 1000)
     }
 
     // Get the grid ready
@@ -76,6 +74,13 @@ export class ScheduleGrid {
         // Set the update grid size function to run on window resize
         window.onresize = () => {
             this.updateGridSize(this)
+        }
+
+        if (this.options.autoRefresh) {
+            // Run populate sessions x seconds
+            window.setInterval(() => {
+                //this.populateSessions()
+            }, this.options.updateInterval * 1000)
         }
     }
 
@@ -501,6 +506,7 @@ export class ScheduleGrid {
         if (sessionWorkshopsToAdd.length > 0) {
             const workshops = await getWorkshops(workshopsQueryString)
             const difficultyLevels = await getDifficultyLevels()
+            this.options.workshopCardOptions.difficultyLevels = difficultyLevels
 
             const workshopsToAdd = sessionWorkshopsToAdd
                 .map(sw => {
@@ -521,8 +527,9 @@ export class ScheduleGrid {
             // Iterate over each workshop to be added and trigger an animation to set the workshop
             for (const workshop of workshopsToAdd) {
                 let sessionBlock = document.getElementById(`session-${workshop.event_location_id}-${workshop.event_timeslot_id}`)
-                let workshopCard = await buildWorkshopCard(workshop, workshop.session_id, difficultyLevels, this.options.workshopCardOptions)
-                this.animateWorkshopDrop(sessionBlock, workshopCard)
+                let workshopCard = new WorkshopCard(workshop, this.options.workshopCardOptions)
+                let workshopCardElement = await workshopCard.element()
+                this.animateWorkshopDrop(sessionBlock, workshopCardElement)
                 sessionBlock.setAttribute('has-workshop', true)
                 sessionBlock.setAttribute('workshop-id', workshop.id)
             }
