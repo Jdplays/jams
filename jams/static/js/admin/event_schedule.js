@@ -4,10 +4,11 @@ import {
     getIconData
 } from '../global/endpoints.js'
 
+import { WorkshopCard } from '../global/workshop_card.js'
+
 import {
     buildQueryString,
     emptyElement,
-    buildWorkshopCard,
     createDropdown
 } from '../global/helper.js'
 
@@ -151,15 +152,17 @@ async function populateWorkshopList() {
         const workshopListBlock = document.createElement('div')
         workshopListBlock.classList.add('workshop-list-block')
         let cardOptions = {
-            size: 150
+            size: 150,
+            difficultyLevels: difficultyLevels
         }
-        let workshopCard = await buildWorkshopCard(workshop, undefined, difficultyLevels, cardOptions)
-        workshopCard.id = "drag-drop-workshop-" + workshop.id
-        workshopCard.draggable = true
-        workshopCard.addEventListener('dragstart', function (event) {
+        let workshopCard = new WorkshopCard(workshop, cardOptions)
+        let workshopCardElement = await workshopCard.element()
+        workshopCardElement.id = "drag-drop-workshop-" + workshop.id
+        workshopCardElement.draggable = true
+        workshopCardElement.addEventListener('dragstart', function (event) {
             drag(event, workshop.id)
         });
-        workshopListBlock.appendChild(workshopCard)
+        workshopListBlock.appendChild(workshopCardElement)
         elementList.push(workshopListBlock)
     }
 

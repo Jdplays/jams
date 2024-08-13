@@ -505,8 +505,10 @@ export class ScheduleGrid {
 
         if (sessionWorkshopsToAdd.length > 0) {
             const workshops = await getWorkshops(workshopsQueryString)
-            const difficultyLevels = await getDifficultyLevels()
-            this.options.workshopCardOptions.difficultyLevels = difficultyLevels
+            if (!this.options.workshopCardOptions.difficultyLevels) {
+                const difficultyLevels = await getDifficultyLevels()
+                this.options.workshopCardOptions.difficultyLevels = difficultyLevels
+            }
 
             const workshopsToAdd = sessionWorkshopsToAdd
                 .map(sw => {
@@ -527,7 +529,8 @@ export class ScheduleGrid {
             // Iterate over each workshop to be added and trigger an animation to set the workshop
             for (const workshop of workshopsToAdd) {
                 let sessionBlock = document.getElementById(`session-${workshop.event_location_id}-${workshop.event_timeslot_id}`)
-                let workshopCard = new WorkshopCard(workshop, this.options.workshopCardOptions)
+                let cardOptions = { ...this.options.workshopCardOptions, sessionId: workshop.session_id}
+                let workshopCard = new WorkshopCard(workshop, cardOptions)
                 let workshopCardElement = await workshopCard.element()
                 this.animateWorkshopDrop(sessionBlock, workshopCardElement)
                 sessionBlock.setAttribute('has-workshop', true)
@@ -544,6 +547,12 @@ export class ScheduleGrid {
                 this.animateWorkshopDelete(sessionBlock, workshopCard)
                 sessionBlock.setAttribute('has-workshop', false)
                 sessionBlock.removeAttribute('workshop-id')
+                // If the grid is editable, add the drag events to the empty sessions
+                if (this.options.edit) {
+                    sessionBlock.removeEventListener('drop', this.handleDropWithContext)
+                    sessionBlock.addEventListener('drop', this.handleDropWithContext)
+                    sessionBlock.addEventListener('dragover', allowDrop);
+                }
             }
         }
     }

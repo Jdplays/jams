@@ -108,9 +108,8 @@ export class WorkshopCard {
             icon.classList.add('icon-bin-session')
             if (this.options.sessionId != null) {
                 workshopCard.id = `session-${this.options.sessionId}-workshop-${this.workshop.id}`
-            
                 removeButton.onclick = () => {
-                    options.cardRemoveFunc(this.options.sessionId, this.options.scheduleGrid)
+                    this.options.cardRemoveFunc(this.options.sessionId, this.options.scheduleGrid)
                     return true
                 }
             }
