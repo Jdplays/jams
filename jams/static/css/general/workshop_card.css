@@ -7,7 +7,14 @@
 
 .workshop-title {
     font-weight: bold;
-    font-size: 16;
+    text-align: center;
+}
+
+.workshop-body-text {
+    text-align: center;
+    line-height: 1.2em;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .workshop-title-column {
@@ -15,6 +22,7 @@
     flex-direction: column;
     flex-basis: 100%;
     flex: 1;
+    vertical-align: middle;
 }
 
 .workshop-card {
@@ -39,9 +47,12 @@
 .truncate{
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 5;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-height: 6em;         /* 5 lines with a line-height of 1.2em */
-    line-height: 1.2em;
+}
+
+.workshop-body-action {
+    margin-top: 10px;
+    padding: 5px 10px;
+    cursor: pointer;
 }
