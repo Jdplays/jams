@@ -4,7 +4,7 @@ roles:
     pages:
       - user_management
       - events
-      - event_schedule
+      - schedule_planner
       - settings
       - private_access_log
   Volunteer:

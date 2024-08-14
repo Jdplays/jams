@@ -47,8 +47,8 @@ pages:
       routes.backend.private.admin.archive_event:
       routes.backend.private.admin.activate_event:
 
-  event_schedule:
-    endpoint: routes.frontend.private.admin.event_schedule
+  schedule_planner:
+    endpoint: routes.frontend.private.admin.schedule_planner
     backend_endpoints:
     # Events
       routes.backend.private.admin.get_events_field:
