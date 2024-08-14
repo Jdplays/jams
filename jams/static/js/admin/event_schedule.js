@@ -105,8 +105,8 @@ function eventSelectionDropdownOnChange(event) {
     const selectedValue = event.target.value
     EventId = selectedValue
     getEvent(EventId)
-    updateSchedule()
     populateEventDetails()
+    scheduleGrid.chnageEvent(EventId)
 }
 
 // Event Details

@@ -138,6 +138,12 @@ export class ScheduleGrid {
         await this.populateSessions()
     }
 
+    // Allows the eventId to be updated from outside of this script
+    chnageEvent(newEventId) {
+        this.options.eventId = newEventId
+        this.updateSchedule()
+    }
+
     // This preps all of the data required to build the grid
     async rebuildGrid() {
         // Make a map of the id's
