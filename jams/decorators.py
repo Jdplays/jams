@@ -1,5 +1,6 @@
 from flask_security import current_user
-from flask import abort, request
+from flask import abort, request, current_app
+from flask_login.config import EXEMPT_METHODS
 from jams.util import helper
 from jams.models import Page, EndpointRule
 from functools import wraps
@@ -22,17 +23,36 @@ def role_based_access_control_fe(func):
     return wrapper
 
 
+def enforce_login(func, *args, **kwargs):
+    # Check if request method is exempt or login is disabled
+    if request.method in EXEMPT_METHODS or current_app.config.get("LOGIN_DISABLED"):
+        return None
+    
+    # Check if user is authenticated
+    if not current_user.is_authenticated:
+        return current_app.login_manager.unauthorized()
+
+    # Flask 2.x compatibility for async functions
+    if callable(getattr(current_app, "ensure_sync", None)):
+        return current_app.ensure_sync(func)(*args, **kwargs)
+     
+     # Default to calling the original function
+    return func(*args, **kwargs)
 
 def role_based_access_control_be(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        user_role_ids = current_user.role_ids
-        requested_field = kwargs.get('field')
-
         endpoint = helper.extract_endpoint()
-        endpoint_rules = helper.get_endpoint_rules_for_roles(endpoint, user_role_ids)
+        user_role_ids = current_user.role_ids if current_user.is_authenticated else None
+        endpoint_rules = helper.get_endpoint_rules_for_roles(endpoint, user_role_ids, not current_user.is_authenticated)
         if not endpoint_rules:
+            if not current_user.is_authenticated:
+                login_response = enforce_login(func, *args, **kwargs)
+                if login_response is not None:
+                    return login_response
             abort(403, description='You do not have access to the requested resource with your current role')
+
+        requested_field = kwargs.get('field')
         
         for rule in endpoint_rules:
             if rule.allowed_fields is None:
@@ -45,8 +65,16 @@ def role_based_access_control_be(func):
                     query_fields = request.args.keys()
                     for field in query_fields:
                         if field not in allowed_fields:
+                            if not current_user.is_authenticated:
+                                login_response = enforce_login(func, *args, **kwargs)
+                                if login_response is not None:
+                                    return login_response
                             abort(403, description='You do not have access to the requested resource with your current role')
                 return func(*args, **kwargs)
+        if not current_user.is_authenticated:
+            login_response = enforce_login(func, *args, **kwargs)
+            if login_response is not None:
+                return login_response
         abort(403, description='You do not have access to the requested resource with your current role')
     return wrapper
 

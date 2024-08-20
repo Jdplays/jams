@@ -303,14 +303,17 @@ def extract_endpoint():
         endpoint = endpoint.replace(str(value), f"<{key}>")
     return endpoint
 
-def get_endpoint_rules_for_roles(endpoint, role_ids):
+def get_endpoint_rules_for_roles(endpoint, role_ids=None, public=False):
     query = (
-        db.session.query(EndpointRule)
-        .join(RoleEndpointRule, EndpointRule.id == RoleEndpointRule.endpoint_rule_id)
-        .filter(EndpointRule.endpoint == endpoint)
-        .filter(RoleEndpointRule.role_id.in_(role_ids))
-        .order_by(nullsfirst(EndpointRule.allowed_fields))
-    )
+            db.session.query(EndpointRule)
+            .filter(EndpointRule.endpoint == endpoint, EndpointRule.public == public)
+        )
+    
+    if not public:
+        query = query.join(RoleEndpointRule, EndpointRule.id == RoleEndpointRule.endpoint_rule_id)
+        query = query.filter(RoleEndpointRule.role_id.in_(role_ids))
+
+    query = query.order_by(nullsfirst(EndpointRule.allowed_fields))
 
     return query.all()
 
