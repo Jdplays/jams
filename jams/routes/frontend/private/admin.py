@@ -27,8 +27,8 @@ def user_management():
 def events():
     return render_template(f'{url_prefix}/events.html')
 
-@bp.route('/event_schedule')
+@bp.route('/schedule_planner')
 @login_required
 @role_based_access_control_fe
-def event_schedule():
-    return render_template(f'{url_prefix}/event_schedule.html')
+def schedule_planner():
+    return render_template(f'{url_prefix}/schedule_planner.html')

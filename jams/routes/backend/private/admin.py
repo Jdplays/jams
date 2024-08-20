@@ -13,7 +13,6 @@ bp = Blueprint('admin', __name__)
 #------------------------------------------ USER ------------------------------------------#
 
 @bp.route('/users', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_users():
     users = helper.filter_model_by_query_and_properties(User, request.args, 'users')
@@ -21,7 +20,6 @@ def get_users():
 
 
 @bp.route('/users/<field>', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_users_field(field):
     users = helper.filter_model_by_query_and_properties(User, request.args, 'users', field)
@@ -29,14 +27,12 @@ def get_users_field(field):
 
 
 @bp.route('/users/<int:user_id>', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_user(user_id):
     user = User.query.filter_by(id=user_id).first_or_404()
     return jsonify(user.to_dict())
 
 @bp.route('/users/<int:user_id>/<field>', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_user_field(user_id, field):
     user = User.query.filter_by(id=user_id).first_or_404()
@@ -78,7 +74,6 @@ def edit_user(user_id):
 
 
 @bp.route('/users/<int:user_id>/archive', methods=['POST'])
-@login_required
 @role_based_access_control_be
 def archive_user(user_id):
     if current_user.id == user_id:
@@ -91,7 +86,6 @@ def archive_user(user_id):
 
 
 @bp.route('/users/<int:user_id>/activate', methods=['POST'])
-@login_required
 @role_based_access_control_be
 def activate_user(user_id):
     user = User.query.filter_by(id=user_id).first_or_404()
@@ -103,7 +97,6 @@ def activate_user(user_id):
 #------------------------------------------ ROLE ------------------------------------------#
 
 @bp.route('/roles', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_roles():
     roles = helper.filter_model_by_query_and_properties(Role, request.args, 'roles')
@@ -111,7 +104,6 @@ def get_roles():
 
 
 @bp.route('/roles/<field>', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_roles_field(field):
     roles = helper.filter_model_by_query_and_properties(Role, request.args, 'roles', field)
@@ -119,7 +111,6 @@ def get_roles_field(field):
 
 
 @bp.route('/roles/<int:role_id>', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_role(role_id):
     role = Role.query.filter_by(id=role_id).first_or_404()
@@ -127,7 +118,6 @@ def get_role(role_id):
 
 
 @bp.route('/roles/<int:role_id>/<field>', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_role_field(role_id, field):
     role = Role.query.filter_by(id=role_id).first_or_404()
@@ -138,7 +128,6 @@ def get_role_field(role_id, field):
 
 
 @bp.route('/roles', methods=['POST'])
-@login_required
 @role_based_access_control_be
 def add_role():
     data = request.get_json()
@@ -166,7 +155,6 @@ def add_role():
 
 
 @bp.route('/roles/<int:role_id>', methods=['PATCH'])
-@login_required
 @role_based_access_control_be
 def edit_role(role_id):
     role = Role.query.filter_by(id=role_id).first_or_404()
@@ -199,7 +187,6 @@ def edit_role(role_id):
 
 
 @bp.route('/roles/<int:role_id>', methods=['DELETE'])
-@login_required
 @role_based_access_control_be
 def delete_role(role_id):
     role = Role.query.filter_by(id=role_id).first_or_404()
@@ -218,7 +205,6 @@ def delete_role(role_id):
 #------------------------------------------ EVENT ------------------------------------------#
 
 @bp.route('/events', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_events():
     events_data_list = [event.to_dict() for event in Event.query.order_by(Event.id).all()]
@@ -226,7 +212,6 @@ def get_events():
 
 
 @bp.route('/events/<field>', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_events_field(field):
     allowed_fields = list(Event.query.first_or_404().to_dict().keys())
@@ -243,7 +228,6 @@ def get_events_field(field):
 
 
 @bp.route('/events/<int:event_id>', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_event(event_id):
     event = Event.query.filter_by(id=event_id).first_or_404()
@@ -251,7 +235,6 @@ def get_event(event_id):
 
 
 @bp.route('/events/<int:event_id>/<field>', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_event_field(event_id, field):
     event = Event.query.filter_by(id=event_id).first_or_404()
@@ -262,7 +245,6 @@ def get_event_field(event_id, field):
 
 
 @bp.route('/events', methods=['POST'])
-@login_required
 @role_based_access_control_be
 def add_event():
     data = request.get_json()
@@ -288,7 +270,6 @@ def add_event():
 
 
 @bp.route('/events/<int:event_id>', methods=['PATCH'])
-@login_required
 @role_based_access_control_be
 def edit_event(event_id):
     event = Event.query.filter_by(id=event_id).first_or_404()
@@ -311,7 +292,6 @@ def edit_event(event_id):
 
 
 @bp.route('/events/<int:event_id>/archive', methods=['POST'])
-@login_required
 @role_based_access_control_be
 def archive_event(event_id):
     event = Event.query.filter_by(id=event_id).first_or_404()
@@ -322,7 +302,6 @@ def archive_event(event_id):
 
 
 @bp.route('/events/<int:event_id>/activate', methods=['POST'])
-@login_required
 @role_based_access_control_be
 def activate_event(event_id):
     event = Event.query.filter_by(id=event_id).first_or_404()
@@ -334,7 +313,6 @@ def activate_event(event_id):
 #------------------------------------------ EVENT LOCATION / TIMESLOT ------------------------------------------#
 
 @bp.route('/events/<int:event_id>/locations', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_event_locations(event_id):
     # Check if the event exists
@@ -346,7 +324,6 @@ def get_event_locations(event_id):
 
 
 @bp.route('/events/<int:event_id>/locations/<int:event_location_id>', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_event_location(event_id, event_location_id):
     # Check if the event exists
@@ -358,7 +335,6 @@ def get_event_location(event_id, event_location_id):
 
 
 @bp.route('/events/<int:event_id>/timeslots', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_event_timeslots(event_id):
     # Check if the event exists
@@ -369,7 +345,6 @@ def get_event_timeslots(event_id):
     return jsonify({'event_timeslots': ordered_event_timeslots})
 
 @bp.route('/events/<int:event_id>/timeslots/<int:event_timeslot_id>', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_event_timeslot(event_id, event_timeslot_id):
     # Check if the event exists
@@ -381,7 +356,6 @@ def get_event_timeslot(event_id, event_timeslot_id):
 
 
 @bp.route('/events/<int:event_id>/locations', methods=['POST'])
-@login_required
 @role_based_access_control_be
 def add_event_location(event_id):
     Event.query.filter_by(id=event_id).first_or_404()
@@ -426,7 +400,6 @@ def add_event_location(event_id):
 
 
 @bp.route('/events/<int:event_id>/timeslots', methods=['POST'])
-@login_required
 @role_based_access_control_be
 def add_event_timeslot(event_id):
     Event.query.filter_by(id=event_id).first_or_404()
@@ -467,7 +440,6 @@ def add_event_timeslot(event_id):
     
 
 @bp.route('/events/<int:event_id>/locations/<int:event_location_id>/update_order', methods=['POST'])
-@login_required
 @role_based_access_control_be
 def update_event_location_order(event_id, event_location_id):
     Event.query.filter_by(id=event_id).first_or_404()
@@ -499,7 +471,6 @@ def update_event_location_order(event_id, event_location_id):
 
 
 @bp.route('/events/<int:event_id>/locations/<int:event_location_id>', methods=['DELETE'])
-@login_required
 @role_based_access_control_be
 def delete_event_location(event_id, event_location_id):
     Event.query.filter_by(id=event_id).first_or_404()
@@ -524,7 +495,6 @@ def delete_event_location(event_id, event_location_id):
 
 
 @bp.route('/events/<int:event_id>/timeslots/<int:event_timeslot_id>', methods=['DELETE'])
-@login_required
 @role_based_access_control_be
 def delete_event_timeslot(event_id, event_timeslot_id):
     Event.query.filter_by(id=event_id).first_or_404()
@@ -541,7 +511,6 @@ def delete_event_timeslot(event_id, event_timeslot_id):
 
 
 @bp.route('/events/<int:event_id>/sessions', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_event_sessions(event_id):
     # Check if the event exists
@@ -557,7 +526,6 @@ def get_event_sessions(event_id):
 
 
 @bp.route('/sessions/<int:session_id>', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_session(session_id):
     session = Session.query.filter_by(id=session_id).first_or_404()
@@ -567,7 +535,6 @@ def get_session(session_id):
 
 
 @bp.route('/sessions/<int:session_id>/workshop', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_workshop_for_session(session_id):
     session = Session.query.filter_by(id=session_id).first_or_404()
@@ -583,7 +550,6 @@ def get_workshop_for_session(session_id):
 
 
 @bp.route('/sessions/<int:session_id>/workshop', methods=['POST'])
-@login_required
 @role_based_access_control_be
 def add_workshop_to_session(session_id):
     session = Session.query.filter_by(id=session_id).first_or_404()
@@ -610,7 +576,6 @@ def add_workshop_to_session(session_id):
 
 
 @bp.route('/sessions/<int:session_id>/workshop', methods=['DELETE'])
-@login_required
 @role_based_access_control_be
 def remove_workshop_from_session(session_id):
     session = Session.query.filter_by(id=session_id).first_or_404()
@@ -628,7 +593,6 @@ def remove_workshop_from_session(session_id):
 #------------------------------------------ PAGE ------------------------------------------#
 
 @bp.route('/pages', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_pages():
     pages = helper.filter_model_by_query_and_properties(Page, request.args, 'pages')
@@ -636,7 +600,6 @@ def get_pages():
 
 
 @bp.route('/pages/<field>', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_pages_field(field):
     pages = helper.filter_model_by_query_and_properties(Page, request.args, 'pages', field)
@@ -646,13 +609,11 @@ def get_pages_field(field):
 #------------------------------------------ FILE TEST ------------------------------------------#
 
 @bp.route('/files', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_files():
     return jsonify({'files': files.get_files_name_list(bucket_name=files.workshop_bucket)})
 
 @bp.route('/files', methods=['POST'])
-@login_required
 @role_based_access_control_be
 def upload_file():
     file = request.files['file']

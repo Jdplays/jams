@@ -13,7 +13,6 @@ bp = Blueprint('management', __name__)
 #------------------------------------------ WORKSHOP ------------------------------------------#
 
 @bp.route('/workshops', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_workshops():
     workshops = helper.filter_model_by_query_and_properties(Workshop, request.args, 'workshops')
@@ -21,7 +20,6 @@ def get_workshops():
 
 
 @bp.route('/workshops/<field>', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_workshops_field(field):
     workshops = helper.filter_model_by_query_and_properties(Workshop, request.args, 'workshops', field)
@@ -29,7 +27,6 @@ def get_workshops_field(field):
 
 
 @bp.route('/workshops/<int:workshop_id>', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_workshop(workshop_id):
     workshop = Workshop.query.filter_by(id=workshop_id).first_or_404()
@@ -37,7 +34,6 @@ def get_workshop(workshop_id):
 
 
 @bp.route('/workshops/<int:workshop_id>/<field>', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_workshop_field(workshop_id, field):
     workshop = Workshop.query.filter_by(id=workshop_id).first_or_404()
@@ -50,7 +46,6 @@ def get_workshop_field(workshop_id, field):
 
 
 @bp.route('/workshops', methods=['POST'])
-@login_required
 @role_based_access_control_be
 def add_workshop():
     data = request.get_json()
@@ -76,7 +71,6 @@ def add_workshop():
 
 
 @bp.route('/workshops/<int:workshop_id>', methods=['PATCH'])
-@login_required
 @role_based_access_control_be
 def edit_workshop(workshop_id):
     workshop = Workshop.query.filter_by(id=workshop_id).first_or_404()
@@ -99,7 +93,6 @@ def edit_workshop(workshop_id):
 
 
 @bp.route('/workshops/<int:workshop_id>/archive', methods=['POST'])
-@login_required
 @role_based_access_control_be
 def archive_workshop(workshop_id):
     workshop = Workshop.query.filter_by(id=workshop_id).first_or_404()
@@ -109,7 +102,6 @@ def archive_workshop(workshop_id):
     return jsonify({'message': 'The workshop has been successfully archived'})
 
 @bp.route('/workshops/<int:workshop_id>/activate', methods=['POST'])
-@login_required
 @role_based_access_control_be
 def activate_workshop(workshop_id):
     workshop = Workshop.query.filter_by(id=workshop_id).first_or_404()
@@ -119,7 +111,6 @@ def activate_workshop(workshop_id):
     return jsonify({'message': 'The workshop has been successfully activated'})
 
 @bp.route('/workshops/<int:workshop_id>/worksheet', methods=['POST'])
-@login_required
 @role_based_access_control_be
 def add_worksheet(workshop_id):
     workshop = Workshop.query.filter_by(id=workshop_id).first_or_404()
@@ -143,7 +134,6 @@ def add_worksheet(workshop_id):
 
 
 @bp.route('/workshops/<int:workshop_id>/files', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_files(workshop_id):
     workshop_files = WorkshopFile.query.filter_by(workshop_id=workshop_id).all()
@@ -153,7 +143,6 @@ def get_files(workshop_id):
     return jsonify({'files':return_obj})
 
 @bp.route('/workshops/<int:workshop_id>/files/<uuid:file_id>/data', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_file_data(workshop_id, file_id):
     workshop_file = WorkshopFile.query.filter_by(workshop_id=workshop_id, file_id=file_id).first_or_404()
@@ -161,7 +150,6 @@ def get_file_data(workshop_id, file_id):
     return jsonify(file.to_dict())
 
 @bp.route('/workshops/<int:workshop_id>/files/<uuid:file_id>/data', methods=['PATCH'])
-@login_required
 @role_based_access_control_be
 def edit_file_data(workshop_id, file_id):
     workshop_file = WorkshopFile.query.filter_by(workshop_id=workshop_id, file_id=file_id).first_or_404()
@@ -183,7 +171,6 @@ def edit_file_data(workshop_id, file_id):
 
 
 @bp.route('/workshops/<int:workshop_id>/files/<uuid:file_id>/versions', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_file_versions(workshop_id, file_id):
     workshop_file = WorkshopFile.query.filter_by(workshop_id=workshop_id, file_id=file_id).first_or_404()
@@ -192,7 +179,6 @@ def get_file_versions(workshop_id, file_id):
     return jsonify({'file_versions': return_obj})
 
 @bp.route('/workshops/<int:workshop_id>/files/<uuid:file_id>', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_workshop_file(workshop_id, file_id):
     WorkshopFile.query.filter_by(workshop_id=workshop_id, file_id=file_id).first_or_404()
@@ -206,7 +192,6 @@ def get_workshop_file(workshop_id, file_id):
 #------------------------------------------ LOCATION ------------------------------------------#
 
 @bp.route('/locations', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_locations():
     locations_data_list = [location.to_dict() for location in Location.query.order_by(Location.id).all()]
@@ -214,7 +199,6 @@ def get_locations():
 
 
 @bp.route('/locations/<field>', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_locations_field(field):
     allowed_fields = list(Location.query.first_or_404().to_dict().keys())
@@ -232,7 +216,6 @@ def get_locations_field(field):
 
 
 @bp.route('/locations/<int:location_id>', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_location(location_id):
     location = Location.query.filter_by(id=location_id).first_or_404()
@@ -240,7 +223,6 @@ def get_location(location_id):
 
 
 @bp.route('/locations/<int:location_id>/<field>', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_location_field(location_id, field):
     location = Location.query.filter_by(id=location_id).first_or_404()
@@ -253,7 +235,6 @@ def get_location_field(location_id, field):
     
 
 @bp.route('/locations', methods=['POST'])
-@login_required
 @role_based_access_control_be
 def add_location():
     data = request.get_json()
@@ -275,7 +256,6 @@ def add_location():
     })
 
 @bp.route('/locations/<int:location_id>', methods=['PATCH'])
-@login_required
 @role_based_access_control_be
 def edit_location(location_id):
     location = Location.query.filter_by(id=location_id).first_or_404()
@@ -298,7 +278,6 @@ def edit_location(location_id):
 
 
 @bp.route('/locations/<int:location_id>/archive', methods=['POST'])
-@login_required
 @role_based_access_control_be
 def archive_location(location_id):
         location = Location.query.filter_by(id=location_id).first_or_404()
@@ -309,7 +288,6 @@ def archive_location(location_id):
 
 
 @bp.route('/locations/<int:location_id>/activate', methods=['POST'])
-@login_required
 @role_based_access_control_be
 def activate_location(location_id):
     location = Location.query.filter_by(id=location_id).first_or_404()
@@ -321,7 +299,6 @@ def activate_location(location_id):
 #------------------------------------------ TIMESLOT ------------------------------------------#
 
 @bp.route('/timeslots', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_timeslots():
     timeslots_data_list = [timeslot.to_dict() for timeslot in Timeslot.query.order_by(Timeslot.id).all()]
@@ -329,7 +306,6 @@ def get_timeslots():
 
 
 @bp.route('/timeslots/<field>', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_timeslots_field(field):
     allowed_fields = list(Timeslot.query.first_or_404().to_dict().keys())
@@ -347,7 +323,6 @@ def get_timeslots_field(field):
 
 
 @bp.route('/timeslots/<int:timeslot_id>', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_timeslot(timeslot_id):
     timeslot = Timeslot.query.filter_by(id=timeslot_id).first_or_404()
@@ -355,7 +330,6 @@ def get_timeslot(timeslot_id):
 
 
 @bp.route('/timeslots/<int:timeslot_id>/<field>', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_timeslot_field(timeslot_id, field):
     timeslot = Timeslot.query.filter_by(id=timeslot_id).first_or_404()
@@ -368,7 +342,6 @@ def get_timeslot_field(timeslot_id, field):
     
 
 @bp.route('/timeslots', methods=['POST'])
-@login_required
 @role_based_access_control_be
 def add_timeslot():
     data = request.get_json()
@@ -392,7 +365,6 @@ def add_timeslot():
     })
 
 @bp.route('/timeslots/<int:timeslot_id>', methods=['PATCH'])
-@login_required
 @role_based_access_control_be
 def edit_timeslot(timeslot_id):
     timeslot = Timeslot.query.filter_by(id=timeslot_id).first_or_404()
@@ -415,7 +387,6 @@ def edit_timeslot(timeslot_id):
 
 
 @bp.route('/timeslots/<int:timeslot_id>/archive', methods=['POST'])
-@login_required
 @role_based_access_control_be
 def archive_timeslot(timeslot_id):
         timeslot = Timeslot.query.filter_by(id=timeslot_id).first_or_404()
@@ -426,7 +397,6 @@ def archive_timeslot(timeslot_id):
 
 
 @bp.route('/timeslots/<int:timeslot_id>/activate', methods=['POST'])
-@login_required
 @role_based_access_control_be
 def activate_timeslot(timeslot_id):
     timeslot = Timeslot.query.filter_by(id=timeslot_id).first_or_404()
@@ -439,14 +409,12 @@ def activate_timeslot(timeslot_id):
 #------------------------------------------ DIFFICULTY LEVEL ------------------------------------------#
 
 @bp.route('/difficulty_levels', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_difficulty_levels():
     difficulty_levels_data_list = [difficulty.to_dict() for difficulty in DifficultyLevel.query.order_by(DifficultyLevel.id).all()]
     return jsonify({'difficulty_levels': difficulty_levels_data_list})
 
 @bp.route('/difficulty_levels/<int:difficulty_id>', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_difficulty_level(difficulty_id):
     difficulty = DifficultyLevel.query.filter_by(id=difficulty_id).first_or_404()

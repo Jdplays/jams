@@ -14,6 +14,11 @@ export function buildQueryString(params) {
 
     // Process each key, value pair in the params object
     for (const [key, value] of Object.entries(params)) {
+        let processedValue = value
+        // Check if value is empty
+        if (isNullEmptyOrSpaces(value)) {
+            continue
+        }
         if (typeof value === 'string' && value.startsWith('$~')) {
             const refKey = value.slice(2) // Extract the reference key after '$~'
             if (params[refKey] !== undefined) {
@@ -21,8 +26,6 @@ export function buildQueryString(params) {
                 continue
             }
         } else { 
-            let processedValue = value
-
             // Handle any null or undefined values and replace them with 'None'
             if (processedValue === null || processedValue === undefined) {
                 processedValue = 'None'
@@ -74,22 +77,70 @@ export function buildQueryString(params) {
 
 }
 
-export function isEmptyOrSpaces(str){
-    return str === null || str.match(/^ *$/) !== null;
+export function isNullEmptyOrSpaces(input){
+    if (input === null || input === undefined) {
+        return true;
+    }
+
+    if (typeof input === 'string') {
+        return input.trim().length === 0;
+    }
+
+    if (Array.isArray(input)) {
+        return input.length === 0 || input.every(isNullEmptyOrSpaces);
+    }
+
+    return false;
 }
 
+// Empties all children from a html element
+export function emptyElement(element) {
+    while (element.firstChild) {
+        element.removeChild(element.firstChild)
+    }
+}
 
+// Function to convert hex to rgba
+export function hexToRgba(hex, alpha) {
+    let r = parseInt(hex.slice(1, 3), 16);
+    let g = parseInt(hex.slice(3, 5), 16);
+    let b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
+// Can be added to an element to allow drop
+export function allowDrop(ev) {
+    ev.preventDefault();
+}
 
+// Creates a promise that only resolves when an element animation is done
+export function waitForTransitionEnd(element) {
+    return new Promise(resolve => {
+        const handler = () => {
+            element.removeEventListener('transitionend', handler);
+            resolve();
+        };
+        element.addEventListener('transitionend', handler);
+    });
+}
 
+// Creates a generic dropdown based on inputs
+export function createDropdown(options, defualtOptionText, onChangeFunc) {
+    const select = document.createElement('select')
+    const defaultOptionsElement = document.createElement('option');
+    defaultOptionsElement.innerText = defualtOptionText
+    defaultOptionsElement.disabled = true;
+    defaultOptionsElement.selected = true;
+    defaultOptionsElement.hidden = true;
+    select.appendChild(defaultOptionsElement)
+    for (const option of options) {
+        const optionElement = document.createElement('option');
+        optionElement.value = option.id;
+        optionElement.innerText = option.name;
+        select.appendChild(optionElement);
+    }
 
+    select.onchange = onChangeFunc
 
-
-
-
-
-
-
-
-
-
+    return select
+}

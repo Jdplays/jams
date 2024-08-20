@@ -27,9 +27,12 @@ def generate_endpoints_structure():
         # Get the first key-value pair from the pages dictionary
         for page_name, page_data in pages.items():
             page_endpoint = page_data.get('endpoint', [])
+            page_is_public = page_data.get('public', [])
+            if not page_is_public:
+                page_is_public = False
             page = Page.query.filter_by(name=page_name).first()
             if not page:
-                page = Page(name=page_name, endpoint=page_endpoint)
+                page = Page(name=page_name, endpoint=page_endpoint, public=page_is_public)
                 db.session.add(page)
             else:
                 page.endpoint = page_endpoint
@@ -52,11 +55,11 @@ def generate_endpoints_structure():
                     allowed_fields = None
                     if endpoint_data:
                         allowed_fields = endpoint_data.get('allowed_fields', [])
-                    endpoint_rule = EndpointRule.query.filter_by(endpoint=endpoint_name, allowed_fields=allowed_fields).first()
+                    endpoint_rule = EndpointRule.query.filter_by(endpoint=endpoint_name, allowed_fields=allowed_fields, public=page_is_public).first()
                     if not endpoint_rule:
-                        endpoint_rule = helper.get_endpoint_rule_for_page(endpoint_name, page.id)
+                        endpoint_rule = helper.get_endpoint_rule_for_page(endpoint=endpoint_name, page_id=page.id, public=page_is_public)
                         if not endpoint_rule:
-                            endpoint_rule = EndpointRule(endpoint=endpoint_name, allowed_fields=allowed_fields)
+                            endpoint_rule = EndpointRule(endpoint=endpoint_name, allowed_fields=allowed_fields, public=page_is_public)
                             db.session.add(endpoint_rule)
                         else:
                             endpoint_rule.allowed_fields = allowed_fields

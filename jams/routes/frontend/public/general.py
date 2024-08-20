@@ -12,3 +12,7 @@ def nav():
 @bp.route('/')
 def home():
     return render_template(f'public/home.html')
+
+@bp.route('/public_schedule')
+def public_schedule():
+    return render_template(f'public/public_schedule.html')

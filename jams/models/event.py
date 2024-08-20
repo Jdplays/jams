@@ -185,6 +185,10 @@ class Session(db.Model):
         if not self.workshop:
             return False
         return True
+    
+    @property
+    def location_column_order(self):
+        return self.event_location.order
 
     def __init__(self, event_id, event_location_id, event_timeslot_id, workshop_id=None, active=True):
         self.event_id = event_id
@@ -205,6 +209,8 @@ class Session(db.Model):
             'event_id': self.event_id,
             'event_location_id': self.event_location_id,
             'event_timeslot_id': self.event_timeslot_id,
+            'workshop_id': self.workshop_id,
             'has_workshop': self.has_workshop,
+            'location_column_order': self.location_column_order,
             'active': self.active
         }

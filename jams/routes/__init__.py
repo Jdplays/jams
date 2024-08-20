@@ -1,4 +1,4 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, send_from_directory
 from flask_security import current_user
 from jams.util import helper
 from jams.models import db, PrivateAccessLog
@@ -34,3 +34,7 @@ def before_all_requests(response):
         db.session.add(log_entry)
         db.session.commit()
     return response
+
+@routes_bp.route('/assets/icons/<path:filename>')
+def serve_icon(filename):
+    return send_from_directory('static/icons', filename)

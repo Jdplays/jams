@@ -9,3 +9,5 @@ gunicorn
 python-dotenv
 pyyaml
 minio
+setuptools
+python-dotenv
