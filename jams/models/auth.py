@@ -187,20 +187,23 @@ class Page(db.Model):
     name = Column(String(100), unique=True, nullable=False)
     endpoint = Column(String(255), unique=True, nullable=False)
     parent_id = Column(Integer, ForeignKey('page.id'), nullable=True)
+    public = Column(Boolean, nullable=False, default=False)
 
     parent = relationship('Page', remote_side=[id], backref='children')
 
-    def __init__(self, name, endpoint, parent_id=None):
+    def __init__(self, name, endpoint, parent_id=None, public=False):
         self.name = name
         self.endpoint = endpoint
         self.parent_id = parent_id
+        self.public = public
 
     def to_dict(self):
         return {
             'id': self.id,
             'name': self.name,
             'endpoint': self.endpoint,
-            'parent_id': self.parent
+            'parent_id': self.parent,
+            'public': self.public
         }
 
 
@@ -211,16 +214,19 @@ class EndpointRule(db.Model):
     id = Column(Integer, primary_key=True)
     endpoint = Column(String(255), nullable=False)
     allowed_fields = Column(String(255), nullable=True) # This is a comma seperated list of allowed fields for the endpoint
+    public = Column(Boolean, nullable=False, default=False)
 
-    def __init__(self, endpoint, allowed_fields=None):
+    def __init__(self, endpoint, allowed_fields=None, public=False):
         self.endpoint = endpoint
         self.allowed_fields = allowed_fields
+        self.public = public
 
     def to_dict(self):
         return {
             'id': self.id,
             'endpoint': self.endpoint,
-            'allowed_fields': self.allowed_fields if self.allowed_fields is not None else ''
+            'allowed_fields': self.allowed_fields if self.allowed_fields is not None else '',
+            'public': self.public
         }
     
 class RoleEndpointRule(db.Model):
