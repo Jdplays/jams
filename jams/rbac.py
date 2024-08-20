@@ -57,7 +57,7 @@ def generate_endpoints_structure():
                         allowed_fields = endpoint_data.get('allowed_fields', [])
                     endpoint_rule = EndpointRule.query.filter_by(endpoint=endpoint_name, allowed_fields=allowed_fields, public=page_is_public).first()
                     if not endpoint_rule:
-                        endpoint_rule = helper.get_endpoint_rule_for_page(endpoint_name, page.id)
+                        endpoint_rule = helper.get_endpoint_rule_for_page(endpoint=endpoint_name, page_id=page.id, public=page_is_public)
                         if not endpoint_rule:
                             endpoint_rule = EndpointRule(endpoint=endpoint_name, allowed_fields=allowed_fields, public=page_is_public)
                             db.session.add(endpoint_rule)
