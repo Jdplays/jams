@@ -8,7 +8,6 @@ from jams.util import helper
 bp = Blueprint('monitoring', __name__)
 
 @bp.route('/private_access_logs', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_private_access_logs():
     private_access_logs = helper.filter_model_by_query_and_properties(PrivateAccessLog, request.args, 'private_access_logs')

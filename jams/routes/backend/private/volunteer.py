@@ -11,7 +11,6 @@ bp = Blueprint('volunteer', __name__)
 #------------------------------------------ Volunteer Attendance ------------------------------------------#
 
 @bp.route('/users/<int:user_id>/voluteer_attendences/<int:event_id>', methods=['GET'])
-@login_required
 @role_based_access_control_be
 def get_user_attendance(user_id, event_id):
     attendance = VolunteerAttendance.query.filter_by(user_id=user_id, event_id=event_id).first_or_404()
@@ -19,7 +18,6 @@ def get_user_attendance(user_id, event_id):
 
 
 @bp.route('/users/<int:user_id>/voluteer_attendences/<int:event_id>', methods=['POST'])
-@login_required
 @protect_user_updates
 @role_based_access_control_be
 def add_user_attendance(user_id, event_id):
@@ -48,7 +46,6 @@ def add_user_attendance(user_id, event_id):
 
 
 @bp.route('/users/<int:user_id>/voluteer_attendences/<int:event_id>', methods=['PATCH'])
-@login_required
 @protect_user_updates
 @role_based_access_control_be
 def edit_user_attendance(user_id, event_id):
