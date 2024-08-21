@@ -1,0 +1,40 @@
+{% extends './private/admin/settings/settings-layout.html' %}
+
+{% block settings_title %}Eventbrite{% endblock %}
+
+{% block settings_name %}Eventbrite{% endblock %}
+
+{% block settings_content %}
+
+<div id="eventbrite-settings-content" class="settings-content-container">
+    <p>You can enable the eventbrite API integration in order to import events and automtically have attendees accounts
+        created for registration</p>
+
+    <form>
+        <label class="form-check form-switch">
+            <input id="toggle-eventbrite-switch" class="form-check-input" type="checkbox">
+            <span class="form-check-label">Enable Eventbrite API integration</span>
+        </label>
+
+        <div id="eventbrite-token-block" style="display: none;">
+            <label class="form-label">Private API Toekn</label>
+            <div class="input-group">
+                <input id="eventbrite-api-token-input" type="password" class="form-control" autocomplete="off">
+                <button id="eventbrite-api-token-verify-button" type="button" class="btn">Verify</button>
+            </div>
+        </div>
+
+        <div id="eventbrite-org-selection-block" style="display: none;">
+            <div class="mb-3">
+                <label class="form-label">Select Organisation to pull events from</label>
+                <select id="eventbrite-org-select" class="form-control"></select> 
+            </div>
+        </div>
+    </form>
+</div>
+
+<script src="{{ url_for('static', filename='js/admin/settings/settings-int-eventbrite.js') }}" type="module" defer></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/general/icons.css') }}">
+
+
+{% endblock %}

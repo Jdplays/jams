@@ -1,0 +1,14 @@
+.accordion .btn-custom {
+    height: calc(1.5em + 0.75rem + 2px); /* Matches the height of the accordion button */
+    padding: 0.375rem 1.25rem; /* Matches the padding of the accordion button */
+    font-size: 1rem; /* Matches the font size */
+    text-align: left;
+  }
+
+  .accordion .accordion-header {
+    padding: 0; /* Remove padding from the accordion header to make the button full-width */
+  }
+
+  .settings-content-container {
+    padding: 10px;
+  }

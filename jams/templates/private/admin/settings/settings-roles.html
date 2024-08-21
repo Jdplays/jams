@@ -1,21 +1,10 @@
-{% extends '_layout.html' %}
+{% extends './private/admin/settings/settings-layout.html' %}
 
-{% block title %}Settings{% endblock %}
+{% block settings_title %}Settings{% endblock %}
 
-{% block content %}
+{% block settings_name %}Roles{% endblock %}
 
-<div class="row row-deck row-cards">
-    <div class="col-4">
-        <div class="card">
-            <div class="card-body" style="height: 10rem">
-                <h1>Settings</h1>
-                <p>This is the Settings page!</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<h2>Roles</h2>
+{% block settings_content %}
 
 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add-role-modal" onclick="PrepAddRoleForm()">Add
     Role</button>
@@ -123,7 +112,7 @@
 
 <p id="roles-request-response"></p>
 
-<script src="{{ url_for('static', filename='js/admin/settings.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/admin/settings/settings-ac-roles.js') }}" defer></script>
 
 <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>

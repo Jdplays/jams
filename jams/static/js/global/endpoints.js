@@ -272,3 +272,110 @@ export function getIconData(filename) {
         })
     })
 }
+
+export function verifyEventbriteApiToken(token) {
+    return new Promise((resolve, reject) => {
+        const data = {
+            'private_token': token
+        }
+
+        $.ajax({
+            url: `/backend/integrations/eventbrite/verify`,
+            type: 'POST',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response.verified)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function getEventbriteUserOrganisations() {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `/backend/integrations/eventbrite/organisations`,
+            type: 'GET',
+            success: function (response) {
+                resolve(response.organisations)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(false)
+            }
+        });
+    });
+}
+
+
+export function enableEventbriteIntegration(data) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `/backend/integrations/eventbrite/enable`,
+            type: 'POST',
+            data: data,
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function disableEventbriteIntegration() {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `/backend/integrations/eventbrite/disable`,
+            type: 'DELETE',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function getEventbriteIntegrationConfig() {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `/backend/integrations/eventbrite/config`,
+            type: 'GET',
+            success: function (response) {
+                resolve(response.eventbrite_config)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(false)
+            }
+        });
+    });
+}
+
+export function editEventbriteIntegrationConfig(data) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `/backend/integrations/eventbrite/config`,
+            type: 'PATCH',
+            data: data,
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response.eventbrite_config)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(false)
+            }
+        });
+    });
+}

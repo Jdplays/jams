@@ -11,3 +11,4 @@ pyyaml
 minio
 setuptools
 python-dotenv
+requests

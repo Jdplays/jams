@@ -6,5 +6,9 @@ from .event import Event, Location, Timeslot, EventLocation, EventTimeslot, Sess
 from .volunteer import VolunteerAttendance
 from.files import File, FileVersion, WorkshopFile
 from .audit import PrivateAccessLog
+from .config import Config
 
-__all__ = ['User', 'Role', 'Workshop', 'DifficultyLevel', 'Event', 'Location', 'Timeslot', 'EventLocation', 'EventTimeslot', 'Session', 'VolunteerAttendance', 'Page', 'EndpointRule', 'RoleEndpointRule', 'PageEndpointRule', 'RolePage', 'File', 'FileVersion', 'WorkshopFile', 'PrivateAccessLog']
+__all__ = [
+    name for name in globals().keys() 
+    if not name.startswith('_')
+]

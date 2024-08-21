@@ -9,11 +9,33 @@ bp = Blueprint('admin', __name__, url_prefix='admin')
 
 # URL PREFIX = /admin
 
+# Settings
+
 @bp.route('/settings')
 @login_required
 @role_based_access_control_fe
 def settings():
-    return render_template(f'{url_prefix}/settings.html')
+    return render_template(f'{url_prefix}/settings/settings-general.html')
+
+@bp.route('/settings/eventbrite')
+@login_required
+@role_based_access_control_fe
+def settings_eventbrite():
+    return render_template(f'{url_prefix}/settings/settings-eventbrite.html')
+
+@bp.route('/settings/roles')
+@login_required
+@role_based_access_control_fe
+def settings_roles():
+    return render_template(f'{url_prefix}/settings/settings-roles.html')
+
+@bp.route('/settings/auth_sources')
+@login_required
+@role_based_access_control_fe
+def settings_auth_sources():
+    return render_template(f'{url_prefix}/settings/settings-auth_sources.html')
+
+## Other
 
 @bp.route('/user_management')
 @login_required
