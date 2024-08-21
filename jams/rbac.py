@@ -77,9 +77,9 @@ def assign_role_to_page_recursive(role, page, default=False):
         if not role_page:
             role_page = RolePage(role_id=role.id, page_id=page.id, default=default)
             db.session.add(role_page)
-    if page.children:
-        for child in page.children:
-            assign_role_to_page_recursive(role, child, default)
+        if page.children:
+            for child in page.children:
+                assign_role_to_page_recursive(role, child, default)
 
 def generate_roles(folder, parent_folder=None, default=False):
     added_roles_names = []
