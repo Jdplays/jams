@@ -93,6 +93,20 @@ export interface Page {
     public:boolean
 }
 
+export interface PrivateAccessLog {
+    id:number
+    url:string
+    internal_endpoint:string
+    user_id:number
+    user_display_name:string
+    username:string
+    user_email:string
+    user_role_names:string
+    required_role_names:string
+    status_code:string
+    date_time:string
+}
+
 export interface PaginationResponseData {
     pagination_block_size:number
     pagination_start_index:number
@@ -123,12 +137,15 @@ export interface QueryStringData extends
     TransformToSingularOrArray<Event>,
     TransformToSingularOrArray<User>,
     TransformToSingularOrArray<Role>,
-    TransformToSingularOrArray<Page> {
+    TransformToSingularOrArray<Page>,
+    TransformToSingularOrArray<PrivateAccessLog> {
         $pagination_block_size?:number
         $pagination_start_index?:number
         $order_by?:string
         $order_direction?:string
     }
+
+export type QueryStringKey = keyof QueryStringData;
 
 export interface BackendMultiEntryResponse<T> {
     pagination:PaginationResponseData
