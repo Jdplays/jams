@@ -11,7 +11,9 @@ import {
     User,
     Role,
     Page,
-    QueryStringData
+    QueryStringData,
+    BackendMultiEntryResponse,
+    PrivateAccessLog
 } from "./endpoints_interfaces";
 
 // This is a script where all then endpoint calls will live to prevent duplication across scripts
@@ -609,10 +611,6 @@ export function deleteRole(roleId:number):Promise<boolean> {
     });
 }
 // #endregion
-
-// #region Pages
-
-// #endregion
 export function getPageNames(queryString:string|null=null):Promise<[Partial<Page>]> {
     return new Promise((resolve, reject) => {
         let url = '/backend/pages/name'
@@ -632,6 +630,32 @@ export function getPageNames(queryString:string|null=null):Promise<[Partial<Page
         });
     });
 }
+// #region Pages
+
+// #region Audit
+export function getPrivateAccessLogs(queryString:string|null=null):Promise<BackendMultiEntryResponse<PrivateAccessLog>> {
+    return new Promise((resolve, reject) => {
+        let url = '/backend/private_access_logs'
+        if (queryString) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);   
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error);
+            }
+        });
+    });
+}
+// #endregion
+
+// #endregion
+
 // #region Code Assets
 export function getIconData(filename:string):Promise<string> {
     return new Promise((resolve, reject) => {
