@@ -1,4 +1,7 @@
+import {Toast} from "../global/sweet_alert"
+
 type QueryStringParams = {[key: string]: any}
+type ModelModityFunc = ((arg1:number) => void)
 
 interface FieldValues {
     [key: string]: string;
@@ -159,3 +162,77 @@ export function createDropdown(options:any, defualtOptionText:string, onChangeFu
 
     return select
 }
+
+export function buildEditButtonForModel(modelId:number, editModalId:string, prepEditFunc:ModelModityFunc) {
+    let button = document.createElement('button')
+    button.id = `edit-${modelId}`
+    button.classList.add('btn', 'btn-outline-primary', 'py-1', 'px-2', 'mb-1')
+    button.innerHTML = 'Edit'
+    button.setAttribute('data-bs-toggle', 'modal')
+    button.setAttribute('data-bs-target', `#${editModalId}`)
+    button.onclick = function () {
+        prepEditFunc(modelId)
+    }
+    button.style.padding = '10px'
+
+    return button
+}
+
+export function buildActionButtonsForModel(modelId:number, modelActive:boolean, archiveModelFunc:ModelModityFunc, activateModelFunc:ModelModityFunc, editModalId:string, prepEditFunc:ModelModityFunc) {
+    let container = document.createElement('div')
+    if (modelActive) {
+        container.appendChild(buildEditButtonForModel(modelId, editModalId, prepEditFunc))
+
+        let archiveButton = document.createElement('button')
+        archiveButton.id = `archive-${modelId}`
+        archiveButton.classList.add('btn', 'btn-danger', 'py-1', 'px-2', 'mb-1')
+        archiveButton.innerHTML = 'Archive'
+        archiveButton.onclick = function () {
+            archiveModelFunc(modelId)
+        }
+        archiveButton.style.padding = '10px'
+        container.appendChild(archiveButton)
+    } else {
+        let activateButton = document.createElement('button')
+        activateButton.id = `activate-${modelId}`
+        activateButton.classList.add('btn', 'btn-success', 'py-1', 'px-2', 'mb-1')
+        activateButton.innerHTML = 'Activate'
+        activateButton.onclick = function () {
+            activateModelFunc(modelId)
+        }
+        activateButton.style.padding = '10px'
+        container.appendChild(activateButton)
+    }
+
+    return container
+}
+
+export function successToast(message:string) {
+    Toast.fire({
+        icon: 'success',
+        title: message
+    })
+}
+
+export function errorToast() {
+    Toast.fire({
+        icon: 'error',
+        title: 'An Error occurred!'
+    })
+}
+
+
+export function getSelectValues(select:HTMLSelectElement) {
+    var result = [];
+    var options = select && select.options;
+    var opt;
+  
+    for (var i=0, iLen=options.length; i<iLen; i++) {
+      opt = options[i];
+  
+      if (opt.selected) {
+        result.push(Number(opt.value));
+      }
+    }
+    return result;
+  }
