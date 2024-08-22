@@ -150,7 +150,8 @@ function initialiseAgGrid() {
 }
 
 async function preloadRoleNames() {
-    let roles = await getRoleNames();
+    const response = await getRoleNames();
+    let roles = response.data
     let roleNamesMap:Record<number,string> = {};
     roles.forEach(role => {
         roleNamesMap[role.id] = role.name;
@@ -160,7 +161,8 @@ async function preloadRoleNames() {
 
 async function populateUserManagementTable() {
     //gridApi.setGridOption("loading", true);
-    let allUsers = await getUsers()
+    const response = await getUsers()
+    let allUsers = response.data
     roleNamesMap = await preloadRoleNames()
 
     gridApi.setGridOption('rowData', allUsers)

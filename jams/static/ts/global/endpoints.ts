@@ -423,13 +423,13 @@ export function getCurrentUserId():Promise<number> {
     });
 }
 
-export function getUsers():Promise<[User]> {
+export function getUsers():Promise<BackendMultiEntryResponse<[User]>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             url: '/backend/users',
             type: 'GET',
             success: function(response) {
-                resolve(response.users);
+                resolve(response);
             },
             error: function(error) {
                 console.log('Error fetching data:', error);
@@ -507,13 +507,13 @@ export function activateUser(userID:number):Promise<boolean> {
 // #endregion
 
 // #region Roles
-export function getRoles():Promise<[Role]> {
+export function getRoles():Promise<BackendMultiEntryResponse<[Role]>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             url: '/backend/roles',
             type: 'GET',
             success: function(response) {
-                resolve(response.roles);   
+                resolve(response);   
             },
             error: function(error) {
                 console.log('Error fetching data:', error);
@@ -539,7 +539,7 @@ export function getRole(roleId:number):Promise<Role> {
     });
 }
 
-export function getRoleNames(queryString:string=null):Promise<[Role]> {
+export function getRoleNames(queryString:string=null):Promise<BackendMultiEntryResponse<[Partial<Role>]>> {
     return new Promise((resolve, reject) => {
         let url = '/backend/roles/name'
         if (queryString != null) {
@@ -549,7 +549,7 @@ export function getRoleNames(queryString:string=null):Promise<[Role]> {
             url: url,
             type: 'GET',
             success: function(response) {
-                resolve(response.roles);
+                resolve(response);
             },
             error: function(error) {
                 console.log('Error fetching data:', error);
@@ -611,7 +611,7 @@ export function deleteRole(roleId:number):Promise<boolean> {
     });
 }
 // #endregion
-export function getPageNames(queryString:string|null=null):Promise<[Partial<Page>]> {
+export function getPageNames(queryString:string|null=null):Promise<BackendMultiEntryResponse<[Partial<Page>]>> {
     return new Promise((resolve, reject) => {
         let url = '/backend/pages/name'
         if (queryString != null) {
@@ -621,7 +621,7 @@ export function getPageNames(queryString:string|null=null):Promise<[Partial<Page
             url: url,
             type: 'GET',
             success: function(response) {
-                resolve(response.pages);   
+                resolve(response);   
             },
             error: function(error) {
                 console.log('Error fetching data:', error);

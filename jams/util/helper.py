@@ -167,10 +167,10 @@ def filter_model_by_query_and_properties(model, request_args, objects_json_key, 
     default_field_names = ['$pagination_block_size', '$pagination_start_index', '$order_by', '$order_direction']
     pagination_block_size = 50
     pagination_start_index = 0
-    pagination_order_by = model.id
+    pagination_order_by = 'id'
     pagination_order_direction = 'ASC'
 
-    order_by = pagination_order_by
+    order_by = model.id
     order_direction = pagination_order_direction
 
     # Check if things are being searched for
