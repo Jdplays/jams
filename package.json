@@ -1,0 +1,11 @@
+{
+  "type": "module",
+  "dependencies": {
+    "sweetalert2": "^11.12.4",
+    "typescript": "^5.5.4"
+  },
+  "devDependencies": {
+    "@types/bootstrap": "^5.2.10",
+    "@types/jquery": "^3.5.30"
+  }
+}
