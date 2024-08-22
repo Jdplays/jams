@@ -14,11 +14,10 @@ import {
     removeLocationFromEvent,
     removeTimeslotFromEvent,
     getIconData
-} from './endpoints.js'
-import { EventLocation, EventTimeslot, Location, Timeslot } from './endpoints_interfaces.js'
-
-import {buildQueryString, emptyElement, allowDrop, waitForTransitionEnd} from './helper.js'
-import {WorkshopCard, WorkshopCardOptions} from './workshop_card.js'
+} from './endpoints'
+import { EventLocation, EventTimeslot, Location, Timeslot } from './endpoints_interfaces'
+import {buildQueryString, emptyElement, allowDrop, waitForTransitionEnd} from './helper'
+import {WorkshopCard, WorkshopCardOptions} from './workshop_card'
 
 type Icons = {[key: string]: any}
 
@@ -31,26 +30,28 @@ interface TimeslotsInEvent extends Timeslot {
     event_timeslot_id:number
 }
 
-interface ScheduleGridOptions {
-    eventId: number
-    size:number
-    edit:boolean
-    updateInterval:number
-    workshopCardOptions:WorkshopCardOptions
-    autoScale:boolean
-    autoRefresh:boolean
+export interface ScheduleGridOptions {
+    eventId?: number
+    size?:number
+    edit?:boolean
+    updateInterval?:number
+    workshopCardOptions?:WorkshopCardOptions
+    autoScale?:boolean
+    autoRefresh?:boolean
 }
 
 export class ScheduleGrid {
     private scheduleContainer:HTMLElement|null
-    private options:ScheduleGridOptions
+    private options:ScheduleGridOptions = {}
     private icons:Icons
     private sessionCount:number
-    private currentDragType:string
     private eventLocations:EventLocation[]
     private eventTimeslots:EventTimeslot[]
 
-    constructor(scheduleContainerId:string, options:ScheduleGridOptions) {
+    public currentDragType:string
+
+
+    constructor(scheduleContainerId:string, options:ScheduleGridOptions = {}) {
         // Set options (use defaults for options not provided)
         const {
             eventId = 1,
@@ -60,7 +61,7 @@ export class ScheduleGrid {
             workshopCardOptions = {},
             autoScale = false,
             autoRefresh = true
-        } = options
+        } = options || {}
        
         this.options = {
             eventId,
@@ -106,7 +107,7 @@ export class ScheduleGrid {
             this.updateGridSize(this)
         }
 
-        if (this.options.autoRefresh) {
+        if (this.options.autoRefresh && this.options.updateInterval) {
             // Run populate sessions x seconds
             window.setInterval(() => {
                 this.populateSessions()
@@ -120,35 +121,40 @@ export class ScheduleGrid {
         if (this.options.workshopCardOptions === null) {
             this.options.workshopCardOptions = {}
         }
+        
+        if (this.options.workshopCardOptions) {
+            // Set if the remove button should be included (this is only true if the grid is editable)
+            if (this.options.workshopCardOptions.remove === undefined) {
+                this.options.workshopCardOptions.remove = this.options.edit
+            }
 
-        // Set if the remove button should be included (this is only true if the grid is editable)
-        if (this.options.workshopCardOptions.remove === undefined) {
-            this.options.workshopCardOptions.remove = this.options.edit
-        }
+            // Set the remove icon so it doesnt have to be loaded in every time
+            if (this.options.workshopCardOptions.cardRemoveIcon === undefined) {
+                this.options.workshopCardOptions.cardRemoveIcon = this.icons.remove
+            }
 
-        // Set the remove icon so it doesnt have to be loaded in every time
-        if (this.options.workshopCardOptions.cardRemoveIcon === undefined) {
-            this.options.workshopCardOptions.cardRemoveIcon = this.icons.remove
-        }
+            // Set the remove function
+            if (this.options.workshopCardOptions.cardRemoveFunc === undefined) {
+                this.options.workshopCardOptions.cardRemoveFunc = this.workshopRemoveFunc
+            }
 
-        // Set the remove function
-        if (this.options.workshopCardOptions.cardRemoveFunc === undefined) {
-            this.options.workshopCardOptions.cardRemoveFunc = this.workshopRemoveFunc
-        }
+            // Set the current schedule grid object as an option so it can be used with some events
+            if (this.options.workshopCardOptions.scheduleGrid === undefined) {
+                this.options.workshopCardOptions.scheduleGrid = this
+            }
 
-        // Set the current schedule grid object as an option so it can be used with some events
-        if (this.options.workshopCardOptions.scheduleGrid === undefined) {
-            this.options.workshopCardOptions.scheduleGrid = this
-        }
-
-        // Set the size that has been passed in for the grid as the workshop cards need to fit the session blocks
-        if (this.options.workshopCardOptions.size === undefined) {
-            this.options.workshopCardOptions.size = this.options.size
+            // Set the size that has been passed in for the grid as the workshop cards need to fit the session blocks
+            if (this.options.workshopCardOptions.size === undefined) {
+                this.options.workshopCardOptions.size = this.options.size
+            }
         }
     }
 
     // Do a full update of the schedule grid
     async updateSchedule() {
+        if (!this.options.eventId) {
+            return
+        }
         // Get the locations and timeslots assigned to the event
         this.eventLocations = await getLocationsForEvent(this.options.eventId)
         this.eventTimeslots = await getTimeslotsForEvent(this.options.eventId)
