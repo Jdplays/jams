@@ -112,7 +112,8 @@ function initialiseAgGrid() {
 }
 
 async function populateEventsTable() {
-    let allEvents:Event[] = await getEvents()
+    const response = await getEvents()
+    let allEvents = response.data
     if (gridApi) {
         gridApi.setGridOption('rowData', allEvents)
     }

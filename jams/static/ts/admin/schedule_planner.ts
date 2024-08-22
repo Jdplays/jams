@@ -17,6 +17,7 @@ import {
 import { WorkshopCard } from '../global/workshop_card'
 import {ScheduleGrid, ScheduleGridOptions} from '../global/schedule_grid'
 import TomSelect from 'tom-select';
+import { QueryStringData } from '../global/endpoints_interfaces';
 
 
 // Variables
@@ -41,7 +42,8 @@ const scheduleGrid = new ScheduleGrid('schedule-container', scheduleGridOptions)
 
 // Populates the Event selection dropdown with all of the events
 async function populateEventSelectionDropdown() {
-    let events = await getEventNames()
+    const eventsResponse = await getEventNames()
+    let events = eventsResponse.data
 
     let eventSelectionDropdown = document.getElementById('event-selection')
     let select = createDropdown(events, events[0].name, eventSelectionDropdownOnChange)
@@ -84,15 +86,17 @@ async function populateEventDetails() {
 // Workshop Selction
 // Populates the list of workshop cards
 async function populateWorkshopList() {
-    let queryData = {
+    let queryData:Partial<QueryStringData> = {
         name: currentSearchQuery,
         description: '$~name',
-        difficulty_id: selectDifficultyIds,
-        tag_ids: selectedTags
+        difficulty_id: selectDifficultyIds
     }
     let queryString = buildQueryString(queryData)
-    let workshops = await getWorkshops(queryString)
-    let difficultyLevels = await getDifficultyLevels()
+    console.log(queryString)
+    const workshopsResponse = await getWorkshops(queryString)
+    const difficultyLevels = await getDifficultyLevels()
+
+    let workshops = workshopsResponse.data
 
     let workshopList = document.getElementById('workshop-selection-list')
 

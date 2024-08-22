@@ -15,14 +15,14 @@ bp = Blueprint('admin', __name__)
 @bp.route('/users', methods=['GET'])
 @role_based_access_control_be
 def get_users():
-    users = helper.filter_model_by_query_and_properties(User, request.args, 'users')
+    users = helper.filter_model_by_query_and_properties(User, request.args)
     return jsonify(users)
 
 
 @bp.route('/users/<field>', methods=['GET'])
 @role_based_access_control_be
 def get_users_field(field):
-    users = helper.filter_model_by_query_and_properties(User, request.args, 'users', field)
+    users = helper.filter_model_by_query_and_properties(User, request.args, field)
     return jsonify(users)
 
 
@@ -99,14 +99,14 @@ def activate_user(user_id):
 @bp.route('/roles', methods=['GET'])
 @role_based_access_control_be
 def get_roles():
-    roles = helper.filter_model_by_query_and_properties(Role, request.args, 'roles')
+    roles = helper.filter_model_by_query_and_properties(Role, request.args)
     return jsonify(roles)
 
 
 @bp.route('/roles/<field>', methods=['GET'])
 @role_based_access_control_be
 def get_roles_field(field):
-    roles = helper.filter_model_by_query_and_properties(Role, request.args, 'roles', field)
+    roles = helper.filter_model_by_query_and_properties(Role, request.args, field)
     return jsonify(roles)
 
 
@@ -207,24 +207,15 @@ def delete_role(role_id):
 @bp.route('/events', methods=['GET'])
 @role_based_access_control_be
 def get_events():
-    events_data_list = [event.to_dict() for event in Event.query.order_by(Event.id).all()]
-    return jsonify({'events': events_data_list})
+    data = helper.filter_model_by_query_and_properties(Event, request.args)
+    return jsonify(data)
 
 
 @bp.route('/events/<field>', methods=['GET'])
 @role_based_access_control_be
 def get_events_field(field):
-    allowed_fields = list(Event.query.first_or_404().to_dict().keys())
-    if field not in allowed_fields:
-        abort(404, description=f"Field '{field}' not found or allowed")
-    events_data_list = []
-    for event in Event.query.all():
-        events_data_list.append({
-            'id': event.id,
-            field: getattr(event, field)
-        })
-    
-    return jsonify({'events': events_data_list})
+    data = helper.filter_model_by_query_and_properties(Event, request.args, field)
+    return jsonify(data)
 
 
 @bp.route('/events/<int:event_id>', methods=['GET'])
@@ -315,12 +306,12 @@ def activate_event(event_id):
 @bp.route('/events/<int:event_id>/locations', methods=['GET'])
 @role_based_access_control_be
 def get_event_locations(event_id):
-    # Check if the event exists
     Event.query.filter_by(id=event_id).first_or_404()
     
-    ordered_event_locations = [location.to_dict() for location in helper.get_ordered_event_locations(event_id)]
+    ordered_event_locations = helper.get_ordered_event_locations(event_id)
+    data = helper.filter_model_by_query_and_properties(EventLocation, request.args, input_data=ordered_event_locations)
 
-    return jsonify({'event_locations': ordered_event_locations})
+    return jsonify(data)
 
 
 @bp.route('/events/<int:event_id>/locations/<int:event_location_id>', methods=['GET'])
@@ -340,9 +331,10 @@ def get_event_timeslots(event_id):
     # Check if the event exists
     Event.query.filter_by(id=event_id).first_or_404()
     
-    ordered_event_timeslots = [timeslot.to_dict() for timeslot in helper.get_ordered_event_timeslots(event_id)]
+    ordered_event_timeslots = helper.get_ordered_event_timeslots(event_id)
+    data = helper.filter_model_by_query_and_properties(EventLocation, request.args, input_data=ordered_event_timeslots)
 
-    return jsonify({'event_timeslots': ordered_event_timeslots})
+    return jsonify(data)
 
 @bp.route('/events/<int:event_id>/timeslots/<int:event_timeslot_id>', methods=['GET'])
 @role_based_access_control_be
@@ -515,12 +507,11 @@ def delete_event_timeslot(event_id, event_timeslot_id):
 def get_event_sessions(event_id):
     # Check if the event exists
     event = Event.query.filter_by(id=event_id).first_or_404()
+    sessions = event.sessions
     
-    event_sessions = []
-    for session in event.sessions:
-        event_sessions.append(session.to_dict())
+    data = helper.filter_model_by_query_and_properties(Session, request.args, input_data=sessions)
 
-    return jsonify({'sessions': event_sessions})
+    return jsonify(data)
 
 #------------------------------------------ SESSION ------------------------------------------#
 
@@ -595,14 +586,14 @@ def remove_workshop_from_session(session_id):
 @bp.route('/pages', methods=['GET'])
 @role_based_access_control_be
 def get_pages():
-    pages = helper.filter_model_by_query_and_properties(Page, request.args, 'pages')
+    pages = helper.filter_model_by_query_and_properties(Page, request.args)
     return jsonify(pages)
 
 
 @bp.route('/pages/<field>', methods=['GET'])
 @role_based_access_control_be
 def get_pages_field(field):
-    pages = helper.filter_model_by_query_and_properties(Page, request.args, 'pages', field)
+    pages = helper.filter_model_by_query_and_properties(Page, request.args, field)
     return jsonify(pages)
 
 

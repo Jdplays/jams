@@ -157,7 +157,7 @@ def contains_value(obj, value):
         return False
     return recursive_search(obj, value)
 
-def filter_model_by_query_and_properties(model, request_args, objects_json_key, requested_field=None):
+def filter_model_by_query_and_properties(model, request_args, requested_field=None, input_data=None):
     query = model.query
     objects = []
     properties_values = {}
@@ -255,13 +255,15 @@ def filter_model_by_query_and_properties(model, request_args, objects_json_key, 
         
         if filters:
             query = query.filter(*filters)
-        
-    if order_direction == 'ASC':
-        objects = query.order_by(asc(order_by)).all()
-    elif order_direction == 'DESC':
-        objects = query.order_by(desc(order_by)).all()
+    if input_data == None:
+        if order_direction == 'ASC':
+            objects = query.order_by(asc(order_by)).all()
+        elif order_direction == 'DESC':
+            objects = query.order_by(desc(order_by)).all()
+        else:
+            abort(400, description=f"Invalid Order Direction value: {order_direction}")
     else:
-        abort(400, description=f"Invalid Order Direction value: {order_direction}")
+        objects = input_data
 
     if properties_values:
         for obj in objects[:]:

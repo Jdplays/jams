@@ -19,13 +19,13 @@ import {
 // This is a script where all then endpoint calls will live to prevent duplication across scripts
 
 // #region Event Locations
-export function getLocationsForEvent(eventId:number):Promise<[EventLocation]> {
+export function getLocationsForEvent(eventId:number):Promise<BackendMultiEntryResponse<[EventLocation]>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             url: `/backend/events/${eventId}/locations`,
             type: 'GET',
             success: function (response) {
-                resolve(response.event_locations)
+                resolve(response)
             },
             error: function (error) {
                 console.log('Error fetching data:', error);
@@ -97,13 +97,13 @@ export function removeLocationFromEvent(eventId:number, eventLocationId:number):
 // #endregion
 
 // #region Locations
-export function getLocations():Promise<[Location]> {
+export function getLocations():Promise<BackendMultiEntryResponse<[Location]>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             url: '/backend/locations',
             type: 'GET',
             success: function (response) {
-                resolve(response.locations)
+                resolve(response)
             },
             error: function (error) {
                 console.log('Error fetching data:', error);
@@ -115,13 +115,13 @@ export function getLocations():Promise<[Location]> {
 // #endregion
 
 // #region Event Timeslots
-export function getTimeslotsForEvent(eventId:number):Promise<[EventTimeslot]> {
+export function getTimeslotsForEvent(eventId:number):Promise<BackendMultiEntryResponse<[EventTimeslot]>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             url: `/backend/events/${eventId}/timeslots`,
             type: 'GET',
             success: function (response) {
-                resolve(response.event_timeslots)
+                resolve(response)
             },
             error: function (error) {
                 console.log('Error fetching data:', error);
@@ -171,13 +171,13 @@ export function removeTimeslotFromEvent(eventId:number, eventTimeslotId:number):
 // #endregion
 
 // #region Timeslots
-export function getTimeslots():Promise<[Timeslot]> {
+export function getTimeslots():Promise<BackendMultiEntryResponse<[Timeslot]>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             url: '/backend/timeslots',
             type: 'GET',
             success: function (response) {
-                resolve(response.timeslots)
+                resolve(response)
             },
             error: function (error) {
                 console.log('Error fetching data:', error);
@@ -189,17 +189,17 @@ export function getTimeslots():Promise<[Timeslot]> {
 // #endregion
 
 // #region Workshops
-export function getWorkshops(queryString:string|null = null):Promise<[Workshop]> {
+export function getWorkshops(queryString:string|null = null):Promise<BackendMultiEntryResponse<[Workshop]>> {
     return new Promise((resolve, reject) => {
         let url = "/backend/workshops"
         if (queryString != null) {
-            url += `?${queryString}`
+            `url?${queryString}`
         }
         $.ajax({
             url: url,
             type: 'GET',
             success: function (response) {
-                resolve(response.workshops)
+                resolve(response)
             },
             error: function (error) {
                 console.log('Error fetching data:', error);
@@ -211,13 +211,13 @@ export function getWorkshops(queryString:string|null = null):Promise<[Workshop]>
 // #endregion
 
 // #region Sessions
-export function getSessionsForEvent(eventId:number):Promise<[Session]> {
+export function getSessionsForEvent(eventId:number):Promise<BackendMultiEntryResponse<[Session]>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             url: `/backend/events/${eventId}/sessions`,
             type: 'GET',
             success: function (response) {
-                resolve(response.sessions)
+                resolve(response)
             },
             error: function (error) {
                 console.log('Error fetching data:', error);
@@ -289,13 +289,13 @@ export function getDifficultyLevels():Promise<[DifficultyLevel]> {
 // #endregion
 
 // #region Events
-export function getEvents():Promise<[Event]> {
+export function getEvents():Promise<BackendMultiEntryResponse<[Event]>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             url: '/backend/events',
             type: 'GET',
             success: function(response) {
-                resolve(response.events);   
+                resolve(response);   
             },
             error: function(error) {
                 console.log('Error fetching data:', error);
@@ -305,13 +305,13 @@ export function getEvents():Promise<[Event]> {
     });
 }
 
-export function getEventNames():Promise<[Partial<Event>]> {
+export function getEventNames():Promise<BackendMultiEntryResponse<[Partial<Event>]>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             url: '/backend/events/name',
             type: 'GET',
             success: function (response) {
-                resolve(response.events)
+                resolve(response)
             },
             error: function (error) {
                 console.log('Error fetching data:', error);

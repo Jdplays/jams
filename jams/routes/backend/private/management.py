@@ -15,14 +15,14 @@ bp = Blueprint('management', __name__)
 @bp.route('/workshops', methods=['GET'])
 @role_based_access_control_be
 def get_workshops():
-    workshops = helper.filter_model_by_query_and_properties(Workshop, request.args, 'workshops')
+    workshops = helper.filter_model_by_query_and_properties(Workshop, request.args)
     return jsonify(workshops)
 
 
 @bp.route('/workshops/<field>', methods=['GET'])
 @role_based_access_control_be
 def get_workshops_field(field):
-    workshops = helper.filter_model_by_query_and_properties(Workshop, request.args, 'workshops', field)
+    workshops = helper.filter_model_by_query_and_properties(Workshop, request.args, field)
     return jsonify(workshops)
 
 
@@ -194,25 +194,15 @@ def get_workshop_file(workshop_id, file_id):
 @bp.route('/locations', methods=['GET'])
 @role_based_access_control_be
 def get_locations():
-    locations_data_list = [location.to_dict() for location in Location.query.order_by(Location.id).all()]
-    return jsonify({'locations': locations_data_list})
+    data = helper.filter_model_by_query_and_properties(Location, request.args)
+    return jsonify(data)
 
 
 @bp.route('/locations/<field>', methods=['GET'])
 @role_based_access_control_be
 def get_locations_field(field):
-    allowed_fields = list(Location.query.first_or_404().to_dict().keys())
-    if field not in allowed_fields:
-        abort(404, description=f"Field '{field}' not found or allowed")
-
-    locations_data_list = []
-    for location in Location.query.all():
-        locations_data_list.append({
-            'id': location.id,
-            field: getattr(location, field)
-        })
-        
-    return jsonify({'locations': locations_data_list})
+    data = helper.filter_model_by_query_and_properties(Location, request.args, field)
+    return jsonify(data)
 
 
 @bp.route('/locations/<int:location_id>', methods=['GET'])
@@ -301,25 +291,15 @@ def activate_location(location_id):
 @bp.route('/timeslots', methods=['GET'])
 @role_based_access_control_be
 def get_timeslots():
-    timeslots_data_list = [timeslot.to_dict() for timeslot in Timeslot.query.order_by(Timeslot.id).all()]
-    return jsonify({'timeslots': timeslots_data_list})
+    data = helper.filter_model_by_query_and_properties(Timeslot, request.args)
+    return jsonify(data)
 
 
 @bp.route('/timeslots/<field>', methods=['GET'])
 @role_based_access_control_be
 def get_timeslots_field(field):
-    allowed_fields = list(Timeslot.query.first_or_404().to_dict().keys())
-    if field not in allowed_fields:
-        abort(404, description=f"Field '{field}' not found or allowed")
-
-    timeslots_data_list = []
-    for timeslot in Timeslot.query.all():
-        timeslots_data_list.append({
-            'id': timeslot.id,
-            field: getattr(timeslot, field)
-        })
-        
-    return jsonify({'timeslots': timeslots_data_list})
+    data = helper.filter_model_by_query_and_properties(Timeslot, request.args, field)
+    return jsonify(data)
 
 
 @bp.route('/timeslots/<int:timeslot_id>', methods=['GET'])

@@ -156,8 +156,10 @@ export class ScheduleGrid {
             return
         }
         // Get the locations and timeslots assigned to the event
-        this.eventLocations = await getLocationsForEvent(this.options.eventId)
-        this.eventTimeslots = await getTimeslotsForEvent(this.options.eventId)
+        const eventLocationsResponse = await getLocationsForEvent(this.options.eventId)
+        const evenTimeslotsResponse = await getTimeslotsForEvent(this.options.eventId)
+        this.eventLocations = eventLocationsResponse.data
+        this.eventTimeslots = evenTimeslotsResponse.data
 
         // Update the grid size variables
         this.updateGridSize()
@@ -187,8 +189,11 @@ export class ScheduleGrid {
         let eventTimeslotIds = new Set(this.eventTimeslots.map(timeslot => timeslot.timeslot_id))
 
         // Get all the locations and timeslots
-        const locations = await getLocations()
-        const timeslots = await getTimeslots()
+        const locationsResponse = await getLocations()
+        const timeslotsResponse = await getTimeslots()
+
+        let locations = locationsResponse.data
+        let timeslots = timeslotsResponse.data
 
         // Build objects that combine the locations and event locations to avoid extra unnessesary server calls
         const locationsInEvent:LocationsInEvent[] = this.eventLocations
@@ -489,7 +494,8 @@ export class ScheduleGrid {
     // Populate the session blocks with workshops that are assigned to them
     async populateSessions() {
         // Get all the sessions for the given event
-        const sessions = await getSessionsForEvent(this.options.eventId)
+        const sessionsResponse = await getSessionsForEvent(this.options.eventId)
+        let sessions = sessionsResponse.data
 
         // If the grid session count is not equal to the length of the sessions justed pulled down, reload the grid
         if (this.sessionCount != sessions.length) {
@@ -551,7 +557,8 @@ export class ScheduleGrid {
         let workshopsQueryString = buildQueryString(workshopsQueryData)
 
         if (sessionWorkshopsToAdd.length > 0) {
-            const workshops = await getWorkshops(workshopsQueryString)
+            const workshopsResponse = await getWorkshops(workshopsQueryString)
+            let workshops = workshopsResponse.data
             if (!this.options.workshopCardOptions.difficultyLevels) {
                 const difficultyLevels = await getDifficultyLevels()
                 this.options.workshopCardOptions.difficultyLevels = difficultyLevels
