@@ -157,7 +157,7 @@ def contains_value(obj, value):
         return False
     return recursive_search(obj, value)
 
-def filter_model_by_query_and_properties(model, request_args, requested_field=None, input_data=None):
+def filter_model_by_query_and_properties(model, request_args=None, requested_field=None, input_data=None, return_objects=False):
     query = model.query
     objects = []
     properties_values = {}
@@ -297,6 +297,9 @@ def filter_model_by_query_and_properties(model, request_args, requested_field=No
             'pagination_total_records': pagination_record_count
         }
     }
+
+    if return_objects:
+        return trimmed_objects
     
     return return_obj
 

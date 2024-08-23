@@ -127,14 +127,14 @@ def add_worksheet(workshop_id):
     return jsonify({'message': 'File successfully uploaded'})
 
 
-@bp.route('/workshops/<int:workshop_id>/files', methods=['GET'])
+@bp.route('/workshops/files', methods=['GET'])
 @role_based_access_control_be
-def get_files(workshop_id):
-    workshop_files = WorkshopFile.query.filter_by(workshop_id=workshop_id).all()
+def get_workshop_files():
+    workshop_files = helper.filter_model_by_query_and_properties(WorkshopFile, request.args, return_objects=True)
     if not workshop_files:
         abort(404)
     files = [wf.file for wf in workshop_files]
-    data = helper.filter_model_by_query_and_properties(File, request.args, input_data=files)
+    data = helper.filter_model_by_query_and_properties(File, input_data=files)
     return jsonify(data)
 
 @bp.route('/workshops/<int:workshop_id>/files/<uuid:file_id>/data', methods=['GET'])

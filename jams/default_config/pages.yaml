@@ -87,7 +87,7 @@ pages:
       routes.backend.private.management.activate_workshop:
       routes.backend.private.management.get_difficulty_levels:
       routes.backend.private.management.get_difficulty_level:
-      routes.backend.private.management.get_files:
+      routes.backend.private.management.get_workshop_files:
       routes.backend.private.management.add_worksheet:
 
 

@@ -57,7 +57,7 @@ class WorkshopFile(db.Model):
     file_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('file.id'), nullable=False)
     type = Column(String(80), nullable=False)
 
-    workshop = relationship('Workshop', backref='workshop_file')
+    workshop = relationship('Workshop', backref='files')
     file = relationship('File', backref='workshop_file')
 
     def __int__(self, workshop_id, file_id, type):

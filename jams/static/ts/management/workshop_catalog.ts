@@ -7,16 +7,18 @@ import {
     getDifficultyLevels,
     getFilesForWorkshop,
     getWorkshop,
+    getWorkshopFiles,
     getWorkshops,
     uploadFileToWorkshop
 } from "../global/endpoints";
-import { RequestMultiModelJSONData } from "../global/endpoints_interfaces";
-import { emptyElement, buildActionButtonsForModel, successToast, errorToast, getSelectValues } from "../global/helper";
+import { RequestMultiModelJSONData, File, Workshop, QueryStringData } from "../global/endpoints_interfaces";
+import { buildActionButtonsForModel, successToast, errorToast, buildQueryString } from "../global/helper";
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
 
 let gridApi: GridApi<any>;
 
 let difficultyLevelsNameMap:Record<number, string> = {};
+let workshopWorksheetsMap:Record<number, File> = {};
 
 async function archiveWorkshopOnClick(workshopId:number) {
     const response = await archiveWorkshop(workshopId)
@@ -215,6 +217,22 @@ function initialiseAgGrid() {
                 flex: 1
             },
             {
+                field: 'worksheet', cellRenderer: (params:any) => {
+                    if (!params.data.has_files) {
+                        return 'None'
+                    } else {
+                        const worksheetData = workshopWorksheetsMap[params.data.id]
+                        let worksheetElement = document.createElement('a')
+                        worksheetElement.innerHTML = worksheetData.name
+                        worksheetElement.href = `/private/management/workshops/${params.data.id}/files/${worksheetData.uuid}`
+                        worksheetElement.style.padding = '5px'
+
+                        return worksheetElement
+                    }
+                },
+                flex: 1
+            },
+            {
                 field: 'options', cellRenderer: (params:any) => {
                     return buildActionButtonsForModel(params.data.id, params.data.active, archiveWorkshopOnClick, activateWorkshopOnClick, 'edit-workshop-modal', prepEditWorkshopForm)
                 },
@@ -239,12 +257,34 @@ async function preLoadDifficultyLevels() {
     return difficultyLevelsNameMap
 }
 
+async function preLoadWorkshopWorksheets(workshops:[Workshop]) {
+    let workshopIdsWithFiles:number[] = workshops.filter(workshop => workshop.has_files).map(ws => ws.id)
+    let workshopWorksheetsMap:Record<number, File> = {}
+
+    const promises = workshopIdsWithFiles.map(async (wId) => {
+        const queryData: Partial<QueryStringData> = {
+            workshop_id: wId,
+            type: 'worksheet'
+        };
+        const queryString = buildQueryString(queryData);
+        const workshopFilesResponse = await getWorkshopFiles(queryString);
+        
+        workshopWorksheetsMap[wId] = workshopFilesResponse.data[0];
+    });
+
+    await Promise.all(promises);
+
+    return workshopWorksheetsMap;
+
+}
+
 
 async function populateWorkshopsTable() {
     const allWorkshopsResponse = await getWorkshops();
     let allWorkshops = allWorkshopsResponse.data
 
     difficultyLevelsNameMap = await preLoadDifficultyLevels()
+    workshopWorksheetsMap = await preLoadWorkshopWorksheets(allWorkshops)
 
     gridApi.setGridOption('rowData', allWorkshops)
 }

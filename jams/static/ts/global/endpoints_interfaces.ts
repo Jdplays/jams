@@ -34,6 +34,7 @@ export interface Workshop {
     description:string
     min_volunteers:number
     difficulty_id:number
+    has_files:boolean
     active:boolean
 }
 

@@ -14,7 +14,7 @@ import {
     BackendMultiEntryResponse,
     PrivateAccessLog,
     VolunteerAttendance,
-    WorkshopFile
+    File
 } from "./endpoints_interfaces";
 
 // This is a script where all then endpoint calls will live to prevent duplication across scripts
@@ -479,11 +479,39 @@ export function activateWorkshop(workshopId:number):Promise<boolean> {
     });
 }
 
-export function getFilesForWorkshop(workshopId:number):Promise<BackendMultiEntryResponse<[File]>> {
+export function getWorkshopFiles(queryString:string|null = null):Promise<BackendMultiEntryResponse<[File]>> {
     return new Promise((resolve, reject) => {
+        let url = "/backend/workshops/files"
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
         $.ajax({
             type: 'GET',
-            url: `/backend/workshops/${workshopId}/files`,
+            url: url,
+            success: function(response) {
+                resolve(response);   
+            },
+            error: function(error) {
+                if (error.status === 404) {
+                    resolve(null);
+                } else {
+                    console.log('Error fetching data:', error);
+                    reject(error);
+                }
+            }
+        });
+    });
+}
+
+export function getFilesForWorkshop(workshopId:number, queryString:string|null = null):Promise<BackendMultiEntryResponse<[File]>> {
+    return new Promise((resolve, reject) => {
+        let url = `/backend/workshops/${workshopId}/files`
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            type: 'GET',
+            url: url,
             success: function(response) {
                 resolve(response);   
             },

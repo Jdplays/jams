@@ -15,6 +15,12 @@ class Workshop(db.Model):
 
     difficulty = relationship('DifficultyLevel', backref='workshops')
 
+    @property
+    def has_files(self):
+        if not self.files:
+            return False
+        return True
+
     # Requires name and description to be passed
     def __init__(self, name, description, min_volunteers=0, difficulty_id=None, active=True):
         self.name = name
@@ -46,6 +52,7 @@ class Workshop(db.Model):
             'description': self.description,
             'min_volunteers': self.min_volunteers,
             'difficulty_id': self.difficulty_id,
+            'has_files': self.has_files,
             'active': self.active
         }
     
