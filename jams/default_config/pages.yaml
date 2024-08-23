@@ -115,6 +115,7 @@ pages:
         allowed_fields: id, name
       routes.backend.private.admin.get_users_field:
         allowed_fields: id, display_name, role_ids
+      routes.backend.private.volunteer.get_event_attendance:
       routes.backend.private.volunteer.get_user_attendance:
       routes.backend.private.volunteer.add_user_attendance:
       routes.backend.private.volunteer.edit_user_attendance:

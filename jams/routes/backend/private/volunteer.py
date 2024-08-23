@@ -3,12 +3,20 @@ from flask import Blueprint, request, jsonify, abort
 from flask_security import login_required
 from jams.decorators import role_based_access_control_be, protect_user_updates
 from jams.models import db, VolunteerAttendance
+from jams.util import helper
 
 bp = Blueprint('volunteer', __name__)
 
 # URL PREFIX = /backend
 
 #------------------------------------------ Volunteer Attendance ------------------------------------------#
+
+@bp.route('/events/<int:event_id>/voluteer_attendences', methods=['GET'])
+@role_based_access_control_be
+def get_event_attendance(event_id):
+    attendances = VolunteerAttendance.query.filter_by(event_id=event_id).all()
+    data = helper.filter_model_by_query_and_properties(VolunteerAttendance, request.args, input_data=attendances)
+    return jsonify(data)
 
 @bp.route('/users/<int:user_id>/voluteer_attendences/<int:event_id>', methods=['GET'])
 @role_based_access_control_be

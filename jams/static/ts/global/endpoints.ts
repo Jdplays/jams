@@ -11,18 +11,22 @@ import {
     User,
     Role,
     Page,
-    QueryStringData,
     BackendMultiEntryResponse,
-    PrivateAccessLog
+    PrivateAccessLog,
+    VolunteerAttendance
 } from "./endpoints_interfaces";
 
 // This is a script where all then endpoint calls will live to prevent duplication across scripts
 
 // #region Event Locations
-export function getLocationsForEvent(eventId:number):Promise<BackendMultiEntryResponse<[EventLocation]>> {
+export function getLocationsForEvent(eventId:number, queryString:string|null = null):Promise<BackendMultiEntryResponse<[EventLocation]>> {
     return new Promise((resolve, reject) => {
+        let url = `/backend/events/${eventId}/locations`
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
         $.ajax({
-            url: `/backend/events/${eventId}/locations`,
+            url: url,
             type: 'GET',
             success: function (response) {
                 resolve(response)
@@ -97,10 +101,14 @@ export function removeLocationFromEvent(eventId:number, eventLocationId:number):
 // #endregion
 
 // #region Locations
-export function getLocations():Promise<BackendMultiEntryResponse<[Location]>> {
+export function getLocations(queryString:string|null = null):Promise<BackendMultiEntryResponse<[Location]>> {
     return new Promise((resolve, reject) => {
+        let url = '/backend/locations'
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
         $.ajax({
-            url: '/backend/locations',
+            url: url,
             type: 'GET',
             success: function (response) {
                 resolve(response)
@@ -112,13 +120,101 @@ export function getLocations():Promise<BackendMultiEntryResponse<[Location]>> {
         });
     });
 }
+
+export function getLocation(locationId:number):Promise<Location> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `/backend/locations/${locationId}`,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function addLocation(data:Partial<RequestMultiModelJSONData>):Promise<boolean> {
+    return new Promise((resolve) => {
+        $.ajax({
+            type: 'POST',
+            url: '/backend/locations',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(true)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(false)
+            }
+        });
+    });
+}
+
+export function editLocation(locationId:number, data:Partial<RequestMultiModelJSONData>):Promise<boolean> {
+    return new Promise((resolve) => {
+        $.ajax({
+            type: 'PATCH',
+            url: `/backend/locations/${locationId}`,
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(true)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(false)
+            }
+        });
+    });
+}
+
+export function archiveLocation(locationId:number):Promise<boolean> {
+    return new Promise((resolve) => {
+        $.ajax({
+            type: 'POST',
+            url: `/backend/locations/${locationId}/archive`,
+            success: function (response) {
+                resolve(true)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(false)
+            }
+        });
+    });
+}
+
+export function activateLocation(locationId:number):Promise<boolean> {
+    return new Promise((resolve) => {
+        $.ajax({
+            type: 'POST',
+            url: `/backend/locations/${locationId}/activate`,
+            success: function (response) {
+                resolve(true)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(false)
+            }
+        });
+    });
+}
 // #endregion
 
 // #region Event Timeslots
-export function getTimeslotsForEvent(eventId:number):Promise<BackendMultiEntryResponse<[EventTimeslot]>> {
+export function getTimeslotsForEvent(eventId:number, queryString:string|null = null):Promise<BackendMultiEntryResponse<[EventTimeslot]>> {
     return new Promise((resolve, reject) => {
+        let url = `/backend/events/${eventId}/timeslots`
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
         $.ajax({
-            url: `/backend/events/${eventId}/timeslots`,
+            url: url,
             type: 'GET',
             success: function (response) {
                 resolve(response)
@@ -171,10 +267,14 @@ export function removeTimeslotFromEvent(eventId:number, eventTimeslotId:number):
 // #endregion
 
 // #region Timeslots
-export function getTimeslots():Promise<BackendMultiEntryResponse<[Timeslot]>> {
+export function getTimeslots(queryString:string|null = null):Promise<BackendMultiEntryResponse<[Timeslot]>> {
     return new Promise((resolve, reject) => {
+        let url = '/backend/timeslots'
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
         $.ajax({
-            url: '/backend/timeslots',
+            url: url,
             type: 'GET',
             success: function (response) {
                 resolve(response)
@@ -186,6 +286,90 @@ export function getTimeslots():Promise<BackendMultiEntryResponse<[Timeslot]>> {
         });
     });
 }
+
+export function getTimeslot(timeslotId:number):Promise<Timeslot> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `/backend/timeslots/${timeslotId}`,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function addTimeslot(data:Partial<RequestMultiModelJSONData>):Promise<boolean> {
+    return new Promise((resolve) => {
+        $.ajax({
+            type: 'POST',
+            url: '/backend/timeslots',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(true)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(false)
+            }
+        });
+    });
+}
+
+export function editTimeslot(timeslotId:number, data:Partial<RequestMultiModelJSONData>):Promise<boolean> {
+    return new Promise((resolve) => {
+        $.ajax({
+            type: 'PATCH',
+            url: `/backend/timeslots/${timeslotId}`,
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(true)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(false)
+            }
+        });
+    });
+}
+
+export function archiveTimeslot(timeslotId:number):Promise<boolean> {
+    return new Promise((resolve) => {
+        $.ajax({
+            type: 'POST',
+            url: `/backend/timeslots/${timeslotId}/archive`,
+            success: function (response) {
+                resolve(true)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(false)
+            }
+        });
+    });
+}
+
+export function activateTimeslot(timeslotId:number):Promise<boolean> {
+    return new Promise((resolve) => {
+        $.ajax({
+            type: 'POST',
+            url: `/backend/timeslots/${timeslotId}/activate`,
+            success: function (response) {
+                resolve(true)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(false)
+            }
+        });
+    });
+}
 // #endregion
 
 // #region Workshops
@@ -193,7 +377,7 @@ export function getWorkshops(queryString:string|null = null):Promise<BackendMult
     return new Promise((resolve, reject) => {
         let url = "/backend/workshops"
         if (queryString != null) {
-            `url?${queryString}`
+            url += `?${queryString}`
         }
         $.ajax({
             url: url,
@@ -211,10 +395,14 @@ export function getWorkshops(queryString:string|null = null):Promise<BackendMult
 // #endregion
 
 // #region Sessions
-export function getSessionsForEvent(eventId:number):Promise<BackendMultiEntryResponse<[Session]>> {
+export function getSessionsForEvent(eventId:number, queryString:string|null = null):Promise<BackendMultiEntryResponse<[Session]>> {
     return new Promise((resolve, reject) => {
+        let url = `/backend/events/${eventId}/sessions`
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
         $.ajax({
-            url: `/backend/events/${eventId}/sessions`,
+            url: url,
             type: 'GET',
             success: function (response) {
                 resolve(response)
@@ -289,10 +477,14 @@ export function getDifficultyLevels():Promise<[DifficultyLevel]> {
 // #endregion
 
 // #region Events
-export function getEvents():Promise<BackendMultiEntryResponse<[Event]>> {
+export function getEvents(queryString:string|null = null):Promise<BackendMultiEntryResponse<[Event]>> {
     return new Promise((resolve, reject) => {
+        let url = '/backend/events'
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
         $.ajax({
-            url: '/backend/events',
+            url: url,
             type: 'GET',
             success: function(response) {
                 resolve(response);   
@@ -305,10 +497,14 @@ export function getEvents():Promise<BackendMultiEntryResponse<[Event]>> {
     });
 }
 
-export function getEventNames():Promise<BackendMultiEntryResponse<[Partial<Event>]>> {
+export function getEventNames(queryString:string|null = null):Promise<BackendMultiEntryResponse<[Partial<Event>]>> {
     return new Promise((resolve, reject) => {
+        let url = '/backend/events/name'
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
         $.ajax({
-            url: '/backend/events/name',
+            url: url,
             type: 'GET',
             success: function (response) {
                 resolve(response)
@@ -413,7 +609,7 @@ export function getCurrentUserId():Promise<number> {
             url: '/backend/get_current_user_id',
             type: 'GET',
             success: function(response) {
-                resolve(response.current_user_id);
+                resolve(Number(response.current_user_id));
             },
             error: function(error) {
                 console.log('Error fetching data:', error);
@@ -423,10 +619,34 @@ export function getCurrentUserId():Promise<number> {
     });
 }
 
-export function getUsers():Promise<BackendMultiEntryResponse<[User]>> {
+export function getUsers(queryString:string|null = null):Promise<BackendMultiEntryResponse<[User]>> {
     return new Promise((resolve, reject) => {
+        let url = '/backend/users'
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
         $.ajax({
-            url: '/backend/users',
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function getUsersDisplayNames(queryString:string|null = null):Promise<BackendMultiEntryResponse<[Partial<User>]>> {
+    return new Promise((resolve, reject) => {
+        let url = `/backend/users/display_name`
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            url: url,
             type: 'GET',
             success: function(response) {
                 resolve(response);
@@ -507,10 +727,14 @@ export function activateUser(userID:number):Promise<boolean> {
 // #endregion
 
 // #region Roles
-export function getRoles():Promise<BackendMultiEntryResponse<[Role]>> {
+export function getRoles(queryString:string|null = null):Promise<BackendMultiEntryResponse<[Role]>> {
     return new Promise((resolve, reject) => {
+        let url = '/backend/roles'
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
         $.ajax({
-            url: '/backend/roles',
+            url: url,
             type: 'GET',
             success: function(response) {
                 resolve(response);   
@@ -611,6 +835,8 @@ export function deleteRole(roleId:number):Promise<boolean> {
     });
 }
 // #endregion
+
+// #region Pages
 export function getPageNames(queryString:string|null=null):Promise<BackendMultiEntryResponse<[Partial<Page>]>> {
     return new Promise((resolve, reject) => {
         let url = '/backend/pages/name'
@@ -630,7 +856,7 @@ export function getPageNames(queryString:string|null=null):Promise<BackendMultiE
         });
     });
 }
-// #region Pages
+// #endregion
 
 // #region Audit
 export function getPrivateAccessLogs(queryString:string|null=null):Promise<BackendMultiEntryResponse<PrivateAccessLog>> {
@@ -652,9 +878,83 @@ export function getPrivateAccessLogs(queryString:string|null=null):Promise<Backe
         });
     });
 }
-// #endregion
 
 // #endregion
+
+// # region Volunteer Attendance
+
+export function getAttendanceForEvent(eventID:number, queryString:string|null = null):Promise<BackendMultiEntryResponse<[VolunteerAttendance]>> {
+    return new Promise((resolve, reject) => {
+        let url = `/backend/events/voluteer_attendences/${eventID}`
+        if (queryString) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);   
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error);
+            }
+        });
+    });
+}
+
+export function getAttendanceForVolunteer(userID:number, eventID:number):Promise<VolunteerAttendance> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `/backend/users/${userID}/voluteer_attendences/${eventID}`,
+            type: 'GET',
+            success: function(response) {
+                resolve(response.voluteer_attendence);   
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error);
+            }
+        });
+    });
+}
+
+export function addAttendance(userID:number, eventID:number, data:Partial<RequestMultiModelJSONData>):Promise<boolean> {
+    return new Promise((resolve) => {
+        $.ajax({
+            type: 'POST',
+            url: `/backend/users/${userID}/voluteer_attendences/${eventID}`,
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(true)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(false)
+            }
+        });
+    });
+}
+
+export function editAttendance(userID:number, eventID:number, data:Partial<RequestMultiModelJSONData>):Promise<boolean> {
+    return new Promise((resolve) => {
+        $.ajax({
+            type: 'PATCH',
+            url: `/backend/users/${userID}/voluteer_attendences/${eventID}`,
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(true)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(false)
+            }
+        });
+    });
+}
+// # endregion
 
 // #region Code Assets
 export function getIconData(filename:string):Promise<string> {
