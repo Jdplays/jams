@@ -107,6 +107,18 @@ export interface PrivateAccessLog {
     date_time:string
 }
 
+export interface VolunteerAttendance {
+    id:number
+    event_id:number
+    user_id:number
+    setup:boolean
+    main:boolean
+    packdown:boolean
+    note:string
+}
+
+
+
 export interface PaginationResponseData {
     pagination_block_size:number
     pagination_start_index:number
@@ -115,9 +127,7 @@ export interface PaginationResponseData {
     pagination_total_records:number
 }
 
-
-
-export interface RequestMultiModelJSONData extends EventLocation, EventTimeslot, Location, Timeslot, Workshop, Session, DifficultyLevel, Event, User, Role, Page{
+export interface RequestMultiModelJSONData extends EventLocation, EventTimeslot, Location, Timeslot, Workshop, Session, DifficultyLevel, Event, User, Role, Page, PrivateAccessLog, VolunteerAttendance{
     force?:boolean
 }
 
@@ -138,7 +148,8 @@ export interface QueryStringData extends
     TransformToSingularOrArray<User>,
     TransformToSingularOrArray<Role>,
     TransformToSingularOrArray<Page>,
-    TransformToSingularOrArray<PrivateAccessLog> {
+    TransformToSingularOrArray<PrivateAccessLog>,
+    TransformToSingularOrArray<VolunteerAttendance> {
         $pagination_block_size?:number
         $pagination_start_index?:number
         $order_by?:string

@@ -54,7 +54,7 @@ async function addEventOnClick() {
     }
 }
 
-async function EditEventOnClick() {
+async function editEventOnClick() {
     const eventID:number = Number((document.getElementById('edit-event-id') as HTMLInputElement).value)
     const data:Partial<RequestMultiModelJSONData> = {
         'name': (document.getElementById('edit-event-name') as HTMLInputElement).value || '',
@@ -127,6 +127,6 @@ document.addEventListener("DOMContentLoaded", initialiseAgGrid);
 document.addEventListener("DOMContentLoaded", () => {
     if (typeof window !== 'undefined') {
         (<any>window).addEventOnClick = addEventOnClick;
-        (<any>window).editEventOnClick = EditEventOnClick;
+        (<any>window).editEventOnClick = editEventOnClick;
     }
 });
