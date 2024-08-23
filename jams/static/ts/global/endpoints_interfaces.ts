@@ -117,6 +117,27 @@ export interface VolunteerAttendance {
     note:string
 }
 
+export interface WorkshopFile {
+    id:number
+    workshop_id:number
+    file_id:string
+    type:string
+}
+
+export interface File {
+    uuid:string
+    name:string
+    bucket_name:string
+    current_version_id:string
+    public:boolean
+}
+
+export interface FileVersion {
+    id:number
+    file_id:string
+    version_id:string
+}
+
 
 
 export interface PaginationResponseData {
@@ -127,7 +148,7 @@ export interface PaginationResponseData {
     pagination_total_records:number
 }
 
-export interface RequestMultiModelJSONData extends EventLocation, EventTimeslot, Location, Timeslot, Workshop, Session, DifficultyLevel, Event, User, Role, Page, PrivateAccessLog, VolunteerAttendance{
+export interface RequestMultiModelJSONData extends EventLocation, EventTimeslot, Location, Timeslot, Workshop, Session, DifficultyLevel, Event, User, Role, Page, PrivateAccessLog, VolunteerAttendance, WorkshopFile, File, FileVersion{
     force?:boolean
 }
 
@@ -149,7 +170,10 @@ export interface QueryStringData extends
     TransformToSingularOrArray<Role>,
     TransformToSingularOrArray<Page>,
     TransformToSingularOrArray<PrivateAccessLog>,
-    TransformToSingularOrArray<VolunteerAttendance> {
+    TransformToSingularOrArray<VolunteerAttendance>,
+    TransformToSingularOrArray<WorkshopFile>,
+    TransformToSingularOrArray<File>,
+    TransformToSingularOrArray<FileVersion> {
         $pagination_block_size?:number
         $pagination_start_index?:number
         $order_by?:string

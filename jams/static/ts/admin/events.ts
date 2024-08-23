@@ -73,8 +73,8 @@ async function editEventOnClick() {
     }
 }
 
-async function prepEditEventForm(eventID:number) {
-    const event:Event = await getEvent(eventID)
+async function prepEditEventForm(eventId:number) {
+    const event:Event = await getEvent(eventId)
 
     const hiddenIdInput = document.getElementById('edit-event-id') as HTMLInputElement
     const nameInput = document.getElementById('edit-event-name') as HTMLInputElement
@@ -82,7 +82,7 @@ async function prepEditEventForm(eventID:number) {
     const dateInput = document.getElementById('edit-event-date') as HTMLInputElement
     const passwordInput = document.getElementById('edit-event-password') as HTMLInputElement
 
-    hiddenIdInput.value = String(eventID)
+    hiddenIdInput.value = String(eventId)
     nameInput.value = event.name
     descriptionInput.value = event.description
     dateInput.value = event.date

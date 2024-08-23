@@ -55,7 +55,7 @@
             <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
               Cancel
             </a>
-            <a href="#" onclick="AddWorkshopOnClick()" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
+            <a href="#" onclick="addWorkshopOnClick()" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
               <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-plus" width="24" height="24"
                 viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
                 stroke-linejoin="round">
@@ -113,7 +113,7 @@
             <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
               Cancel
             </a>
-            <a href="#" onclick="EditWorkshopOnClick()" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
+            <a href="#" onclick="editWorkshopOnClick()" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
               <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-plus" width="24" height="24"
                 viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
                 stroke-linejoin="round">
@@ -132,26 +132,9 @@
 
 
 
-    <div class="table-responsive">
-      <table id="workshop-table" class="table table-vcenter">
-        <thead class="sticky-top">
-          <tr>
-            <th>Workshop Name</th>
-            <th>Description</th>
-            <th>Minimum Required Volunteers</th>
-            <th>Difficulty</th>
-            <th>Worksheet</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="table-body">
-          <!-- Data will be dynamically added here -->
-        </tbody>
-      </table>
-    </div>
-
-    <p id="workshop-request-response"></p>
+    <div id="workshops-data-grid-container">
+      <div id="workshops-data-grid" class="ag-theme-quartz" style="height: 500px"></div>
+  </div>
 
     <script src="{{ url_for('static', filename='js/management/workshop_catalog.js') }}" defer></script>
   </div>

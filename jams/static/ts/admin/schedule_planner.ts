@@ -108,7 +108,7 @@ async function populateWorkshopList() {
         workshopListBlock.classList.add('workshop-list-block')
         let cardOptions = {
             size: 150,
-            difficultyLevels: difficultyLevels
+            difficultyLevels: difficultyLevels.data
         }
         let workshopCard = new WorkshopCard(workshop, cardOptions)
         let workshopCardElement = await workshopCard.element()
@@ -164,7 +164,7 @@ async function populateWorkshopSelectionTools() {
     let difficultyOptions = document.createElement('div')
     difficultyOptions.classList.add('form-selectgroup', 'form-selectgroup-pills')
 
-    for (const level of difficultyLevels) {
+    for (const level of difficultyLevels.data) {
         let option = document.createElement('label')
         option.classList.add('form-selectgroup-item')
 

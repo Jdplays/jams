@@ -75,7 +75,8 @@ export class WorkshopCard {
 
         // Load the difficulty levels if they weren't passed in
         if (!this.options.difficultyLevels) {
-            this.options.difficultyLevels = await getDifficultyLevels()
+            const response = await getDifficultyLevels()
+            this.options.difficultyLevels = response.data
         }
 
         // Get the remove icon if it wasnt passed in

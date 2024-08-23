@@ -13,7 +13,8 @@ import {
     Page,
     BackendMultiEntryResponse,
     PrivateAccessLog,
-    VolunteerAttendance
+    VolunteerAttendance,
+    WorkshopFile
 } from "./endpoints_interfaces";
 
 // This is a script where all then endpoint calls will live to prevent duplication across scripts
@@ -392,6 +393,131 @@ export function getWorkshops(queryString:string|null = null):Promise<BackendMult
         });
     });
 }
+
+export function getWorkshop(workshopId:number):Promise<Workshop> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `/backend/workshops/${workshopId}`,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);  
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function addWorkshop(data:Partial<RequestMultiModelJSONData>):Promise<Workshop> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: '/backend/workshops',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function editWorkshop(workshopId:number, data:Partial<RequestMultiModelJSONData>):Promise<boolean> {
+    return new Promise((resolve) => {
+        $.ajax({
+            type: 'PATCH',
+            url: `/backend/workshops/${workshopId}`,
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(true)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(false)
+            }
+        });
+    });
+}
+
+
+export function archiveWorkshop(workshopId:number):Promise<boolean> {
+    return new Promise((resolve) => {
+        $.ajax({
+            type: 'POST',
+            url: `/backend/workshops/${workshopId}/archive`,
+            success: function (response) {
+                resolve(true)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(false)
+            }
+        });
+    });
+}
+
+export function activateWorkshop(workshopId:number):Promise<boolean> {
+    return new Promise((resolve) => {
+        $.ajax({
+            type: 'POST',
+            url: `/backend/workshops/${workshopId}/activate`,
+            success: function (response) {
+                resolve(true)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(false)
+            }
+        });
+    });
+}
+
+export function getFilesForWorkshop(workshopId:number):Promise<BackendMultiEntryResponse<[File]>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'GET',
+            url: `/backend/workshops/${workshopId}/files`,
+            success: function(response) {
+                resolve(response);   
+            },
+            error: function(error) {
+                if (error.status === 404) {
+                    resolve(null);
+                } else {
+                    console.log('Error fetching data:', error);
+                    reject(error);
+                }
+            }
+        });
+    });
+}
+
+export function uploadFileToWorkshop(workshopId:number, fileData:FormData):Promise<boolean> {
+    return new Promise((resolve) => {
+        $.ajax({
+            type: 'POST',
+            url: '/backend/workshops/' + workshopId + '/worksheet',
+            data: fileData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                resolve(true)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(false)
+            }
+        });
+    });
+}
+
 // #endregion
 
 // #region Sessions
@@ -459,13 +585,29 @@ export function removeWorkshopFromSession(sessionId:number):Promise<boolean> {
 // #endregion
 
 // #region Difficulty Levels
-export function getDifficultyLevels():Promise<[DifficultyLevel]> {
+export function getDifficultyLevels():Promise<BackendMultiEntryResponse<[DifficultyLevel]>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             url: '/backend/difficulty_levels',
             type: 'GET',
             success: function(response) {
-                resolve(response.difficulty_levels);  
+                resolve(response);  
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function getDifficultyLevel(difficultyLevelId:number):Promise<DifficultyLevel> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `/backend/difficulty_levels/${difficultyLevelId}`,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);  
             },
             error: function(error) {
                 console.log('Error fetching data:', error);

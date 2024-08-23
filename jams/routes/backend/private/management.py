@@ -57,17 +57,14 @@ def add_workshop():
     min_volunteers = data.get('min_volunteers')
     difficulty_id = data.get('difficulty_id')
 
-    if not name or not description or not min_volunteers or not difficulty_id or difficulty_id == '-1':
+    if not name or not description or min_volunteers == None or not difficulty_id or difficulty_id == '-1':
         abort(400, description="No 'name' or 'description' or 'min_volunteers' or 'difficulty_id' provided")
 
     new_workshop = Workshop(name=name, description=description, min_volunteers=min_volunteers, difficulty_id=difficulty_id)
     db.session.add(new_workshop)
     db.session.commit()
 
-    return jsonify({
-        'message': 'New workshop has been successfully added',
-        'workshop': new_workshop.to_dict()
-    })
+    return jsonify(new_workshop.to_dict())
 
 
 @bp.route('/workshops/<int:workshop_id>', methods=['PATCH'])
@@ -127,10 +124,7 @@ def add_worksheet(workshop_id):
         workshop_file = WorkshopFile(workshop_id=workshop_id, file_id=file_db_obj.id, type='worksheet')
         db.session.add(workshop_file)
         db.session.commit()
-    return jsonify({
-        'message': 'File successfully uploaded',
-        'file': file_db_obj.to_dict()
-        })
+    return jsonify({'message': 'File successfully uploaded'})
 
 
 @bp.route('/workshops/<int:workshop_id>/files', methods=['GET'])
@@ -139,8 +133,9 @@ def get_files(workshop_id):
     workshop_files = WorkshopFile.query.filter_by(workshop_id=workshop_id).all()
     if not workshop_files:
         abort(404)
-    return_obj = [workshop_file.file.to_dict() for workshop_file in workshop_files]
-    return jsonify({'files':return_obj})
+    files = [wf.file for wf in workshop_files]
+    data = helper.filter_model_by_query_and_properties(File, request.args, input_data=files)
+    return jsonify(data)
 
 @bp.route('/workshops/<int:workshop_id>/files/<uuid:file_id>/data', methods=['GET'])
 @role_based_access_control_be
@@ -391,8 +386,8 @@ def activate_timeslot(timeslot_id):
 @bp.route('/difficulty_levels', methods=['GET'])
 @role_based_access_control_be
 def get_difficulty_levels():
-    difficulty_levels_data_list = [difficulty.to_dict() for difficulty in DifficultyLevel.query.order_by(DifficultyLevel.id).all()]
-    return jsonify({'difficulty_levels': difficulty_levels_data_list})
+    data = helper.filter_model_by_query_and_properties(DifficultyLevel, request.args)
+    return jsonify(data)
 
 @bp.route('/difficulty_levels/<int:difficulty_id>', methods=['GET'])
 @role_based_access_control_be

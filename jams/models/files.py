@@ -21,7 +21,7 @@ class File(db.Model):
     
     def to_dict(self):
         return {
-            'id': self.id,
+            'uuid': self.id,
             'name': self.name,
             'bucket_name': self.bucket_name,
             'current_version_id': self.current_version_id,
@@ -43,7 +43,7 @@ class FileVersion(db.Model):
 
     def to_dict(self):
         return {
-            'id': self.id,
+            'file_version_id': self.id,
             'file_id': self.file_id,
             'version_id': self.version_id
         }
@@ -64,5 +64,13 @@ class WorkshopFile(db.Model):
         self.workshop_id = workshop_id
         self.file_id = file_id
         self.type = type
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'workshop_id': self.workshop_id,
+            'file_id': self.file_id,
+            'type': self.type
+        }
 
     

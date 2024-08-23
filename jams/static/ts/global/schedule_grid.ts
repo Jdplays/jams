@@ -560,7 +560,8 @@ export class ScheduleGrid {
             const workshopsResponse = await getWorkshops(workshopsQueryString)
             let workshops = workshopsResponse.data
             if (!this.options.workshopCardOptions.difficultyLevels) {
-                const difficultyLevels = await getDifficultyLevels()
+                const response = await getDifficultyLevels()
+                let difficultyLevels = response.data
                 this.options.workshopCardOptions.difficultyLevels = difficultyLevels
             }
 
