@@ -1,6 +1,7 @@
 import path from 'path';
 import url from 'url';
 import { glob } from 'glob';
+import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -38,5 +39,9 @@ export default {
   },
   optimization: {
     minimize: false,
-  }
+  },
+  plugins: [
+    //new BundleAnalyzerPlugin()
+  ],
+  mode: 'production'
 };
