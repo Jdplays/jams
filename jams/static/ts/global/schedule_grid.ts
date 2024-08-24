@@ -14,23 +14,54 @@ import {
     removeLocationFromEvent,
     removeTimeslotFromEvent,
     getIconData
-} from './endpoints.js'
+} from './endpoints'
+import { EventLocation, EventTimeslot, Location, Timeslot } from './endpoints_interfaces'
+import {buildQueryString, emptyElement, allowDrop, waitForTransitionEnd} from './helper'
+import {WorkshopCard, WorkshopCardOptions} from './workshop_card'
 
-import {buildQueryString, emptyElement, allowDrop, waitForTransitionEnd} from './helper.js'
-import {WorkshopCard} from './workshop_card.js'
+type Icons = {[key: string]: any}
+
+interface LocationsInEvent extends Location {
+    event_location_id:number
+    event_location_order:number
+}
+
+interface TimeslotsInEvent extends Timeslot {
+    event_timeslot_id:number
+}
+
+export interface ScheduleGridOptions {
+    eventId?: number
+    size?:number
+    edit?:boolean
+    updateInterval?:number
+    workshopCardOptions?:WorkshopCardOptions
+    autoScale?:boolean
+    autoRefresh?:boolean
+}
 
 export class ScheduleGrid {
-    constructor(scheduleContainerId, options = {}) {
+    private scheduleContainer:HTMLElement|null
+    private options:ScheduleGridOptions = {}
+    private icons:Icons
+    private sessionCount:number
+    private eventLocations:EventLocation[]
+    private eventTimeslots:EventTimeslot[]
+
+    public currentDragType:string
+
+
+    constructor(scheduleContainerId:string, options:ScheduleGridOptions = {}) {
         // Set options (use defaults for options not provided)
         const {
             eventId = 1,
             size = 150,
             edit = false,
             updateInterval = 1,
-            workshopCardOptions = null,
+            workshopCardOptions = {},
             autoScale = false,
             autoRefresh = true
-        } = options
+        } = options || {}
        
         this.options = {
             eventId,
@@ -49,8 +80,8 @@ export class ScheduleGrid {
         this.icons = {}
         this.sessionCount = 0
         this.currentDragType = ''
-        this.eventLocations = null
-        this.eventTimeslots = null
+        this.eventLocations = []
+        this.eventTimeslots = []
 
         // Initialise the grid
         this.initialiseScheduleGrid()
@@ -76,7 +107,7 @@ export class ScheduleGrid {
             this.updateGridSize(this)
         }
 
-        if (this.options.autoRefresh) {
+        if (this.options.autoRefresh && this.options.updateInterval) {
             // Run populate sessions x seconds
             window.setInterval(() => {
                 this.populateSessions()
@@ -90,38 +121,45 @@ export class ScheduleGrid {
         if (this.options.workshopCardOptions === null) {
             this.options.workshopCardOptions = {}
         }
+        
+        if (this.options.workshopCardOptions) {
+            // Set if the remove button should be included (this is only true if the grid is editable)
+            if (this.options.workshopCardOptions.remove === undefined) {
+                this.options.workshopCardOptions.remove = this.options.edit
+            }
 
-        // Set if the remove button should be included (this is only true if the grid is editable)
-        if (this.options.workshopCardOptions.remove === undefined) {
-            this.options.workshopCardOptions.remove = this.options.edit
-        }
+            // Set the remove icon so it doesnt have to be loaded in every time
+            if (this.options.workshopCardOptions.cardRemoveIcon === undefined) {
+                this.options.workshopCardOptions.cardRemoveIcon = this.icons.remove
+            }
 
-        // Set the remove icon so it doesnt have to be loaded in every time
-        if (this.options.workshopCardOptions.cardRemoveIcon === undefined) {
-            this.options.workshopCardOptions.cardRemoveIcon = this.icons.remove
-        }
+            // Set the remove function
+            if (this.options.workshopCardOptions.cardRemoveFunc === undefined) {
+                this.options.workshopCardOptions.cardRemoveFunc = this.workshopRemoveFunc
+            }
 
-        // Set the remove function
-        if (this.options.workshopCardOptions.cardRemoveFunc === undefined) {
-            this.options.workshopCardOptions.cardRemoveFunc = this.workshopRemoveFunc
-        }
+            // Set the current schedule grid object as an option so it can be used with some events
+            if (this.options.workshopCardOptions.scheduleGrid === undefined) {
+                this.options.workshopCardOptions.scheduleGrid = this
+            }
 
-        // Set the current schedule grid object as an option so it can be used with some events
-        if (this.options.workshopCardOptions.scheduleGrid === undefined) {
-            this.options.workshopCardOptions.scheduleGrid = this
-        }
-
-        // Set the size that has been passed in for the grid as the workshop cards need to fit the session blocks
-        if (this.options.workshopCardOptions.size === undefined) {
-            this.options.workshopCardOptions.size = this.options.size
+            // Set the size that has been passed in for the grid as the workshop cards need to fit the session blocks
+            if (this.options.workshopCardOptions.size === undefined) {
+                this.options.workshopCardOptions.size = this.options.size
+            }
         }
     }
 
     // Do a full update of the schedule grid
     async updateSchedule() {
+        if (!this.options.eventId) {
+            return
+        }
         // Get the locations and timeslots assigned to the event
-        this.eventLocations = await getLocationsForEvent(this.options.eventId)
-        this.eventTimeslots = await getTimeslotsForEvent(this.options.eventId)
+        const eventLocationsResponse = await getLocationsForEvent(this.options.eventId)
+        const evenTimeslotsResponse = await getTimeslotsForEvent(this.options.eventId)
+        this.eventLocations = eventLocationsResponse.data
+        this.eventTimeslots = evenTimeslotsResponse.data
 
         // Update the grid size variables
         this.updateGridSize()
@@ -139,7 +177,7 @@ export class ScheduleGrid {
     }
 
     // Allows the eventId to be updated from outside of this script
-    chnageEvent(newEventId) {
+    changeEvent(newEventId:number) {
         this.options.eventId = newEventId
         this.updateSchedule()
     }
@@ -151,11 +189,14 @@ export class ScheduleGrid {
         let eventTimeslotIds = new Set(this.eventTimeslots.map(timeslot => timeslot.timeslot_id))
 
         // Get all the locations and timeslots
-        const locations = await getLocations()
-        const timeslots = await getTimeslots()
+        const locationsResponse = await getLocations()
+        const timeslotsResponse = await getTimeslots()
+
+        let locations = locationsResponse.data
+        let timeslots = timeslotsResponse.data
 
         // Build objects that combine the locations and event locations to avoid extra unnessesary server calls
-        const locationsInEvent = this.eventLocations
+        const locationsInEvent:LocationsInEvent[] = this.eventLocations
         .map(eventLocation => {
             for (const location of locations) {
                 if (eventLocation.location_id === location.id) {
@@ -170,7 +211,7 @@ export class ScheduleGrid {
         })
         .filter(eventLocation => eventLocation !== null)
     
-        const timeslotsInEvent = this.eventTimeslots
+        const timeslotsInEvent:TimeslotsInEvent[] = this.eventTimeslots
             .map(eventTimeslot => {
                 for (const timeslot of timeslots) {
                     if (eventTimeslot.timeslot_id === timeslot.id) {
@@ -200,12 +241,14 @@ export class ScheduleGrid {
         )
 
         // Set the new grid
-        emptyElement(this.scheduleContainer)
-        this.scheduleContainer.appendChild(tmpGridContainer)
+        if (this.scheduleContainer) {
+            emptyElement(this.scheduleContainer)
+            this.scheduleContainer.appendChild(tmpGridContainer)
+        }
     }
 
     // This builds the base schedule grid without any workshops
-    async buildScheduleGrid(locations, timeslots, dropdownLocations=null, dropdownTimeslots=null) {
+    async buildScheduleGrid(locations:LocationsInEvent[], timeslots:TimeslotsInEvent[], dropdownLocations:Location[]=[], dropdownTimeslots:Timeslot[]=[]) {
         // Set the session count back to 0
         this.sessionCount = 0
 
@@ -329,8 +372,8 @@ export class ScheduleGrid {
 
             // Create the header and add the drag over events
             let header = document.createElement('div');
-            header.setAttribute('event-location-id', location.event_location_id)
-            header.setAttribute('data-index', location.event_location_order)
+            header.setAttribute('event-location-id', String(location.event_location_id))
+            header.setAttribute('data-index', String(location.event_location_order))
             header.classList.add('header', 'header-top');
             header.style.width = `${this.options.size}px`
             if (this.options.edit) {
@@ -400,8 +443,8 @@ export class ScheduleGrid {
                 sessionBlock.id = `session-${location.event_location_id}-${timeslot.event_timeslot_id}`
                 sessionBlock.style.width = `${this.options.size}px`
                 sessionBlock.style.height = `${this.options.size}px`
-                sessionBlock.setAttribute('has-workshop', false)
-                sessionBlock.setAttribute('location-column-order', location.event_location_order)
+                sessionBlock.setAttribute('has-workshop', String(false))
+                sessionBlock.setAttribute('location-column-order', String(location.event_location_order))
                 mainColumn.appendChild(sessionBlock);
                 // Increment the session count of the grid
                 this.sessionCount ++
@@ -451,7 +494,8 @@ export class ScheduleGrid {
     // Populate the session blocks with workshops that are assigned to them
     async populateSessions() {
         // Get all the sessions for the given event
-        const sessions = await getSessionsForEvent(this.options.eventId)
+        const sessionsResponse = await getSessionsForEvent(this.options.eventId)
+        let sessions = sessionsResponse.data
 
         // If the grid session count is not equal to the length of the sessions justed pulled down, reload the grid
         if (this.sessionCount != sessions.length) {
@@ -465,7 +509,10 @@ export class ScheduleGrid {
         // Iterate over the sessions
         for (const session of sessions) {
             let sessionBlock = document.getElementById(`session-${session.event_location_id}-${session.event_timeslot_id}`)
-            sessionBlock.setAttribute('session-id', session.id)
+            if (!sessionBlock) {
+                continue
+            }
+            sessionBlock.setAttribute('session-id', String(session.id))
 
             // If a session block says it's order is different from what the DB's session says it is, reload the grid
             if (sessionBlock.getAttribute('location-column-order') !== String(session.location_column_order)) {
@@ -510,9 +557,11 @@ export class ScheduleGrid {
         let workshopsQueryString = buildQueryString(workshopsQueryData)
 
         if (sessionWorkshopsToAdd.length > 0) {
-            const workshops = await getWorkshops(workshopsQueryString)
+            const workshopsResponse = await getWorkshops(workshopsQueryString)
+            let workshops = workshopsResponse.data
             if (!this.options.workshopCardOptions.difficultyLevels) {
-                const difficultyLevels = await getDifficultyLevels()
+                const response = await getDifficultyLevels()
+                let difficultyLevels = response.data
                 this.options.workshopCardOptions.difficultyLevels = difficultyLevels
             }
 
@@ -535,12 +584,16 @@ export class ScheduleGrid {
             // Iterate over each workshop to be added and trigger an animation to set the workshop
             for (const workshop of workshopsToAdd) {
                 let sessionBlock = document.getElementById(`session-${workshop.event_location_id}-${workshop.event_timeslot_id}`)
+                if (!sessionBlock) {
+                    continue
+                }
+
                 let cardOptions = { ...this.options.workshopCardOptions, sessionId: workshop.session_id}
                 let workshopCard = new WorkshopCard(workshop, cardOptions)
-                let workshopCardElement = await workshopCard.element()
+                let workshopCardElement = await workshopCard.element() as HTMLElement
                 this.animateWorkshopDrop(sessionBlock, workshopCardElement)
-                sessionBlock.setAttribute('has-workshop', true)
-                sessionBlock.setAttribute('workshop-id', workshop.id)
+                sessionBlock.setAttribute('has-workshop', String(true))
+                sessionBlock.setAttribute('workshop-id', String(workshop.id))
             }
         }
 
@@ -549,9 +602,13 @@ export class ScheduleGrid {
         if (sessionWorkshopsToRemove) {
             for (const workshop of sessionWorkshopsToRemove) {
                 let sessionBlock = document.getElementById(`session-${workshop.event_location_id}-${workshop.event_timeslot_id}`)
-                let workshopCard = sessionBlock.children[0]
+                if (!sessionBlock) {
+                    continue
+                }
+
+                let workshopCard = sessionBlock.children[0] as HTMLElement
                 this.animateWorkshopDelete(sessionBlock, workshopCard)
-                sessionBlock.setAttribute('has-workshop', false)
+                sessionBlock.setAttribute('has-workshop', String(false))
                 sessionBlock.removeAttribute('workshop-id')
                 // If the grid is editable, add the drag events to the empty sessions
                 if (this.options.edit) {
@@ -565,109 +622,155 @@ export class ScheduleGrid {
 
     // Sets up the event listeners to allow columns (locations) to be dragged
     setUpColumnDragEventListeners() {
+        if (!this.scheduleContainer) {
+            return
+        }
         // Make a map of the id's
         let eventTimeslotIds = new Set(this.eventTimeslots.map(timeslot => timeslot.id))
 
-        let draggedColumn = null;
-        let draggedIndex = null;
+        let draggedColumn:HTMLElement|null = null;
+        let draggedIndex:number|null = null;
+
         let dropIndicator = document.createElement('div');
         dropIndicator.classList.add('location-column-drop-indicator');
         dropIndicator.style.display = 'none'
         this.scheduleContainer.appendChild(dropIndicator);
 
         document.querySelectorAll('.header-top').forEach(grabHandle => {
-            grabHandle.addEventListener('dragstart', (e) => {
-                draggedColumn = grabHandle.closest('.header-top');
-                draggedIndex = Number(draggedColumn.getAttribute('data-index'));
-                e.dataTransfer.effectAllowed = 'move';
+            grabHandle.addEventListener('dragstart', (e:Event) => {
+                // Cast the event to DragEvent
+                const dragEvent = e as DragEvent;
+                if (dragEvent.dataTransfer) {
+                    draggedColumn = grabHandle.closest('.header-top') as HTMLElement | null
+                    if (draggedColumn) {
+                        draggedIndex = Number(draggedColumn.getAttribute('data-index'));
 
-                this.currentDragType = 'column-move'
+                        dragEvent.dataTransfer.effectAllowed = 'move';
 
-                e.dataTransfer.setData('event-location-id', draggedColumn.getAttribute('event-location-id'))
-                e.dataTransfer.setDragImage(grabHandle.parentElement, 75, 4)
+                        this.currentDragType = 'column-move'
+
+                        const eventLocationId = draggedColumn.getAttribute('event-location-id') || '';
+                        dragEvent.dataTransfer.setData('event-location-id', eventLocationId);
+                        
+                        // Ensure grabHandle.parentElement is not null
+                        const dragImageElement = grabHandle.parentElement as HTMLElement | null;
+                        if (dragImageElement) {
+                            dragEvent.dataTransfer.setDragImage(dragImageElement, 75, 4);
+                        }
+                    }
+                }
             });
 
             grabHandle.addEventListener('dragend', () => {
                 dropIndicator.style.display = 'none';
             });
 
-            grabHandle.parentElement.addEventListener('dragover', (e) => {
-                if (this.currentDragType === 'column-move') {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = 'move';
+            if (grabHandle.parentElement) {
+                grabHandle.parentElement.addEventListener('dragover', (e:Event) => {
+                    const dragEvent = e as DragEvent;
+                    if (dragEvent.dataTransfer) {
+                        if (this.currentDragType === 'column-move') {
+                            e.preventDefault();
+                            dragEvent.dataTransfer.dropEffect = 'move';
+                            
+                            const target = e.target as Element | null;
+                            const headerTopElement = target?.closest('.header-top') as HTMLElement | null
 
-                    const target = e.target.closest('.header-top');
-                    if (target) {
-                        dropIndicator.style.display = 'block'
-                        target.appendChild(dropIndicator)
-                    }
-                }
-            });
-
-            grabHandle.parentElement.addEventListener('drop', (e) => {
-                if (this.currentDragType === 'column-move') {
-                    e.preventDefault();
-                    dropIndicator.style.display = 'none';
-                    const target = e.target.closest('.header-top');
-                    if (target && target !== draggedColumn) {
-                        const targetIndex = Number(target.getAttribute('data-index'));
-
-                        let newIndex = targetIndex
-
-                        let eventLocationId = e.dataTransfer.getData('event-location-id')
-
-                        this.locationColumnDropFunc(eventLocationId, newIndex);
-                        this.currentDragType = ''
-                    }
-                }
-                else if (this.currentDragType === 'workshop-add') {
-                    const target = e.target.closest('.header-top');
-                    if (!target) {
-                        return
-                    }
-                    let workshopId = e.dataTransfer.getData("workshop-id");
-                    let eventLocationId = Number(target.getAttribute('event-location-id'))
-
-                    let sessionIds = []
-                    let sessionWorkshopIds = []
-                    let sessionBlockIds = []
-
-                    for (const eventTimeslotId of eventTimeslotIds) {
-                        let sessionBlockId = `session-${eventLocationId}-${eventTimeslotId}`
-                        sessionBlockIds.push(sessionBlockId)
-                        let sessionBlock = this.scheduleContainer.querySelector(`#${sessionBlockId}`)
-                        let sessionId = sessionBlock.getAttribute('session-id')
-                        sessionIds.push(sessionId)
-
-                        let sessionWorkshopId = sessionBlock.getAttribute('workshop-id')
-                        if (sessionWorkshopId != null) {
-                            sessionWorkshopIds.push(sessionWorkshopId)
+                            if (headerTopElement) {
+                                dropIndicator.style.display = 'block'
+                                headerTopElement.appendChild(dropIndicator)
+                            }
                         }
                     }
+                });
 
-                    if (sessionWorkshopIds.length > 0) {
-                        this.showMassPlaceWorkshopModal(sessionIds, workshopId)
+                grabHandle.parentElement.addEventListener('drop', (e) => {
+                    if (this.currentDragType === 'column-move') {
+                        e.preventDefault();
+                        dropIndicator.style.display = 'none';
+
+                        const target = e.target as Element | null;
+                        const headerTopElement = target?.closest('.header-top') as HTMLElement | null
+
+                        if (headerTopElement && headerTopElement !== draggedColumn) {
+                            const targetIndex = Number(headerTopElement.getAttribute('data-index'));
+
+                            let newIndex = targetIndex
+
+                            const dragEvent = e as DragEvent;
+                            if (dragEvent.dataTransfer) {
+                                let eventLocationId = Number(dragEvent.dataTransfer.getData('event-location-id'))
+                                this.locationColumnDropFunc(eventLocationId, newIndex);
+                            }
+
+                            this.currentDragType = ''
+                        }
                     }
-                    else {
-                        this.addWorkshopToMultipleSessions(sessionIds, workshopId, false)
+                    else if (this.currentDragType === 'workshop-add') {
+                        const target = e.target as Element | null;
+                        const headerTopElement = target?.closest('.header-top') as HTMLElement | null
+                        if (!headerTopElement) {
+                            return
+                        }
+
+                        const dragEvent = e as DragEvent;
+                        if (dragEvent.dataTransfer) {
+                            let workshopId = Number(dragEvent.dataTransfer.getData("workshop-id"));
+                            let eventLocationId = Number(headerTopElement.getAttribute('event-location-id'))
+
+                            let sessionIds:number[] = []
+                            let sessionWorkshopIds:number[] = []
+                            let sessionBlockIds:string[] = []
+
+                            for (const eventTimeslotId of eventTimeslotIds) {
+                                let sessionBlockId = `session-${eventLocationId}-${eventTimeslotId}`
+                                sessionBlockIds.push(sessionBlockId)
+                                if (!this.scheduleContainer) {
+                                    return
+                                }
+
+                                let sessionBlock = this.scheduleContainer.querySelector(`#${sessionBlockId}`)
+                                if (!sessionBlock) {
+                                    return
+                                }
+
+                                let sessionId = Number(sessionBlock.getAttribute('session-id'))
+                                sessionIds.push(sessionId)
+
+                                let sessionWorkshopId = Number(sessionBlock.getAttribute('workshop-id'))
+                                if (sessionWorkshopId != null) {
+                                    sessionWorkshopIds.push(sessionWorkshopId)
+                                }
+                            }
+
+                            if (sessionWorkshopIds.length > 0) {
+                                this.showMassPlaceWorkshopModal(sessionIds, workshopId)
+                            }
+                            else {
+                                this.addWorkshopToMultipleSessions(sessionIds, workshopId, false)
+                            }
+                        }
                     }
-                }
-            });
+                });
+            }
 
         });
     }
 
     // Event handler for a workshop drop that includes the class context
-    handleDropWithContext = (event) => {
+    handleDropWithContext = (event:DragEvent) => {
         this.workshopDrop(event, this)
     }
 
     // Handles the drop event
-    async workshopDrop(event, scheduleGrid) {
+    async workshopDrop(event:DragEvent, scheduleGrid:ScheduleGrid) {
         if (this.currentDragType === 'workshop-add') {
             event.preventDefault();
-            var workshopID = event.dataTransfer.getData("workshop-id");
-            var sessionID = event.target.getAttribute('session-id')
+            const workshopID = Number(event.dataTransfer?.getData("workshop-id")) || null;
+            const sessionID = Number((event.target as HTMLElement).getAttribute('session-id')) || null;
+            if (!sessionID || !workshopID) {
+                return
+            }
             if (await addWorkshopToSession(sessionID, workshopID)) {
                 await scheduleGrid.populateSessions()
             }
@@ -676,49 +779,49 @@ export class ScheduleGrid {
     }
 
     // Handle workshop delete event
-    async workshopRemoveFunc(sessionId, scheduleGrid=null) {
+    async workshopRemoveFunc(sessionId:number, scheduleGrid:ScheduleGrid) {
         if (await removeWorkshopFromSession(sessionId)) {
             await scheduleGrid.populateSessions()
         }
     }
 
     // Handle locations being added to the event
-    async locationAddFunc(locationId, order) {
+    async locationAddFunc(locationId:number, order:number) {
         if (await addLocationToEvent(this.options.eventId, locationId, order)) {
             await this.updateSchedule()
         }
     }
 
     // Handle timeslots being added to the event
-    async timeslotAddFunc(timeslotId) {
+    async timeslotAddFunc(timeslotId:number) {
         if (await addTimeslotToEvent(this.options.eventId, timeslotId)) {
             await this.updateSchedule()
         }
     }
 
     // Handle locations being removed to the event
-    async locationRemoveFunc(locationId) {
+    async locationRemoveFunc(locationId:number) {
         if (await removeLocationFromEvent(this.options.eventId, locationId)) {
             await this.updateSchedule()
         }
     }
 
     // Handle timeslots being removed to the event
-    async timeslotRemoveFunc(timeslotId) {
+    async timeslotRemoveFunc(timeslotId:number) {
         if (await removeTimeslotFromEvent(this.options.eventId, timeslotId)) {
             await this.updateSchedule()
         }
     }
 
     // Handle locations being reordered on the schedule
-    async locationColumnDropFunc(eventLocationId, newOrder) {
+    async locationColumnDropFunc(eventLocationId:number, newOrder:number) {
         if (await updateEventLocationOrder(this.options.eventId, eventLocationId, newOrder)) {
             await this.updateSchedule()
         }
     }
 
     // Handles the animation for when a workshop is dropped onto the scheudle
-    async animateWorkshopDrop(sessionBlock, workshopCard) {
+    async animateWorkshopDrop(sessionBlock:HTMLElement, workshopCard:HTMLElement) {
 
         workshopCard.classList.add('workshop-card-animate-shrink', 'workshop-card-animate')
         emptyElement(sessionBlock)
@@ -736,7 +839,7 @@ export class ScheduleGrid {
     }
 
     // Handles the animation for when a workshop is deleted from the schedule
-    async animateWorkshopDelete(sessionBlock, workshopCard) {
+    async animateWorkshopDelete(sessionBlock:HTMLElement, workshopCard:HTMLElement) {
         workshopCard.classList.add('workshop-card-animate')
 
         // Trigger a reflow to ensure initial styles are applied
@@ -751,7 +854,7 @@ export class ScheduleGrid {
     }
 
     // Shows a modal warning the user about placing a workshop across a location
-    async showMassPlaceWorkshopModal(sessionIds, workshopId) {
+    async showMassPlaceWorkshopModal(sessionIds:number[], workshopId:number) {
         const dangerModal = $('#mass-place-workshop-modal')
         dangerModal.modal('show')
 
@@ -771,7 +874,7 @@ export class ScheduleGrid {
     }
 
     // Handles adding a workshop to multiple sessions
-    async addWorkshopToMultipleSessions(sessionIds, workshopId, force) {
+    async addWorkshopToMultipleSessions(sessionIds:number[], workshopId:number, force:boolean) {
         const addPromises = [];
 
         for (let i = 0; i < sessionIds.length; i++) {

@@ -23,3 +23,6 @@ migrations
 
 # Ignore user config files
 config/*.yaml
+node_modules
+package-lock.json
+jams/static/js

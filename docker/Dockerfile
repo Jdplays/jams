@@ -1,6 +1,13 @@
 # Use the official Python image from the Docker Hub
 FROM python:3.9-slim
 
+# Install curl to get Node.js and npm
+RUN apt-get update && apt-get install -y curl
+
+# Install Node.js and npm
+RUN curl -fsSl https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
+
 # Set the working directory
 WORKDIR /jams
 
@@ -18,6 +25,20 @@ COPY ./check_db.py .
 
 # Copy the user config folder into the container
 COPY ./config .
+
+# Copy required files for typescript
+COPY ./package.json .
+COPY ./tsconfig.json .
+COPY ./docker/webpack-prod.config.mjs ./webpack.config.mjs
+
+# Install node packages
+RUN npm i
+
+# Bundle the typescript into javascript
+RUN npm run build
+
+# Remove the typescript files
+RUN rm -rf ./jams/static/ts
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt

@@ -1,30 +1,34 @@
 // Event Schedule Page
 
 import {
-    getIconData
-} from '../global/endpoints.js'
-
-import { WorkshopCard } from '../global/workshop_card.js'
+    getEventNames,
+    getEvent,
+    getWorkshops,
+    getIconData,
+    getDifficultyLevels
+} from '../global/endpoints'
 
 import {
     buildQueryString,
     emptyElement,
     createDropdown
-} from '../global/helper.js'
+} from '../global/helper'
 
-import {getDifficultyLevels} from '../global/endpoints.js'
+import { WorkshopCard } from '../global/workshop_card'
+import {ScheduleGrid, ScheduleGridOptions} from '../global/schedule_grid'
+import TomSelect from 'tom-select';
+import { QueryStringData } from '../global/endpoints_interfaces';
 
-import {ScheduleGrid} from '../global/schedule_grid.js'
 
 // Variables
-var EventId = 1
+var EventId:number = 1
 
-var selectDifficultyIds = []
-var selectedTags = []
-var currentSearchQuery = ''
+var selectDifficultyIds:number[] = []
+var selectedTags:number[] = []
+var currentSearchQuery:string = ''
 
 // Schedule Grid
-const scheduleGridOptions = {
+const scheduleGridOptions:ScheduleGridOptions = {
     eventId: EventId,
     edit: true,
     size: 150
@@ -32,81 +36,30 @@ const scheduleGridOptions = {
 
 const scheduleGrid = new ScheduleGrid('schedule-container', scheduleGridOptions)
 
-// Backend API Calls
-function getEventNames() {
-    return new Promise((resolve, reject) => {
-        $.ajax({
-            url: '/backend/events/name',
-            type: 'GET',
-            success: function (response) {
-                resolve(response.events)
-            },
-            error: function (error) {
-                console.log('Error fetching data:', error);
-                reject(error);
-            }
-        });
-    });
-}
-
-function getEvent(eventID) {
-    return new Promise((resolve, reject) => {
-        $.ajax({
-            url: '/backend/events/' + eventID,
-            type: 'GET',
-            success: function (response) {
-                resolve(response)
-            },
-            error: function (error) {
-                console.log('Error fetching data:', error);
-                reject(error)
-            }
-        })
-    })
-}
-
-function getWorkshops(queryString = null) {
-    return new Promise((resolve, reject) => {
-        let url = "/backend/workshops"
-        if (queryString != null) {
-            url += `?${queryString}`
-        }
-        $.ajax({
-            url: url,
-            type: 'GET',
-            success: function (response) {
-                resolve(response.workshops)
-            },
-            error: function (error) {
-                console.log('Error fetching data:', error);
-                reject(error)
-            }
-        });
-    });
-}
-
 // General Methods
 
 // Event Selection
 
 // Populates the Event selection dropdown with all of the events
 async function populateEventSelectionDropdown() {
-    let events = await getEventNames()
+    const eventsResponse = await getEventNames()
+    let events = eventsResponse.data
 
     let eventSelectionDropdown = document.getElementById('event-selection')
-    let select = createDropdown(await events, await events[0].name, eventSelectionDropdownOnChange)
+    let select = createDropdown(events, events[0].name, eventSelectionDropdownOnChange)
     select.id = 'event-select'
     select.classList.add('select-event-dropdown', 'form-control')
     eventSelectionDropdown.appendChild(select)
 }
 
 // Handles the onchange event for the Event selction dropdown 
-function eventSelectionDropdownOnChange(event) {
-    const selectedValue = event.target.value
+function eventSelectionDropdownOnChange(event:Event) {
+    const element = event.target as HTMLInputElement
+    const selectedValue = Number(element.value)
     EventId = selectedValue
     getEvent(EventId)
     populateEventDetails()
-    scheduleGrid.chnageEvent(EventId)
+    scheduleGrid.changeEvent(EventId)
 }
 
 // Event Details
@@ -133,15 +86,16 @@ async function populateEventDetails() {
 // Workshop Selction
 // Populates the list of workshop cards
 async function populateWorkshopList() {
-    let queryData = {
+    let queryData:Partial<QueryStringData> = {
         name: currentSearchQuery,
         description: '$~name',
-        difficulty_id: selectDifficultyIds,
-        tag_ids: selectedTags
+        difficulty_id: selectDifficultyIds
     }
     let queryString = buildQueryString(queryData)
-    let workshops = await getWorkshops(queryString)
-    let difficultyLevels = await getDifficultyLevels()
+    const workshopsResponse = await getWorkshops(queryString)
+    const difficultyLevels = await getDifficultyLevels()
+
+    let workshops = workshopsResponse.data
 
     let workshopList = document.getElementById('workshop-selection-list')
 
@@ -153,14 +107,14 @@ async function populateWorkshopList() {
         workshopListBlock.classList.add('workshop-list-block')
         let cardOptions = {
             size: 150,
-            difficultyLevels: difficultyLevels
+            difficultyLevels: difficultyLevels.data
         }
         let workshopCard = new WorkshopCard(workshop, cardOptions)
         let workshopCardElement = await workshopCard.element()
         workshopCardElement.id = "drag-drop-workshop-" + workshop.id
         workshopCardElement.draggable = true
         workshopCardElement.addEventListener('dragstart', function (event) {
-            drag(event, workshop.id)
+            drag(event, String(workshop.id))
         });
         workshopListBlock.appendChild(workshopCardElement)
         elementList.push(workshopListBlock)
@@ -176,7 +130,7 @@ async function populateWorkshopList() {
 }
 
 // Handles updating the global reference of the selected difficulty ids
-function updateDifficultyIdsList(checked, id) {
+function updateDifficultyIdsList(checked:boolean, id:number) {
     if (checked) {
         // add To list
         if (!selectDifficultyIds.includes(id)) {
@@ -209,7 +163,7 @@ async function populateWorkshopSelectionTools() {
     let difficultyOptions = document.createElement('div')
     difficultyOptions.classList.add('form-selectgroup', 'form-selectgroup-pills')
 
-    for (const level of difficultyLevels) {
+    for (const level of difficultyLevels.data) {
         let option = document.createElement('label')
         option.classList.add('form-selectgroup-item')
 
@@ -218,9 +172,6 @@ async function populateWorkshopSelectionTools() {
         input.classList.add('form-selectgroup-input')
         option.appendChild(input)
         input.onchange = function () {
-            if (!input.checked) {
-                input.selected = false
-            }
             updateDifficultyIdsList(input.checked, level.id)
             populateWorkshopList()
         }
@@ -253,12 +204,11 @@ async function populateWorkshopSelectionTools() {
     let tagsSelect = document.createElement('select')
     tagsSelect.id = 'select-tags'
     tagsSelect.name = 'tags[]'
-    tagsSelect.multiple = 'multiple'
-    tagsSelect.placeholder = 'Select tags'
+    tagsSelect.multiple = true
 
     for(let i=0; i < 5; i++) {
         let option = document.createElement('option')
-        option.value = i
+        option.value = String(i)
         option.text = 'tag ' + i
         tagsSelect.appendChild(option)
     }
@@ -274,7 +224,7 @@ async function populateWorkshopSelectionTools() {
         plugins: ['remove_button'],
         create: false,
         maxItems: null,
-        onChange: function(values) {
+        onChange: function(values:any) {
             // TODO: ADD THIS WHEN TAGS ARE IMPLEMENTED
             //selectedTags = values
             //PopulateWorkshopList()
@@ -323,7 +273,7 @@ function handleWorkshopSelectionArrows() {
 
 // Handles the event for when the workshop selection search bar's input is updated
 function workshopSearchOnChange() {
-    let tmp = document.getElementById('workshop-search-box').value
+    let tmp = (document.getElementById('workshop-search-box') as HTMLInputElement).value
     let filtered = tmp.replace(/[?&|=\/\\]/g, '');
 
     currentSearchQuery = filtered
@@ -332,21 +282,21 @@ function workshopSearchOnChange() {
 }
 
 // Can be added to an element to allow drag
-function drag(ev, value) {
+function drag(ev:DragEvent, value:string) {
     ev.dataTransfer.setData("workshop-id", value);
     ev.dataTransfer.setData("drag-type", "blah");
     scheduleGrid.currentDragType = 'workshop-add'
 }
 
 // Formats a date from numbers to words (24-09-15 to 15th Spetember 2024)
-function formatDate(dateString) {
+function formatDate(dateString:string) {
     const date = new Date(dateString);
     const day = date.getDate();
     const month = date.toLocaleString('default', { month: 'long' });
     const year = date.getFullYear();
     
     // Function to get the ordinal suffix for the day
-    function getOrdinalSuffix(n) {
+    function getOrdinalSuffix(n:any) {
         if (n > 3 && n < 21) return 'th';
         switch (n % 10) {
             case 1: return 'st';
