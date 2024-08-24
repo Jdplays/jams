@@ -5,20 +5,20 @@ import {
     editWorkshop,
     getDifficultyLevel,
     getDifficultyLevels,
-    getFilesForWorkshop,
+    getFilesDataForWorkshop,
     getWorkshop,
-    getWorkshopFiles,
+    getWorkshopFilesData,
     getWorkshops,
     uploadFileToWorkshop
 } from "../global/endpoints";
-import { RequestMultiModelJSONData, File, Workshop, QueryStringData } from "../global/endpoints_interfaces";
+import { RequestMultiModelJSONData, FileData, Workshop, QueryStringData } from "../global/endpoints_interfaces";
 import { buildActionButtonsForModel, successToast, errorToast, buildQueryString } from "../global/helper";
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
 
 let gridApi: GridApi<any>;
 
 let difficultyLevelsNameMap:Record<number, string> = {};
-let workshopWorksheetsMap:Record<number, File> = {};
+let workshopWorksheetsMap:Record<number, FileData> = {};
 
 async function archiveWorkshopOnClick(workshopId:number) {
     const response = await archiveWorkshop(workshopId)
@@ -141,7 +141,7 @@ async function prepEditWorkshopForm(workshopId:number) {
     }
     let difficultyLevels = await getDifficultyLevels()
 
-    const workshopFilesResponse = await getFilesForWorkshop(workshop.id)
+    const workshopFilesResponse = await getFilesDataForWorkshop(workshop.id)
 
 
     const hiddenIdInput = document.getElementById('edit-workshop-id') as HTMLInputElement
@@ -224,7 +224,7 @@ function initialiseAgGrid() {
                         const worksheetData = workshopWorksheetsMap[params.data.id]
                         let worksheetElement = document.createElement('a')
                         worksheetElement.innerHTML = worksheetData.name
-                        worksheetElement.href = `/private/management/workshops/${params.data.id}/files/${worksheetData.uuid}`
+                        worksheetElement.href = `/private/management/workshops/files/edit?workshop_id=${params.data.id}&file_uuid=${worksheetData.uuid}`
                         worksheetElement.style.padding = '5px'
 
                         return worksheetElement
@@ -259,7 +259,7 @@ async function preLoadDifficultyLevels() {
 
 async function preLoadWorkshopWorksheets(workshops:[Workshop]) {
     let workshopIdsWithFiles:number[] = workshops.filter(workshop => workshop.has_files).map(ws => ws.id)
-    let workshopWorksheetsMap:Record<number, File> = {}
+    let workshopWorksheetsMap:Record<number, FileData> = {}
 
     const promises = workshopIdsWithFiles.map(async (wId) => {
         const queryData: Partial<QueryStringData> = {
@@ -267,7 +267,7 @@ async function preLoadWorkshopWorksheets(workshops:[Workshop]) {
             type: 'worksheet'
         };
         const queryString = buildQueryString(queryData);
-        const workshopFilesResponse = await getWorkshopFiles(queryString);
+        const workshopFilesResponse = await getWorkshopFilesData(queryString);
         
         workshopWorksheetsMap[wId] = workshopFilesResponse.data[0];
     });

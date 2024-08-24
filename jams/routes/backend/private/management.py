@@ -124,7 +124,10 @@ def add_worksheet(workshop_id):
         workshop_file = WorkshopFile(workshop_id=workshop_id, file_id=file_db_obj.id, type='worksheet')
         db.session.add(workshop_file)
         db.session.commit()
-    return jsonify({'message': 'File successfully uploaded'})
+    return jsonify({
+        'message': 'File successfully uploaded',
+        'file_data': file_db_obj.to_dict()
+    })
 
 
 @bp.route('/workshops/files', methods=['GET'])
@@ -163,26 +166,6 @@ def edit_file_data(workshop_id, file_id):
     db.session.commit()
     
     return jsonify(file.to_dict())
-
-
-@bp.route('/workshops/<int:workshop_id>/files/<uuid:file_id>/versions', methods=['GET'])
-@role_based_access_control_be
-def get_file_versions(workshop_id, file_id):
-    workshop_file = WorkshopFile.query.filter_by(workshop_id=workshop_id, file_id=file_id).first_or_404()
-    file = workshop_file.file
-    return_obj = [file_version.to_dict() for file_version in file.versions]
-    return jsonify({'file_versions': return_obj})
-
-@bp.route('/workshops/<int:workshop_id>/files/<uuid:file_id>', methods=['GET'])
-@role_based_access_control_be
-def get_workshop_file(workshop_id, file_id):
-    WorkshopFile.query.filter_by(workshop_id=workshop_id, file_id=file_id).first_or_404()
-    file = File.query.filter_by(id=file_id).first_or_404()
-    if request.args:
-        version_id = request.args.get('version_id')
-        if version_id:
-            return helper.get_and_prepare_file(files.workshop_bucket, file.name, version_id)
-    return helper.get_and_prepare_file(files.workshop_bucket, file.name, file.current_version_id)
 
 #------------------------------------------ LOCATION ------------------------------------------#
 

@@ -14,7 +14,10 @@ import {
     BackendMultiEntryResponse,
     PrivateAccessLog,
     VolunteerAttendance,
-    File
+    FileData,
+    FileResponse,
+    FileVersion,
+    WorkshopFile
 } from "./endpoints_interfaces";
 
 // This is a script where all then endpoint calls will live to prevent duplication across scripts
@@ -410,6 +413,22 @@ export function getWorkshop(workshopId:number):Promise<Workshop> {
     });
 }
 
+export function getWorkshopField(workshopId:number, field:string):Promise<Workshop> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `/backend/workshops/${workshopId}/${field}`,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);  
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
 export function addWorkshop(data:Partial<RequestMultiModelJSONData>):Promise<Workshop> {
     return new Promise((resolve, reject) => {
         $.ajax({
@@ -479,7 +498,7 @@ export function activateWorkshop(workshopId:number):Promise<boolean> {
     });
 }
 
-export function getWorkshopFiles(queryString:string|null = null):Promise<BackendMultiEntryResponse<[File]>> {
+export function getWorkshopFilesData(queryString:string|null = null):Promise<BackendMultiEntryResponse<[FileData]>> {
     return new Promise((resolve, reject) => {
         let url = "/backend/workshops/files"
         if (queryString != null) {
@@ -503,7 +522,7 @@ export function getWorkshopFiles(queryString:string|null = null):Promise<Backend
     });
 }
 
-export function getFilesForWorkshop(workshopId:number, queryString:string|null = null):Promise<BackendMultiEntryResponse<[File]>> {
+export function getFilesDataForWorkshop(workshopId:number, queryString:string|null = null):Promise<BackendMultiEntryResponse<[FileData]>> {
     return new Promise((resolve, reject) => {
         let url = `/backend/workshops/${workshopId}/files`
         if (queryString != null) {
@@ -527,20 +546,54 @@ export function getFilesForWorkshop(workshopId:number, queryString:string|null =
     });
 }
 
-export function uploadFileToWorkshop(workshopId:number, fileData:FormData):Promise<boolean> {
-    return new Promise((resolve) => {
+export function getWorkshopFileData(workshopId:number, fileUUID:string):Promise<FileData> {
+    return new Promise((resolve, reject) => {
+      $.ajax({
+        url: `/backend/workshops/${workshopId}/files/${fileUUID}/data`,
+        type: "GET",
+        success: function (response) {
+          resolve(response);
+        },
+        error: function (error) {
+          console.log("Error fetching data:", error);
+          reject(error);
+        },
+      });
+    });
+  }
+
+  export function editFileData(workshopId:number, fileUUID:string, data:Partial<FileData>):Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      $.ajax({
+        url: `/backend/workshops/${workshopId}/files/${fileUUID}/data`,
+        type: "PATCH",
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        success: function (response) {
+            resolve(true)
+        },
+        error: function (error) {
+            console.log('Error fetching data:', error);
+            resolve(false)
+        }
+      });
+    });
+  }
+
+export function uploadFileToWorkshop(workshopId:number, fileData:FormData):Promise<FileData> {
+    return new Promise((resolve, reject) => {
         $.ajax({
             type: 'POST',
-            url: '/backend/workshops/' + workshopId + '/worksheet',
+            url: `/backend/workshops/${workshopId}/worksheet`,
             data: fileData,
             processData: false,
             contentType: false,
             success: function (response) {
-                resolve(true)
+                resolve(response.file_data)
             },
             error: function (error) {
                 console.log('Error fetching data:', error);
-                resolve(false)
+                reject(error)
             }
         });
     });
@@ -1124,7 +1177,49 @@ export function editAttendance(userID:number, eventID:number, data:Partial<Reque
         });
     });
 }
-// # endregion
+// #endregion
+
+// #region Files
+export function getFile(fileUUID:string, queryString:string|null = null):Promise<FileResponse> {
+    return new Promise((resolve, reject) => {
+        let url = `/resources/files/${fileUUID}`
+        if (queryString) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            type: 'GET',
+            url: url,
+            xhrFields: {
+                responseType: 'blob'
+            },
+            success: function(data, response, jqXHR) {
+                const mimeType = jqXHR.getResponseHeader("Content-Type");
+                resolve({data, mimeType});   
+            },
+            error: function (error) {
+                console.log("Error fetching data:", error);
+                reject(error);
+            }
+        });
+    });
+}
+
+export function getFileVersions(fileUUID:string):Promise<[FileVersion]> {
+    return new Promise((resolve, reject) => {
+      $.ajax({
+        url: `/resources/files/${fileUUID}/versions`,
+        type: "GET",
+        success: function (response) {
+          resolve(response.file_versions);
+        },
+        error: function (error) {
+          console.log("Error fetching data:", error);
+          reject(error);
+        },
+      });
+    });
+  }
+// #endregion
 
 // #region Code Assets
 export function getIconData(filename:string):Promise<string> {

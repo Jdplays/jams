@@ -4,10 +4,10 @@ pages:
   edit_workshop_worksheet:
     endpoint: routes.frontend.private.management.edit_workshop_worksheet
     backend_endpoints:
-      routes.backend.private.management.get_workshop_file:
+      routes.resources.get_workshop_file:
+      routes.resources.get_file_versions:
       routes.backend.private.management.get_file_data:
       routes.backend.private.management.edit_file_data:
-      routes.backend.private.management.get_file_versions:
       routes.backend.private.management.add_worksheet:
       routes.backend.private.management.get_workshop_field:
         allowed_fields: id, name
