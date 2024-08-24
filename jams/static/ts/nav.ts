@@ -74,3 +74,8 @@ function toggleTheme() {
 // Event listeners
 document.addEventListener("DOMContentLoaded", loadNavigationBar);
 document.addEventListener("DOMContentLoaded", loadTheme);
+document.addEventListener("DOMContentLoaded", () => {
+    if (typeof window !== 'undefined') {
+        (<any>window).toggleTheme = toggleTheme;
+    }
+});
