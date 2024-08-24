@@ -1,4 +1,21 @@
-export function buildQueryString(params) {
+import {Toast} from "../global/sweet_alert"
+
+type QueryStringParams = {[key: string]: any}
+type ModelModityFunc = ((arg1:number) => void)
+
+interface FieldValues {
+    [key: string]: string;
+}
+
+interface References {
+    [key: string]: string;
+}
+
+interface ReferencedFields {
+    [key: string]: string[];
+}
+
+export function buildQueryString(params:QueryStringParams):string|null {
     // Make sure params have a value
     if (params === null || params === undefined) {
         return null
@@ -8,9 +25,9 @@ export function buildQueryString(params) {
     let queryString = ''
     const orSeparator = '|'
     const paramSeparator = '&'
-    const fieldValues = {}
-    const references = {}
-    const referencedFields = {}
+    const fieldValues:FieldValues = {}
+    const references:References = {}
+    const referencedFields:ReferencedFields = {}
 
     // Process each key, value pair in the params object
     for (const [key, value] of Object.entries(params)) {
@@ -77,7 +94,7 @@ export function buildQueryString(params) {
 
 }
 
-export function isNullEmptyOrSpaces(input){
+export function isNullEmptyOrSpaces(input:any):boolean {
     if (input === null || input === undefined) {
         return true;
     }
@@ -94,14 +111,14 @@ export function isNullEmptyOrSpaces(input){
 }
 
 // Empties all children from a html element
-export function emptyElement(element) {
+export function emptyElement(element:HTMLElement):void {
     while (element.firstChild) {
         element.removeChild(element.firstChild)
     }
 }
 
 // Function to convert hex to rgba
-export function hexToRgba(hex, alpha) {
+export function hexToRgba(hex:string, alpha:number):string {
     let r = parseInt(hex.slice(1, 3), 16);
     let g = parseInt(hex.slice(3, 5), 16);
     let b = parseInt(hex.slice(5, 7), 16);
@@ -109,13 +126,13 @@ export function hexToRgba(hex, alpha) {
 }
 
 // Can be added to an element to allow drop
-export function allowDrop(ev) {
+export function allowDrop(ev:DragEvent):void {
     ev.preventDefault();
 }
 
 // Creates a promise that only resolves when an element animation is done
-export function waitForTransitionEnd(element) {
-    return new Promise(resolve => {
+export function waitForTransitionEnd(element:HTMLElement):Promise<void> {
+    return new Promise<void>(resolve => {
         const handler = () => {
             element.removeEventListener('transitionend', handler);
             resolve();
@@ -124,8 +141,9 @@ export function waitForTransitionEnd(element) {
     });
 }
 
+type OnAnyFunc = (ev: Event) => void
 // Creates a generic dropdown based on inputs
-export function createDropdown(options, defualtOptionText, onChangeFunc) {
+export function createDropdown(options:any, defualtOptionText:string, onChangeFunc:OnAnyFunc):HTMLSelectElement {
     const select = document.createElement('select')
     const defaultOptionsElement = document.createElement('option');
     defaultOptionsElement.innerText = defualtOptionText
@@ -144,3 +162,79 @@ export function createDropdown(options, defualtOptionText, onChangeFunc) {
 
     return select
 }
+
+export function buildEditButtonForModel(modelId:number, editModalId:string, prepEditFunc:ModelModityFunc) {
+    let button = document.createElement('button')
+    button.id = `edit-${modelId}`
+    button.classList.add('btn', 'btn-outline-primary', 'py-1', 'px-2', 'mb-1')
+    button.innerHTML = 'Edit'
+    button.setAttribute('data-bs-toggle', 'modal')
+    button.setAttribute('data-bs-target', `#${editModalId}`)
+    button.onclick = function () {
+        prepEditFunc(modelId)
+    }
+    button.style.padding = '10px'
+
+    return button
+}
+
+export function buildActionButtonsForModel(modelId:number, modelActive:boolean, archiveModelFunc:ModelModityFunc, activateModelFunc:ModelModityFunc, editModalId:string, prepEditFunc:ModelModityFunc) {
+    let container = document.createElement('div')
+    if (modelActive) {
+        container.appendChild(buildEditButtonForModel(modelId, editModalId, prepEditFunc))
+
+        let archiveButton = document.createElement('button')
+        archiveButton.id = `archive-${modelId}`
+        archiveButton.classList.add('btn', 'btn-danger', 'py-1', 'px-2', 'mb-1')
+        archiveButton.innerHTML = 'Archive'
+        archiveButton.onclick = function () {
+            archiveModelFunc(modelId)
+        }
+        archiveButton.style.padding = '10px'
+        container.appendChild(archiveButton)
+    } else {
+        let activateButton = document.createElement('button')
+        activateButton.id = `activate-${modelId}`
+        activateButton.classList.add('btn', 'btn-success', 'py-1', 'px-2', 'mb-1')
+        activateButton.innerHTML = 'Activate'
+        activateButton.onclick = function () {
+            activateModelFunc(modelId)
+        }
+        activateButton.style.padding = '10px'
+        container.appendChild(activateButton)
+    }
+
+    return container
+}
+
+export function successToast(message:string) {
+    Toast.fire({
+        icon: 'success',
+        title: message
+    })
+}
+
+export function errorToast(message:string|null=null) {
+    Toast.fire({
+        icon: 'error',
+        title: message ?? 'An Error occurred!'
+    })
+}
+
+
+export function getSelectValues(select:HTMLSelectElement) {
+    var result = [];
+    var options = select && select.options;
+    var opt;
+  
+    for (var i=0, iLen=options.length; i<iLen; i++) {
+      opt = options[i];
+  
+      if (opt.selected) {
+        result.push(Number(opt.value));
+      }
+    }
+    return result;
+  }
+
+  export const isDefined = (value:any):boolean => value !== undefined && value !== null;

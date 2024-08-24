@@ -157,7 +157,7 @@ def contains_value(obj, value):
         return False
     return recursive_search(obj, value)
 
-def filter_model_by_query_and_properties(model, request_args, objects_json_key, requested_field=None):
+def filter_model_by_query_and_properties(model, request_args=None, requested_field=None, input_data=None, return_objects=False):
     query = model.query
     objects = []
     properties_values = {}
@@ -167,8 +167,11 @@ def filter_model_by_query_and_properties(model, request_args, objects_json_key, 
     default_field_names = ['$pagination_block_size', '$pagination_start_index', '$order_by', '$order_direction']
     pagination_block_size = 50
     pagination_start_index = 0
+    pagination_order_by = 'id'
+    pagination_order_direction = 'ASC'
+
     order_by = model.id
-    order_direction = 'ASC'
+    order_direction = pagination_order_direction
 
     # Check if things are being searched for
     if request_args:
@@ -185,9 +188,11 @@ def filter_model_by_query_and_properties(model, request_args, objects_json_key, 
                         pagination_start_index = int(search_value)
                     
                     if search_field == '$order_by':
+                        pagination_order_by = search_value
                         order_by = getattr(model, search_value)
                     
                     if search_field == '$order_direction':
+                        pagination_order_direction = search_value
                         order_direction = str(search_value).upper()
                     
                 except ValueError:
@@ -250,13 +255,15 @@ def filter_model_by_query_and_properties(model, request_args, objects_json_key, 
         
         if filters:
             query = query.filter(*filters)
-        
-    if order_direction == 'ASC':
-        objects = query.order_by(asc(order_by)).all()
-    elif order_direction == 'DESC':
-        objects = query.order_by(desc(order_by)).all()
+    if input_data == None:
+        if order_direction == 'ASC':
+            objects = query.order_by(asc(order_by)).all()
+        elif order_direction == 'DESC':
+            objects = query.order_by(desc(order_by)).all()
+        else:
+            abort(400, description=f"Invalid Order Direction value: {order_direction}")
     else:
-        abort(400, description=f"Invalid Order Direction value: {order_direction}")
+        objects = input_data
 
     if properties_values:
         for obj in objects[:]:
@@ -279,13 +286,20 @@ def filter_model_by_query_and_properties(model, request_args, objects_json_key, 
     else:
         data_list = [obj.to_dict() for obj in trimmed_objects]
 
-    record_count = query.count()
+    pagination_record_count = query.count()
     return_obj = {
-        objects_json_key: data_list,
-        'pagination_block_size': pagination_block_size,
-        'pagination_start_index': pagination_start_index,
-        'pagination_total_records': record_count
+        'data': data_list,
+        'pagination': {
+            'pagination_block_size': pagination_block_size,
+            'pagination_start_index': pagination_start_index,
+            'order_by': pagination_order_by,
+            'order_direction': pagination_order_direction,
+            'pagination_total_records': pagination_record_count
+        }
     }
+
+    if return_objects:
+        return trimmed_objects
     
     return return_obj
 

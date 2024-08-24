@@ -4,10 +4,10 @@ pages:
   edit_workshop_worksheet:
     endpoint: routes.frontend.private.management.edit_workshop_worksheet
     backend_endpoints:
-      routes.backend.private.management.get_workshop_file:
+      routes.resources.get_workshop_file:
+      routes.resources.get_file_versions:
       routes.backend.private.management.get_file_data:
       routes.backend.private.management.edit_file_data:
-      routes.backend.private.management.get_file_versions:
       routes.backend.private.management.add_worksheet:
       routes.backend.private.management.get_workshop_field:
         allowed_fields: id, name
@@ -107,7 +107,7 @@ pages:
       routes.backend.private.management.activate_workshop:
       routes.backend.private.management.get_difficulty_levels:
       routes.backend.private.management.get_difficulty_level:
-      routes.backend.private.management.get_files:
+      routes.backend.private.management.get_workshop_files:
       routes.backend.private.management.add_worksheet:
 
 
@@ -135,6 +135,7 @@ pages:
         allowed_fields: id, name
       routes.backend.private.admin.get_users_field:
         allowed_fields: id, display_name, role_ids
+      routes.backend.private.volunteer.get_event_attendance:
       routes.backend.private.volunteer.get_user_attendance:
       routes.backend.private.volunteer.add_user_attendance:
       routes.backend.private.volunteer.edit_user_attendance:

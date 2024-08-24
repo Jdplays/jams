@@ -1,8 +1,10 @@
+import { isDefined } from "./global/helper";
+
 function loadNavigationBar() {
     const navContainer = document.getElementById('nav-container');
     if (navContainer) {
         // Check the current URL path
-        const currentPath = window.location.pathname;
+        const currentPath:string = window.location.pathname;
         let navUrl;
 
         // Determine which nav bar to load based on the path
@@ -74,3 +76,8 @@ function toggleTheme() {
 // Event listeners
 document.addEventListener("DOMContentLoaded", loadNavigationBar);
 document.addEventListener("DOMContentLoaded", loadTheme);
+document.addEventListener("DOMContentLoaded", () => {
+    if (isDefined(window)) {
+        (<any>window).toggleTheme = toggleTheme;
+    }
+});

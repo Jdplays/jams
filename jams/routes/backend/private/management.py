@@ -15,14 +15,14 @@ bp = Blueprint('management', __name__)
 @bp.route('/workshops', methods=['GET'])
 @role_based_access_control_be
 def get_workshops():
-    workshops = helper.filter_model_by_query_and_properties(Workshop, request.args, 'workshops')
+    workshops = helper.filter_model_by_query_and_properties(Workshop, request.args)
     return jsonify(workshops)
 
 
 @bp.route('/workshops/<field>', methods=['GET'])
 @role_based_access_control_be
 def get_workshops_field(field):
-    workshops = helper.filter_model_by_query_and_properties(Workshop, request.args, 'workshops', field)
+    workshops = helper.filter_model_by_query_and_properties(Workshop, request.args, field)
     return jsonify(workshops)
 
 
@@ -57,17 +57,14 @@ def add_workshop():
     min_volunteers = data.get('min_volunteers')
     difficulty_id = data.get('difficulty_id')
 
-    if not name or not description or not min_volunteers or not difficulty_id or difficulty_id == '-1':
+    if not name or not description or min_volunteers == None or not difficulty_id or difficulty_id == '-1':
         abort(400, description="No 'name' or 'description' or 'min_volunteers' or 'difficulty_id' provided")
 
     new_workshop = Workshop(name=name, description=description, min_volunteers=min_volunteers, difficulty_id=difficulty_id)
     db.session.add(new_workshop)
     db.session.commit()
 
-    return jsonify({
-        'message': 'New workshop has been successfully added',
-        'workshop': new_workshop.to_dict()
-    })
+    return jsonify(new_workshop.to_dict())
 
 
 @bp.route('/workshops/<int:workshop_id>', methods=['PATCH'])
@@ -129,18 +126,19 @@ def add_worksheet(workshop_id):
         db.session.commit()
     return jsonify({
         'message': 'File successfully uploaded',
-        'file': file_db_obj.to_dict()
-        })
+        'file_data': file_db_obj.to_dict()
+    })
 
 
-@bp.route('/workshops/<int:workshop_id>/files', methods=['GET'])
+@bp.route('/workshops/files', methods=['GET'])
 @role_based_access_control_be
-def get_files(workshop_id):
-    workshop_files = WorkshopFile.query.filter_by(workshop_id=workshop_id).all()
+def get_workshop_files():
+    workshop_files = helper.filter_model_by_query_and_properties(WorkshopFile, request.args, return_objects=True)
     if not workshop_files:
         abort(404)
-    return_obj = [workshop_file.file.to_dict() for workshop_file in workshop_files]
-    return jsonify({'files':return_obj})
+    files = [wf.file for wf in workshop_files]
+    data = helper.filter_model_by_query_and_properties(File, input_data=files)
+    return jsonify(data)
 
 @bp.route('/workshops/<int:workshop_id>/files/<uuid:file_id>/data', methods=['GET'])
 @role_based_access_control_be
@@ -169,50 +167,20 @@ def edit_file_data(workshop_id, file_id):
     
     return jsonify(file.to_dict())
 
-
-@bp.route('/workshops/<int:workshop_id>/files/<uuid:file_id>/versions', methods=['GET'])
-@role_based_access_control_be
-def get_file_versions(workshop_id, file_id):
-    workshop_file = WorkshopFile.query.filter_by(workshop_id=workshop_id, file_id=file_id).first_or_404()
-    file = workshop_file.file
-    return_obj = [file_version.to_dict() for file_version in file.versions]
-    return jsonify({'file_versions': return_obj})
-
-@bp.route('/workshops/<int:workshop_id>/files/<uuid:file_id>', methods=['GET'])
-@role_based_access_control_be
-def get_workshop_file(workshop_id, file_id):
-    WorkshopFile.query.filter_by(workshop_id=workshop_id, file_id=file_id).first_or_404()
-    file = File.query.filter_by(id=file_id).first_or_404()
-    if request.args:
-        version_id = request.args.get('version_id')
-        if version_id:
-            return helper.get_and_prepare_file(files.workshop_bucket, file.name, version_id)
-    return helper.get_and_prepare_file(files.workshop_bucket, file.name, file.current_version_id)
-
 #------------------------------------------ LOCATION ------------------------------------------#
 
 @bp.route('/locations', methods=['GET'])
 @role_based_access_control_be
 def get_locations():
-    locations_data_list = [location.to_dict() for location in Location.query.order_by(Location.id).all()]
-    return jsonify({'locations': locations_data_list})
+    data = helper.filter_model_by_query_and_properties(Location, request.args)
+    return jsonify(data)
 
 
 @bp.route('/locations/<field>', methods=['GET'])
 @role_based_access_control_be
 def get_locations_field(field):
-    allowed_fields = list(Location.query.first_or_404().to_dict().keys())
-    if field not in allowed_fields:
-        abort(404, description=f"Field '{field}' not found or allowed")
-
-    locations_data_list = []
-    for location in Location.query.all():
-        locations_data_list.append({
-            'id': location.id,
-            field: getattr(location, field)
-        })
-        
-    return jsonify({'locations': locations_data_list})
+    data = helper.filter_model_by_query_and_properties(Location, request.args, field)
+    return jsonify(data)
 
 
 @bp.route('/locations/<int:location_id>', methods=['GET'])
@@ -301,25 +269,15 @@ def activate_location(location_id):
 @bp.route('/timeslots', methods=['GET'])
 @role_based_access_control_be
 def get_timeslots():
-    timeslots_data_list = [timeslot.to_dict() for timeslot in Timeslot.query.order_by(Timeslot.id).all()]
-    return jsonify({'timeslots': timeslots_data_list})
+    data = helper.filter_model_by_query_and_properties(Timeslot, request.args)
+    return jsonify(data)
 
 
 @bp.route('/timeslots/<field>', methods=['GET'])
 @role_based_access_control_be
 def get_timeslots_field(field):
-    allowed_fields = list(Timeslot.query.first_or_404().to_dict().keys())
-    if field not in allowed_fields:
-        abort(404, description=f"Field '{field}' not found or allowed")
-
-    timeslots_data_list = []
-    for timeslot in Timeslot.query.all():
-        timeslots_data_list.append({
-            'id': timeslot.id,
-            field: getattr(timeslot, field)
-        })
-        
-    return jsonify({'timeslots': timeslots_data_list})
+    data = helper.filter_model_by_query_and_properties(Timeslot, request.args, field)
+    return jsonify(data)
 
 
 @bp.route('/timeslots/<int:timeslot_id>', methods=['GET'])
@@ -411,8 +369,8 @@ def activate_timeslot(timeslot_id):
 @bp.route('/difficulty_levels', methods=['GET'])
 @role_based_access_control_be
 def get_difficulty_levels():
-    difficulty_levels_data_list = [difficulty.to_dict() for difficulty in DifficultyLevel.query.order_by(DifficultyLevel.id).all()]
-    return jsonify({'difficulty_levels': difficulty_levels_data_list})
+    data = helper.filter_model_by_query_and_properties(DifficultyLevel, request.args)
+    return jsonify(data)
 
 @bp.route('/difficulty_levels/<int:difficulty_id>', methods=['GET'])
 @role_based_access_control_be

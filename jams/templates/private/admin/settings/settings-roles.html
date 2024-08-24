@@ -6,7 +6,7 @@
 
 {% block settings_content %}
 
-<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add-role-modal" onclick="PrepAddRoleForm()">Add
+<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add-role-modal" onclick="prepAddRoleForm()">Add
     Role</button>
 
 <div class="modal" id="add-role-modal" tabindex="-1">
@@ -36,7 +36,7 @@
                 <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
                     Cancel
                 </a>
-                <a href="#" onclick="AddRoleOnClick()" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
+                <a href="#" onclick="addRoleOnClick()" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-plus" width="24"
                         height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
                         stroke-linecap="round" stroke-linejoin="round">
@@ -51,20 +51,8 @@
     </div>
 </div>
 
-<div class="table-responsive">
-    <table id="roles-table" class="table table-vcenter">
-        <thead class="sticky-top">
-            <tr>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Pages</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody id="table-body">
-            <!-- Data will be dynamically added here -->
-        </tbody>
-    </table>
+<div id="roles-data-grid-container">
+    <div id="roles-data-grid" class="ag-theme-quartz" style="height: 500px"></div>
 </div>
 
 <div class="modal" id="edit-role-modal" tabindex="-1">
@@ -95,7 +83,7 @@
                 <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
                     Cancel
                 </a>
-                <a href="#" onclick="EditRoleOnClick()" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
+                <a href="#" onclick="editRoleOnClick()" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-plus" width="24"
                         height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
                         stroke-linecap="round" stroke-linejoin="round">

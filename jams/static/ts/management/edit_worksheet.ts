@@ -1,121 +1,26 @@
-var VersionId = null
+import {
+    getFile,
+    getWorkshopFileData,
+    editFileData,
+    getFileVersions,
+    getWorkshopField,
+    uploadFileToWorkshop
+} from "../global/endpoints";
+import { FileData, FileResponse } from "../global/endpoints_interfaces";
+import { emptyElement, isDefined } from "../global/helper";
+import tinymce, { Editor } from 'tinymce';
+import TurndownService from 'turndown';
+import { marked } from 'marked';
 
-function getFile() {
-  let url = `/backend/workshops/${workshopId}/files/${fileUUID}`
-    if (VersionId != null) {
-      url += `?version_id=${VersionId}`
-    }
-  return new Promise((resolve, reject) => {
-    $.ajax({
-      url: url,
-      type: "GET",
-      xhrFields: {
-        responseType: 'blob' // Expect binary data
-      },
-      success: function (data, textStatus, jqXHR) {
-        const mimeType = jqXHR.getResponseHeader("Content-Type");
-        resolve({data, mimeType});
-      },
-      error: function (error) {
-        console.log("Error fetching data:", error);
-        reject(error);
-      },
-    });
-  });
-}
-
-function getFileData() {
-  return new Promise((resolve, reject) => {
-    $.ajax({
-      url: `/backend/workshops/${workshopId}/files/${fileUUID}/data`,
-      type: "GET",
-      success: function (response) {
-        resolve(response);
-      },
-      error: function (error) {
-        console.log("Error fetching data:", error);
-        reject(error);
-      },
-    });
-  });
-}
-
-function editFileData(data) {
-  return new Promise((resolve, reject) => {
-    $.ajax({
-      url: `/backend/workshops/${workshopId}/files/${fileUUID}/data`,
-      type: "PATCH",
-      data: JSON.stringify(data),
-      contentType: 'application/json',
-      success: function (response) {
-        resolve(response);
-      },
-      error: function (error) {
-        console.log("Error fetching data:", error);
-        reject(error);
-      },
-    });
-  });
-}
-
-function getFileVersions() {
-  return new Promise((resolve, reject) => {
-    $.ajax({
-      url: `/backend/workshops/${workshopId}/files/${fileUUID}/versions`,
-      type: "GET",
-      success: function (response) {
-        resolve(response.file_versions);
-      },
-      error: function (error) {
-        console.log("Error fetching data:", error);
-        reject(error);
-      },
-    });
-  });
-}
-
-function getWorkshopName() {
-  return new Promise((resolve, reject) => {
-      $.ajax({
-          url: `/backend/workshops/${workshopId}/name`,
-          type: 'GET',
-          success: function(response) {
-              resolve(response);  
-          },
-          error: function(error) {
-              console.log('Error fetching data:', error);
-              reject(error)
-          }
-      });
-  });
-}
-
-function uploadFileToWorkshop(fileData) {
-  return new Promise((resolve, reject) => {
-    $.ajax({
-      type: "POST",
-      url: `/backend/workshops/${workshopId}/worksheet`,
-      data: fileData,
-      processData: false,
-      contentType: false,
-      success: function (response) {
-        document.getElementById('tool-bar-upload-response').innerHTML = response.message
-        resolve(response);
-      },
-      error: function (error) {
-        console.log("Error fetching data:", error);
-        document.getElementById('tool-bar-upload-response').innerHTML = error
-        reject(error);
-      },
-    });
-  });
-}
+var VersionId:string|null = null
+let workshopId:number
+let fileUUID:string
 
 function uploadFileInputOnChange() {
-  let input = document.getElementById('tool-bar-upload-file-input')
-  file = input.files[0]
+  const input = document.getElementById('tool-bar-upload-file-input') as HTMLInputElement
+  const file = input.files[0]
 
-  let button = document.getElementById('tool-bar-upload-file-button')
+  const button = document.getElementById('tool-bar-upload-file-button') as HTMLButtonElement
   if(file) {
     button.disabled = false
   }
@@ -126,10 +31,10 @@ function uploadFileInputOnChange() {
 
 
 async function uploadFileButtonOnClick() {
-  let input = document.getElementById('tool-bar-upload-file-input')
+  const input = document.getElementById('tool-bar-upload-file-input') as HTMLInputElement
 
-  file = input.files[0]
-  fileType = file.name.split('.').pop().toLowerCase()
+  const file = input.files[0]
+  const fileType = file.name.split('.').pop().toLowerCase()
   if (fileType != 'md' && fileType != 'pdf') {
     document.getElementById('tool-bar-upload-response').innerHTML = 'Invalid File type selected!'
     return
@@ -140,42 +45,42 @@ async function uploadFileButtonOnClick() {
   var fileData = new FormData();
   fileData.append('file', newFile);
 
-  uploadFileToWorkshop(fileData).then(response => {
+  uploadFileToWorkshop(workshopId, fileData).then(response => {
     initialisePage()
   })
   
 }
 
-function versionDropdownOnChange(version) {
+function versionDropdownOnChange(version:string) {
   VersionId = version
   initialisePage()
 }
 
 async function restoreButtonOnClick() {
-  data = {
+  const data:Partial<FileData> = {
     'current_version_id': VersionId
   }
 
-  await editFileData(data).then(response => {
+  await editFileData(workshopId, fileUUID, data).then(response => {
     initialisePage()
   })
 }
 
 async function saveButtonOnClick() {
-  let content = tinyMCE.activeEditor.getContent({format: 'markdown'})
-  const turndownService = new TurndownService()
-  const markdownContent = turndownService.turndown(content)
+    const content: string = tinymce.activeEditor.getContent({ format: 'html' });
+    const turndownService = new TurndownService()
+    const markdownContent: string = turndownService.turndown(content);
 
-  // Create a Blob from the markdown content
-  const blob = new Blob([markdownContent], { type: 'text/markdown' })
+    // Create a Blob from the markdown content
+    const blob = new Blob([markdownContent], { type: 'text/markdown' })
 
-  const fileData = new FormData()
-  fileData.append('file', blob, 'worksheet.md')
+    const fileData = new FormData()
+    fileData.append('file', blob, 'worksheet.md')
 
-  await uploadFileToWorkshop(fileData).then(response => {
-    VersionId = response.file.current_version_id
-    initialisePage()
-  })
+    await uploadFileToWorkshop(workshopId, fileData).then(response => {
+        VersionId = response.current_version_id
+        initialisePage()
+    })
 }
 
 async function initialisePage() {
@@ -186,17 +91,21 @@ async function initialisePage() {
   fileContainer.style.width = `100%`;
 
   // Get the file passed in
-  let response = await getFile(fileUUID);
+  let queryString:string|null = null;
+  if (VersionId != null) {
+    queryString = `version_id=${VersionId}`
+  }
+  let response = await getFile(fileUUID, queryString);
 
   let fileData = response.data
   let fileMimeType = response.mimeType
 
-  EmptyElement(fileContainer)
+  emptyElement(fileContainer)
 
   displayFile(fileContainer, fileData, fileMimeType)
 }
 
-function displayFile(fileContainer, fileData, mimeType) {
+function displayFile(fileContainer:HTMLElement, fileData:Blob, mimeType:string) {
     const blob = new Blob([fileData], {type: mimeType});
     const url = URL.createObjectURL(blob)
 
@@ -206,7 +115,7 @@ function displayFile(fileContainer, fileData, mimeType) {
 
         reader.onload = function (e) {
             // Read the file as text
-            const markdownText = e.target.result;
+            const markdownText = String(e.target.result);
 
             initialiseTinyMCE(fileContainer, markdownText);
         };
@@ -224,7 +133,7 @@ function displayFile(fileContainer, fileData, mimeType) {
         element.height = '100%'
     } else if (mimeType === 'application/json') {
         element = document.createElement('pre')
-        element.textContent = fileData;
+        element.textContent = String(fileData);
     } else {
         element = document.createElement('a')
         element.href = url
@@ -235,10 +144,10 @@ function displayFile(fileContainer, fileData, mimeType) {
     fileContainer.appendChild(element)
 }
 
-function initialiseTinyMCE(fileContainer, fileData) {
+async function initialiseTinyMCE(fileContainer:HTMLElement, fileData:string) {
     const tinymceTextArea = document.createElement("textarea");
     tinymceTextArea.id = "tinymce-text-area";
-    const htmlContent = marked.parse(fileData)
+    const htmlContent = await marked.parse(fileData)
     tinymceTextArea.innerHTML = htmlContent
 
     fileContainer.appendChild(tinymceTextArea)
@@ -250,6 +159,9 @@ function initialiseTinyMCE(fileContainer, fileData) {
         resize: false,
         menubar: false,
         statusbar: false,
+        skin: 'oxide',
+        content_css: 'default',
+        license_key: 'gpl',
         plugins: [
         "advlist",
         "autolink",
@@ -278,9 +190,9 @@ function initialiseTinyMCE(fileContainer, fileData) {
         "removeformat | save",
         content_style:
         "body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 14px; -webkit-font-smoothing: antialiased; }",
-        setup: (editor) => {
+        setup: (editor:Editor) => {
           editor.on('Dirty', (e) => {
-            let saveButton = document.getElementById('tool-bar-save-file')
+            let saveButton = document.getElementById('tool-bar-save-file') as HTMLButtonElement
             saveButton.disabled = false
           })
         }
@@ -291,41 +203,34 @@ function initialiseTinyMCE(fileContainer, fileData) {
         tinymceOptions.content_css = "dark";
     }
 
-    tinyMCE.init(tinymceOptions);
+    tinymce.init(tinymceOptions);
 }
 
 async function populateToolBar() {
-  let fileData = await getFileData()
-  let fileVersions = await getFileVersions()
-  let workshopData = await getWorkshopName()
-
-  const infoCol = document.getElementById('tool-bar-col-1')
-  const versionCol = document.getElementById('tool-bar-col-2')
-  const actionsCol = document.getElementById('tool-bar-col-3')
+  let fileData = await getWorkshopFileData(workshopId, fileUUID)
+  let fileVersions = await getFileVersions(fileUUID)
+  let workshopData = await getWorkshopField(workshopId, 'name')
 
   // Info Column
-  infoCol.width = '40%'
-  let title = document.getElementById('tool-bar-title')
+  let title = document.getElementById('tool-bar-title') as HTMLElement
   title.innerHTML = `${workshopData.name} - Worksheet`
 
-  let uploadInput = document.getElementById('tool-bar-upload-file-input')
+  let uploadInput = document.getElementById('tool-bar-upload-file-input') as HTMLInputElement
   uploadInput.value = ''
 
-  let uploadButton = document.getElementById('tool-bar-upload-file-button')
+  let uploadButton = document.getElementById('tool-bar-upload-file-button') as HTMLButtonElement
   uploadButton.disabled = true
 
   // Version Column
-  versionCol.width = '40%'
-
-  let versionDropdown = document.getElementById('version-dropdown')
-  EmptyElement(versionDropdown)
+  let versionDropdown = document.getElementById('version-dropdown') as HTMLSelectElement
+  emptyElement(versionDropdown)
 
   let selectedVersionHeader = document.createElement('span')
   selectedVersionHeader.classList.add('dropdown-header')
   selectedVersionHeader.innerHTML = 'Selected Version'
   versionDropdown.appendChild(selectedVersionHeader)
 
-  let defaultVersionOption = document.createElement('a')
+  let defaultVersionOption = document.createElement('a') as any
   defaultVersionOption.classList.add('dropdown-item')
   defaultVersionOption.disabled = true
   if (VersionId == null) {
@@ -366,24 +271,32 @@ async function populateToolBar() {
 
 
   // Restore Column
-  actionsCol.width = '20%'
-  let restoreButton = document.getElementById('tool-bar-restore-file')
+  let restoreButton = document.getElementById('tool-bar-restore-file') as HTMLButtonElement
   restoreButton.disabled = true
   if (VersionId != null && VersionId != fileData.current_version_id) {
     restoreButton.disabled = false
   }
 
-  let saveButton = document.getElementById('tool-bar-save-file')
+  let saveButton = document.getElementById('tool-bar-save-file') as HTMLButtonElement
   saveButton.disabled = true
   
 }
 
-// Empties all children from a html element
-function EmptyElement(element) {
-  while (element.firstChild) {
-      element.removeChild(element.firstChild)
-  }
-}
-
 // Event listeners
+document.addEventListener("DOMContentLoaded", () => {
+    const urlString: string = window.location.href
+    const url: URL = new URL(urlString)
+    const params: URLSearchParams = url.searchParams
+
+    workshopId = Number(params.get('workshop_id'))
+    fileUUID = params.get('file_uuid')
+});
 document.addEventListener("DOMContentLoaded", initialisePage);
+document.addEventListener("DOMContentLoaded", () => {
+    if (isDefined(window)) {
+        (<any>window).saveButtonOnClick = saveButtonOnClick;
+        (<any>window).restoreButtonOnClick = restoreButtonOnClick;
+        (<any>window).uploadFileInputOnChange = uploadFileInputOnChange;
+        (<any>window).uploadFileButtonOnClick = uploadFileButtonOnClick;
+    }
+});

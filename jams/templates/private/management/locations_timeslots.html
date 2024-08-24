@@ -38,7 +38,7 @@
                 <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
                     Cancel
                 </a>
-                <a href="#" onclick="AddLocationOnClick()" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
+                <a href="#" onclick="addLocationOnClick()" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-plus" width="24"
                         height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
                         stroke-linecap="round" stroke-linejoin="round">
@@ -72,7 +72,7 @@
                 <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
                     Cancel
                 </a>
-                <a href="#" onclick="EditLocationOnClick()" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
+                <a href="#" onclick="editLocationOnClick()" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-plus" width="24"
                         height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
                         stroke-linecap="round" stroke-linejoin="round">
@@ -87,21 +87,9 @@
     </div>
 </div>
 
-<div class="table-responsive">
-    <table id="location-table" class="table table-vcenter">
-        <thead class="sticky-top">
-            <tr>
-                <th>Location Name</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody id="table-body">
-            <!-- Data will be dynamically added here -->
-        </tbody>
-    </table>
+<div id="locations-data-grid-container">
+    <div id="locations-data-grid" class="ag-theme-quartz" style="height: 500px"></div>
 </div>
-
-<p id="location-request-response"></p>
 
 <h1>Timeslots</h1>
 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add-timeslot-modal">Add
@@ -133,7 +121,7 @@
                 <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
                     Cancel
                 </a>
-                <a href="#" onclick="AddTimeslotOnClick()" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
+                <a href="#" onclick="addTimeslotOnClick()" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-plus" width="24"
                         height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
                         stroke-linecap="round" stroke-linejoin="round">
@@ -148,20 +136,8 @@
     </div>
 </div>
 
-<div class="table-responsive">
-    <table id="timeslot-table" class="table table-vcenter">
-        <thead class="sticky-top">
-            <tr>
-                <th>Timeslot Name</th>
-                <th>Start Time</th>
-                <th>End Time</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody id="table-body">
-            <!-- Data will be dynamically added here -->
-        </tbody>
-    </table>
+<div id="timeslots-data-grid-container">
+    <div id="timeslots-data-grid" class="ag-theme-quartz" style="height: 500px"></div>
 </div>
 
 <div class="modal" id="edit-timeslot-modal" tabindex="-1">
@@ -191,7 +167,7 @@
                 <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
                     Cancel
                 </a>
-                <a href="#" onclick="EditTimeslotOnClick()" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
+                <a href="#" onclick="editTimeslotOnClick()" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-plus" width="24"
                         height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
                         stroke-linecap="round" stroke-linejoin="round">

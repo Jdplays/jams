@@ -1,13 +1,37 @@
-import {
-    getDifficultyLevels,
-    getIconData
-} from './endpoints.js'
+import { getDifficultyLevels, getIconData } from './endpoints'
+import { DifficultyLevel, Workshop } from './endpoints_interfaces'
+import {hexToRgba} from './helper'
+import { ScheduleGrid } from './schedule_grid'
 
-import {hexToRgba} from './helper.js'
+export interface WorkshopCardOptions {
+    sessionId?:number|null
+    difficultyLevels?:DifficultyLevel[]|null
+    size?:number
+    remove?:boolean
+    cardRemoveIcon?:string|null
+    cardRemoveFunc?:((arg1:number, arg2:any) => void)
+    cardBodyText?:string|null
+    cardBodyIcon?:string|null
+    cardBodyActionText?:string|null
+    cardBodyActionFunc?:(() => void) | null
+    bodyText?:string|null
+    scheduleGrid?:ScheduleGrid|null
+
+}
+
+type ContainerStyles = {[key: string]: any}
 
 export class WorkshopCard {
-    constructor(workshop, options) {
+    private workshop:Workshop
+    private options:WorkshopCardOptions
+    private titleFontSize:number
+    private bodyFontSize:number
+    private workshopDifficulty:DifficultyLevel|undefined
+
+    constructor(workshop:Workshop, options:WorkshopCardOptions) {
         this.workshop = workshop
+        this.titleFontSize = 0
+        this.bodyFontSize = 0
 
         // Set options (use defaults for options not provided)
         let {
@@ -16,11 +40,12 @@ export class WorkshopCard {
             size = 150,
             remove = false,
             cardRemoveIcon = null,
-            cardRemoveFunc = null,
+            cardRemoveFunc,
             cardBodyText = null,
             cardBodyIcon = null,
             cardBodyActionText = null,
             cardBodyActionFunc = null,
+            bodyText = null,
             scheduleGrid = null
         } = options
 
@@ -35,6 +60,7 @@ export class WorkshopCard {
             cardBodyIcon,
             cardBodyActionText,
             cardBodyActionFunc,
+            bodyText,
             scheduleGrid
         }
 
@@ -49,7 +75,8 @@ export class WorkshopCard {
 
         // Load the difficulty levels if they weren't passed in
         if (!this.options.difficultyLevels) {
-            this.options.difficultyLevels = await getDifficultyLevels()
+            const response = await getDifficultyLevels()
+            this.options.difficultyLevels = response.data
         }
 
         // Get the remove icon if it wasnt passed in
@@ -59,8 +86,10 @@ export class WorkshopCard {
         }
 
         // Set the text font sizes
-        this.titleFontSize = this.options.size * 0.12
-        this.bodyFontSize = this.options.size * 0.08
+        if (this.options.size) {
+            this.titleFontSize = this.options.size * 0.12
+            this.bodyFontSize = this.options.size * 0.08
+        }
 
         this.workshopDifficulty = this.options.difficultyLevels.find(level => level.id === this.workshop.difficulty_id)
 
@@ -102,15 +131,21 @@ export class WorkshopCard {
         // If a workshop card needs a remove button, add it
         if (this.options.remove) {
             let removeButton = document.createElement('div')
-            removeButton.innerHTML = this.options.cardRemoveIcon
-            let icon = removeButton.querySelector('svg')
-            icon.classList.remove('icon-tabler-trash')
-            icon.classList.add('icon-bin-session')
+            if (this.options.cardRemoveIcon) {
+                removeButton.innerHTML = this.options.cardRemoveIcon
+                let icon = removeButton.querySelector('svg')
+                if (icon) {
+                    icon.classList.remove('icon-tabler-trash')
+                    icon.classList.add('icon-bin-session')
+                }
+            }
             if (this.options.sessionId != null) {
                 workshopCard.id = `session-${this.options.sessionId}-workshop-${this.workshop.id}`
                 removeButton.onclick = () => {
-                    this.options.cardRemoveFunc(this.options.sessionId, this.options.scheduleGrid)
-                    return true
+                    if (this.options.cardRemoveFunc && this.options.sessionId && this.options.scheduleGrid) {
+                        this.options.cardRemoveFunc(this.options.sessionId, this.options.scheduleGrid)
+                        return true
+                    }
                 }
             }
 
@@ -123,13 +158,16 @@ export class WorkshopCard {
         if (!this.options.bodyText) {
             workshopBodyText.innerHTML = this.workshop.description
         } else {
-            workshopBodyText.innerHTML = this.bodyText
+            workshopBodyText.innerHTML = this.options.bodyText
         }
         workshopBodyText.style.fontSize = `${this.bodyFontSize}px`
         workshopBodyText.classList.add('workshop-body-text', 'truncate')
 
         // Set available height for body text
-        let availableHeight = this.options.size - this.calculateElementHeight(workshopTitleContainer) - 20 // 20px for some padding
+        let availableHeight = 0
+        if (this.options.size) {
+            availableHeight = this.options.size - this.calculateElementHeight(workshopTitleContainer) - 20 // 20px for some padding
+        }
         
 
         const workshopActionButton = document.createElement('button')
@@ -147,9 +185,7 @@ export class WorkshopCard {
 
         // Calculate the max number of lines for the body text
         let maxLines = Math.floor(availableHeight / (this.bodyFontSize * 1.2))
-        //console.log(availableHeight)
-        //console.log(maxLines)
-        workshopBodyText.style.webkitLineClamp = maxLines
+        workshopBodyText.style.webkitLineClamp = `${maxLines}`
 
         workshopCard.appendChild(workshopTitleContainer)
         workshopCard.appendChild(workshopBodyText)
@@ -161,7 +197,7 @@ export class WorkshopCard {
         return workshopCard
     }
 
-    calculateElementHeight(element, containerStyles = {}) {
+    calculateElementHeight(element:HTMLElement, containerStyles:ContainerStyles = {}) {
         // Create a temporary container to hold the element off-screen
         const tempContainer = document.createElement('div');
         tempContainer.style.position = 'absolute';

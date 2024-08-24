@@ -16,12 +16,11 @@ bp = Blueprint('management', __name__, url_prefix='management')
 def workshop_catalog():
     return render_template(f'{url_prefix}/workshop_catalog.html')
 
-@bp.route('/workshops/<int:workshop_id>/files/<uuid:file_id>')
+@bp.route('/workshops/files/edit')
 @login_required
 @role_based_access_control_fe
-def edit_workshop_worksheet(workshop_id, file_id):
-    WorkshopFile.query.filter_by(workshop_id=workshop_id, file_id=file_id).first_or_404()
-    return render_template(f'{url_prefix}/edit_worksheet.html', workshop_id = workshop_id, file_id = file_id)
+def edit_workshop_worksheet():
+    return render_template(f'{url_prefix}/edit_worksheet.html')
 
 @bp.route('/locations_timeslots')
 @login_required
