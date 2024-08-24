@@ -2,6 +2,8 @@ import path from 'path';
 import url from 'url';
 import { glob } from 'glob';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
+import pkg from 'webpack';
+const { SourceMapDevToolPlugin } = pkg;
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,11 +21,12 @@ const entries = glob.sync('./jams/static/ts/**/*.ts').reduce((entries, entry) =>
 
 
 export default {
+  devtool: 'source-map',
   entry: entries, // Adjust to your TypeScript entry point
   output: {
     filename: '[name].js',
     path: path.resolve(__dirname, './jams/static/js/'), // Output directory for the JavaScript files
-    publicPath: '/'
+    publicPath: '/static/js/'
   },
   resolve: {
     extensions: ['.ts', '.js']
@@ -40,7 +43,12 @@ export default {
   optimization: {
     minimize: false,
   },
+  devtool: false,
   plugins: [
+    new SourceMapDevToolPlugin({
+      append: '\n//# sourceMappingURL=/static/js/[url]',
+      filename: '[name].js.map',
+    }),
     //new BundleAnalyzerPlugin()
   ],
   mode: 'development'
