@@ -12,7 +12,7 @@ import {
     uploadFileToWorkshop
 } from "../global/endpoints";
 import { RequestMultiModelJSONData, FileData, Workshop, QueryStringData } from "../global/endpoints_interfaces";
-import { buildActionButtonsForModel, successToast, errorToast, buildQueryString } from "../global/helper";
+import { buildActionButtonsForModel, successToast, errorToast, buildQueryString, isDefined } from "../global/helper";
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
 
 let gridApi: GridApi<any>;
@@ -194,7 +194,6 @@ async function prepEditWorkshopForm(workshopId:number) {
         badge.classList.add('badge-circle', 'ms-auto');
         badge.style.backgroundColor = difficulty.display_colour;
 
-        //dropdownItem.appendChild(badge);
         difficultyLevelDropdown.appendChild(option);
     }
 
@@ -300,7 +299,7 @@ function initaliseAddForm() {
 document.addEventListener("DOMContentLoaded", initialiseAgGrid);
 document.addEventListener("DOMContentLoaded", initaliseAddForm);
 document.addEventListener("DOMContentLoaded", () => {
-    if (typeof window !== 'undefined') {
+    if (isDefined(window)) {
         (<any>window).addWorkshopOnClick = addWorkshopOnClick;
         (<any>window).editWorkshopOnClick = editWorkshopOnClick;
     }

@@ -160,13 +160,11 @@ async function preloadRoleNames() {
 }
 
 async function populateUserManagementTable() {
-    //gridApi.setGridOption("loading", true);
     const response = await getUsers()
     let allUsers = response.data
     roleNamesMap = await preloadRoleNames()
 
     gridApi.setGridOption('rowData', allUsers)
-    //gridApi.setGridOption("loading", false);
 }
 
 // Event listeners

@@ -7,7 +7,7 @@ import {
     uploadFileToWorkshop
 } from "../global/endpoints";
 import { FileData, FileResponse } from "../global/endpoints_interfaces";
-import { emptyElement } from "../global/helper";
+import { emptyElement, isDefined } from "../global/helper";
 import tinymce, { Editor } from 'tinymce';
 import TurndownService from 'turndown';
 import { marked } from 'marked';
@@ -293,7 +293,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 document.addEventListener("DOMContentLoaded", initialisePage);
 document.addEventListener("DOMContentLoaded", () => {
-    if (typeof window !== 'undefined') {
+    if (isDefined(window)) {
         (<any>window).saveButtonOnClick = saveButtonOnClick;
         (<any>window).restoreButtonOnClick = restoreButtonOnClick;
         (<any>window).uploadFileInputOnChange = uploadFileInputOnChange;

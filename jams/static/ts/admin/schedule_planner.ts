@@ -92,7 +92,6 @@ async function populateWorkshopList() {
         difficulty_id: selectDifficultyIds
     }
     let queryString = buildQueryString(queryData)
-    console.log(queryString)
     const workshopsResponse = await getWorkshops(queryString)
     const difficultyLevels = await getDifficultyLevels()
 
@@ -226,7 +225,6 @@ async function populateWorkshopSelectionTools() {
         create: false,
         maxItems: null,
         onChange: function(values:any) {
-            console.log(values)
             // TODO: ADD THIS WHEN TAGS ARE IMPLEMENTED
             //selectedTags = values
             //PopulateWorkshopList()

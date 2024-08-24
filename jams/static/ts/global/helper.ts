@@ -214,10 +214,10 @@ export function successToast(message:string) {
     })
 }
 
-export function errorToast() {
+export function errorToast(message:string|null=null) {
     Toast.fire({
         icon: 'error',
-        title: 'An Error occurred!'
+        title: message ?? 'An Error occurred!'
     })
 }
 
@@ -236,3 +236,5 @@ export function getSelectValues(select:HTMLSelectElement) {
     }
     return result;
   }
+
+  export const isDefined = (value:any):boolean => value !== undefined && value !== null;

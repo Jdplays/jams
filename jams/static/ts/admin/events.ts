@@ -7,7 +7,7 @@ import {
     activateEvent
 } from "../global/endpoints"
 import { RequestMultiModelJSONData, Event } from "../global/endpoints_interfaces";
-import { buildActionButtonsForModel, successToast, errorToast } from "../global/helper";
+import { buildActionButtonsForModel, successToast, errorToast, isDefined } from "../global/helper";
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
 
 
@@ -125,7 +125,7 @@ async function populateEventsTable() {
 // Event listeners
 document.addEventListener("DOMContentLoaded", initialiseAgGrid);
 document.addEventListener("DOMContentLoaded", () => {
-    if (typeof window !== 'undefined') {
+    if (isDefined(window)) {
         (<any>window).addEventOnClick = addEventOnClick;
         (<any>window).editEventOnClick = editEventOnClick;
     }

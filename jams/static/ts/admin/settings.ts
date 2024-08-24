@@ -7,7 +7,7 @@ import {
     getPageNames
 } from "../global/endpoints"
 import { RequestMultiModelJSONData } from "../global/endpoints_interfaces";
-import { successToast, errorToast, getSelectValues, emptyElement, isNullEmptyOrSpaces, buildEditButtonForModel } from "../global/helper";
+import { successToast, errorToast, getSelectValues, emptyElement, isNullEmptyOrSpaces, buildEditButtonForModel, isDefined } from "../global/helper";
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
 import TomSelect from 'tom-select';
 
@@ -206,7 +206,7 @@ async function populateRolesTable() {
 // Event listeners
 document.addEventListener("DOMContentLoaded", initialiseAgGrid);
 document.addEventListener("DOMContentLoaded", () => {
-    if (typeof window !== 'undefined') {
+    if (isDefined(window)) {
         (<any>window).prepAddRoleForm = prepAddRoleForm;
         (<any>window).addRoleOnClick = addRoleOnClick;
         (<any>window).editRoleOnClick = editRoleOnClick;

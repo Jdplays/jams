@@ -13,7 +13,7 @@ import {
     activateTimeslot
 } from '../global/endpoints'
 import { RequestMultiModelJSONData } from '../global/endpoints_interfaces'
-import { buildActionButtonsForModel, successToast, errorToast } from "../global/helper";
+import { buildActionButtonsForModel, successToast, errorToast, isDefined } from "../global/helper";
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
 
 let locationsGridApi: GridApi<any>;
@@ -111,7 +111,7 @@ async function populateLocationsTable() {
 // Event listeners
 document.addEventListener("DOMContentLoaded", initialiseLocationsAgGrid);
 document.addEventListener("DOMContentLoaded", () => {
-    if (typeof window !== 'undefined') {
+    if (isDefined(window)) {
         (<any>window).addLocationOnClick = addLocationOnClick;
         (<any>window).editLocationOnClick = editLocationOnClick;
     }
@@ -222,7 +222,7 @@ async function populateTimeslotsTable() {
 // Event listeners
 document.addEventListener("DOMContentLoaded", initialiseTimeslotsAgGrid);
 document.addEventListener("DOMContentLoaded", () => {
-    if (typeof window !== 'undefined') {
+    if (isDefined(window)) {
         (<any>window).addTimeslotOnClick = addTimeslotOnClick;
         (<any>window).editTimeslotOnClick = editTimeslotOnClick;
     }

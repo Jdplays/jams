@@ -1,3 +1,5 @@
+import { isDefined } from "./global/helper";
+
 function loadNavigationBar() {
     const navContainer = document.getElementById('nav-container');
     if (navContainer) {
@@ -75,7 +77,7 @@ function toggleTheme() {
 document.addEventListener("DOMContentLoaded", loadNavigationBar);
 document.addEventListener("DOMContentLoaded", loadTheme);
 document.addEventListener("DOMContentLoaded", () => {
-    if (typeof window !== 'undefined') {
+    if (isDefined(window)) {
         (<any>window).toggleTheme = toggleTheme;
     }
 });
