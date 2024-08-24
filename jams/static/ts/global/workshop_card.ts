@@ -185,8 +185,6 @@ export class WorkshopCard {
 
         // Calculate the max number of lines for the body text
         let maxLines = Math.floor(availableHeight / (this.bodyFontSize * 1.2))
-        //console.log(availableHeight)
-        //console.log(maxLines)
         workshopBodyText.style.webkitLineClamp = `${maxLines}`
 
         workshopCard.appendChild(workshopTitleContainer)
