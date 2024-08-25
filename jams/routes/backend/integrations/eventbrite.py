@@ -15,7 +15,7 @@ def verify():
     if not data:
         abort(400, description="No data provided")
     
-    private_token = data.get('private_token')
+    private_token = data.get(ConfigType.EVENTBRITE_BEARER_TOKEN.name)
     if private_token == None:
         abort(400, description="Private token not provided")
     
@@ -39,13 +39,10 @@ def get_config():
     if enabled == None:
         enabled = False
 
-    print(ConfigType.EVENTBRITE_ENABLED.name)
     eventbrite_config[ConfigType.EVENTBRITE_ENABLED.name] = enabled if enabled != None else False
-    eventbrite_config[ConfigType.EVENTBRITE_BEARER_TOKEN.name] = get_config_value(ConfigType.EVENTBRITE_BEARER_TOKEN)
     eventbrite_config[ConfigType.EVENTBRITE_ORGANISATION_ID.name] = get_config_value(ConfigType.EVENTBRITE_ORGANISATION_ID)
     eventbrite_config[ConfigType.EVENTBRITE_ORGANISATION_NAME.name] = get_config_value(ConfigType.EVENTBRITE_ORGANISATION_NAME)
 
-    print(eventbrite_config)
     return jsonify({'eventbrite_config': eventbrite_config})
 
 @bp.route('/config', methods=['PATCH'])
@@ -55,7 +52,7 @@ def edit_config():
     if not data:
         abort(400, description="No data provided")
     
-    allowed_fields = list(config_item.value for config_item in ConfigType)
+    allowed_fields = list(config_item.name for config_item in eventbrite.configItems)
     for config_name, value in data.items():
         if config_name in allowed_fields:
             set_config_value(ConfigType[config_name], value)
@@ -81,7 +78,7 @@ def enable():
     if not data:
         abort(400, description="No data provided")
     
-    allowed_fields = list(config_item.value for config_item in ConfigType)
+    allowed_fields = list(config_item.name for config_item in eventbrite.configItems)
     for config_name, value in data.items():
         if config_name in allowed_fields:
             if not value:

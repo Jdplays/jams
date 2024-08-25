@@ -152,6 +152,21 @@ export interface PaginationResponseData {
     pagination_total_records:number
 }
 
+export interface EventbriteIntegrationConfig {
+    EVENTBRITE_ENABLED:boolean
+    EVENTBRITE_BEARER_TOKEN:string
+    EVENTBRITE_ORGANISATION_ID:string
+    EVENTBRITE_ORGANISATION_NAME:string
+}
+
+export interface EventbriteOrganisation {
+    id:string
+    name:string
+    image_id:string
+    
+
+}
+
 export interface RequestMultiModelJSONData extends EventLocation, EventTimeslot, Location, Timeslot, Workshop, Session, DifficultyLevel, Event, User, Role, Page, PrivateAccessLog, VolunteerAttendance, WorkshopFile, FileData, FileVersion{
     force?:boolean
 }

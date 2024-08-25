@@ -2,9 +2,9 @@ from enum import Enum
 from jams.models import db, Config
 
 class ConfigType(Enum):
-    EVENTBRITE_ENABLED = 'EVENTBRITE_ENABLED',
-    EVENTBRITE_BEARER_TOKEN = 'EVENTBRITE_BEARER_TOKEN',
-    EVENTBRITE_ORGANISATION_ID = 'EVENTBRITE_ORGANISATION_ID',
+    EVENTBRITE_ENABLED = 'EVENTBRITE_ENABLED'
+    EVENTBRITE_BEARER_TOKEN = 'EVENTBRITE_BEARER_TOKEN'
+    EVENTBRITE_ORGANISATION_ID = 'EVENTBRITE_ORGANISATION_ID'
     EVENTBRITE_ORGANISATION_NAME = 'EVENTBRITE_ORGANISATION_NAME'
 
 
@@ -29,7 +29,7 @@ def create_config_entry(key:ConfigType, value, private=True):
     if config:
         return set_config_value(key, value)
     
-    config = Config(key.value, value, private)
+    config = Config(key=key.value, value=value, private=private)
     db.session.add(config)
     db.session.commit()
 

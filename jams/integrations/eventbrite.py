@@ -1,8 +1,15 @@
 import requests
+from jams.configuration import ConfigType
 
 #base_url = 'https://www.eventbriteapi.com/v3'
 base_url = 'https://private-anon-60974f3b0d-eventbriteapiv3public.apiary-mock.com/v3' # This is just the mock server and should be updated later.
 token = '' # No token is needed for the mock server. This should also not be hard coded and should be configurable from settings
+configItems = [
+    ConfigType.EVENTBRITE_BEARER_TOKEN,
+    ConfigType.EVENTBRITE_ENABLED,
+    ConfigType.EVENTBRITE_ORGANISATION_ID,
+    ConfigType.EVENTBRITE_ORGANISATION_NAME
+]
 
 defaultHeaders = {
     'Authorization': f'Bearer {token}'
@@ -32,7 +39,8 @@ def get_organisations(private_token=None):
     orgainisationsJson = response.json()['organizations']
     orgainisations = []
     for org in orgainisationsJson:
-        orgainisations.append(Orgainisation(org['id'], org['name'], org['image_id']))
+        org = Orgainisation(org['id'], org['name'], org['image_id'])
+        orgainisations.append(org)
     
     return orgainisations
 
