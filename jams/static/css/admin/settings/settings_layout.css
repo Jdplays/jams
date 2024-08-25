@@ -12,3 +12,7 @@
   .settings-content-container {
     padding: 10px;
   }
+
+  .settings-nav-item {
+    color: gray;
+  }
