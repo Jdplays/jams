@@ -2,8 +2,8 @@
 from flask import Blueprint, request, jsonify, abort
 from flask_security import login_required, current_user
 from jams.decorators import role_based_access_control_be, protect_user_updates
-from jams.models import db, User, Role, Event, EventLocation, EventTimeslot, Session, Page
-from jams.util import helper, files
+from jams.models import db, User, Role, Event, EventLocation, EventTimeslot, Session, Page, Config
+from jams.util import helper
 from jams.rbac import generate_roles_file_from_db, update_pages_assigned_to_role
 
 bp = Blueprint('admin', __name__)
@@ -597,16 +597,12 @@ def get_pages_field(field):
     return jsonify(pages)
 
 
-#------------------------------------------ FILE TEST ------------------------------------------#
+#------------------------------------------ CONFIG ------------------------------------------#
 
-@bp.route('/files', methods=['GET'])
+@bp.route('/config/<string:key>', methods=['GET'])
 @role_based_access_control_be
-def get_files():
-    return jsonify({'files': files.get_files_name_list(bucket_name=files.workshop_bucket)})
-
-@bp.route('/files', methods=['POST'])
-@role_based_access_control_be
-def upload_file():
-    file = request.files['file']
-    files.upload_file(bucket_name=files.workshop_bucket, file_name=file.filename, file_data=file.stream)
-    return jsonify({'message': 'File successfully uploaded'})
+def get_config_value(key):
+    if not helper.user_has_access_to_page('settings'):
+        abort(403, description='You do not have access to the requested resource with your current role')
+    config = Config.query.filter_by(key=key).first_or_404()
+    return jsonify(config.to_dict())

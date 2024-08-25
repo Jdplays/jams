@@ -11,10 +11,30 @@ pages:
       routes.backend.private.management.add_worksheet:
       routes.backend.private.management.get_workshop_field:
         allowed_fields: id, name
+  
+  settings_eventbrite:
+    endpoint: routes.frontend.private.admin.settings_eventbrite
+    backend_endpoints:
+      routes.backend.integrations.eventbrite.verify:
+      routes.backend.integrations.eventbrite.get_organisations:
+      routes.backend.integrations.eventbrite.get_config:
+      routes.backend.integrations.eventbrite.edit_config:
+      routes.backend.integrations.eventbrite.enable:
+      routes.backend.integrations.eventbrite.disable:
+
+  settings_auth_sources:
+    endpoint: routes.frontend.private.admin.settings_auth_sources
+
+  settings_roles:
+    endpoint: routes.frontend.private.admin.settings_roles
 
   # Admin
   settings:
     endpoint: routes.frontend.private.admin.settings
+    child_pages:
+      - settings_roles
+      - settings_eventbrite
+      - settings_auth_sources
     backend_endpoints:
       routes.backend.private.admin.get_roles:
       routes.backend.private.admin.get_role:

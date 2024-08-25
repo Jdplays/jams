@@ -17,7 +17,8 @@ import {
     FileData,
     FileResponse,
     FileVersion,
-    WorkshopFile
+    EventbriteIntegrationConfig,
+    EventbriteOrganisation
 } from "./endpoints_interfaces";
 
 // This is a script where all then endpoint calls will live to prevent duplication across scripts
@@ -1219,6 +1220,115 @@ export function getFileVersions(fileUUID:string):Promise<[FileVersion]> {
       });
     });
   }
+// #endregion
+
+// #region Eventbrite Integration
+export function verifyEventbriteApiToken(token:string):Promise<boolean> {
+    return new Promise((resolve) => {
+        const data:Partial<EventbriteIntegrationConfig> = {
+            'EVENTBRITE_BEARER_TOKEN': token
+        }
+
+        $.ajax({
+            url: `/backend/integrations/eventbrite/verify`,
+            type: 'POST',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response.verified)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(false)
+            }
+        });
+    });
+}
+
+export function getEventbriteUserOrganisations():Promise<[EventbriteOrganisation]> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `/backend/integrations/eventbrite/organisations`,
+            type: 'GET',
+            success: function (response) {
+                resolve(response.organisations)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(false)
+            }
+        });
+    });
+}
+
+
+export function enableEventbriteIntegration(data:Partial<EventbriteIntegrationConfig>):Promise<boolean> {
+    return new Promise((resolve) => {
+        $.ajax({
+            url: `/backend/integrations/eventbrite/enable`,
+            type: 'POST',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(true)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(false)
+            }
+        });
+    });
+}
+
+export function disableEventbriteIntegration():Promise<boolean> {
+    return new Promise((resolve) => {
+        $.ajax({
+            url: `/backend/integrations/eventbrite/disable`,
+            type: 'DELETE',
+            success: function (response) {
+                resolve(true)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(false)
+            }
+        });
+    });
+}
+
+export function getEventbriteIntegrationConfig():Promise<EventbriteIntegrationConfig> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `/backend/integrations/eventbrite/config`,
+            type: 'GET',
+            success: function (response) {
+                resolve(response.eventbrite_config)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(false)
+            }
+        });
+    });
+}
+
+export function editEventbriteIntegrationConfig(data:Partial<EventbriteIntegrationConfig>):Promise<EventbriteIntegrationConfig> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `/backend/integrations/eventbrite/config`,
+            type: 'PATCH',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response.eventbrite_config)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
 // #endregion
 
 // #region Code Assets

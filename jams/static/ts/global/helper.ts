@@ -238,3 +238,10 @@ export function getSelectValues(select:HTMLSelectElement) {
   }
 
   export const isDefined = (value:any):boolean => value !== undefined && value !== null;
+
+  export function getSelectedDropdownText(select:HTMLSelectElement):string|null {
+    if (select.selectedIndex === -1) {
+        return null
+    }
+    return select.options[select.selectedIndex].text
+  }

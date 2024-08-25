@@ -11,3 +11,4 @@ bp = Blueprint('general', __name__)
 def get_current_user_id():
     if current_user.is_authenticated:
         return jsonify({'current_user_id': current_user.id})
+    
