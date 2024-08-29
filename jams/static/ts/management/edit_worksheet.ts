@@ -5,9 +5,9 @@ import {
     getFileVersions,
     getWorkshopField,
     uploadFileToWorkshop
-} from "../global/endpoints";
-import { FileData, FileResponse } from "../global/endpoints_interfaces";
-import { emptyElement, isDefined } from "../global/helper";
+} from "@global/endpoints";
+import { FileData } from "@global/endpoints_interfaces";
+import { emptyElement, isDefined } from "@global/helper";
 import tinymce, { Editor } from 'tinymce';
 import TurndownService from 'turndown';
 import { marked } from 'marked';

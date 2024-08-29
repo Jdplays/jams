@@ -19,7 +19,7 @@ import {
     FileVersion,
     EventbriteIntegrationConfig,
     EventbriteOrganisation
-} from "./endpoints_interfaces";
+} from "@global/endpoints_interfaces";
 
 // This is a script where all then endpoint calls will live to prevent duplication across scripts
 

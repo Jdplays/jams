@@ -1,4 +1,4 @@
-import {Toast} from "../global/sweet_alert"
+import {Toast} from "@global/sweet_alert"
 
 type QueryStringParams = {[key: string]: any}
 type ModelModityFunc = ((arg1:number) => void)

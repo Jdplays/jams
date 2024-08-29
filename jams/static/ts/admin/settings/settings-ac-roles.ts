@@ -5,9 +5,9 @@ import {
     editRole,
     deleteRole,
     getPageNames
-} from "../../global/endpoints"
-import { RequestMultiModelJSONData } from "../../global/endpoints_interfaces";
-import { successToast, errorToast, getSelectValues, emptyElement, isNullEmptyOrSpaces, buildEditButtonForModel, isDefined } from "../../global/helper";
+} from "@global/endpoints"
+import { RequestMultiModelJSONData } from "@global/endpoints_interfaces";
+import { successToast, errorToast, getSelectValues, emptyElement, isNullEmptyOrSpaces, buildEditButtonForModel, isDefined } from "@global/helper";
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
 import TomSelect from 'tom-select';
 

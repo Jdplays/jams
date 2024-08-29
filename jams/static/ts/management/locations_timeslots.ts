@@ -11,9 +11,9 @@ import {
     editTimeslot,
     archiveTimeslot,
     activateTimeslot
-} from '../global/endpoints'
-import { RequestMultiModelJSONData } from '../global/endpoints_interfaces'
-import { buildActionButtonsForModel, successToast, errorToast, isDefined } from "../global/helper";
+} from '@global/endpoints'
+import { RequestMultiModelJSONData } from '@global/endpoints_interfaces'
+import { buildActionButtonsForModel, successToast, errorToast, isDefined } from "@global/helper";
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
 
 let locationsGridApi: GridApi<any>;

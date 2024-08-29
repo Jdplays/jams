@@ -6,8 +6,8 @@ import {
     addAttendance,
     editAttendance,
     getCurrentUserId
-} from '../global/endpoints'
-import { RequestMultiModelJSONData, VolunteerAttendance } from "../global/endpoints_interfaces";
+} from '@global/endpoints'
+import { RequestMultiModelJSONData, VolunteerAttendance } from "@global/endpoints_interfaces";
 
 let EventId = 1
 let CurrentUserId = 0

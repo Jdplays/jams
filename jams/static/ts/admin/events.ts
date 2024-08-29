@@ -5,9 +5,9 @@ import {
     editEvent,
     archiveEvent,
     activateEvent
-} from "../global/endpoints"
-import { RequestMultiModelJSONData, Event } from "../global/endpoints_interfaces";
-import { buildActionButtonsForModel, successToast, errorToast, isDefined } from "../global/helper";
+} from "@global/endpoints"
+import { RequestMultiModelJSONData, Event } from "@global/endpoints_interfaces";
+import { buildActionButtonsForModel, successToast, errorToast, isDefined } from "@global/helper";
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
 
 
@@ -95,7 +95,27 @@ function initialiseAgGrid() {
             {field: 'name', flex: 1},
             {field: 'description', flex: 1},
             {field: 'date', flex: 1},
+            {field: 'start_time', headerName: 'Start Time', flex: 1},
+            {field: 'end_time', headerName: 'End Time', flex: 1},
+            {field: 'capacity', flex: 1},
             {field: 'password', flex: 1},
+            {
+                field: 'external_url',
+                headerName: 'External Link',
+                cellRenderer: (params:any) => {
+                    let linkElement = document.createElement('a') as HTMLAnchorElement
+                    if (params.data.external) {
+                        linkElement.innerHTML = 'Link'
+                        linkElement.href = params.data.external_url
+                        linkElement.target = '_blank'
+                        return linkElement
+                    } else {
+                        linkElement.innerHTML = 'N/A'
+                        return linkElement
+                    }
+                },
+                flex: 1
+            },
             {
                 field: 'options', cellRenderer: (params:any) => {
                     return buildActionButtonsForModel(params.data.id, params.data.active, archiveEventOnClick, activateEventOnClick, 'edit-event-modal', prepEditEventForm)

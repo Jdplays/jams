@@ -1,6 +1,6 @@
-import { verifyEventbriteApiToken, getIconData, getEventbriteUserOrganisations, enableEventbriteIntegration, getEventbriteIntegrationConfig, editEventbriteIntegrationConfig, disableEventbriteIntegration } from "../../global/endpoints"
-import { emptyElement, errorToast, getSelectedDropdownText, isDefined, isNullEmptyOrSpaces, successToast } from "../../global/helper"
-import { EventbriteIntegrationConfig, EventbriteOrganisation } from "../../global/endpoints_interfaces"
+import { verifyEventbriteApiToken, getIconData, getEventbriteUserOrganisations, enableEventbriteIntegration, getEventbriteIntegrationConfig, editEventbriteIntegrationConfig, disableEventbriteIntegration } from "@global/endpoints"
+import { emptyElement, errorToast, getSelectedDropdownText, isDefined, isNullEmptyOrSpaces, successToast } from "@global/helper"
+import { EventbriteIntegrationConfig, EventbriteOrganisation } from "@global/endpoints_interfaces"
 
 let loadingIcon:string;
 let tickIcon:string;
