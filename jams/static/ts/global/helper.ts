@@ -143,13 +143,17 @@ export function waitForTransitionEnd(element:HTMLElement):Promise<void> {
 
 type OnAnyFunc = (ev: Event) => void
 // Creates a generic dropdown based on inputs
-export function createDropdown(options:any, defualtOptionText:string, onChangeFunc:OnAnyFunc):HTMLSelectElement {
+export function createDropdown(options:any[], defualtOptionText:string, onChangeFunc:OnAnyFunc):HTMLSelectElement {
     const select = document.createElement('select')
     const defaultOptionsElement = document.createElement('option');
     defaultOptionsElement.innerText = defualtOptionText
     defaultOptionsElement.disabled = true;
     defaultOptionsElement.selected = true;
     defaultOptionsElement.hidden = true;
+    const defaultOptionData = options.filter(op => op.name === defualtOptionText)
+    if (defaultOptionData.length > 0) {
+        defaultOptionsElement.value = defaultOptionData[0].id;
+    }
     select.appendChild(defaultOptionsElement)
     for (const option of options) {
         const optionElement = document.createElement('option');
@@ -244,4 +248,20 @@ export function getSelectValues(select:HTMLSelectElement) {
         return null
     }
     return select.options[select.selectedIndex].text
+  }
+
+  export function addSpinnerToElement(element:HTMLElement) {
+    let div = document.createElement('div')
+    div.classList.add('spinner-border')
+    element.appendChild(div)
+    return element
+  }
+
+  export function removeSpinnerFromElement(element:HTMLElement) {
+    const spinner = element.querySelector('.spinner-border')
+    if (spinner === undefined || spinner === null) {
+        return element
+    }
+    element.removeChild(spinner)
+    return element
   }

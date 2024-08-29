@@ -235,7 +235,7 @@ async function verifyPrivateApiToken() {
             tickIcon = await getIconData('check')
         }
 
-        let organisations = await getEventbriteUserOrganisations()
+        let organisations = await getEventbriteUserOrganisations(token)
 
         if (organisations.length <= 0) {
             console.log('ERROR')

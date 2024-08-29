@@ -118,6 +118,11 @@ function initialiseAgGrid() {
             },
             {
                 field: 'options', cellRenderer: (params:any) => {
+                    if (params.data.external) {
+                        return buildActionButtonsForModel(params.data.id, params.data.active, archiveEventOnClick, activateEventOnClick, 'edit-event-modal', () => {
+                            console.log('edit')
+                        })
+                    }
                     return buildActionButtonsForModel(params.data.id, params.data.active, archiveEventOnClick, activateEventOnClick, 'edit-event-modal', prepEditEventForm)
                 },
                 flex: 1
