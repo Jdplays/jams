@@ -1,9 +1,10 @@
 from flask_security import current_user
 from flask import abort, request, current_app
 from flask_login.config import EXEMPT_METHODS
-from jams.util import helper
-from jams.models import Page, EndpointRule
 from functools import wraps
+from jams.util import helper
+from jams.models import Page
+from jams.configuration import ConfigType, get_config_value
 
 
 #------------------------------------------ RBAC ------------------------------------------#
@@ -88,5 +89,15 @@ def protect_user_updates(func):
         user_management_request = helper.user_has_access_to_page('user_management')
         if current_user_id is not user_id and not user_management_request:
             abort(403, description='You do not have access to the requested resource')
+        return func(*args, **kwargs)
+    return wrapper
+
+def eventbrite_inetegration_route(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        enabled = get_config_value(ConfigType.EVENTBRITE_ENABLED)
+
+        if not enabled:
+            abort(400, description='The requested route is not currently enabled')
         return func(*args, **kwargs)
     return wrapper

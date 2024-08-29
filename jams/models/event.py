@@ -19,12 +19,18 @@ class Event(db.Model):
     external_id = Column(String(), nullable=True)
     external_url = Column(String(), nullable=True)
 
-    def __init__(self, name, description, date, password, active=True):
+    def __init__(self, name, description, date, start_time, end_time, capacity, password, active=True, external=False, external_id=None, external_url = None):
         self.name = name
         self.description = description
         self.date = date
+        self.start_time = start_time
+        self.end_time = end_time
+        self.capacity = capacity
         self.password = password
         self.active = active
+        self.external = external
+        self.external_id = external_id
+        self.external_url = external_url
 
     def activate(self):
         self.active = True

@@ -245,12 +245,18 @@ def add_event():
     name = data.get('name')
     description = data.get('description')
     date = data.get('date')
+    start_time = data.get('start_time')
+    end_time = data.get('end_time')
+    capacity = data.get('capacity')
+    external = data.get('external')
+    external_id = data.get('external_id')
+    external_url = data.get('external_url')
     password = data.get('password')
 
-    if not name or not description or not date or not password:
-        abort(400, description="No 'name' or'description' or 'date' or 'password' provided")
+    if not name or not description or not date or not start_time or not end_time or not capacity or not password :
+        abort(400, description="No 'name' or'description' or 'date' or 'start_time' or 'end_time' or 'capacity' or 'password' provided")
 
-    new_event = Event(name=name, description=description, date=date, password=password)
+    new_event = Event(name=name, description=description, date=date, start_time=start_time, end_time=end_time, capacity=capacity, password=password, external=external, external_id=external_id, external_url=external_url)
     db.session.add(new_event)
     db.session.commit()
 
