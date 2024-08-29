@@ -8,8 +8,16 @@ class Event(db.Model):
     name = Column(String(80), unique=True, nullable=False)
     description = Column(String(255), unique=False, nullable=True)
     date = Column(DATE, nullable=False)
+    start_time = Column(TIME, nullable=False)
+    end_time = Column(TIME, nullable=False)
     password = Column(String(50), nullable=False)
+    capacity = Column(Integer(), nullable=False)
     active = Column(Boolean(), nullable=False, default=True)
+
+    # Integration Event
+    external = Column(Boolean(), nullable=True, default=False)
+    external_id = Column(String(), nullable=True)
+    external_url = Column(String(), nullable=True)
 
     def __init__(self, name, description, date, password, active=True):
         self.name = name
@@ -30,8 +38,14 @@ class Event(db.Model):
             'name': self.name,
             'description': self.description,
             'date': str(self.date),
+            'start_time': str(self.start_time),
+            'end_time': str(self.end_time),
             'password': self.password,
-            'active': self.active
+            'capacity': self.capacity,
+            'active': self.active,
+            'external': self.external,
+            'external_id': self.external_id,
+            'external_url': self.external_url
         }
 
 
