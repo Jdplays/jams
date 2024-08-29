@@ -1,21 +1,32 @@
 <!-- Navigation Bar -->
 <header class="navbar navbar-expand-sm navbar-light d-print-none">
     <div class="container">
+        <!-- Navbar Brand -->
         <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3 me-auto">
             <a href="{{ url_for('routes.frontend.public.general.home')}}">JAMS</a>
         </h1>
+
+        <!-- Navbar Toggler (for mobile view) -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-nav" aria-controls="main-nav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Theme Toggle Button -->
         <div id="nav_theme_button" class="navbar-nav flex-row order-md-last">
             <div class="nav-item">
-              <a class="nav-link px-0 hide-theme-dark" aria-label="Enable dark mode" onclick="toggleTheme()">
-                <i class="ti ti-moon ti-size-3"></i>
-              </a>
-              <a class="nav-link px-0 hide-theme-light" aria-label="Enable light mode" onclick="toggleTheme()">
-                <i class="ti ti-sun-high ti-size-3"></i>
-              </a>
+                <a class="nav-link px-0 hide-theme-dark" aria-label="Enable dark mode" onclick="toggleTheme()">
+                    <i class="ti ti-moon ti-size-3"></i>
+                </a>
+                <a class="nav-link px-0 hide-theme-light" aria-label="Enable light mode" onclick="toggleTheme()">
+                    <i class="ti ti-sun-high ti-size-3"></i>
+                </a>
             </div>
         </div>
+
+        <!-- Collapsible Navbar Content -->
         <div id="main-nav" class="collapse navbar-collapse">
             <div class="d-flex flex-column flex-md-row flex-fill align-items-stretch align-items-md-center">
+                <!-- Public Schedule Link -->
                 <div class="nav-item">
                     <a href="{{ url_for('routes.frontend.public.general.public_schedule')}}" class="nav-link d-flex lh-1 text-end p-0">
                         <span class="nav-link-title">
@@ -23,9 +34,20 @@
                         </span>
                     </a>
                 </div>
+
+                <!-- Volunteer Portal Link (Mobile view) -->
+                <div class="nav-item d-block d-md-none">
+                    <a href="{{ url_for('routes.frontend.private.general.dashboard')}}" class="nav-link d-flex lh-1 text-end p-0">
+                        <span class="nav-link-title">
+                            Volunteer Portal
+                        </span>
+                    </a>
+                </div>
             </div>
         </div>
-        <div id="nav_portal" class="navbar-nav flex-row order-md-last">
+
+        <!-- Volunteer Portal Link (Desktop view) -->
+        <div id="nav_portal" class="navbar-nav flex-row order-md-last d-none d-md-flex">
             <div class="nav-item">
                 <a href="{{ url_for('routes.frontend.private.general.dashboard')}}" class="nav-link d-flex lh-1 text-end p-0">
                     <span class="nav-link-title">
