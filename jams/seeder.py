@@ -77,13 +77,19 @@ def seed_events():
     # Check if the Jam event already exists
     if not Event.query.filter_by(name="Jam").first():
         date = datetime.date(day=15, month=9, year=2024)
-        event = Event(name="Jam", description="This is a Test event for Jam", date=date, password="jam123")
+        start = datetime.time(hour=13, minute=0, second=0)
+        end = datetime.time(hour=17, minute=0, second=0)
+        capacity = 50
+        event = Event(name="Jam", description="This is a Test event for Jam", date=date, start_time=start, end_time=end, capacity=capacity, password="jam123")
         db.session.add(event)
     
     # Check if the coder dojo event already exists
     if not Event.query.filter_by(name="Coder Dojo").first():
         date = datetime.date(day=7, month=8, year=2024)
-        event = Event(name="Coder Dojo", description="Coder dojo test event", date=date, password="password123")
+        start = datetime.time(hour=18, minute=0, second=0)
+        end = datetime.time(hour=20, minute=0, second=0)
+        capacity = 50
+        event = Event(name="Coder Dojo", description="Coder dojo test event", date=date, start_time=start, end_time=end, capacity=capacity, password="password123")
         db.session.add(event)
     
     db.session.commit()
