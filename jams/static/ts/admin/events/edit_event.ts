@@ -1,19 +1,39 @@
-import { addNewEvent, getEventbriteEvents } from "@global/endpoints"
+import { addNewEvent, editEvent, getEvent, getEventbriteEvents } from "@global/endpoints"
 import { EventbriteEvent, Event } from "@global/endpoints_interfaces"
-import { addSpinnerToElement, createDropdown, emptyElement, errorToast, isDefined, isNullEmptyOrSpaces, removeSpinnerFromElement } from "@global/helper"
+import { addSpinnerToElement, createDropdown, errorToast, isDefined, isNullEmptyOrSpaces, removeSpinnerFromElement } from "@global/helper"
 
+let EventId:number
+let EventData:Event
+
+async function prepEditEventForm() {
+    const eventNameInput = document.getElementById('edit-event-name') as HTMLInputElement
+    const eventDescriptionInput = document.getElementById('edit-event-description') as HTMLInputElement
+    const eventDateInput = document.getElementById('edit-event-date') as HTMLInputElement
+    const eventStartInput = document.getElementById('edit-event-start') as HTMLInputElement
+    const eventEndInput = document.getElementById('edit-event-end') as HTMLInputElement
+    const eventCapacityInput = document.getElementById('edit-event-capacity') as HTMLInputElement
+    const eventPasswordInput = document.getElementById('edit-event-password') as HTMLInputElement
+
+    eventNameInput.value = EventData.name
+    eventDescriptionInput.value = EventData.description
+    eventDateInput.value = EventData.date
+    eventStartInput.value = EventData.start_time
+    eventEndInput.value = EventData.end_time
+    eventCapacityInput.value = String(EventData.capacity)
+    eventPasswordInput.value = EventData.password
+}
 
 async function toggleEventbriteImportOnChange() {
     const toggle = document.getElementById('toggle-eventbrite-import-switch') as HTMLInputElement
     const importContainer = document.getElementById('eventbrite-import-container') as HTMLElement
     const importDropdownContainer = document.getElementById('eventbrite-import-dropdown-container') as HTMLDivElement
 
-    const eventNameInput = document.getElementById('add-event-name') as HTMLInputElement
-    const eventDescriptionInput = document.getElementById('add-event-description') as HTMLInputElement
-    const eventDateInput = document.getElementById('add-event-date') as HTMLInputElement
-    const eventStartInput = document.getElementById('add-event-start') as HTMLInputElement
-    const eventEndInput = document.getElementById('add-event-end') as HTMLInputElement
-    const eventCapacityInput = document.getElementById('add-event-capacity') as HTMLInputElement
+    const eventNameInput = document.getElementById('edit-event-name') as HTMLInputElement
+    const eventDescriptionInput = document.getElementById('edit-event-description') as HTMLInputElement
+    const eventDateInput = document.getElementById('edit-event-date') as HTMLInputElement
+    const eventStartInput = document.getElementById('edit-event-start') as HTMLInputElement
+    const eventEndInput = document.getElementById('edit-event-end') as HTMLInputElement
+    const eventCapacityInput = document.getElementById('edit-event-capacity') as HTMLInputElement
 
     const checked = toggle.checked
 
@@ -21,18 +41,21 @@ async function toggleEventbriteImportOnChange() {
 
     if (checked) {
         importContainer.style.display = 'block'
+
+        removeSpinnerFromElement(importContainer)
+        addSpinnerToElement(importContainer)
+
+        const events = await getEventbriteEvents()
+        await createEventsImportDropDown(events, importDropdownContainer)
+
+        removeSpinnerFromElement(importContainer)
+        setEventbriteImportContainerElementsVisibility(true)
+        
+        eventbriteEventsDropdownOnChange(events)
     } else {
         importContainer.style.display = 'none'
+        prepEditEventForm()
     }
-
-    removeSpinnerFromElement(importContainer)
-    addSpinnerToElement(importContainer)
-
-    const events = await getEventbriteEvents()
-    await createEventsImportDropDown(events, importDropdownContainer)
-
-    removeSpinnerFromElement(importContainer)
-    setEventbriteImportContainerElementsVisibility(true)
 
     eventNameInput.disabled = checked
     eventDescriptionInput.disabled = checked
@@ -40,8 +63,6 @@ async function toggleEventbriteImportOnChange() {
     eventStartInput.disabled = checked
     eventEndInput.disabled = checked
     eventCapacityInput.disabled = checked
-
-    eventbriteEventsDropdownOnChange(events)
 
 }
 
@@ -79,14 +100,14 @@ async function createEventsImportDropDown(events:EventbriteEvent[], parent:HTMLE
 function eventbriteEventsDropdownOnChange(events:EventbriteEvent[]) {
     const importDropdownContainer = document.getElementById('eventbrite-import-dropdown') as HTMLInputElement
 
-    const eventNameInput = document.getElementById('add-event-name') as HTMLInputElement
-    const eventDescriptionInput = document.getElementById('add-event-description') as HTMLInputElement
-    const eventDateInput = document.getElementById('add-event-date') as HTMLInputElement
-    const eventStartInput = document.getElementById('add-event-start') as HTMLInputElement
-    const eventEndInput = document.getElementById('add-event-end') as HTMLInputElement
-    const eventCapacityInput = document.getElementById('add-event-capacity') as HTMLInputElement
-    const eventUrlHiddenInput = document.getElementById('add-eventbrite-url') as HTMLInputElement
-    const eventIdHiddenInput = document.getElementById('add-eventbrite-id') as HTMLInputElement
+    const eventNameInput = document.getElementById('edit-event-name') as HTMLInputElement
+    const eventDescriptionInput = document.getElementById('edit-event-description') as HTMLInputElement
+    const eventDateInput = document.getElementById('edit-event-date') as HTMLInputElement
+    const eventStartInput = document.getElementById('edit-event-start') as HTMLInputElement
+    const eventEndInput = document.getElementById('edit-event-end') as HTMLInputElement
+    const eventCapacityInput = document.getElementById('edit-event-capacity') as HTMLInputElement
+    const eventUrlHiddenInput = document.getElementById('edit-eventbrite-url') as HTMLInputElement
+    const eventIdHiddenInput = document.getElementById('edit-eventbrite-id') as HTMLInputElement
 
     let event = events.filter(ev => ev.id === importDropdownContainer.value)[0]
 
@@ -108,16 +129,16 @@ function eventbriteEventsDropdownOnChange(events:EventbriteEvent[]) {
 
 }
 
-async function addEventOnclick() {
-    const eventNameInput = document.getElementById('add-event-name') as HTMLInputElement
-    const eventDescriptionInput = document.getElementById('add-event-description') as HTMLInputElement
-    const eventDateInput = document.getElementById('add-event-date') as HTMLInputElement
-    const eventStartInput = document.getElementById('add-event-start') as HTMLInputElement
-    const eventEndInput = document.getElementById('add-event-end') as HTMLInputElement
-    const eventCapacityInput = document.getElementById('add-event-capacity') as HTMLInputElement
-    const eventPasswordInput = document.getElementById('add-event-password') as HTMLInputElement
-    const eventUrlHiddenInput = document.getElementById('add-eventbrite-url') as HTMLInputElement
-    const eventbriteIdHiddenInput = document.getElementById('add-eventbrite-id') as HTMLInputElement
+async function editEventOnclick() {
+    const eventNameInput = document.getElementById('edit-event-name') as HTMLInputElement
+    const eventDescriptionInput = document.getElementById('edit-event-description') as HTMLInputElement
+    const eventDateInput = document.getElementById('edit-event-date') as HTMLInputElement
+    const eventStartInput = document.getElementById('edit-event-start') as HTMLInputElement
+    const eventEndInput = document.getElementById('edit-event-end') as HTMLInputElement
+    const eventCapacityInput = document.getElementById('edit-event-capacity') as HTMLInputElement
+    const eventPasswordInput = document.getElementById('edit-event-password') as HTMLInputElement
+    const eventUrlHiddenInput = document.getElementById('edit-eventbrite-url') as HTMLInputElement
+    const eventbriteIdHiddenInput = document.getElementById('edit-eventbrite-id') as HTMLInputElement
 
     let external = false
     if (!isNullEmptyOrSpaces(eventbriteIdHiddenInput.value)) {
@@ -150,7 +171,7 @@ async function addEventOnclick() {
         }
     }
 
-    const respose = await addNewEvent(data)
+    const respose = await editEvent(EventId, data)
     if (respose) {
         window.location.replace('/private/admin/events')
     } else {
@@ -169,10 +190,18 @@ function onInputChangeValidate(element:HTMLInputElement) {
 }
 
 // EVent Listeners
+document.addEventListener("DOMContentLoaded", async () => {
+    const pagePath = window.location.pathname
+    const pathParts = pagePath.split('/')
+    EventId = Number(pathParts[pathParts.length - 2])
+    EventData = await getEvent(EventId)
+    prepEditEventForm()
+});
+
 document.addEventListener("DOMContentLoaded", () => {
     if (isDefined(window)) {
         (<any>window).toggleEventbriteImportOnChange = toggleEventbriteImportOnChange;
-        (<any>window).addEventOnclick = addEventOnclick;
+        (<any>window).editEventOnclick = editEventOnclick;
         (<any>window).onInputChangeValidate = onInputChangeValidate;
     }
 });

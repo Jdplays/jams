@@ -7,7 +7,7 @@ import {
     activateEvent
 } from "@global/endpoints"
 import { RequestMultiModelJSONData, Event } from "@global/endpoints_interfaces";
-import { buildActionButtonsForModel, successToast, errorToast, isDefined } from "@global/helper";
+import { buildActionButtonsForModel, successToast, errorToast, isDefined, buildArchiveActivateButtonForModel } from "@global/helper";
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
 
 
@@ -35,18 +35,15 @@ async function activateEventOnClick(eventId:number) {
     }
 }
 
-
-async function addEventOnClick() {
+async function editExternalEventOnClick() {
+    const eventID:number = Number((document.getElementById('edit-external-event-id') as HTMLInputElement).value)
     const data:Partial<RequestMultiModelJSONData> = {
-        'name': (document.getElementById('add-event-name') as HTMLInputElement).value || '',
-        'description': (document.getElementById('add-event-description') as HTMLInputElement).value || '',
-        'date': (document.getElementById('add-event-date') as HTMLInputElement).value || '',
-        'password': (document.getElementById('add-event-password') as HTMLInputElement).value || '',
+        'password': (document.getElementById('edit-external-event-password') as HTMLInputElement).value || '',
     }
 
-    const response = await addNewEvent(data)
+    const response = await editEvent(eventID, data)
     if (response) {
-        successToast('Event Successfully Added')
+        successToast('Event Successfully Edited')
         populateEventsTable()
     }
     else {
@@ -54,13 +51,10 @@ async function addEventOnClick() {
     }
 }
 
-async function editEventOnClick() {
-    const eventID:number = Number((document.getElementById('edit-event-id') as HTMLInputElement).value)
+async function unlinkExternalEventOnClick() {
+    const eventID:number = Number((document.getElementById('edit-external-event-id') as HTMLInputElement).value)
     const data:Partial<RequestMultiModelJSONData> = {
-        'name': (document.getElementById('edit-event-name') as HTMLInputElement).value || '',
-        'description': (document.getElementById('edit-event-description') as HTMLInputElement).value || '',
-        'date': (document.getElementById('edit-event-date') as HTMLInputElement).value || '',
-        'password': (document.getElementById('edit-event-password') as HTMLInputElement).value || '',
+        'external': false
     }
 
     const response = await editEvent(eventID, data)
@@ -76,16 +70,10 @@ async function editEventOnClick() {
 async function prepEditEventForm(eventId:number) {
     const event:Event = await getEvent(eventId)
 
-    const hiddenIdInput = document.getElementById('edit-event-id') as HTMLInputElement
-    const nameInput = document.getElementById('edit-event-name') as HTMLInputElement
-    const descriptionInput = document.getElementById('edit-event-description') as HTMLInputElement
-    const dateInput = document.getElementById('edit-event-date') as HTMLInputElement
-    const passwordInput = document.getElementById('edit-event-password') as HTMLInputElement
+    const hiddenIdInput = document.getElementById('edit-external-event-id') as HTMLInputElement
+    const passwordInput = document.getElementById('edit-external-event-password') as HTMLInputElement
 
     hiddenIdInput.value = String(eventId)
-    nameInput.value = event.name
-    descriptionInput.value = event.description
-    dateInput.value = event.date
     passwordInput.value = event.password
 }
 
@@ -118,12 +106,20 @@ function initialiseAgGrid() {
             },
             {
                 field: 'options', cellRenderer: (params:any) => {
-                    if (params.data.external) {
-                        return buildActionButtonsForModel(params.data.id, params.data.active, archiveEventOnClick, activateEventOnClick, 'edit-event-modal', () => {
-                            console.log('edit')
-                        })
+                    if (!params.data.external) {
+                        let div = document.createElement('div')
+                        let editButton = document.createElement('a')
+                        editButton.classList.add('btn', 'btn-outline-primary', 'py-1', 'px-2', 'mb-1')
+                        editButton.innerHTML = 'Edit'
+                        editButton.href = `/private/admin/events/${params.data.id}/edit`
+                        div.appendChild(editButton)
+
+                        const archiveActivateButton = buildArchiveActivateButtonForModel(params.data.id, params.data.active, archiveEventOnClick, activateEventOnClick)
+                        div.appendChild(archiveActivateButton)
+
+                        return div
                     }
-                    return buildActionButtonsForModel(params.data.id, params.data.active, archiveEventOnClick, activateEventOnClick, 'edit-event-modal', prepEditEventForm)
+                    return buildActionButtonsForModel(params.data.id, params.data.active, archiveEventOnClick, activateEventOnClick, 'edit-external-event-modal', prepEditEventForm)
                 },
                 flex: 1
             }
@@ -145,13 +141,11 @@ async function populateEventsTable() {
 }
 
 
-
-
 // Event listeners
 document.addEventListener("DOMContentLoaded", initialiseAgGrid);
 document.addEventListener("DOMContentLoaded", () => {
     if (isDefined(window)) {
-        (<any>window).addEventOnClick = addEventOnClick;
-        (<any>window).editEventOnClick = editEventOnClick;
+        (<any>window).editExternalEventOnClick = editExternalEventOnClick;
+        (<any>window).unlinkExternalEventOnClick = unlinkExternalEventOnClick;
     }
 });

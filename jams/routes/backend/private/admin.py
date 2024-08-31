@@ -253,6 +253,11 @@ def add_event():
     external_url = data.get('external_url')
     password = data.get('password')
 
+    if external:
+        external_event = Event.query.filter_by(external_id=external_id).first()
+        if external_event:
+            abort(400, description='You cannot import an event that has already been imported')
+
     if not name or not description or not date or not start_time or not end_time or not capacity or not password :
         abort(400, description="No 'name' or'description' or 'date' or 'start_time' or 'end_time' or 'capacity' or 'password' provided")
 
@@ -278,6 +283,15 @@ def edit_event(event_id):
     allowed_fields = list(event.to_dict().keys())
     for field, value in data.items():
         if field in allowed_fields:
+            if field == 'external_id':
+                external_event = Event.query.filter_by(external_id=value).first()
+                if external_event:
+                    abort(400, description='You cannot import an event that has already been imported')
+            
+            if field == 'external':
+                if not bool(value):
+                    event.external_id = None
+                    event.external_url = None
             setattr(event, field, value)
     
     db.session.commit()

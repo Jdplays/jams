@@ -182,10 +182,8 @@ export function buildEditButtonForModel(modelId:number, editModalId:string, prep
     return button
 }
 
-export function buildActionButtonsForModel(modelId:number, modelActive:boolean, archiveModelFunc:ModelModityFunc, activateModelFunc:ModelModityFunc, editModalId:string, prepEditFunc:ModelModityFunc) {
-    let container = document.createElement('div')
+export function buildArchiveActivateButtonForModel(modelId:number, modelActive:boolean, archiveModelFunc:ModelModityFunc, activateModelFunc:ModelModityFunc) {
     if (modelActive) {
-        container.appendChild(buildEditButtonForModel(modelId, editModalId, prepEditFunc))
 
         let archiveButton = document.createElement('button')
         archiveButton.id = `archive-${modelId}`
@@ -195,7 +193,7 @@ export function buildActionButtonsForModel(modelId:number, modelActive:boolean, 
             archiveModelFunc(modelId)
         }
         archiveButton.style.padding = '10px'
-        container.appendChild(archiveButton)
+        return archiveButton
     } else {
         let activateButton = document.createElement('button')
         activateButton.id = `activate-${modelId}`
@@ -205,8 +203,18 @@ export function buildActionButtonsForModel(modelId:number, modelActive:boolean, 
             activateModelFunc(modelId)
         }
         activateButton.style.padding = '10px'
-        container.appendChild(activateButton)
+        return activateButton
     }
+}
+
+export function buildActionButtonsForModel(modelId:number, modelActive:boolean, archiveModelFunc:ModelModityFunc, activateModelFunc:ModelModityFunc, editModalId:string, prepEditFunc:ModelModityFunc) {
+    let container = document.createElement('div')
+    if (modelActive) {
+        container.appendChild(buildEditButtonForModel(modelId, editModalId, prepEditFunc))
+    }
+
+    const archiveActivateButton = buildArchiveActivateButtonForModel(modelId, modelActive, archiveModelFunc, activateModelFunc)
+    container.appendChild(archiveActivateButton)
 
     return container
 }
