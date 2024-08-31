@@ -1,0 +1,66 @@
+{% extends '_layout.html' %}
+
+{% block title %}Events{% endblock %}
+
+{% block content %}
+
+<div class="row row-deck row-cards">
+    <div class="col-4">
+        <div class="card">
+            <div class="card-body" style="height: 10rem">
+                <h1>Events</h1>
+                <p>This is the Events page!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<a type="button" class="btn btn-primary" href="{{ url_for('routes.frontend.private.admin.add_event') }}" >Add Event</a>
+
+<div id="events-data-grid-container">
+    <div id="events-data-grid" class="ag-theme-quartz" style="height: 500px"></div>
+</div>
+
+<div class="modal" id="edit-external-event-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Event</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-external-event-id" name="event_id">
+                <div class="mb-3">
+                    <p class="text-yellow"><strong>Warning: This event is linked externally. You are only be able to update the event password. All other values will be inherited from eventbrite</strong></p>
+                    <button class="btn btn-danger" data-bs-dismiss="modal" onclick="unlinkExternalEventOnClick()">Unlink Event</button>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Event Password</label>
+                    <input type="text" class="form-control" name="name" id="edit-external-event-password"
+                        placeholder="password123" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
+                    Cancel
+                </a>
+                <a href="#" onclick="editExternalEventOnClick()" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-plus" width="24"
+                        height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M12 5l0 14"></path>
+                        <path d="M5 12l14 0"></path>
+                    </svg>
+                    Edit Event
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<p id="events-request-response"></p>
+
+<script src="{{ url_for('static', filename='js/admin/events/events.js') }}" type="module" defer></script>
+
+{% endblock %}

@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Union
 from jams.models import db, Config
 
 class ConfigType(Enum):
@@ -9,8 +10,12 @@ class ConfigType(Enum):
 
 
 
-def get_config_value(key:ConfigType):
-    config = Config.query.filter_by(key=key.value).first()
+def get_config_value(key:Union[str, ConfigType]):
+    if  isinstance(key, str):
+        config_type = ConfigType[key]
+    else:
+        config_type = key
+    config = Config.query.filter_by(key=config_type.value).first()
     if not config:
         return None
     return config.value

@@ -157,11 +157,24 @@ def contains_value(obj, value):
         return False
     return recursive_search(obj, value)
 
+def build_multi_object_paginated_return_obj(data_list, pagination_block_size, pagination_start_index, pagination_order_by, pagination_order_direction, pagination_record_count):
+    return_obj = {
+        'data': data_list,
+        'pagination': {
+            'pagination_block_size': pagination_block_size,
+            'pagination_start_index': pagination_start_index,
+            'order_by': pagination_order_by,
+            'order_direction': pagination_order_direction,
+            'pagination_total_records': pagination_record_count
+        }
+    }
+
+    return return_obj
+
 def filter_model_by_query_and_properties(model, request_args=None, requested_field=None, input_data=None, return_objects=False):
     query = model.query
     objects = []
     properties_values = {}
-    allowed_fields = list(model.query.first_or_404().to_dict().keys())
 
     # Default parameters
     default_field_names = ['$pagination_block_size', '$pagination_start_index', '$order_by', '$order_direction']
@@ -169,6 +182,13 @@ def filter_model_by_query_and_properties(model, request_args=None, requested_fie
     pagination_start_index = 0
     pagination_order_by = 'id'
     pagination_order_direction = 'ASC'
+
+    if input_data is not None:
+        if len(input_data) <= 0:
+            return_obj = build_multi_object_paginated_return_obj(input_data, pagination_block_size, pagination_start_index, pagination_order_by, pagination_order_direction, 0)
+            return return_obj
+    
+    allowed_fields = list(model.query.first_or_404().to_dict().keys())
 
     order_by = model.id
     order_direction = pagination_order_direction
@@ -287,16 +307,7 @@ def filter_model_by_query_and_properties(model, request_args=None, requested_fie
         data_list = [obj.to_dict() for obj in trimmed_objects]
 
     pagination_record_count = query.count()
-    return_obj = {
-        'data': data_list,
-        'pagination': {
-            'pagination_block_size': pagination_block_size,
-            'pagination_start_index': pagination_start_index,
-            'order_by': pagination_order_by,
-            'order_direction': pagination_order_direction,
-            'pagination_total_records': pagination_record_count
-        }
-    }
+    return_obj = build_multi_object_paginated_return_obj(data_list, pagination_block_size, pagination_start_index, pagination_order_by, pagination_order_direction, pagination_record_count)
 
     if return_objects:
         return trimmed_objects

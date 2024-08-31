@@ -1,6 +1,6 @@
-import { verifyEventbriteApiToken, getIconData, getEventbriteUserOrganisations, enableEventbriteIntegration, getEventbriteIntegrationConfig, editEventbriteIntegrationConfig, disableEventbriteIntegration } from "../../global/endpoints"
-import { emptyElement, errorToast, getSelectedDropdownText, isDefined, isNullEmptyOrSpaces, successToast } from "../../global/helper"
-import { EventbriteIntegrationConfig, EventbriteOrganisation } from "../../global/endpoints_interfaces"
+import { verifyEventbriteApiToken, getIconData, getEventbriteUserOrganisations, enableEventbriteIntegration, getEventbriteIntegrationConfig, editEventbriteIntegrationConfig, disableEventbriteIntegration } from "@global/endpoints"
+import { emptyElement, errorToast, getSelectedDropdownText, isDefined, isNullEmptyOrSpaces, successToast } from "@global/helper"
+import { EventbriteIntegrationConfig, EventbriteOrganisation } from "@global/endpoints_interfaces"
 
 let loadingIcon:string;
 let tickIcon:string;
@@ -235,7 +235,7 @@ async function verifyPrivateApiToken() {
             tickIcon = await getIconData('check')
         }
 
-        let organisations = await getEventbriteUserOrganisations()
+        let organisations = await getEventbriteUserOrganisations(token)
 
         if (organisations.length <= 0) {
             console.log('ERROR')

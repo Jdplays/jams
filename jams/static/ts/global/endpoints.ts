@@ -18,8 +18,9 @@ import {
     FileResponse,
     FileVersion,
     EventbriteIntegrationConfig,
-    EventbriteOrganisation
-} from "./endpoints_interfaces";
+    EventbriteOrganisation,
+    EventbriteEvent
+} from "@global/endpoints_interfaces";
 
 // This is a script where all then endpoint calls will live to prevent duplication across scripts
 
@@ -1245,11 +1246,19 @@ export function verifyEventbriteApiToken(token:string):Promise<boolean> {
     });
 }
 
-export function getEventbriteUserOrganisations():Promise<[EventbriteOrganisation]> {
+export function getEventbriteUserOrganisations(token:string|null=null):Promise<[EventbriteOrganisation]> {
     return new Promise((resolve, reject) => {
+        let data:Partial<EventbriteIntegrationConfig> = {}
+        if (token) {
+            data = {
+                'EVENTBRITE_BEARER_TOKEN': token
+            } 
+        }
         $.ajax({
             url: `/backend/integrations/eventbrite/organisations`,
-            type: 'GET',
+            type: 'POST',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
             success: function (response) {
                 resolve(response.organisations)
             },
@@ -1325,6 +1334,22 @@ export function editEventbriteIntegrationConfig(data:Partial<EventbriteIntegrati
             error: function (error) {
                 console.log('Error fetching data:', error);
                 reject(error)
+            }
+        });
+    });
+}
+
+export function getEventbriteEvents():Promise<[EventbriteEvent]> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `/backend/integrations/eventbrite/events`,
+            type: 'GET',
+            success: function (response) {
+                resolve(response.events)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(false)
             }
         });
     });

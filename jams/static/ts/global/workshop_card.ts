@@ -1,7 +1,7 @@
-import { getDifficultyLevels, getIconData } from './endpoints'
-import { DifficultyLevel, Workshop } from './endpoints_interfaces'
-import {hexToRgba} from './helper'
-import { ScheduleGrid } from './schedule_grid'
+import { getDifficultyLevels, getIconData } from '@global/endpoints'
+import { DifficultyLevel, Workshop } from '@global/endpoints_interfaces'
+import {hexToRgba} from '@global/helper'
+import { ScheduleGrid } from '@global/schedule_grid'
 
 export interface WorkshopCardOptions {
     sessionId?:number|null

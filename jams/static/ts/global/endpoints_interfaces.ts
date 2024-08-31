@@ -60,8 +60,14 @@ export interface Event {
     name:string
     description:string
     date:string
+    start_time:string
+    end_time:string
     password:string
+    capacity:number
     active:boolean
+    external:boolean
+    external_id:string
+    external_url:string
 }
 
 export interface User {
@@ -163,8 +169,17 @@ export interface EventbriteOrganisation {
     id:string
     name:string
     image_id:string
-    
+}
 
+export interface EventbriteEvent {
+    id:string
+    name:string
+    description:string
+    date:string
+    start_time:string
+    end_time:string
+    capacity:number
+    url:string
 }
 
 export interface RequestMultiModelJSONData extends EventLocation, EventTimeslot, Location, Timeslot, Workshop, Session, DifficultyLevel, Event, User, Role, Page, PrivateAccessLog, VolunteerAttendance, WorkshopFile, FileData, FileVersion{

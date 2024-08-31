@@ -1,0 +1,81 @@
+{% extends '_layout.html' %}
+
+{% block title %}Add Event{% endblock %}
+
+{% block content %}
+
+<h1>Add Event</h1>
+<h3> Here you can add an event or import one from eventbrite</h3>
+
+<div>
+        {% if get_config_value('EVENTBRITE_ENABLED') %}
+        <div>
+            <div class="mb-3">
+                <label class="form-check form-switch">
+                    <input id="toggle-eventbrite-import-switch" class="form-check-input" type="checkbox"
+                        oninput="toggleEventbriteImportOnChange()">
+                    <span class="form-check-label">Import Event from Eventbrite</span>
+                </label>
+            </div>
+            <div id="eventbrite-import-container" style="display: none;" class="mb-3">
+                <label class="form-label">Select Event from Eventbrite</label>
+                <div id="eventbrite-import-dropdown-container">
+                </div>
+                <p class="text-yellow"><strong>Warning: Adding an event from Eventbrite will limit yor control in editing. You will only be able to update the event password. All other values will be inherited from eventbrite</strong></p>
+            </div>
+        </div>
+        {% endif %}
+        <div id="main-form">
+            <div class="mb-3">
+                <label class="form-label required">Event Name</label>
+                <input type="text" class="form-control" name="name" id="add-event-name" oninput="onInputChangeValidate(this)"/>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label required">Event Description</label>
+                <textarea class="form-control" rows="5" id="add-event-description" name="description" oninput="onInputChangeValidate(this)"></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: space-between;">
+                <div style="flex: 1; margin: 5px;">
+                    <div class="mb-3">
+                        <label class="form-label required">Date</label>
+                        <input type="date" class="form-control" name="date" id="add-event-date" oninput="onInputChangeValidate(this)"/>
+                    </div>
+                </div>
+
+                <div style="flex: 1; margin: 5px;">
+                    <div class="mb-3">
+                        <label class="form-label required">Start Time</label>
+                        <input type="time" class="form-control" name="start" id="add-event-start" oninput="onInputChangeValidate(this)"/>
+                    </div>
+                </div>
+
+                <div style="flex: 1; margin: 5px;">
+                    <div class="mb-3">
+                        <label class="form-label required">End Time</label>
+                        <input type="time" class="form-control" name="end" id="add-event-end" oninput="onInputChangeValidate(this)"/>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label required">Event Capacity</label>
+                <input type="number" class="form-control" name="name" id="add-event-capacity" value="0" oninput="onInputChangeValidate(this)"/>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label required">Event Password</label>
+            <input type="text" class="form-control" name="name" id="add-event-password" oninput="onInputChangeValidate(this)"/>
+        </div>
+
+        <input type="hidden" id="add-eventbrite-id" name="eventbrite_id">
+        <input type="hidden" id="add-eventbrite-url" name="eventbrite_url">
+
+        <button class="btn btn-primary" onclick="addEventOnclick()">Add Event</button>
+</div>
+
+<script src="{{ url_for('static', filename='js/admin/events/add_event.js') }}" type="module" defer></script>
+
+{% endblock %}

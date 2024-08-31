@@ -14,10 +14,10 @@ import {
     removeLocationFromEvent,
     removeTimeslotFromEvent,
     getIconData
-} from './endpoints'
-import { EventLocation, EventTimeslot, Location, Timeslot } from './endpoints_interfaces'
-import {buildQueryString, emptyElement, allowDrop, waitForTransitionEnd} from './helper'
-import {WorkshopCard, WorkshopCardOptions} from './workshop_card'
+} from '@global/endpoints'
+import { EventLocation, EventTimeslot, Location, Timeslot } from '@global/endpoints_interfaces'
+import {buildQueryString, emptyElement, allowDrop, waitForTransitionEnd} from '@global/helper'
+import {WorkshopCard, WorkshopCardOptions} from '@global/workshop_card'
 
 type Icons = {[key: string]: any}
 

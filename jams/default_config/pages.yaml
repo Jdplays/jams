@@ -1,6 +1,7 @@
 pages:
 
-  # Child Pages
+# Child Pages
+  # Workshop
   edit_workshop_worksheet:
     endpoint: routes.frontend.private.management.edit_workshop_worksheet
     backend_endpoints:
@@ -12,6 +13,7 @@ pages:
       routes.backend.private.management.get_workshop_field:
         allowed_fields: id, name
   
+  # Settings
   settings_eventbrite:
     endpoint: routes.frontend.private.admin.settings_eventbrite
     backend_endpoints:
@@ -27,14 +29,6 @@ pages:
 
   settings_roles:
     endpoint: routes.frontend.private.admin.settings_roles
-
-  # Admin
-  settings:
-    endpoint: routes.frontend.private.admin.settings
-    child_pages:
-      - settings_roles
-      - settings_eventbrite
-      - settings_auth_sources
     backend_endpoints:
       routes.backend.private.admin.get_roles:
       routes.backend.private.admin.get_role:
@@ -44,6 +38,28 @@ pages:
       routes.backend.private.admin.get_pages:
       routes.backend.private.admin.get_pages_field:
         allowed_fields: id, name, parent_id
+
+  # Events
+  add_event:
+    endpoint: routes.frontend.private.admin.add_event
+    backend_endpoints:
+      routes.backend.private.admin.add_event:
+      routes.backend.integrations.eventbrite.get_events:
+  
+  edit_event:
+    endpoint: routes.frontend.private.admin.edit_event
+    backend_endpoints:
+      routes.backend.private.admin.get_event:
+      routes.backend.private.admin.edit_event:
+
+# Normal Pages
+  # Admin
+  settings:
+    endpoint: routes.frontend.private.admin.settings
+    child_pages:
+      - settings_roles
+      - settings_eventbrite
+      - settings_auth_sources
 
   user_management:
     endpoint: routes.frontend.private.admin.user_management
@@ -59,11 +75,11 @@ pages:
 
   events:
     endpoint: routes.frontend.private.admin.events
+    child_pages:
+      - add_event
+      - edit_event
     backend_endpoints:
       routes.backend.private.admin.get_events:
-      routes.backend.private.admin.get_event:
-      routes.backend.private.admin.add_event:
-      routes.backend.private.admin.edit_event:
       routes.backend.private.admin.archive_event:
       routes.backend.private.admin.activate_event:
 

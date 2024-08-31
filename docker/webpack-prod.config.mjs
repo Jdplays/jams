@@ -1,6 +1,7 @@
 import path from 'path';
 import url from 'url';
 import { glob } from 'glob';
+import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,7 +26,12 @@ export default {
     publicPath: '/'
   },
   resolve: {
-    extensions: ['.ts', '.js']
+    extensions: ['.ts', '.js'],
+    plugins: [
+      new TsconfigPathsPlugin({
+        configFile: './tsconfig.json'
+      }),
+    ]
   },
   module: {
     rules: [

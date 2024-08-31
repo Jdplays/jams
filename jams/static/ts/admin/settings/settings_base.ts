@@ -3,6 +3,10 @@ function structureNav() {
     const pathParts = pagePath.split('/')
     const pageName = pathParts[pathParts.length - 1]
 
+    if (pageName === 'settings') {
+        return
+    }
+
     const linkElement = document.getElementById(`${pageName}-link`) as HTMLAnchorElement
 
     linkElement.classList.remove('settings-nav-item')

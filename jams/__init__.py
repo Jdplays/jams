@@ -8,6 +8,7 @@ from jams.routes import routes_bp
 from jams.seeder import preform_seed
 from jams.forms.flask_security import CustomLoginForm, CustomRegisterForm
 from jams.util import helper
+from jams.configuration import get_config_value
 
 def create_app():
     app = Flask(__name__)
@@ -37,7 +38,7 @@ def create_app():
     # Define the context processor to register methods for use in templating
     @app.context_processor
     def utility_processor():
-        return dict(user_has_access_to_page=helper.user_has_access_to_page)
+        return dict(user_has_access_to_page=helper.user_has_access_to_page, get_config_value=get_config_value)
 
     return app
 
