@@ -1,4 +1,4 @@
-import { isDefined } from "./global/helper";
+import { isDefined } from "@global/helper";
 
 function loadNavigationBar() {
     const navContainer = document.getElementById('nav-container');

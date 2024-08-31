@@ -2,6 +2,7 @@ import path from 'path';
 import url from 'url';
 import { glob } from 'glob';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
+import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import pkg from 'webpack';
 const { SourceMapDevToolPlugin } = pkg;
 
@@ -30,7 +31,12 @@ export default {
     publicPath: '/static/js/'
   },
   resolve: {
-    extensions: ['.ts', '.js']
+    extensions: ['.ts', '.js'],
+    plugins: [
+      new TsconfigPathsPlugin({
+        configFile: './tsconfig.json'
+      }),
+    ]
   },
   module: {
     rules: [

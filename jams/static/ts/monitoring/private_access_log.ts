@@ -1,8 +1,8 @@
 import {
     getPrivateAccessLogs
-} from '../global/endpoints'
-import { QueryStringData, QueryStringKey } from "../global/endpoints_interfaces";
-import { isNullEmptyOrSpaces, buildQueryString } from "../global/helper";
+} from '@global/endpoints'
+import { QueryStringData, QueryStringKey } from "@global/endpoints_interfaces";
+import { isNullEmptyOrSpaces, buildQueryString } from "@global/helper";
 import { createGrid, GridApi, GridOptions, ValueFormatterParams } from 'ag-grid-community';
 
 let gridApi:GridApi<any>;

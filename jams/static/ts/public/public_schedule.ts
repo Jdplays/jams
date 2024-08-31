@@ -1,4 +1,4 @@
-import {ScheduleGrid} from '../global/schedule_grid'
+import {ScheduleGrid} from '@global/schedule_grid'
 
 const scheduleGridOptions = {
     eventId: 1,

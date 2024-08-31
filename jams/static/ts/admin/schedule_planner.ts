@@ -6,18 +6,18 @@ import {
     getWorkshops,
     getIconData,
     getDifficultyLevels
-} from '../global/endpoints'
+} from '@global/endpoints'
 
 import {
     buildQueryString,
     emptyElement,
     createDropdown
-} from '../global/helper'
+} from '@global/helper'
 
-import { WorkshopCard } from '../global/workshop_card'
-import {ScheduleGrid, ScheduleGridOptions} from '../global/schedule_grid'
+import { WorkshopCard } from '@global/workshop_card'
+import {ScheduleGrid, ScheduleGridOptions} from '@global/schedule_grid'
+import { QueryStringData } from '@global/endpoints_interfaces';
 import TomSelect from 'tom-select';
-import { QueryStringData } from '../global/endpoints_interfaces';
 
 
 // Variables

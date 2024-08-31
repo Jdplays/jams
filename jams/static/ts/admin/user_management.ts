@@ -6,9 +6,9 @@ import {
     archiveUser,
     activateUser,
     getRoleNames
-} from '../global/endpoints'
-import { RequestMultiModelJSONData } from "../global/endpoints_interfaces";
-import { emptyElement, buildActionButtonsForModel, successToast, errorToast, getSelectValues } from "../global/helper";
+} from '@global/endpoints'
+import { RequestMultiModelJSONData } from "@global/endpoints_interfaces";
+import { emptyElement, buildActionButtonsForModel, successToast, errorToast, getSelectValues } from "@global/helper";
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
 import TomSelect from 'tom-select';
 

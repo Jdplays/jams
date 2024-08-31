@@ -17,6 +17,7 @@
     "@types/turndown": "^5.0.5",
     "glob": "^11.0.0",
     "ts-loader": "^9.5.1",
+    "tsconfig-paths-webpack-plugin": "^4.1.0",
     "webpack": "^5.94.0",
     "webpack-bundle-analyzer": "^4.10.2",
     "webpack-cli": "^5.1.4"
