@@ -264,7 +264,7 @@ async function preLoadWorkshopTypes() {
 function initialiseDropzone() {
     const dropzoneElement = document.getElementById('workshop-files-dropzone')
 
-    const dropzone = new Dropzone('form#workshop-files-dropzone', {url: `/backend/workshops/${WorkshopId}/files`})
+    const dropzone = new Dropzone('form#workshop-files-dropzone', {url: `/backend/workshops/${WorkshopId}/files`, parallelUploads: 1})
 
     dropzone.on("complete", async function(file) {
         await populateWorkshopFiles()
