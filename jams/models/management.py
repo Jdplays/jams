@@ -55,7 +55,7 @@ class Workshop(db.Model):
         return True
 
     # Requires name and description to be passed
-    def __init__(self, name, description, difficulty_id=None, active=True, volunteer_signup=True, attendee_registration=True, publicly_visible=True, min_volunteers=None, capacity=None, workshop_type_id=None):
+    def __init__(self, name, description, difficulty_id=None, active=True, volunteer_signup=True, attendee_registration=True, publicly_visible=True, min_volunteers=0, capacity=0, workshop_type_id=None):
         self.name = name
         self.description = description
         self.difficulty_id = difficulty_id
