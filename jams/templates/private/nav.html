@@ -58,7 +58,7 @@
             </div>
           </li>
           {% endif %}
-          {% if user_has_access_to_page('workshop_catalog', 'locations_timeslots') %}
+          {% if user_has_access_to_page('workshops', 'locations_timeslots') %}
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" data-bs-auto-close="outside"
               role="button" aria-expanded="false">
@@ -67,9 +67,9 @@
               </span>
             </a>
             <div class="dropdown-menu">
-              {% if user_has_access_to_page('workshop_catalog') %}
-              <a class="dropdown-item" href="{{ url_for('routes.frontend.private.management.workshop_catalog')}}">
-                Workshop Catalog
+              {% if user_has_access_to_page('workshops') %}
+              <a class="dropdown-item" href="{{ url_for('routes.frontend.private.management.workshops')}}">
+                Workshops
               </a>
               {% endif %}
               {% if user_has_access_to_page('locations_timeslots') %}

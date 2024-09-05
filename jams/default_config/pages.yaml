@@ -1,15 +1,35 @@
 pages:
 
 # Child Pages
-  # Workshop
-  edit_workshop_worksheet:
-    endpoint: routes.frontend.private.management.edit_workshop_worksheet
+  # Workshops
+  # Events
+  add_workshop:
+    endpoint: routes.frontend.private.management.add_workshop
+    backend_endpoints:
+      routes.backend.private.management.get_difficulty_levels:
+      routes.backend.private.management.add_workshop:
+      
+  
+  edit_workshop:
+    endpoint: routes.frontend.private.management.edit_workshop
+    backend_endpoints:
+      routes.backend.private.management.get_workshop:
+      routes.backend.private.management.get_difficulty_levels:
+      routes.backend.private.management.get_difficulty_level:
+      routes.backend.private.management.edit_workshop:
+      routes.backend.private.management.add_workshop_file:
+
+
+  edit_workshop_file:
+    endpoint: routes.frontend.private.management.edit_workshop_file
     backend_endpoints:
       routes.resources.get_workshop_file:
       routes.resources.get_file_versions:
       routes.backend.private.management.get_file_data:
       routes.backend.private.management.edit_file_data:
-      routes.backend.private.management.add_worksheet:
+      routes.backend.private.management.add_workshop_file:
+      routes.backend.private.management.archive_workshop_file:
+      routes.backend.private.management.activate_workshop_file:
       routes.backend.private.management.get_workshop_field:
         allowed_fields: id, name
   
@@ -110,21 +130,19 @@ pages:
       routes.backend.private.admin.remove_workshop_from_session:
 
   # Management
-  workshop_catalog:
-    endpoint: routes.frontend.private.management.workshop_catalog
+  workshops:
+    endpoint: routes.frontend.private.management.workshops
     child_pages:
-      - edit_workshop_worksheet
+      - add_workshop
+      - edit_workshop
+      - edit_workshop_file
     backend_endpoints:
       routes.backend.private.management.get_workshops:
-      routes.backend.private.management.get_workshop:
-      routes.backend.private.management.add_workshop:
-      routes.backend.private.management.edit_workshop:
       routes.backend.private.management.archive_workshop:
       routes.backend.private.management.activate_workshop:
       routes.backend.private.management.get_difficulty_levels:
-      routes.backend.private.management.get_difficulty_level:
+      routes.backend.private.management.get_workshop_types:
       routes.backend.private.management.get_workshop_files:
-      routes.backend.private.management.add_worksheet:
 
 
   locations_timeslots:

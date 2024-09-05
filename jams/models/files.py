@@ -56,21 +56,30 @@ class WorkshopFile(db.Model):
     workshop_id = Column(Integer(), ForeignKey('workshop.id'), nullable=False)
     file_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('file.id'), nullable=False)
     type = Column(String(80), nullable=False)
+    active = Column(Boolean(), nullable=False, default=True, server_default='true')
 
     workshop = relationship('Workshop', backref='files')
     file = relationship('File', backref='workshop_file')
 
-    def __int__(self, workshop_id, file_id, type):
+    def __int__(self, workshop_id, file_id, type, active=True):
         self.workshop_id = workshop_id
         self.file_id = file_id
         self.type = type
+        self.active = active
+
+    def activate(self):
+        self.active = True
+
+    def archive(self):
+        self.active = False
     
     def to_dict(self):
         return {
             'id': self.id,
             'workshop_id': self.workshop_id,
             'file_id': self.file_id,
-            'type': self.type
+            'type': self.type,
+            'active': self.active
         }
 
     

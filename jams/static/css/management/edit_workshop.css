@@ -1,0 +1,56 @@
+.files-container-restore {
+    display: grid;
+    grid-template-columns: 80% 20%;
+    gap: 20px;
+    width: 100%;
+}
+
+.files-container {
+    display: grid;
+    grid-template-columns: 100%;
+    gap: 20px;
+    width: 100%;
+}
+
+.active-files-section {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 15px;
+    row-gap: 10px;
+}
+
+.archived-files-section {
+    display: flex;
+    align-items: center;
+}
+
+.file-block {
+    padding: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 300px;
+}
+
+.file-name {
+    flex: 1;
+    margin-left: 5px;
+    margin-right: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 800px) {
+    .files-container-restore {
+        grid-template-columns: 100%;
+    }
+
+    .active-files-section {
+        justify-content: center;
+    }
+
+    .archived-files-section {
+        margin-top: 20px;
+    }
+}

@@ -2,7 +2,7 @@
 from flask import Blueprint, request, jsonify, abort
 from jams.decorators import role_based_access_control_be
 from flask_security import login_required
-from jams.models import db, Workshop, Location, Timeslot, DifficultyLevel, File, WorkshopFile
+from jams.models import db, Workshop, Location, Timeslot, DifficultyLevel, File, WorkshopFile, WorkshopType
 from jams.util import helper
 from jams.util import files
 
@@ -54,13 +54,16 @@ def add_workshop():
 
     name = data.get('name')
     description = data.get('description')
-    min_volunteers = data.get('min_volunteers')
     difficulty_id = data.get('difficulty_id')
+    min_volunteers = data.get('min_volunteers')
+    capacity = data.get('capacity')
+    workshop_type_id = data.get('workshop_type_id')
+    
 
-    if not name or not description or min_volunteers == None or not difficulty_id or difficulty_id == '-1':
-        abort(400, description="No 'name' or 'description' or 'min_volunteers' or 'difficulty_id' provided")
+    if not name or not description or not difficulty_id or difficulty_id == '-1':
+        abort(400, description="No 'name' or 'description' or 'difficulty_id' provided")
 
-    new_workshop = Workshop(name=name, description=description, min_volunteers=min_volunteers, difficulty_id=difficulty_id)
+    new_workshop = Workshop(name=name, description=description, min_volunteers=min_volunteers, difficulty_id=difficulty_id, capacity=capacity, workshop_type_id=workshop_type_id)
     db.session.add(new_workshop)
     db.session.commit()
 
@@ -80,6 +83,8 @@ def edit_workshop(workshop_id):
     for field, value in data.items():
         if field in allowed_fields:
             setattr(workshop, field, value)
+            if field == 'workshop_type_id':
+                workshop.update_workshop_permissions()
 
     db.session.commit()
 
@@ -107,9 +112,9 @@ def activate_workshop(workshop_id):
 
     return jsonify({'message': 'The workshop has been successfully activated'})
 
-@bp.route('/workshops/<int:workshop_id>/worksheet', methods=['POST'])
+@bp.route('/workshops/<int:workshop_id>/files', methods=['POST'])
 @role_based_access_control_be
-def add_worksheet(workshop_id):
+def add_workshop_file(workshop_id):
     workshop = Workshop.query.filter_by(id=workshop_id).first_or_404()
     file = request.files['file']
     folder_name = workshop.name.replace(" ", "_")
@@ -124,18 +129,42 @@ def add_worksheet(workshop_id):
         workshop_file = WorkshopFile(workshop_id=workshop_id, file_id=file_db_obj.id, type='worksheet')
         db.session.add(workshop_file)
         db.session.commit()
+    else:
+        workshop_file.activate()
     return jsonify({
         'message': 'File successfully uploaded',
         'file_data': file_db_obj.to_dict()
     })
 
-
-@bp.route('/workshops/files', methods=['GET'])
+@bp.route('/workshops/<int:workshop_id>/files/<string:file_uuid>/archive', methods=['POST'])
 @role_based_access_control_be
-def get_workshop_files():
-    workshop_files = helper.filter_model_by_query_and_properties(WorkshopFile, request.args, return_objects=True)
-    if not workshop_files:
-        abort(404)
+def archive_workshop_file(workshop_id, file_uuid):
+    Workshop.query.filter_by(id=workshop_id).first_or_404()
+    workshop_file = WorkshopFile.query.filter_by(workshop_id=workshop_id, file_id=file_uuid).first_or_404()
+    
+    workshop_file.archive()
+
+    return jsonify({'message': 'Workshop File successfully archived'})
+
+@bp.route('/workshops/<int:workshop_id>/files/<string:file_uuid>/activate', methods=['POST'])
+@role_based_access_control_be
+def activate_workshop_file(workshop_id, file_uuid):
+    Workshop.query.filter_by(id=workshop_id).first_or_404()
+    workshop_file = WorkshopFile.query.filter_by(workshop_id=workshop_id, file_id=file_uuid).first_or_404()
+    
+    workshop_file.activate()
+
+    return jsonify({'message': 'Workshop File successfully activated'})
+
+
+
+
+@bp.route('/workshops/<int:workshop_id>/files', methods=['GET'])
+@role_based_access_control_be
+def get_workshop_files(workshop_id):
+    args = request.args.to_dict()
+    args['workshop_id'] = str(workshop_id)
+    workshop_files = helper.filter_model_by_query_and_properties(WorkshopFile, args, return_objects=True)
     files = [wf.file for wf in workshop_files]
     data = helper.filter_model_by_query_and_properties(File, input_data=files)
     return jsonify(data)
@@ -378,4 +407,11 @@ def get_difficulty_level(difficulty_id):
     difficulty = DifficultyLevel.query.filter_by(id=difficulty_id).first_or_404()
     return jsonify(difficulty.to_dict())
 
+#------------------------------------------ WORKSHOP TYPE ------------------------------------------#
+
+@bp.route('/workshop_types', methods=['GET'])
+@role_based_access_control_be
+def get_workshop_types():
+    data = helper.filter_model_by_query_and_properties(WorkshopType, request.args)
+    return jsonify(data)
 

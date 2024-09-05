@@ -19,7 +19,8 @@ import {
     FileVersion,
     EventbriteIntegrationConfig,
     EventbriteOrganisation,
-    EventbriteEvent
+    EventbriteEvent,
+    WorkshopType
 } from "@global/endpoints_interfaces";
 
 // This is a script where all then endpoint calls will live to prevent duplication across scripts
@@ -565,7 +566,7 @@ export function getWorkshopFileData(workshopId:number, fileUUID:string):Promise<
   }
 
   export function editFileData(workshopId:number, fileUUID:string, data:Partial<FileData>):Promise<boolean> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       $.ajax({
         url: `/backend/workshops/${workshopId}/files/${fileUUID}/data`,
         type: "PATCH",
@@ -586,7 +587,7 @@ export function uploadFileToWorkshop(workshopId:number, fileData:FormData):Promi
     return new Promise((resolve, reject) => {
         $.ajax({
             type: 'POST',
-            url: `/backend/workshops/${workshopId}/worksheet`,
+            url: `/backend/workshops/${workshopId}/files`,
             data: fileData,
             processData: false,
             contentType: false,
@@ -596,6 +597,38 @@ export function uploadFileToWorkshop(workshopId:number, fileData:FormData):Promi
             error: function (error) {
                 console.log('Error fetching data:', error);
                 reject(error)
+            }
+        });
+    });
+}
+
+export function archiveWorkshopFile(workshopId:number, fileUUID:string):Promise<Boolean> {
+    return new Promise((resolve) => {
+        $.ajax({
+            type: 'POST',
+            url: `/backend/workshops/${workshopId}/files/${fileUUID}/archive`,
+            success: function () {
+                resolve(true)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(false)
+            }
+        });
+    });
+}
+
+export function activateWorkshopFile(workshopId:number, fileUUID:string):Promise<Boolean> {
+    return new Promise((resolve) => {
+        $.ajax({
+            type: 'POST',
+            url: `/backend/workshops/${workshopId}/files/${fileUUID}/activate`,
+            success: function () {
+                resolve(true)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(false)
             }
         });
     });
@@ -688,6 +721,28 @@ export function getDifficultyLevel(difficultyLevelId:number):Promise<DifficultyL
     return new Promise((resolve, reject) => {
         $.ajax({
             url: `/backend/difficulty_levels/${difficultyLevelId}`,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);  
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+// #endregion
+
+// #region Workshop Types
+export function getWorkshopTypes(queryString:string|null = null):Promise<BackendMultiEntryResponse<[WorkshopType]>> {
+    return new Promise((resolve, reject) => {
+        let url = '/backend/workshop_types'
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            url: url,
             type: 'GET',
             success: function(response) {
                 resolve(response);  
