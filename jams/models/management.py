@@ -38,7 +38,7 @@ class Workshop(db.Model):
     active = Column(Boolean(), nullable=False, default=True)
 
     # Permissions
-    workshop_type_id = Column(Integer(), ForeignKey('workshop_type.id'), nullable=False)
+    workshop_type_id = Column(Integer(), ForeignKey('workshop_type.id'), nullable=False, server_default='1')
     volunteer_signup = Column(Boolean, nullable=False, default=True, server_default='true')
     attendee_registration = Column(Boolean, nullable=False, default=True, server_default='true')
     publicly_visible = Column(Boolean, nullable=False, default=True, server_default='true')
