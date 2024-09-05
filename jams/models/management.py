@@ -105,8 +105,6 @@ class Workshop(db.Model):
 
         self.volunteer_signup = workshop_type.volunteer_signup
         self.attendee_registration = workshop_type.attendee_registration
-        print(f'wt: {workshop_type.attendee_registration}')
-        print(f'self: {self.attendee_registration}')
         self.publicly_visible = workshop_type.publicly_visible
 
         if not self.volunteer_signup:

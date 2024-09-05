@@ -24,8 +24,13 @@ async function prepEditWorkshopForm() {
 
     nameInput.value = WorkshopData.name
     descriptionInput.value = WorkshopData.description
-    minVolunteersInput.value = String(WorkshopData.min_volunteers)
-    capacityInput.value = String(WorkshopData.capacity)
+    if (WorkshopData.min_volunteers !== null && WorkshopData.min_volunteers !== undefined) {
+        minVolunteersInput.value = String(WorkshopData.min_volunteers)
+    }
+
+    if (WorkshopData.capacity !== null && WorkshopData.capacity !== undefined) {
+        capacityInput.value = String(WorkshopData.capacity)
+    }
 
 
     const difficultyLevelSelect = document.getElementById('difficulty-selection-container') as HTMLDivElement
@@ -194,34 +199,30 @@ async function archiveWorkshopFileOnClick(fileUUID:string, removeButton:HTMLAnch
 function editWorkshopOnClick() {
     const workshopTypeSelect = document.getElementById('workshop-type-selection-container') as HTMLDivElement
     const workshopDifficultySelect = document.getElementById('difficulty-selection-container') as HTMLInputElement
-    const worksheet = (document.getElementById('edit-workshop-worksheet') as HTMLInputElement).files[0]
 
     const workshopTypeId = getRadioInputGroupSelection(workshopTypeSelect, 'workshop-type')
-    const difficultyId = getRadioInputGroupSelection(workshopDifficultySelect, 'difficulty-level')
+    const difficultyIdStr = getRadioInputGroupSelection(workshopDifficultySelect, 'difficulty-level')
+
+    let difficultyId = null
+    if (difficultyIdStr !== null) {
+        difficultyId = Number(difficultyIdStr)
+    }
 
     const data:Partial<RequestMultiModelJSONData> = {
         name: (document.getElementById('edit-workshop-name') as HTMLInputElement).value,
         description: (document.getElementById('edit-workshop-description') as HTMLInputElement).value,
-        difficulty_id: Number(difficultyId),
+        difficulty_id: difficultyId,
         min_volunteers: Number((document.getElementById('edit-workshop-min_volunteers') as HTMLInputElement).value),
         capacity: Number((document.getElementById('edit-workshop-capacity') as HTMLInputElement).value),
         workshop_type_id: Number(workshopTypeId)
     }
 
-    editWorkshop(WorkshopId, data).then(async () => {
-        if (worksheet != null) {
-            const originalExtension = worksheet.name.split('.').pop();
-            // Define the new name for the file
-            const newFileName = `worksheet.${originalExtension}`;
-            const newFile = new File([worksheet], newFileName, { type: worksheet.type })
-            var fileData = new FormData();
-            fileData.append('file', newFile);
-            await uploadFileToWorkshop(WorkshopId, fileData)
-        }
+    console.log(data)
 
+    editWorkshop(WorkshopId, data).then(async () => {
         successToast('Workshop Successfully Edited')
         window.location.replace('/private/management/workshops')
-    }).catch(error => {
+    }).catch(() => {
         errorToast()
     })
 }
