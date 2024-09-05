@@ -129,6 +129,8 @@ def add_workshop_file(workshop_id):
         workshop_file = WorkshopFile(workshop_id=workshop_id, file_id=file_db_obj.id, type='worksheet')
         db.session.add(workshop_file)
         db.session.commit()
+    else:
+        workshop_file.activate()
     return jsonify({
         'message': 'File successfully uploaded',
         'file_data': file_db_obj.to_dict()
