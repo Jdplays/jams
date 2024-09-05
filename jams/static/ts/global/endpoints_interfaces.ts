@@ -32,10 +32,15 @@ export interface Workshop {
     id:number
     name:string
     description:string
-    min_volunteers:number
     difficulty_id:number
     has_files:boolean
     active:boolean
+    workshop_type_id:number
+    volunteer_signup:boolean
+    attendee_registration:boolean
+    publicly_visible:boolean
+    min_volunteers:number
+    capacity:number
 }
 
 export interface Session {
@@ -53,6 +58,15 @@ export interface DifficultyLevel {
     id:number
     name:string
     display_colour:string
+}
+
+export interface WorkshopType {
+    id:number
+    name:string
+    description:string
+    volunteer_signup:boolean
+    attendee_registration:boolean
+    publicly_visible:boolean
 }
 
 export interface Event {

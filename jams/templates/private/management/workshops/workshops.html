@@ -1,0 +1,27 @@
+{% extends '_layout.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row row-deck row-cards">
+    <div class="col-4">
+      <div class="card">
+        <div class="card-body" style="height: 10rem">
+          <h1>Workshop catalog</h1>
+          <p>This is the Workshop Catalog page!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <a type="button" class="btn btn-primary"
+    href="{{ url_for('routes.frontend.private.management.add_workshop') }}">Add Workshop</a>
+
+  <div id="workshops-data-grid-container">
+    <div id="workshops-data-grid" class="ag-theme-quartz" style="height: 500px"></div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/management/workshops/workshops.js') }}" defer></script>
+</div>
+{% endblock %}

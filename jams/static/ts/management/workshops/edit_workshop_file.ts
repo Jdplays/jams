@@ -13,8 +13,8 @@ import TurndownService from 'turndown';
 import { marked } from 'marked';
 
 var VersionId:string|null = null
-let workshopId:number
-let fileUUID:string
+let WorkshopId:number
+let FileUUID:string
 
 function uploadFileInputOnChange() {
   const input = document.getElementById('tool-bar-upload-file-input') as HTMLInputElement
@@ -45,7 +45,7 @@ async function uploadFileButtonOnClick() {
   var fileData = new FormData();
   fileData.append('file', newFile);
 
-  uploadFileToWorkshop(workshopId, fileData).then(response => {
+  uploadFileToWorkshop(WorkshopId, fileData).then(response => {
     initialisePage()
   })
   
@@ -61,7 +61,7 @@ async function restoreButtonOnClick() {
     'current_version_id': VersionId
   }
 
-  await editFileData(workshopId, fileUUID, data).then(response => {
+  await editFileData(WorkshopId, FileUUID, data).then(response => {
     initialisePage()
   })
 }
@@ -77,7 +77,7 @@ async function saveButtonOnClick() {
     const fileData = new FormData()
     fileData.append('file', blob, 'worksheet.md')
 
-    await uploadFileToWorkshop(workshopId, fileData).then(response => {
+    await uploadFileToWorkshop(WorkshopId, fileData).then(response => {
         VersionId = response.current_version_id
         initialisePage()
     })
@@ -95,7 +95,7 @@ async function initialisePage() {
   if (VersionId != null) {
     queryString = `version_id=${VersionId}`
   }
-  let response = await getFile(fileUUID, queryString);
+  let response = await getFile(FileUUID, queryString);
 
   let fileData = response.data
   let fileMimeType = response.mimeType
@@ -207,13 +207,14 @@ async function initialiseTinyMCE(fileContainer:HTMLElement, fileData:string) {
 }
 
 async function populateToolBar() {
-  let fileData = await getWorkshopFileData(workshopId, fileUUID)
-  let fileVersions = await getFileVersions(fileUUID)
-  let workshopData = await getWorkshopField(workshopId, 'name')
+  let fileData = await getWorkshopFileData(WorkshopId, FileUUID)
+  let fileVersions = await getFileVersions(FileUUID)
+  let workshopData = await getWorkshopField(WorkshopId, 'name')
 
   // Info Column
   let title = document.getElementById('tool-bar-title') as HTMLElement
-  title.innerHTML = `${workshopData.name} - Worksheet`
+  const fileNameParts = fileData.name.split('/')
+  title.innerHTML = fileNameParts[fileNameParts.length - 1]
 
   let uploadInput = document.getElementById('tool-bar-upload-file-input') as HTMLInputElement
   uploadInput.value = ''
@@ -284,12 +285,13 @@ async function populateToolBar() {
 
 // Event listeners
 document.addEventListener("DOMContentLoaded", () => {
-    const urlString: string = window.location.href
-    const url: URL = new URL(urlString)
-    const params: URLSearchParams = url.searchParams
+    const pagePath = window.location.pathname
+    const pathParts = pagePath.split('/')
+    WorkshopId = Number(pathParts[pathParts.length - 4])
+    FileUUID = pathParts[pathParts.length - 2]
 
-    workshopId = Number(params.get('workshop_id'))
-    fileUUID = params.get('file_uuid')
+    const backButton = document.getElementById('back-to-workshop-catalog') as HTMLAnchorElement
+    backButton.href = `/private/management/workshops/${WorkshopId}/edit`
 });
 document.addEventListener("DOMContentLoaded", initialisePage);
 document.addEventListener("DOMContentLoaded", () => {
