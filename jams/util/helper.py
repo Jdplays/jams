@@ -306,7 +306,7 @@ def filter_model_by_query_and_properties(model, request_args=None, requested_fie
     else:
         data_list = [obj.to_dict() for obj in trimmed_objects]
 
-    pagination_record_count = query.count()
+    pagination_record_count = len(data_list)
     return_obj = build_multi_object_paginated_return_obj(data_list, pagination_block_size, pagination_start_index, pagination_order_by, pagination_order_direction, pagination_record_count)
 
     if return_objects:
