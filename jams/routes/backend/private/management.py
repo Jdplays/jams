@@ -2,7 +2,7 @@
 from flask import Blueprint, request, jsonify, abort
 from jams.decorators import role_based_access_control_be
 from flask_security import login_required
-from jams.models import db, Workshop, Location, Timeslot, DifficultyLevel, File, WorkshopFile
+from jams.models import db, Workshop, Location, Timeslot, DifficultyLevel, File, WorkshopFile, WorkshopType
 from jams.util import helper
 from jams.util import files
 
@@ -378,4 +378,11 @@ def get_difficulty_level(difficulty_id):
     difficulty = DifficultyLevel.query.filter_by(id=difficulty_id).first_or_404()
     return jsonify(difficulty.to_dict())
 
+#------------------------------------------ WORKSHOP TYPE ------------------------------------------#
+
+@bp.route('/workshop_types', methods=['GET'])
+@role_based_access_control_be
+def get_workshop_types():
+    data = helper.filter_model_by_query_and_properties(WorkshopType, request.args)
+    return jsonify(data)
 
