@@ -82,7 +82,7 @@ async function populateWorkshopFiles() {
 
     const workshopFilesContainer = document.getElementById('active-files-section') as HTMLDivElement
     emptyElement(workshopFilesContainer)
-    if (workshopFilesResponse.data) {
+    if (workshopFilesResponse) {
         let workshopFiles = workshopFilesResponse.data
         if (workshopFiles != null) {
             for (const file of workshopFiles) {
@@ -137,8 +137,9 @@ async function populateRestoreDropdown() {
 
     restoreDropdown.appendChild(defaultFileOption)
 
-    let archivedFiles = workshopFilesResponse.data
-    if (archivedFiles != null) {
+
+    if (workshopFilesResponse) {
+        let archivedFiles = workshopFilesResponse.data
         if (archivedFiles.length <= 0) {
             filesContainer.className = 'files-container'
             restoreSection.style.display = 'none'

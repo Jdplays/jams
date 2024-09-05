@@ -69,7 +69,7 @@
             <div class="dropdown-menu">
               {% if user_has_access_to_page('workshops') %}
               <a class="dropdown-item" href="{{ url_for('routes.frontend.private.management.workshops')}}">
-                Workshop Catalog
+                Workshops
               </a>
               {% endif %}
               {% if user_has_access_to_page('locations_timeslots') %}
