@@ -41,6 +41,7 @@ function initialiseAgGrid() {
     const gridOptions:GridOptions = {
         tooltipShowDelay:100,
         tooltipMouseTrack: true,
+        domLayout: "autoHeight",
         columnDefs: [
             {field: 'name', flex: 1},
             {field: 'description', flex: 1},
@@ -102,16 +103,17 @@ function initialiseAgGrid() {
             {
                 field: 'options', cellRenderer: (params:any) => {
                     let div = document.createElement('div')
-                        let editButton = document.createElement('a')
-                        editButton.classList.add('btn', 'btn-outline-primary', 'py-1', 'px-2', 'mb-1')
-                        editButton.innerHTML = 'Edit'
-                        editButton.href = `/private/management/workshops/${params.data.id}/edit`
-                        div.appendChild(editButton)
+                    let editButton = document.createElement('a')
+                    editButton.classList.add('btn', 'btn-outline-primary', 'py-1', 'px-2', 'mb-1')
+                    editButton.style.marginRight = '10px'
+                    editButton.innerHTML = 'Edit'
+                    editButton.href = `/private/management/workshops/${params.data.id}/edit`
+                    div.appendChild(editButton)
 
-                        const archiveActivateButton = buildArchiveActivateButtonForModel(params.data.id, params.data.active, archiveWorkshopOnClick, activateWorkshopOnClick)
-                        div.appendChild(archiveActivateButton)
+                    const archiveActivateButton = buildArchiveActivateButtonForModel(params.data.id, params.data.active, archiveWorkshopOnClick, activateWorkshopOnClick)
+                    div.appendChild(archiveActivateButton)
 
-                        return div
+                    return div
                 },
                 flex: 1
             }
@@ -119,6 +121,7 @@ function initialiseAgGrid() {
     }
 
     const gridElement = document.getElementById('workshops-data-grid') as HTMLElement
+    gridElement.style.height = `${window.innerHeight * 0.7}px`;
     gridApi = createGrid(gridElement, gridOptions)
 
     populateWorkshopsTable()
