@@ -110,7 +110,18 @@ async function populateWorkshopFiles() {
                 removeButton.classList.add('btn', 'btn-link', 'link-danger')
                 removeButton.innerHTML = xIconData
                 removeButton.onclick = () => {
-                    archiveWorkshopFileOnClick(file.uuid, removeButton)
+                    let confirmDeleteModal = $('#confirm-delete')
+                    confirmDeleteModal.modal('show')
+
+                    confirmDeleteModal.find('#confirm-delete-text').text(`
+                        The file "${fileName}" will be archived. You will be able to restore it via the dropdown or by uploading a new file of the same name (this will be a new version) 
+                        `);
+
+                    confirmDeleteModal.find('#confirm-delete-button').off('click');
+
+                    confirmDeleteModal.find('#confirm-delete-button').click(() => {
+                        archiveWorkshopFileOnClick(file.uuid, removeButton)
+                    });
                 }
 
                 fileBlock.appendChild(fileNameSpan)
@@ -268,6 +279,7 @@ function initialiseDropzone() {
 
     dropzone.on("complete", async function(file) {
         await populateWorkshopFiles()
+        await populateRestoreDropdown()
         dropzone.removeFile(file);
       });
 }

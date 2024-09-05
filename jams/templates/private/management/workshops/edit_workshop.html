@@ -4,129 +4,154 @@
 
 {% block content %}
 
-<h1>Edit Workshop</h1>
+<div class="content-wrapper">
+  <div class="main-content">
 
-<a type="button" class="btn btn-link link-secondary mb-3"
-  href="{{ url_for('routes.frontend.private.management.workshops') }}">
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-    class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-left">
-    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-    <path d="M5 12l14 0" />
-    <path d="M5 12l6 6" />
-    <path d="M5 12l6 -6" />
-  </svg>
-  <span class="btn-text">Back</span>
-</a>
+    <h1>Edit Workshop</h1>
 
-<div class="card card-md">
-  <div id="main-form" class="card-body">
-    <div class="mb-3">
-      <label class="form-label">Workshop Name</label>
-      <input type="text" class="form-control" name="name" id="edit-workshop-name" placeholder="Your workshop name" />
-    </div>
-    <div class="mb-3">
-      <label class="form-label">Workshop Description</label>
-      <textarea class="form-control" rows="5" id="edit-workshop-description" name="description"></textarea>
-    </div>
+    <a type="button" class="btn btn-link link-secondary mb-3"
+      href="{{ url_for('routes.frontend.private.management.workshops') }}">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-left">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M5 12l14 0" />
+        <path d="M5 12l6 6" />
+        <path d="M5 12l6 -6" />
+      </svg>
+      <span class="btn-text">Back</span>
+    </a>
 
-
-    <label class="form-label">Workshop Type</label>
-    <div id="workshop-type-selection-container" class="form-selectgroup-boxes row mb-3">
-    </div>
-
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 10px;">
-      <div id="min-volunteers-block" class="mb-3">
-        <label class="form-label">Minimum Volunteers</label>
-        <div class="input-icon">
-          <input type="number" class="form-control text-center" value="0" id="edit-workshop-min_volunteers"
-            name="min_volunteers">
-          <span class="input-icon-addon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-              class="icon icon-tabler icons-tabler-outline icon-tabler-users">
-              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-              <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
-              <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-              <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
-            </svg>
-          </span>
+    <div class="card card-md">
+      <div id="main-form" class="card-body">
+        <div class="mb-3">
+          <label class="form-label">Workshop Name</label>
+          <input type="text" class="form-control" name="name" id="edit-workshop-name"
+            placeholder="Your workshop name" />
         </div>
-      </div>
-      <div id="capacity-block" class="mb-3">
-        <label class="form-label">Workshop Capacity</label>
-        <div class="input-icon">
-          <input type="number" class="form-control text-center" value="0" id="edit-workshop-capacity" name="capacity">
-          <span class="input-icon-addon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-              class="icon icon-tabler icons-tabler-outline icon-tabler-users">
-              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-              <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
-              <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-              <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
-            </svg>
-          </span>
+        <div class="mb-3">
+          <label class="form-label">Workshop Description</label>
+          <textarea class="form-control" rows="5" id="edit-workshop-description" name="description"></textarea>
         </div>
-      </div>
-    </div>
 
-    <div id="difficulty-block" class="mb-3">
-      <label class="form-label">Difficulty</label>
-      <div id="difficulty-selection-container" class="form-selectgroup">
-      </div>
-    </div>
 
-    <div class="mb-3">
-      <div id="files-container" class="files-container-restore">
-        <div>
-          <label class="form-label">Workshop files</label>
-          <div id="active-files-section" class="active-files-section">
+        <label class="form-label">Workshop Type</label>
+        <div id="workshop-type-selection-container" class="form-selectgroup-boxes row mb-3">
+        </div>
 
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 10px;">
+          <div id="min-volunteers-block" class="mb-3">
+            <label class="form-label">Minimum Volunteers</label>
+            <div class="input-icon">
+              <input type="number" class="form-control text-center" value="0" id="edit-workshop-min_volunteers"
+                name="min_volunteers">
+              <span class="input-icon-addon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="icon icon-tabler icons-tabler-outline icon-tabler-users">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+                  <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
+                </svg>
+              </span>
+            </div>
           </div>
-        </div>
-        <div id="restore-section">
-          <label class="form-label">Restore a file</label>
-          <div class="archived-files-section">
-            <div class="dropdown">
-              <a href="#" class="btn dropdown-toggle" data-bs-toggle="dropdown">Select File</a>
-              <div id="restore-dropdown" class="dropdown-menu">
-              </div>
+          <div id="capacity-block" class="mb-3">
+            <label class="form-label">Workshop Capacity</label>
+            <div class="input-icon">
+              <input type="number" class="form-control text-center" value="0" id="edit-workshop-capacity"
+                name="capacity">
+              <span class="input-icon-addon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="icon icon-tabler icons-tabler-outline icon-tabler-users">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+                  <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
+                </svg>
+              </span>
             </div>
           </div>
         </div>
-      </div>
 
+        <div id="difficulty-block" class="mb-3">
+          <label class="form-label">Difficulty</label>
+          <div id="difficulty-selection-container" class="form-selectgroup">
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <div id="files-container" class="files-container-restore">
+            <div>
+              <label class="form-label">Workshop files</label>
+              <div id="active-files-section" class="active-files-section">
+
+              </div>
+            </div>
+            <div id="restore-section">
+              <label class="form-label">Restore a file</label>
+              <div class="archived-files-section">
+                <div class="dropdown">
+                  <a href="#" class="btn dropdown-toggle" data-bs-toggle="dropdown">Select File</a>
+                  <div id="restore-dropdown" class="dropdown-menu">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <form class="dropzone form-control" id="workshop-files-dropzone">
+          <div class="dz-default dz-message">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              class="icon icon-tabler icons-tabler-outline icon-tabler-file-isr">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M15 3v4a1 1 0 0 0 1 1h4" />
+              <path d="M15 3v4a1 1 0 0 0 1 1h4" />
+              <path d="M6 8v-3a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-7" />
+              <path d="M3 15l3 -3l3 3" />
+            </svg>
+            <button class="dz-button" type="button">Drop files here to upload</button>
+          </div>
+        </form>
+      </div>
     </div>
-    <form class="dropzone form-control" id="workshop-files-dropzone">
-      <div class="dz-default dz-message">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-          class="icon icon-tabler icons-tabler-outline icon-tabler-file-isr">
-          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-          <path d="M15 3v4a1 1 0 0 0 1 1h4" />
-          <path d="M15 3v4a1 1 0 0 0 1 1h4" />
-          <path d="M6 8v-3a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-7" />
-          <path d="M3 15l3 -3l3 3" />
-        </svg>
-        <button class="dz-button" type="button">Drop files here to upload</button>
-      </div>
-    </form>
-  </div>
-</div>
 
-<button class="btn btn-primary mt-3" onclick="editWorkshopOnClick()">
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-    class="icon icon-tabler icons-tabler-outline icon-tabler-pencil">
-    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-    <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
-    <path d="M13.5 6.5l4 4" />
-  </svg>
-  <span class="btn-text">Edit Workshop</span>
-</button>
+    <button class="btn btn-primary mt-3" onclick="editWorkshopOnClick()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        class="icon icon-tabler icons-tabler-outline icon-tabler-pencil">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+        <path d="M13.5 6.5l4 4" />
+      </svg>
+      <span class="btn-text">Edit Workshop</span>
+    </button>
+
+  </div>
+
+  <div id="confirm-delete" class="modal modal-blur fade" id="modal-small" tabindex="-1" style="display: none;"
+        aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="modal-title">Are you sure?</div>
+                    <div id="confirm-delete-text"></div>
+                </div>
+                <div class="modal-footer">
+                    <button id="confirm-delete-button" type="button" class="btn btn-danger" data-bs-dismiss="modal">Yes, archive</button>
+                    <button type="button" class="btn btn-link link-secondary me-auto"
+                        data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/management/edit_workshop.css') }}">
 
