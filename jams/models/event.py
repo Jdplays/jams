@@ -88,6 +88,7 @@ class Timeslot(db.Model):
     name = Column(String(100), nullable=False)
     start = Column(TIME(), nullable=False)
     end = Column(TIME(), nullable=False)
+    is_break = Column(Boolean(), nullable=False, default=False, server_default='false')
     active = Column(Boolean(), default=True)
 
     @property
@@ -96,10 +97,11 @@ class Timeslot(db.Model):
         end_formatted = self.end.strftime('%H:%M') if self.end else 'N/A'
         return f"{start_formatted} - {end_formatted}"
     
-    def __init__(self, name, start, end, active=True):
+    def __init__(self, name, start, end, is_break, active=True):
         self.name = name
         self.start = start
         self.end = end
+        self.is_break = is_break
         self.active = active
 
     def activate(self):
@@ -115,6 +117,7 @@ class Timeslot(db.Model):
             'start': str(self.start),
             'end': str(self.end),
             'range': self.range,
+            'is_break': self.is_break,
             'active': self.active
         }
 
@@ -126,16 +129,16 @@ class EventLocation(db.Model):
     event_id = Column(Integer(), ForeignKey('event.id'), nullable=False)
     location_id = Column(Integer(), ForeignKey('location.id'), nullable=False)
     order = Column(Integer(), nullable=False, default=0)
-    hidden = Column(Boolean(), nullable=False, default=False)
+    publicly_visible = Column(Boolean(), nullable=False, default=True, server_default='true')
 
     event = relationship('Event', backref='locations')
     location = relationship('Location')
 
-    def __init__(self, event_id, location_id, order=0, hidden=False):
+    def __init__(self, event_id, location_id, order=0, publicly_visible=True):
         self.event_id = event_id
         self.location_id = location_id
         self.order = order
-        self.hidden = hidden
+        self.publicly_visible = publicly_visible
     
     def hide(self):
         self.hidden = True
@@ -149,7 +152,7 @@ class EventLocation(db.Model):
             'event_id': self.event_id,
             'location_id': self.location_id,
             'order': self.order,
-            'hidden': self.hidden
+            'publicly_visible': self.publicly_visible
         }
 
 # The EventTimeslots are timeslots that are in a specific event and reference one of the overall timeslots along with an order it should be in (lower = first)
@@ -159,15 +162,15 @@ class EventTimeslot(db.Model):
     id = Column(Integer(), primary_key=True)
     event_id = Column(Integer(), ForeignKey('event.id'), nullable=False)
     timeslot_id = Column(Integer(), ForeignKey('timeslot.id'), nullable=False)
-    hidden = Column(Boolean(), nullable=False, default=False)
+    publicly_visible = Column(Boolean(), nullable=False, default=True, server_default='true')
 
     event = relationship('Event', backref='timeslots')
     timeslot = relationship('Timeslot')
 
-    def __init__(self, event_id, timeslot_id, hidden=False):
+    def __init__(self, event_id, timeslot_id, publicly_visible=True):
         self.event_id = event_id
         self.timeslot_id = timeslot_id
-        self.hidden = hidden
+        self.publicly_visible = publicly_visible
 
     def hide(self):
         self.hidden = True
@@ -180,7 +183,7 @@ class EventTimeslot(db.Model):
             'id': self.id,
             'event_id': self.event_id,
             'timeslot_id': self.timeslot_id,
-            'hidden': self.hidden
+            'publicly_visible': self.publicly_visible
         }
 
 
@@ -193,6 +196,7 @@ class Session(db.Model):
     event_location_id = Column(Integer(), ForeignKey('event_location.id'), nullable=False)
     event_timeslot_id = Column(Integer(), ForeignKey('event_timeslot.id'), nullable=False)
     workshop_id = Column(Integer(), ForeignKey('workshop.id'))
+    publicly_visible = Column(Boolean(), nullable=False, default=False, server_default='false')
     active = Column(Boolean(), nullable=False, default=True)
 
     event = relationship('Event', backref='sessions')
@@ -210,11 +214,12 @@ class Session(db.Model):
     def location_column_order(self):
         return self.event_location.order
 
-    def __init__(self, event_id, event_location_id, event_timeslot_id, workshop_id=None, active=True):
+    def __init__(self, event_id, event_location_id, event_timeslot_id, workshop_id=None, publicly_visible=False, active=True):
         self.event_id = event_id
         self.event_location_id = event_location_id
         self.event_timeslot_id = event_timeslot_id
         self.workshop_id = workshop_id
+        self.publicly_visible = publicly_visible
         self.active = active
 
     def activate(self):
@@ -232,5 +237,6 @@ class Session(db.Model):
             'workshop_id': self.workshop_id,
             'has_workshop': self.has_workshop,
             'location_column_order': self.location_column_order,
+            'publicly_visible': self.publicly_visible,
             'active': self.active
         }

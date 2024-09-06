@@ -10,13 +10,15 @@ class WorkshopType(db.Model):
     volunteer_signup = Column(Boolean, nullable=False, default=True, server_default='true')
     attendee_registration = Column(Boolean, nullable=False, default=True, server_default='true')
     publicly_visible = Column(Boolean, nullable=False, default=True, server_default='true')
+    display_colour = Column(String(7), nullable=True)
 
-    def __init__(self, name, description, volunteer_signup=True, attendee_registration=True, publicly_visible=True):
+    def __init__(self, name, description, volunteer_signup=True, attendee_registration=True, publicly_visible=True, display_colour=None):
         self.name = name
         self.description = description
         self.volunteer_signup = volunteer_signup
         self.attendee_registration = attendee_registration
         self.publicly_visible = publicly_visible
+        self.display_colour = display_colour
 
     def to_dict(self):
         return {
@@ -25,7 +27,8 @@ class WorkshopType(db.Model):
             'description': self.description,
             'volunteer_signup': self.volunteer_signup,
             'attendee_registration': self.attendee_registration,
-            'publicly_visible': self.publicly_visible
+            'publicly_visible': self.publicly_visible,
+            'display_colour': self.display_colour
         }
 
 class Workshop(db.Model):
