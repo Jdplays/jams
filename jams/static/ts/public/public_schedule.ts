@@ -4,7 +4,7 @@ const scheduleGridOptions = {
     eventId: 1,
     edit: false,
     autoScale: true,
-    size: 388
+    showPrivate: false,
 }
 
 const scheduleGrid = new ScheduleGrid('schedule-container', scheduleGridOptions)

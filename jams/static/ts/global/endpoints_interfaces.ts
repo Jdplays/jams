@@ -3,14 +3,14 @@ export interface EventLocation {
     event_id:number
     location_id:number
     order:number
-    hidden:boolean
+    publicly_visible:boolean
 }
 
 export interface EventTimeslot {
     id:number
     event_id:number
     timeslot_id:number
-    hidden:boolean
+    publicly_visible:boolean
 }
 
 export interface Location {
@@ -25,6 +25,7 @@ export interface Timeslot {
     start:string
     end:string
     range:string
+    is_break:boolean
     active:boolean
 }
 
@@ -67,6 +68,7 @@ export interface WorkshopType {
     volunteer_signup:boolean
     attendee_registration:boolean
     publicly_visible:boolean
+    display_colour:string
 }
 
 export interface Event {

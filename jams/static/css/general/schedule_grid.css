@@ -51,6 +51,15 @@
 
 .header-top {
     height: 100px;
+    z-index: 99;
+}
+
+.theme-light .header-top {
+    background-color: #F4F4F9;
+}
+
+.theme-dark .header-top {
+    background-color: #1A2234;
 }
 
 .header-side {

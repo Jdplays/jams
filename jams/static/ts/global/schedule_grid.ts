@@ -13,7 +13,8 @@ import {
     addTimeslotToEvent,
     removeLocationFromEvent,
     removeTimeslotFromEvent,
-    getIconData
+    getIconData,
+    getWorkshopTypes
 } from '@global/endpoints'
 import { EventLocation, EventTimeslot, Location, Timeslot } from '@global/endpoints_interfaces'
 import {buildQueryString, emptyElement, allowDrop, waitForTransitionEnd} from '@global/helper'
@@ -32,12 +33,15 @@ interface TimeslotsInEvent extends Timeslot {
 
 export interface ScheduleGridOptions {
     eventId?: number
+    width?:number
+    height?:number
     size?:number
     edit?:boolean
     updateInterval?:number
     workshopCardOptions?:WorkshopCardOptions
     autoScale?:boolean
     autoRefresh?:boolean
+    showPrivate?:boolean
 }
 
 export class ScheduleGrid {
@@ -47,6 +51,8 @@ export class ScheduleGrid {
     private sessionCount:number
     private eventLocations:EventLocation[]
     private eventTimeslots:EventTimeslot[]
+    private locationsInEvent:LocationsInEvent[]
+    private timeslotsInEvent:TimeslotsInEvent[]
 
     public currentDragType:string
 
@@ -55,22 +61,28 @@ export class ScheduleGrid {
         // Set options (use defaults for options not provided)
         const {
             eventId = 1,
+            width = 150,
+            height = 150,
             size = 150,
             edit = false,
             updateInterval = 1,
             workshopCardOptions = {},
             autoScale = false,
-            autoRefresh = true
+            autoRefresh = true,
+            showPrivate = true
         } = options || {}
        
         this.options = {
             eventId,
+            width,
+            height,
             size,
             edit,
             updateInterval,
             workshopCardOptions,
             autoScale,
-            autoRefresh
+            autoRefresh,
+            showPrivate
         }
 
         // Set the schedule container element from html
@@ -82,6 +94,14 @@ export class ScheduleGrid {
         this.currentDragType = ''
         this.eventLocations = []
         this.eventTimeslots = []
+        this.locationsInEvent = []
+        this.timeslotsInEvent = []
+
+        // Set width and height if size is set
+        if (this.options.size !== null && this.options.size !== undefined) {
+            this.options.width = this.options.size
+            this.options.height = this.options.size
+        }
 
         // Initialise the grid
         this.initialiseScheduleGrid()
@@ -144,8 +164,11 @@ export class ScheduleGrid {
             }
 
             // Set the size that has been passed in for the grid as the workshop cards need to fit the session blocks
-            if (this.options.workshopCardOptions.size === undefined) {
-                this.options.workshopCardOptions.size = this.options.size
+            if (this.options.workshopCardOptions.width === undefined) {
+                this.options.workshopCardOptions.width = this.options.width
+            }
+            if (this.options.workshopCardOptions.height === undefined) {
+                this.options.workshopCardOptions.height = this.options.height
             }
         }
     }
@@ -200,30 +223,38 @@ export class ScheduleGrid {
         .map(eventLocation => {
             for (const location of locations) {
                 if (eventLocation.location_id === location.id) {
-                    return {
-                        ...location,
-                        'event_location_id': eventLocation.id,
-                        'event_location_order': eventLocation.order
+                    if (eventLocation.publicly_visible ||(!eventLocation.publicly_visible && this.options.showPrivate)) {
+                        return {
+                            ...location,
+                            'event_location_id': eventLocation.id,
+                            'event_location_order': eventLocation.order
+                        }
                     }
                 }
             }
             return null
         })
         .filter(eventLocation => eventLocation !== null)
+
+        this.locationsInEvent = locationsInEvent        
     
         const timeslotsInEvent:TimeslotsInEvent[] = this.eventTimeslots
             .map(eventTimeslot => {
                 for (const timeslot of timeslots) {
                     if (eventTimeslot.timeslot_id === timeslot.id) {
-                        return {
-                            ...timeslot,
-                            'event_timeslot_id': eventTimeslot.id
+                        if (eventTimeslot.publicly_visible ||(!eventTimeslot.publicly_visible && this.options.showPrivate) || timeslot.is_break) {
+                            return {
+                                ...timeslot,
+                                'event_timeslot_id': eventTimeslot.id
+                            }
                         }
                     }
                 }
                 return null
             })
             .filter(eventTimeslot => eventTimeslot !== null)
+
+        this.timeslotsInEvent = timeslotsInEvent
         
         // Work out what locations/timeslots need to be in the add dropdown (if any)
         const locationsForAddDropdown = locations
@@ -263,7 +294,7 @@ export class ScheduleGrid {
 
         // Set the number of columns in the grid. There is only one row
         if (locations.length > 0) {
-            gridContainer.style.gridTemplateColumns = `100px repeat(${columnCount}, ${this.options.size}px) 100px`
+            gridContainer.style.gridTemplateColumns = `100px repeat(${columnCount}, ${this.options.width}px) 100px`
         } else {
             gridContainer.style.gridTemplateColumns = '100px 100px'
         }
@@ -271,7 +302,7 @@ export class ScheduleGrid {
         // Craete the timeslots column including an empty square for the top left corner
         const timeslotsColumn = document.createElement('div')
         timeslotsColumn.style.gridTemplateColumns = `100px`
-        timeslotsColumn.style.gridTemplateRows = `100px repeat(${rowCount}, ${this.options.size}px) 100px`
+        timeslotsColumn.style.gridTemplateRows = `100px repeat(${rowCount}, ${this.options.height}px) 100px`
 
         let emptyCornerCell = document.createElement('div')
         emptyCornerCell.classList.add('header')
@@ -284,7 +315,7 @@ export class ScheduleGrid {
             // Build the timeslot element
             let div = document.createElement('div');
             div.classList.add('header', 'header-side');
-            div.style.height = `${this.options.size}px`
+            div.style.height = `${this.options.height}px`
 
             const timeslotContainer = document.createElement('div')
             timeslotContainer.classList.add('header-container')
@@ -367,15 +398,15 @@ export class ScheduleGrid {
         for (const location of locations) {
             // Craete the main columns in the grid which will have each location and all its session blocks
             const mainColumn = document.createElement('div')
-            mainColumn.style.gridTemplateColumns = `${this.options.size}px`
-            mainColumn.style.gridTemplateRows = `100px repeat(${rowCount}, ${this.options.size}px)`
+            mainColumn.style.gridTemplateColumns = `${this.options.width}px`
+            mainColumn.style.gridTemplateRows = `100px repeat(${rowCount}, ${this.options.height}px)`
 
             // Create the header and add the drag over events
             let header = document.createElement('div');
             header.setAttribute('event-location-id', String(location.event_location_id))
             header.setAttribute('data-index', String(location.event_location_order))
             header.classList.add('header', 'header-top');
-            header.style.width = `${this.options.size}px`
+            header.style.width = `${this.options.width}px`
             if (this.options.edit) {
                 header.addEventListener('dragover', allowDrop);
             }
@@ -416,9 +447,9 @@ export class ScheduleGrid {
                 let grabHandle = document.createElement('div')
                 grabHandle.innerHTML = this.icons.grabPoint
                 grabHandle.classList.add('location-column-grab-container', 'location-column-grab-container-style')
-                let width = this.options.size / 5
+                let width = this.options.width / 5
                 grabHandle.style.width = `${width}px`
-                grabHandle.style.marginLeft = `${(this.options.size - width) / 2}px`
+                grabHandle.style.marginLeft = `${(this.options.width - width) / 2}px`
                 grabHandle.style.display = 'none'
 
                 header.addEventListener('mouseover', (e) => {
@@ -436,15 +467,19 @@ export class ScheduleGrid {
 
             mainColumn.appendChild(header)
 
+            
             // Create cells for each session
             for (const timeslot of timeslots) {
                 const sessionBlock = document.createElement('div');
                 sessionBlock.classList.add('session-block', 'session-block-style')
                 sessionBlock.id = `session-${location.event_location_id}-${timeslot.event_timeslot_id}`
-                sessionBlock.style.width = `${this.options.size}px`
-                sessionBlock.style.height = `${this.options.size}px`
+                sessionBlock.style.width = `${this.options.width}px`
+                sessionBlock.style.height = `${this.options.height}px`
                 sessionBlock.setAttribute('has-workshop', String(false))
                 sessionBlock.setAttribute('location-column-order', String(location.event_location_order))
+                if (timeslot.is_break) {
+                    sessionBlock.setAttribute('is-break', String(true))
+                }
                 mainColumn.appendChild(sessionBlock);
                 // Increment the session count of the grid
                 this.sessionCount ++
@@ -459,10 +494,10 @@ export class ScheduleGrid {
             if (dropdownLocations.length > 0) {
                 const addLocationsColumn = document.createElement('div')
                 addLocationsColumn.style.gridTemplateColumns = '100px'
-                addLocationsColumn.style.gridTemplateRows = `${this.options.size}px`
+                addLocationsColumn.style.gridTemplateRows = `${this.options.height}px`
 
                 const locationsDropdownCell = document.createElement('div');
-                locationsDropdownCell.classList.add('header-end', 'header-top-end', 'dropdown')
+                locationsDropdownCell.classList.add('header-end', 'header-top-end', 'header-top', 'dropdown')
                 let btn = document.createElement('div')
                 btn.innerHTML = this.icons.addToGrid
                 btn.setAttribute('data-bs-toggle', 'dropdown');
@@ -494,7 +529,11 @@ export class ScheduleGrid {
     // Populate the session blocks with workshops that are assigned to them
     async populateSessions() {
         // Get all the sessions for the given event
-        const sessionsResponse = await getSessionsForEvent(this.options.eventId)
+        const data = {
+            show_private: this.options.showPrivate
+        }
+        const queryString = buildQueryString(data)
+        const sessionsResponse = await getSessionsForEvent(this.options.eventId, queryString)
         let sessions = sessionsResponse.data
 
         // If the grid session count is not equal to the length of the sessions justed pulled down, reload the grid
@@ -541,7 +580,8 @@ export class ScheduleGrid {
 
             // If the grid is editable, add the drag events to the empty sessions
             if (this.options.edit) {
-                if (!session.has_workshop && !sessionWorkshopsToAdd.includes(session)) {
+                const isBreak = sessionBlock.getAttribute('is-break')
+                if (!session.has_workshop && !sessionWorkshopsToAdd.includes(session) && !isBreak) {
                     sessionBlock.removeEventListener('drop', this.handleDropWithContext)
                     sessionBlock.addEventListener('drop', this.handleDropWithContext)
                     sessionBlock.addEventListener('dragover', allowDrop);
@@ -565,15 +605,23 @@ export class ScheduleGrid {
                 this.options.workshopCardOptions.difficultyLevels = difficultyLevels
             }
 
+            if (!this.options.workshopCardOptions.workshopTypes) {
+                const response = await getWorkshopTypes()
+                let workshopTypes = response.data
+                this.options.workshopCardOptions.workshopTypes = workshopTypes
+            }
+
             const workshopsToAdd = sessionWorkshopsToAdd
                 .map(sw => {
                     for (const workshop of workshops) {
                         if (sw.workshop_id === workshop.id) {
-                            return {
-                                ...workshop,
-                                'event_location_id': sw.event_location_id,
-                                'event_timeslot_id': sw.event_timeslot_id,
-                                'session_id': sw.id
+                            if (workshop.publicly_visible ||(!workshop.publicly_visible && this.options.showPrivate)) {
+                                return {
+                                    ...workshop,
+                                    'event_location_id': sw.event_location_id,
+                                    'event_timeslot_id': sw.event_timeslot_id,
+                                    'session_id': sw.id
+                                }
                             }
                         }
                     }
@@ -732,6 +780,11 @@ export class ScheduleGrid {
                                 let sessionBlock = this.scheduleContainer.querySelector(`#${sessionBlockId}`)
                                 if (!sessionBlock) {
                                     return
+                                }
+
+                                const isBreak = sessionBlock.getAttribute('is-break')
+                                if (isBreak) {
+                                    continue
                                 }
 
                                 let sessionId = Number(sessionBlock.getAttribute('session-id'))
@@ -893,30 +946,64 @@ export class ScheduleGrid {
     updateGridSize(scheduleGrid=this) {
         // If auto scale is enabled. Calculate the width and height params
         if (scheduleGrid.options.autoScale) {
-            let oldSize = scheduleGrid.options.size
+            let oldWidth = scheduleGrid.options.width
+            let oldHeight = scheduleGrid.options.height
             let windowWidth = window.innerWidth
             let windowHeight = window.innerHeight
             
             // Round the width to the nearest 50px. Then take 50 px away for side padding
-            let roundedWindowWidth = (50 * Math.round(windowWidth / 50)) - 50
-            let roundedWindowHeight = (50 * Math.round(windowHeight / 50)) - 50
+            let roundedWindowWidth = (50 * Math.round(windowWidth / 50)) * 0.9
+            let roundedWindowHeight = (50 * Math.round(windowHeight / 50)) * 0.8
 
-            let blockWidth = Math.round(roundedWindowWidth / scheduleGrid.eventLocations.length) - 100
-            let blockHeight = Math.round(roundedWindowHeight / scheduleGrid.eventTimeslots.length) - 100
+            let blockWidth = Math.round(roundedWindowWidth / scheduleGrid.locationsInEvent.length) - 0
+            let blockHeight = Math.round(roundedWindowHeight / scheduleGrid.timeslotsInEvent.length) - 0
+            console.log(this.timeslotsInEvent)
 
             if (scheduleGrid.options.edit) {
                 blockWidth -= 100
                 blockHeight -= 100
             }
 
-            let usableWindowSize = blockWidth < blockHeight ? blockWidth : blockHeight
+            scheduleGrid.options.width = blockWidth
+            scheduleGrid.options.height = blockHeight
+            scheduleGrid.options.workshopCardOptions.width = scheduleGrid.options.width
+            scheduleGrid.options.workshopCardOptions.height = scheduleGrid.options.height
 
-            scheduleGrid.options.size = usableWindowSize
-            scheduleGrid.options.workshopCardOptions.size = scheduleGrid.options.size
-
-            if (oldSize !== usableWindowSize) {
+            if (oldWidth !== blockWidth || oldHeight !== blockHeight) {
                 scheduleGrid.updateSchedule()
             }
         }
     }
 }
+
+// Debounce function to limt the rate of scroll events
+function debounce(func:Function, wait:number) {
+    let timeout:number|undefined
+    return function(this:any, ...args:any[]) {
+        if (timeout) clearTimeout(timeout)
+            timeout = window.setTimeout(() => func.apply(this, args), wait)
+    }
+}
+
+document.addEventListener("scroll", debounce(function () {
+    let workshopSelectionContainer = document.querySelector('.workshop-selection-container')
+    let gridLocationHeaders = document.querySelectorAll('.header-top')
+    
+    if (workshopSelectionContainer === null || workshopSelectionContainer === undefined) {
+        gridLocationHeaders.forEach(element => {
+            let header = element as HTMLElement
+            header.style.position = 'sticky';
+            header.style.top = '10px'
+        })
+        return
+    }
+
+    gridLocationHeaders.forEach(element => {
+        let header = element as HTMLElement
+
+        header.style.position = 'sticky'
+        header.style.top = `${workshopSelectionContainer.clientHeight}px`
+        
+    })
+
+}, 10));
