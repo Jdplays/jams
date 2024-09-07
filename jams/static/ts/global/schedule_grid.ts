@@ -184,9 +184,6 @@ export class ScheduleGrid {
         this.eventLocations = eventLocationsResponse.data
         this.eventTimeslots = evenTimeslotsResponse.data
 
-        // Update the grid size variables
-        this.updateGridSize()
-
         // Rebuild the base grid
         await this.rebuildGrid()
 
@@ -255,6 +252,9 @@ export class ScheduleGrid {
             .filter(eventTimeslot => eventTimeslot !== null)
 
         this.timeslotsInEvent = timeslotsInEvent
+
+        // Update the grid size variables
+        this.updateGridSize()
         
         // Work out what locations/timeslots need to be in the add dropdown (if any)
         const locationsForAddDropdown = locations
@@ -293,7 +293,7 @@ export class ScheduleGrid {
         const rowCount = timeslots.length
 
         // Set the number of columns in the grid. There is only one row
-        if (locations.length > 0) {
+        if (columnCount > 0) {
             gridContainer.style.gridTemplateColumns = `100px repeat(${columnCount}, ${this.options.width}px) 100px`
         } else {
             gridContainer.style.gridTemplateColumns = '100px 100px'
@@ -955,14 +955,13 @@ export class ScheduleGrid {
             let roundedWindowWidth = (50 * Math.round(windowWidth / 50)) * 0.9
             let roundedWindowHeight = (50 * Math.round(windowHeight / 50)) * 0.8
 
-            let blockWidth = Math.round(roundedWindowWidth / scheduleGrid.locationsInEvent.length) - 0
-            let blockHeight = Math.round(roundedWindowHeight / scheduleGrid.timeslotsInEvent.length) - 0
-            console.log(this.timeslotsInEvent)
-
             if (scheduleGrid.options.edit) {
-                blockWidth -= 100
-                blockHeight -= 100
+                roundedWindowWidth -= 100
+                roundedWindowHeight -= 100
             }
+
+            let blockWidth = Math.round(roundedWindowWidth / scheduleGrid.locationsInEvent.length)
+            let blockHeight = Math.round(roundedWindowHeight / scheduleGrid.timeslotsInEvent.length)
 
             scheduleGrid.options.width = blockWidth
             scheduleGrid.options.height = blockHeight
