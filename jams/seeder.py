@@ -72,7 +72,8 @@ def seed_workshop_types():
             name='Internal Volunteer Workshop',
             description='A workshop that is not publicly visible and only volunteers can sign up to.',
             attendee_registration=False,
-            publicly_visible=False
+            publicly_visible=False,
+            display_colour='#551ca6'
             )
         db.session.add(workshop_type)
 
@@ -89,7 +90,8 @@ def seed_workshop_types():
             name='Attendee Information Session',
             description='An session that is public, but no one can sign up to. EG: (Break time)',
             volunteer_signup=False,
-            attendee_registration=False
+            attendee_registration=False,
+            display_colour='#ffb412'
             )
         db.session.add(workshop_type)
 
@@ -99,7 +101,8 @@ def seed_workshop_types():
             description='An session that is private and for the volunteers, but no one can sign up to. EG: (Debrief)',
             volunteer_signup=False,
             attendee_registration=False,
-            publicly_visible=False
+            publicly_visible=False,
+            display_colour='#696564'
             )
         db.session.add(workshop_type)
     
