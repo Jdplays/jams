@@ -338,11 +338,12 @@ def add_timeslot():
     name = data.get('name')
     start = data.get('start')
     end = data.get('end')
+    is_break = data.get('is_break')
 
     if not name:
         abort(400, description="No 'name' provided")
 
-    new_timeslot = Timeslot(name=name, start=start, end=end)
+    new_timeslot = Timeslot(name=name, start=start, end=end, is_break=is_break)
     db.session.add(new_timeslot)
     db.session.commit()
 

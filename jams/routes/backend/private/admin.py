@@ -2,7 +2,7 @@
 from flask import Blueprint, request, jsonify, abort
 from flask_security import login_required, current_user
 from jams.decorators import role_based_access_control_be, protect_user_updates
-from jams.models import db, User, Role, Event, EventLocation, EventTimeslot, Session, Page, Config
+from jams.models import db, User, Role, Event, EventLocation, EventTimeslot, Session, Page, Config, Workshop
 from jams.util import helper
 from jams.rbac import generate_roles_file_from_db, update_pages_assigned_to_role
 
@@ -404,6 +404,8 @@ def add_event_location(event_id):
 
     db.session.commit()
 
+    helper.update_event_location_visibility(event_location)
+
     return jsonify({
         'message': 'Location has been added to the event',
         'event_location': event_location.to_dict()
@@ -444,6 +446,8 @@ def add_event_timeslot(event_id):
             db.session.add(session)
 
     db.session.commit()
+
+    helper.update_event_timeslot_visibility(event_timeslot)
 
     return jsonify({
         'message': 'Timeslot has been added to the event',
@@ -528,10 +532,19 @@ def get_event_sessions(event_id):
     # Check if the event exists
     event = Event.query.filter_by(id=event_id).first_or_404()
     sessions = event.sessions
-    
-    data = helper.filter_model_by_query_and_properties(Session, request.args, input_data=sessions)
 
-    return jsonify(data)
+    mutable_args = request.args.to_dict()
+    show_private = mutable_args.pop('show_private', None).lower() == 'true'
+    
+    data = helper.filter_model_by_query_and_properties(Session, mutable_args, input_data=sessions, return_objects=True)
+    
+    for session in data.copy():
+        if (not session.event_location.publicly_visible and not show_private) or (not session.event_timeslot.publicly_visible and not show_private) and not session.event_timeslot.timeslot.is_break:
+            data.remove(session)
+
+    return_obj = [session.to_dict() for session in data]
+
+    return jsonify({'data': return_obj})
 
 #------------------------------------------ SESSION ------------------------------------------#
 
@@ -572,14 +585,20 @@ def add_workshop_to_session(session_id):
     workshop_id = data.get('workshop_id')
     force = data.get('force')
 
+    workshop = Workshop.query.filter_by(id=workshop_id).first_or_404()
+
     if not workshop_id:
         abort(400, description="No 'workshop_id' provided")
     
     if session.has_workshop and not force:
         abort(400, description="Session already has a workshop")
     
+    
     session.workshop_id = workshop_id
+    session.publicly_visible = workshop.publicly_visible
     db.session.commit()
+
+    helper.update_session_event_location_visibility(session)
 
     return jsonify({
         'message': 'Workshop successfully added to session'
@@ -595,8 +614,10 @@ def remove_workshop_from_session(session_id):
         abort(400, description="Session has no workshop")
     
     session.workshop_id = None
-    
+    session.publicly_visible = True
     db.session.commit()
+    
+    helper.update_session_event_location_visibility(session)
 
     return jsonify({'message': 'Workshop successfully removed from session'})
 

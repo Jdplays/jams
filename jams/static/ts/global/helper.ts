@@ -50,7 +50,8 @@ export function buildQueryString(params:QueryStringParams):string|null {
 
             // Handle array values by joining them with the OR symbol '|'
             if (Array.isArray(processedValue)) {
-                processedValue = processedValue.join(orSeparator)
+                const filteredValues = processedValue.filter(item => item !== null && item !== undefined && item !== '')
+                processedValue = filteredValues.flat().join(orSeparator)
             }
             // Convert objects into JSON strings
             else if (typeof processedValue === 'object') {

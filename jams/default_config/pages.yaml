@@ -113,6 +113,7 @@ pages:
       # Workshops
       routes.backend.private.management.get_workshops:
       routes.backend.private.management.get_difficulty_levels:
+      routes.backend.private.management.get_workshop_types:
       # Event Locations
       routes.backend.private.management.get_locations:
       routes.backend.private.admin.get_event_locations:
@@ -188,6 +189,7 @@ pages:
     backend_endpoints:
       routes.backend.private.management.get_workshops:
       routes.backend.private.management.get_difficulty_levels:
+      routes.backend.private.management.get_workshop_types:
       routes.backend.private.admin.get_event_locations:
       routes.backend.private.management.get_locations:
       routes.backend.private.admin.get_event_timeslots:

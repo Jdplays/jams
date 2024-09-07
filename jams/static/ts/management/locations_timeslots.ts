@@ -144,7 +144,8 @@ async function addTimeslotOnClick() {
     const data:Partial<RequestMultiModelJSONData> = {
         'name': (document.getElementById('add-timeslot-name') as HTMLInputElement).value,
         'start': (document.getElementById('add-timeslot-start-time') as HTMLInputElement).value,
-        'end': (document.getElementById('add-timeslot-end-time') as HTMLInputElement).value
+        'end': (document.getElementById('add-timeslot-end-time') as HTMLInputElement).value,
+        'is_break': (document.getElementById('add-timeslot-is-break') as HTMLInputElement).checked
     }
 
     const response = await addTimeslot(data)
@@ -162,7 +163,8 @@ async function editTimeslotOnClick() {
     const data:Partial<RequestMultiModelJSONData> = {
         'name': (document.getElementById('edit-timeslot-name') as HTMLInputElement).value,
         'start': (document.getElementById('edit-timeslot-start-time') as HTMLInputElement).value,
-        'end': (document.getElementById('edit-timeslot-end-time') as HTMLInputElement).value
+        'end': (document.getElementById('edit-timeslot-end-time') as HTMLInputElement).value,
+        'is_break': (document.getElementById('edit-timeslot-is-break') as HTMLInputElement).checked
     }
 
     const response = await editTimeslot(timeslotID, data)
@@ -182,11 +184,13 @@ async function prepEditTimeslotForm(timeslotId:number) {
     const nameInput = document.getElementById('edit-timeslot-name') as HTMLInputElement
     const startInput = document.getElementById('edit-timeslot-start-time') as HTMLInputElement
     const endInput = document.getElementById('edit-timeslot-end-time') as HTMLInputElement
+    const isBreakInput = document.getElementById('edit-timeslot-is-break') as HTMLInputElement
 
     hiddenIdInput.value = String(timeslotId)
     nameInput.value = timeslot.name
     startInput.value = timeslot.start
     endInput.value = timeslot.end
+    isBreakInput.checked = timeslot.is_break
 }
 
 function initialiseTimeslotsAgGrid() {
@@ -195,6 +199,7 @@ function initialiseTimeslotsAgGrid() {
             {field: 'name', flex: 1},
             {field: 'start', flex: 1},
             {field: 'end', flex: 1},
+            {field: 'is_break', headerName: 'Break', cellRenderer: 'agCheckboxCellRenderer', flex: 1},
             {
                 field: 'options', cellRenderer: (params:any) => {
                     return buildActionButtonsForModel(params.data.id, params.data.active, archiveTimeslotOnClick, activateTimeslotOnClick, 'edit-timeslot-modal', prepEditTimeslotForm)
