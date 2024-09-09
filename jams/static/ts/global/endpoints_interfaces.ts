@@ -98,6 +98,7 @@ export interface User {
     dob:string
     bio:string
     active:boolean
+    user_induction:boolean
 }
 
 export interface Role {
@@ -242,9 +243,15 @@ export interface QueryStringData extends
         $pagination_start_index?:number
         $order_by?:string
         $order_direction?:string
+        pre_induction_request?:boolean
     }
 
 export type QueryStringKey = keyof QueryStringData;
+
+export interface BackendResponse<T> {
+    message:string
+    data:T
+}
 
 export interface BackendMultiEntryResponse<T> {
     pagination:PaginationResponseData

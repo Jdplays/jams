@@ -12,3 +12,9 @@ def get_current_user_id():
     if current_user.is_authenticated:
         return jsonify({'current_user_id': current_user.id})
     
+@bp.route('/get_current_user_data', methods=['GET'])
+@login_required
+def get_current_user_data():
+    if current_user.is_authenticated:
+        return jsonify(current_user.to_dict())
+    

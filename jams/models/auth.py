@@ -50,6 +50,8 @@ class User(UserMixin, db.Model):
     bio = Column(String(255), nullable=True)
     roles = relationship('Role', secondary='user_roles', backref='users')
     fs_uniquifier = Column(String(255), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
+    open_id_sub = Column(String(255), unique=True, nullable=True)  # OpenID 'sub' claim
+    user_induction = Column(Boolean(), nullable=False, default=False, server_default='false')
     
     # Tracking
     last_login_at = Column(DateTime(), nullable=True)
@@ -81,7 +83,7 @@ class User(UserMixin, db.Model):
         return self.roles[0].name if self.roles else 'No Role'
 
     # Requires email, username, password to be passed
-    def __init__(self, email, username, password, active=False, first_name=None, last_name=None, dob=None, bio=None, roles=None, role_ids:list[int]=None, fs_uniquifier=None, last_login_at=None, current_login_at=None, last_login_ip=None, current_login_ip=None, login_count=0):
+    def __init__(self, email, username, password, active=False, first_name=None, last_name=None, dob=None, bio=None, roles=None, role_ids:list[int]=None, fs_uniquifier=None, last_login_at=None, current_login_at=None, last_login_ip=None, current_login_ip=None, login_count=0, open_id_sub=None, user_induction=False):
         self.email = email
         self.username = username
         self.first_name = first_name
@@ -100,6 +102,8 @@ class User(UserMixin, db.Model):
         self.last_login_ip = last_login_ip
         self.current_login_ip = current_login_ip
         self.login_count = login_count
+        self.open_id_sub = open_id_sub
+        self.user_induction = user_induction
 
     def activate(self):
         self.active = True
@@ -176,7 +180,8 @@ class User(UserMixin, db.Model):
             'role_ids': self.role_ids,
             'dob': self.dob,
             'bio': self.bio,
-            'active': self.active
+            'active': self.active,
+            'user_induction': self.user_induction
         }
     
 ## Role based Auth to pages

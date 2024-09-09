@@ -327,3 +327,15 @@ export function getSelectValues(select:HTMLSelectElement) {
     const selectedValue = selectedRadio ? selectedRadio.value : null
     return selectedValue
   }
+
+  export function validateTextInput(inputElement:HTMLInputElement):boolean {
+    if (isNullEmptyOrSpaces(inputElement.value)) {
+        inputElement.classList.add('is-invalid')
+        inputElement.classList.remove('is-valid')
+        return false
+    } else {
+        inputElement.classList.add('is-valid')
+        inputElement.classList.remove('is-invalid')
+        return true
+    }
+}

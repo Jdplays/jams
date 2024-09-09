@@ -45,7 +45,6 @@ def get_user_field(user_id, field):
 @bp.route('/users/<int:user_id>', methods=['PATCH'])
 @login_required
 @protect_user_updates
-@role_based_access_control_be
 def edit_user(user_id):
     user = User.query.filter_by(id=user_id).first_or_404()
     
