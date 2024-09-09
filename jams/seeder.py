@@ -1,5 +1,6 @@
 from jams.models import db, User, Role, Workshop, Event, Location, Timeslot, DifficultyLevel, WorkshopType
 from jams.rbac import generate_full_rbac
+from jams.configuration import ConfigType, set_config_value
 from flask_security.utils import hash_password
 import datetime
 
@@ -12,6 +13,7 @@ def preform_seed():
     seed_events()
     seed_locations()
     seed_timeslots()
+    seed_config()
 
 def seed_users():
     # Check if the Admin user already exists
@@ -173,3 +175,6 @@ def seed_timeslots():
         db.session.add(timeslot)
     
     db.session.commit()
+
+def seed_config():
+    set_config_value(ConfigType.LOCAL_AUTH_ENABLED, True)
