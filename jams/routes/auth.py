@@ -1,6 +1,9 @@
 # Frontend is just for serving pages
+import random
+import string
 from flask import Blueprint, abort, current_app, redirect, session, url_for, render_template, request
-from flask_security import login_user
+from flask_security import login_user, logout_user, current_user
+from flask_security.utils import hash_password
 from jams import oauth
 from jams.models import db, User
 from jams.configuration import ConfigType, get_config_value
@@ -54,10 +57,16 @@ def authorise():
     
     user_info = token['userinfo']
     user_email = user_info['email']
+    user_sub = user_info['sub']
 
-    user = User.query.filter_by(email=user_email).first()
+    user = User.query.filter_by(open_id_sub=user_sub).first()
     if not user:
-        user = User(email=user_email, username=user_email, password='test')
+        random_password = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
+        user = User(
+            email=user_email,
+            username=user_email,
+            password=hash_password(random_password),
+            open_id_sub=user_sub)
         db.session.add(user)
         user.activate()
         db.session.commit()
@@ -70,4 +79,7 @@ def authorise():
 
     return redirect(next_url)
 
-    
+@bp.route('/logout')
+def logout():
+    logout_user()
+    return redirect('/')
