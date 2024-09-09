@@ -6,12 +6,14 @@ from jams.models import db, PrivateAccessLog
 from jams.routes.backend import backend_bp
 from jams.routes.frontend import frontend_bp
 from jams.routes.resources import bp as resources_bp
+from jams.routes.auth import bp as auth_bp
 
 routes_bp = Blueprint('routes', __name__)
 
 routes_bp.register_blueprint(backend_bp)
 routes_bp.register_blueprint(frontend_bp)
 routes_bp.register_blueprint(resources_bp)
+routes_bp.register_blueprint(auth_bp)
 
 @routes_bp.after_request
 def before_all_requests(response):
