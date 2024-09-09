@@ -7,7 +7,7 @@ from jams.configuration import ConfigType, get_config_value, set_config_value, c
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 @bp.route('/config', methods=['GET'])
-#@role_based_access_control_be
+@role_based_access_control_be
 def get_config():
     auth_config = {}
 
@@ -20,6 +20,7 @@ def get_config():
     return jsonify({'auth_config': auth_config})
 
 @bp.route('/config', methods=['PATCH'])
+@role_based_access_control_be
 def edit_config():
     data = request.get_json()
     if not data:
@@ -41,9 +42,9 @@ def edit_config():
     return jsonify({'message': 'OAuth configuration has been successfully updated'})
 
 @bp.route('/config', methods=['DELETE'])
-#@role_based_access_control_be
+@role_based_access_control_be
 @eventbrite_inetegration_route
-def disable():
+def delete_config():
     remove_config_entry(ConfigType.OAUTH_ENABLED)
     remove_config_entry(ConfigType.OAUTH_PROVIDER_NAME)
     remove_config_entry(ConfigType.OAUTH_DISCOVERY_DOCUMENT_URL)

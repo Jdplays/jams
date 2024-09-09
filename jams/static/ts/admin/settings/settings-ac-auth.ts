@@ -1,6 +1,6 @@
 import { deleteOAuthConfiguration, editAuthConfiguration, getAuthConfiguration } from "@global/endpoints";
-import { AuthConfiguration, EditAuthConfigurationResponse } from "@global/endpoints_interfaces";
-import { isDefined, addSpinnerToElement, removeSpinnerFromElement, emptyElement, isNullEmptyOrSpaces, successToast, errorToast } from "@global/helper";
+import { AuthConfiguration } from "@global/endpoints_interfaces";
+import { isDefined, emptyElement, isNullEmptyOrSpaces, successToast, errorToast } from "@global/helper";
 
 let clientSecretPlaceholder:string = '*****************'
 

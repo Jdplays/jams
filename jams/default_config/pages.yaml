@@ -46,6 +46,10 @@ pages:
 
   settings_auth_sources:
     endpoint: routes.frontend.private.admin.settings_auth_sources
+    backend_endpoints:
+      routes.backend.integrations.auth.get_config:
+      routes.backend.integrations.auth.edit_config:
+      routes.backend.integrations.auth.delete_config:
 
   settings_roles:
     endpoint: routes.frontend.private.admin.settings_roles
