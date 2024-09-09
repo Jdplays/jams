@@ -84,7 +84,7 @@ function toggleLocalAuthOnChange() {
     }
 
     editAuthConfiguration(data).then( () => {
-        const enabledText = 'Enabled' ? localAuthSwitch.checked : 'Disabled'
+        const enabledText = localAuthSwitch.checked ? 'Enabled' : 'Disabled'
         successToast(`Local Auth successfully ${enabledText}`)
     }).catch((error) => {
         const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
@@ -102,7 +102,7 @@ function toggleOAuthOnChange() {
     }
 
     editAuthConfiguration(data).then( () => {
-        const enabledText = 'Enabled' ? oAuthSwitch.checked : 'Disabled'
+        const enabledText = oAuthSwitch.checked ? 'Enabled' : 'Disabled'
         successToast(`${currentConfig.OAUTH_PROVIDER_NAME} OAuth provider successfully ${enabledText}`)
     }).catch((error) => {
         const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
