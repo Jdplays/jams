@@ -16,3 +16,25 @@
   .settings-nav-item {
     color: gray;
   }
+
+  .settings-auth-card {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    align-items: center;
+  }
+
+  .settings-auth-card-item {
+    margin: 10px;
+    position: relative;
+  }
+
+  @media (max-width: 600px) {
+    .settings-auth-card-item-text {
+      display: none;
+    }
+
+    .settings-auth-card {
+      grid-template-columns: 120px 90px repeat(auto-fit, minmax(0, 1fr));
+    }
+  }

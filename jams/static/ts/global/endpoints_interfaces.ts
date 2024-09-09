@@ -198,6 +198,20 @@ export interface EventbriteEvent {
     url:string
 }
 
+export interface AuthConfiguration {
+    LOCAL_AUTH_ENABLED:boolean
+    OAUTH_ENABLED:boolean
+    OAUTH_PROVIDER_NAME:string
+    OAUTH_DISCOVERY_DOCUMENT_URL:string
+    OAUTH_CLIENT_ID:string
+    OAUTH_CLIENT_SECRET:string
+}
+
+export interface EditAuthConfigurationResponse {
+    message:string
+    config:AuthConfiguration
+}
+
 export interface RequestMultiModelJSONData extends EventLocation, EventTimeslot, Location, Timeslot, Workshop, Session, DifficultyLevel, Event, User, Role, Page, PrivateAccessLog, VolunteerAttendance, WorkshopFile, FileData, FileVersion{
     force?:boolean
 }
