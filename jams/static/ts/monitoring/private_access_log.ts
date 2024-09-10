@@ -1,11 +1,15 @@
 import {
-    getPrivateAccessLogs
+    getPrivateAccessLogs,
+    getUsers
 } from '@global/endpoints'
-import { QueryStringData, QueryStringKey } from "@global/endpoints_interfaces";
+import { QueryStringData, QueryStringKey, User } from "@global/endpoints_interfaces";
 import { isNullEmptyOrSpaces, buildQueryString } from "@global/helper";
 import { createGrid, GridApi, GridOptions, ValueFormatterParams } from 'ag-grid-community';
+import { param } from 'jquery';
 
 let gridApi:GridApi<any>;
+
+let usersMap:Record<number, User> = {};
 
 function dateTimeFormatter(params:ValueFormatterParams) {
     const dateStr = params.value;
@@ -83,8 +87,21 @@ function initialiseAgGrid() {
                 tooltipValueGetter: (params:any) => params.value,
             },
             {
-                field: 'user_display_name',
+                field: 'user_id',
                 headerName: "Display Name",
+                cellRenderer: (params:any) => {
+                    if (!params.value) {
+                        return 'N/A'
+                    }
+
+                    const user = usersMap[params.value]
+
+                    if (!user) {
+                        return 'Unknown'
+                    } else {
+                        return user.display_name
+                    }
+                },
                 filter: 'agTextColumnFilter',
                 floatingFilter: true,
                 suppressFloatingFilterButton: true,
@@ -119,10 +136,14 @@ function initialiseAgGrid() {
     const gridElement = document.getElementById('private-access-log-data-grid')
     gridElement.style.height = `${window.innerHeight * 0.8}px`;
     gridApi = createGrid(gridElement, gridOptions)
+
+    populatePrivateAccessLogsTable()
 }
 
-function populatePrivateAccessLogsTable() {
-    initialiseAgGrid()
+async function populatePrivateAccessLogsTable() {
+
+    usersMap = await preLoadUsers()
+
     const logsDataSource = {
         rowCount: 0,
         getRows: async function (params:any) {
@@ -146,6 +167,13 @@ function populatePrivateAccessLogsTable() {
 
                 if (filterKey === 'date_time') {
                     filter = value.dateFrom
+                } else if (filterKey === 'user_id') {
+                    const filteredUserKeys: number[] = Object.entries(usersMap)
+                    .filter(([key, user]) =>
+                        user.display_name.toLowerCase().includes(value.filter.toLowerCase())
+                    ).map(([key]) => Number(key))
+
+                    filter = filteredUserKeys
                 } else {
                     filter = value.filter
                 }
@@ -177,8 +205,16 @@ function populatePrivateAccessLogsTable() {
     }
 
     gridApi.setGridOption("datasource", logsDataSource);
-
-    //gridApi.setGridOption('rowData', allLogs)
 }
 
-document.addEventListener("DOMContentLoaded", populatePrivateAccessLogsTable);
+async function preLoadUsers() {
+    const response = await getUsers()
+    let users = response.data
+    let usersMap:Record<number, User> = {}
+    users.forEach(user => {
+        usersMap[user.id] = user
+    })
+    return usersMap
+}
+
+document.addEventListener("DOMContentLoaded", initialiseAgGrid);
