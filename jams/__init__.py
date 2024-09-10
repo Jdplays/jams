@@ -4,7 +4,7 @@ from flask import Flask
 from flask_security import Security, SQLAlchemyUserDatastore
 
 
-from jams.extensions import db, migrate, login_manager
+from jams.extensions import db, migrate, login_manager, oauth
 from jams.models import User, Role
 from jams.routes import routes_bp
 from jams.seeder import preform_seed
