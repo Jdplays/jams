@@ -21,7 +21,7 @@ def login():
 
     if oauth_enabled and not show_default_form:
         client = oauth.create_client(get_config_value(ConfigType.OAUTH_PROVIDER_NAME))
-        redirect_uri = url_for('routes.auth.authorise', _external=True, _scheme='https')
+        redirect_uri = url_for('routes.auth.authorise', _external=True, _scheme=get_config_value(ConfigType.HTTP_SCHEME))
 
         if next_url:
             session['next'] = next_url

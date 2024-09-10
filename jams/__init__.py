@@ -13,6 +13,7 @@ from jams.util import helper
 from jams.configuration import get_config_value
 from jams.integrations.oauth import setup_oauth
 from jams.routes.error import not_found, server_error, forbidden
+from jams.configuration import ConfigType, set_config_value
 
 def create_app():
     app = Flask(__name__)
@@ -48,12 +49,27 @@ def create_app():
     def utility_processor():
         return dict(user_has_access_to_page=helper.user_has_access_to_page, get_config_value=get_config_value)
         
+    with app.app_context():
+        # Create database tables
+        db.create_all()
+        prep_app()
+        
 
     return app
 
-def prep_app(app):
-    # Create database tables
+def seed_database(app):
     with app.app_context():
-        db.create_all()
         preform_seed()
-        setup_oauth()
+
+def prep_app():
+    setup_oauth()
+
+    app_url =  os.getenv('APP_URL', 'http://127.0.0.1:5000')
+    secure = app_url.startswith('https')
+
+    set_config_value(ConfigType.APP_URL, app_url)
+
+    if secure:
+        set_config_value(ConfigType.HTTP_SCHEME, 'https')
+    else:
+        set_config_value(ConfigType.HTTP_SCHEME, 'http')
