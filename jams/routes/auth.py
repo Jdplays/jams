@@ -25,6 +25,8 @@ def login():
 
         if next_url:
             session['next'] = next_url
+        
+        print(redirect_uri)
             
         return client.authorize_redirect(redirect_uri)
     elif local_auth_enabled:
