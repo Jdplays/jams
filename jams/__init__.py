@@ -4,7 +4,7 @@ from flask import Flask
 from flask_security import Security, SQLAlchemyUserDatastore
 
 
-from jams.extensions import db, migrate, login_manager, oauth
+from jams.extensions import db, migrate, login_manager
 from jams.models import User, Role
 from jams.routes import routes_bp
 from jams.seeder import preform_seed
@@ -47,14 +47,13 @@ def create_app():
     @app.context_processor
     def utility_processor():
         return dict(user_has_access_to_page=helper.user_has_access_to_page, get_config_value=get_config_value)
-    
-    with app.app_context():
-        setup_oauth()
+        
 
     return app
 
-def seed_database(app):
+def prep_app(app):
     # Create database tables
     with app.app_context():
         db.create_all()
         preform_seed()
+        setup_oauth()
