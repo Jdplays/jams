@@ -25,25 +25,25 @@
 
         <!-- Collapsible Navbar Content -->
         <div id="main-nav" class="collapse navbar-collapse">
-            <div class="d-flex flex-column flex-md-row flex-fill align-items-stretch align-items-md-center">
+            <ul class="navbar-nav flex-column flex-md-row w-100">
                 <!-- Public Schedule Link -->
-                <div class="nav-item">
+                <li class="nav-item d-md-none">
                     <a href="{{ url_for('routes.frontend.public.general.public_schedule')}}" class="nav-link d-flex lh-1 text-end p-0">
                         <span class="nav-link-title">
                             Public Schedule
                         </span>
                     </a>
-                </div>
+                </li>
 
                 <!-- Volunteer Portal Link (Mobile view) -->
-                <div class="nav-item d-block d-md-none">
+                <li class="nav-item d-md-none">
                     <a href="{{ url_for('routes.frontend.private.general.dashboard')}}" class="nav-link d-flex lh-1 text-end p-0">
                         <span class="nav-link-title">
                             Volunteer Portal
                         </span>
                     </a>
-                </div>
-            </div>
+                </li>
+            </ul>
         </div>
 
         <!-- Volunteer Portal Link (Desktop view) -->
