@@ -7,7 +7,7 @@ import {
     activateUser,
     getRoleNames
 } from '@global/endpoints'
-import { RequestMultiModelJSONData } from "@global/endpoints_interfaces";
+import { RequestMultiModelJSONData, User } from "@global/endpoints_interfaces";
 import { emptyElement, buildActionButtonsForModel, successToast, errorToast, getSelectValues } from "@global/helper";
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
 import TomSelect from 'tom-select';
@@ -39,21 +39,20 @@ async function activateUserOnClick(userId:number) {
     }
 }
 
-async function editUserOnClick() {
+function editUserOnClick() {
     const userId:number = Number((document.getElementById('edit-user-id') as HTMLInputElement).value)
 
-    const data:Partial<RequestMultiModelJSONData> = {
+    const data:Partial<User> = {
         'role_ids': getSelectValues(document.getElementById('edit-user-select-roles') as HTMLSelectElement)
     }
 
-    const response = await editUser(userId, data)
-    if (response) {
+    editUser(userId, data).then(() => {
         successToast('User Successfully Edited')
         populateUserManagementTable()
-    }
-    else {
-        errorToast()
-    }
+    }).catch((error) => {
+        const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
+        errorToast(errorMessage)
+    })
 }
 
 async function prepEditUserForm(userId:number) {

@@ -20,7 +20,10 @@ import {
     EventbriteIntegrationConfig,
     EventbriteOrganisation,
     EventbriteEvent,
-    WorkshopType
+    WorkshopType,
+    AuthConfiguration,
+    EditAuthConfigurationResponse,
+    BackendResponse
 } from "@global/endpoints_interfaces";
 
 // This is a script where all then endpoint calls will live to prevent duplication across scripts
@@ -883,13 +886,37 @@ export function activateEvent(eventID:number):Promise<boolean> {
 // #endregion
 
 // #region Users
-export function getCurrentUserId():Promise<number> {
+export function getCurrentUserId(queryString:string|null=null):Promise<number> {
     return new Promise((resolve, reject) => {
+        let url = '/backend/get_current_user_id'
+        if (queryString) {
+            url += `?${queryString}`
+        } 
         $.ajax({
-            url: '/backend/get_current_user_id',
+            url: url,
             type: 'GET',
             success: function(response) {
                 resolve(Number(response.current_user_id));
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function getCurrentUserData(queryString:string|null=null):Promise<User> {
+    return new Promise((resolve, reject) => {
+        let url = '/backend/get_current_user_data'
+        if (queryString) {
+            url += `?${queryString}`
+        } 
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);
             },
             error: function(error) {
                 console.log('Error fetching data:', error);
@@ -955,19 +982,23 @@ export function getUserRoles(userId:number):Promise<Partial<User>> {
     });
 }
 
-export function editUser(userId:number, data:Partial<RequestMultiModelJSONData>):Promise<boolean> {
-    return new Promise((resolve) => {
+export function editUser(userId:number, data:Partial<User>, queryString:string|null=null):Promise<BackendResponse<User>> {
+    return new Promise((resolve, reject) => {
+        let url = `/backend/users/${userId}`
+        if (queryString) {
+            url += `?${queryString}`
+        } 
         $.ajax({
             type: 'PATCH',
-            url: `/backend/users/${userId}`,
+            url: url,
             data: JSON.stringify(data),
             contentType: 'application/json',
             success: function (response) {
-                resolve(true)
+                resolve(response)
             },
             error: function (error) {
                 console.log('Error fetching data:', error);
-                resolve(false)
+                reject(error)
             }
         });
     });
@@ -1409,6 +1440,60 @@ export function getEventbriteEvents():Promise<[EventbriteEvent]> {
         });
     });
 }
+// #endregion
+
+// #region Auth Configuration
+
+export function getAuthConfiguration():Promise<AuthConfiguration> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `/backend/integrations/auth/config`,
+            type: 'GET',
+            success: function (response) {
+                resolve(response.auth_config)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(false)
+            }
+        });
+    });
+}
+
+export function editAuthConfiguration(data:Partial<AuthConfiguration>):Promise<EditAuthConfigurationResponse> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `/backend/integrations/auth/config`,
+            type: 'PATCH',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function deleteOAuthConfiguration():Promise<boolean> {
+    return new Promise((resolve) => {
+        $.ajax({
+            url: `/backend/integrations/auth/config`,
+            type: 'DELETE',
+            success: function (response) {
+                resolve(true)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(false)
+            }
+        });
+    });
+}
+
 // #endregion
 
 // #region Code Assets

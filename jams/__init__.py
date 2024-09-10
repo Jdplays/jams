@@ -1,14 +1,18 @@
 import os
 from dotenv import load_dotenv
 from flask import Flask
-from jams.extensions import db, migrate, login_manager
 from flask_security import Security, SQLAlchemyUserDatastore
+
+
+from jams.extensions import db, migrate, login_manager, oauth
 from jams.models import User, Role
 from jams.routes import routes_bp
 from jams.seeder import preform_seed
 from jams.forms.flask_security import CustomLoginForm, CustomRegisterForm
 from jams.util import helper
 from jams.configuration import get_config_value
+from jams.integrations.oauth import setup_oauth
+from jams.routes.error import not_found, server_error, forbidden
 
 def create_app():
     app = Flask(__name__)
@@ -23,6 +27,7 @@ def create_app():
     app.config['SECURITY_PASSWORD_HASH'] = 'argon2'
     app.config["SECURITY_SEND_REGISTER_EMAIL"] = False
     app.config["SECURITY_TRACKABLE"] = True
+    app.config["OAUTH_ENABLE"] = True
 
     db.init_app(app)
     migrate.init_app(app, db)
@@ -31,14 +36,20 @@ def create_app():
     user_datastore = SQLAlchemyUserDatastore(db, User, Role)
     security = Security()
 
-    security.init_app(app, user_datastore, login_form=CustomLoginForm, register_form=CustomRegisterForm)
-
     app.register_blueprint(routes_bp)
+    app.register_error_handler(404, not_found)
+    app.register_error_handler(500, server_error)
+    app.register_error_handler(403, forbidden)
+
+    security.init_app(app, user_datastore, login_form=CustomLoginForm, register_form=CustomRegisterForm)
 
     # Define the context processor to register methods for use in templating
     @app.context_processor
     def utility_processor():
         return dict(user_has_access_to_page=helper.user_has_access_to_page, get_config_value=get_config_value)
+    
+    with app.app_context():
+        setup_oauth()
 
     return app
 

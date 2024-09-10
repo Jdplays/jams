@@ -12,3 +12,4 @@ minio
 setuptools
 python-dotenv
 requests
+Authlib

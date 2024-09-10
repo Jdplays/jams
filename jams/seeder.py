@@ -1,5 +1,6 @@
 from jams.models import db, User, Role, Workshop, Event, Location, Timeslot, DifficultyLevel, WorkshopType
 from jams.rbac import generate_full_rbac
+from jams.configuration import ConfigType, set_config_value
 from flask_security.utils import hash_password
 import datetime
 
@@ -12,36 +13,17 @@ def preform_seed():
     seed_events()
     seed_locations()
     seed_timeslots()
-
-def seed_roles():
-    roles = ['Attendee', 'Volunteer', 'Trustee', 'Admin']
-    for role_name in roles:
-        role = Role.query.filter_by(name=role_name).first()
-        if not role:
-            new_role = Role(name=role_name)
-            db.session.add(new_role)
-    
-    db.session.commit()
+    seed_config()
 
 def seed_users():
     # Check if the Admin user already exists
     if not User.query.filter_by(email="admin@test.com").first():
         admin_role = Role.query.filter_by(name="Admin").first()
         if admin_role:
-            user = User(email='admin@test.com', username="AdminAccount", password=hash_password('admin'))
+            user = User(email='admin@test.com', username="AdminAccount", password=hash_password('admin'), user_induction=True)
             user.set_roles_by_name(['Admin', 'Volunteer'])
             user.activate()
             db.session.add(user)
-    
-    # Check if the Volunteer user already exists
-    if not User.query.filter_by(email="volunteer@test.com").first():
-        volunteer_role = Role.query.filter_by(name="Volunteer").first()
-        if volunteer_role:
-            user = User(email='volunteer@test.com', username="VolunteerAccount", password=hash_password('password123'))
-            user.set_roles_by_name(['Volunteer'])
-            user.activate()
-            db.session.add(user)
-    
     db.session.commit()
 
 def seed_difficulty_levels():
@@ -193,3 +175,6 @@ def seed_timeslots():
         db.session.add(timeslot)
     
     db.session.commit()
+
+def seed_config():
+    set_config_value(ConfigType.LOCAL_AUTH_ENABLED, True)

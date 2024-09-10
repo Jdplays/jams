@@ -7,6 +7,12 @@ class ConfigType(Enum):
     EVENTBRITE_BEARER_TOKEN = 'EVENTBRITE_BEARER_TOKEN'
     EVENTBRITE_ORGANISATION_ID = 'EVENTBRITE_ORGANISATION_ID'
     EVENTBRITE_ORGANISATION_NAME = 'EVENTBRITE_ORGANISATION_NAME'
+    LOCAL_AUTH_ENABLED = 'LOCAL_AUTH_ENABLED'
+    OAUTH_ENABLED = 'OAUTH_ENABLED'
+    OAUTH_PROVIDER_NAME = 'OAUTH_PROVIDER_NAME'
+    OAUTH_DISCOVERY_DOCUMENT_URL = 'OAUTH_DISCOVERY_DOCUMENT_URL'
+    OAUTH_CLIENT_ID = 'OAUTH_CLIENT_ID'
+    OAUTH_CLIENT_SECRET = 'OAUTH_CLIENT_SECRET'
 
 
 
@@ -16,9 +22,16 @@ def get_config_value(key:Union[str, ConfigType]):
     else:
         config_type = key
     config = Config.query.filter_by(key=config_type.value).first()
+
     if not config:
         return None
-    return config.value
+    
+    config_value = config.value.strip()
+
+    if config_value.lower() in ['true', 'false']:
+        return config_value == 'true'
+    
+    return config_value
 
 def set_config_value(key:ConfigType, value):
     config = Config.query.filter_by(key=key.value).first()
