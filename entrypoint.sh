@@ -19,11 +19,11 @@ if [ $DB_STATUS -eq 1 ]; then
     flask db migrate -m "Automatic migration"
     flask db upgrade
 
-    # Seed the database
+    # Prepare the application
     flask shell <<EOF
-from jams import create_app, seed_database
+from jams import create_app, prep_app
 app = create_app()
-seed_database(app)
+prep_app(app)
 EOF
 
     # Start Gunicorn
