@@ -1,5 +1,6 @@
-from jams.models import db, User, Role, Workshop, Event, Location, Timeslot, DifficultyLevel
+from jams.models import db, User, Role, Workshop, Event, Location, Timeslot, DifficultyLevel, WorkshopType
 from jams.rbac import generate_full_rbac
+from jams.configuration import ConfigType, set_config_value
 from flask_security.utils import hash_password
 import datetime
 
@@ -7,40 +8,22 @@ def preform_seed():
     generate_full_rbac()
     seed_users()
     seed_difficulty_levels()
+    seed_workshop_types()
     seed_workshops()
     seed_events()
     seed_locations()
     seed_timeslots()
-
-def seed_roles():
-    roles = ['Attendee', 'Volunteer', 'Trustee', 'Admin']
-    for role_name in roles:
-        role = Role.query.filter_by(name=role_name).first()
-        if not role:
-            new_role = Role(name=role_name)
-            db.session.add(new_role)
-    
-    db.session.commit()
+    seed_config()
 
 def seed_users():
     # Check if the Admin user already exists
     if not User.query.filter_by(email="admin@test.com").first():
         admin_role = Role.query.filter_by(name="Admin").first()
         if admin_role:
-            user = User(email='admin@test.com', username="AdminAccount", password=hash_password('admin'))
+            user = User(email='admin@test.com', username="AdminAccount", password=hash_password('admin'), user_induction=True)
             user.set_roles_by_name(['Admin', 'Volunteer'])
             user.activate()
             db.session.add(user)
-    
-    # Check if the Volunteer user already exists
-    if not User.query.filter_by(email="volunteer@test.com").first():
-        volunteer_role = Role.query.filter_by(name="Volunteer").first()
-        if volunteer_role:
-            user = User(email='volunteer@test.com', username="VolunteerAccount", password=hash_password('password123'))
-            user.set_roles_by_name(['Volunteer'])
-            user.activate()
-            db.session.add(user)
-    
     db.session.commit()
 
 def seed_difficulty_levels():
@@ -58,17 +41,68 @@ def seed_difficulty_levels():
     
     db.session.commit()
 
+def seed_workshop_types():
+    if not WorkshopType.query.filter_by(name='Standard Workshop').first():
+        workshop_type = WorkshopType(
+            name='Standard Workshop',
+            description='A normal workshop which both volunteers and attendees can register for and is publicly visible.',
+            )
+        db.session.add(workshop_type)
+
+    if not WorkshopType.query.filter_by(name='Internal Volunteer Workshop').first():
+        workshop_type = WorkshopType(
+            name='Internal Volunteer Workshop',
+            description='A workshop that is not publicly visible and only volunteers can sign up to.',
+            attendee_registration=False,
+            publicly_visible=False,
+            display_colour='#551ca6'
+            )
+        db.session.add(workshop_type)
+
+    if not WorkshopType.query.filter_by(name='Attendee Only Workshop').first():
+        workshop_type = WorkshopType(
+            name='Attendee Only Workshop',
+            description='A workshop that only attendees can signup to. This is also publicly visible',
+            volunteer_signup=False
+            )
+        db.session.add(workshop_type)
+
+    if not WorkshopType.query.filter_by(name='Attendee Information Session').first():
+        workshop_type = WorkshopType(
+            name='Attendee Information Session',
+            description='An session that is public, but no one can sign up to. EG: (Break time)',
+            volunteer_signup=False,
+            attendee_registration=False,
+            display_colour='#ffb412'
+            )
+        db.session.add(workshop_type)
+
+    if not WorkshopType.query.filter_by(name='Volunteer Information Session').first():
+        workshop_type = WorkshopType(
+            name='Volunteer Information Session',
+            description='An session that is private and for the volunteers, but no one can sign up to. EG: (Debrief)',
+            volunteer_signup=False,
+            attendee_registration=False,
+            publicly_visible=False,
+            display_colour='#696564'
+            )
+        db.session.add(workshop_type)
+    
+    db.session.commit()
+
 def seed_workshops():
     # Check if the AstroPi workshop already exists
     if not Workshop.query.filter_by(name="AstroPi").first():
         workshop = Workshop(name="AstroPi", description="Find out how to run your very own code in space with the European Astro Pi Challenge.")
         workshop.set_difficulty_by_name('Beginner')
+        workshop.set_workshop_type_by_name('Standard Workshop')
         db.session.add(workshop)
     
     # Check if the Zigbee workshop already exists
     if not Workshop.query.filter_by(name="Zigbee").first():
         workshop = Workshop(name="Zigbee", description="Using Zigbee (A wireless communication protocol) you can control all sorts of tech! This workshop shows how to control RGB lamps using Python")
         workshop.set_difficulty_by_name('Intermediate')
+        workshop.set_workshop_type_by_name('Standard Workshop')
         db.session.add(workshop)
     
     db.session.commit()
@@ -141,3 +175,6 @@ def seed_timeslots():
         db.session.add(timeslot)
     
     db.session.commit()
+
+def seed_config():
+    set_config_value(ConfigType.LOCAL_AUTH_ENABLED, True)

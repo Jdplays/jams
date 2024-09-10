@@ -1,12 +1,14 @@
-import { getDifficultyLevels, getIconData } from '@global/endpoints'
-import { DifficultyLevel, Workshop } from '@global/endpoints_interfaces'
+import { getDifficultyLevels, getIconData, getWorkshopTypes } from '@global/endpoints'
+import { DifficultyLevel, Workshop, WorkshopType } from '@global/endpoints_interfaces'
 import {hexToRgba} from '@global/helper'
 import { ScheduleGrid } from '@global/schedule_grid'
 
 export interface WorkshopCardOptions {
     sessionId?:number|null
     difficultyLevels?:DifficultyLevel[]|null
-    size?:number
+    workshopTypes?:WorkshopType[]|null
+    width?:number
+    height?:number
     remove?:boolean
     cardRemoveIcon?:string|null
     cardRemoveFunc?:((arg1:number, arg2:any) => void)
@@ -27,6 +29,7 @@ export class WorkshopCard {
     private titleFontSize:number
     private bodyFontSize:number
     private workshopDifficulty:DifficultyLevel|undefined
+    private workshopType:WorkshopType|undefined
 
     constructor(workshop:Workshop, options:WorkshopCardOptions) {
         this.workshop = workshop
@@ -37,7 +40,9 @@ export class WorkshopCard {
         let {
             sessionId = null,
             difficultyLevels = null,
-            size = 150,
+            workshopTypes = null,
+            width = 150,
+            height = 150,
             remove = false,
             cardRemoveIcon = null,
             cardRemoveFunc,
@@ -52,7 +57,9 @@ export class WorkshopCard {
         this.options = {
             sessionId,
             difficultyLevels,
-            size,
+            workshopTypes,
+            width,
+            height,
             remove,
             cardRemoveIcon,
             cardRemoveFunc,
@@ -79,6 +86,12 @@ export class WorkshopCard {
             this.options.difficultyLevels = response.data
         }
 
+        // Load the workshop Types if they weren't passed in
+        if (!this.options.workshopTypes) {
+            const response = await getWorkshopTypes()
+            this.options.workshopTypes = response.data
+        }
+
         // Get the remove icon if it wasnt passed in
         if (!this.options.cardRemoveIcon) {
             let iconData = await getIconData('remove')
@@ -86,12 +99,13 @@ export class WorkshopCard {
         }
 
         // Set the text font sizes
-        if (this.options.size) {
-            this.titleFontSize = this.options.size * 0.12
-            this.bodyFontSize = this.options.size * 0.08
+        if (this.options.width && this.options.height) {
+            this.titleFontSize = this.options.height * 0.15
+            this.bodyFontSize = this.options.height * 0.1
         }
 
         this.workshopDifficulty = this.options.difficultyLevels.find(level => level.id === this.workshop.difficulty_id)
+        this.workshopType = this.options.workshopTypes.find(type => type.id === this.workshop.workshop_type_id)
 
         return true
     }
@@ -106,11 +120,13 @@ export class WorkshopCard {
         workshopCard.classList.add('workshop-card')
         if (this.workshopDifficulty != null) {
             workshopCard.style.backgroundColor = hexToRgba(this.workshopDifficulty.display_colour, 0.5)
+        } else if (this.workshopType !== null) {
+            workshopCard.style.backgroundColor = hexToRgba(this.workshopType.display_colour, 0.5)
         }
 
         // Set the size of the card based on the options
-        workshopCard.style.width = `${this.options.size}px`
-        workshopCard.style.height = `${this.options.size}px`
+        workshopCard.style.width = `${this.options.width}px`
+        workshopCard.style.height = `${this.options.height}px`
 
         // Build the contents of the card
         const workshopTitleContainer = document.createElement('div')
@@ -165,8 +181,8 @@ export class WorkshopCard {
 
         // Set available height for body text
         let availableHeight = 0
-        if (this.options.size) {
-            availableHeight = this.options.size - this.calculateElementHeight(workshopTitleContainer) - 20 // 20px for some padding
+        if (this.options.height) {
+            availableHeight = this.options.height - this.calculateElementHeight(workshopTitleContainer) - 20 // 20px for some padding
         }
         
 

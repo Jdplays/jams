@@ -1,6 +1,6 @@
 services:
   jams-web:
-    image: ghcr.io/jdplays/jams_master:latest
+    image: ghcr.io/jdplays/jams:master
     container_name: jams-web
     restart: unless-stopped
     command: ./entrypoint.sh

@@ -1,0 +1,40 @@
+<!doctype html>
+
+<head>
+    <title>{% block title %}{% endblock %} - JAMS</title>
+    <script src="{{ url_for('static', filename='js/nav.js') }}" defer></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler-vendors.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+</head>
+
+<body>
+    <body class=" border-top-wide border-primary d-flex flex-column">
+        <div class="page page-center">
+            <div class="container-tight py-4">
+                <div class="empty">
+                    <div class="empty-img">
+                        {% block error_image %}{% endblock %}
+                    </div>
+                    <p class="empty-title">{% block error_title %}{% endblock %}</p>
+                    <p class="empty-subtitle text-secondary">{% block error_subtitle %}{% endblock %}</p>
+                    <div class="empty-action">
+                        <a href="{{ url_for('routes.frontend.universal_home_page') }}" class="btn btn-primary">
+                            <!-- Download SVG icon from http://tabler-icons.io/i/arrow-left -->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="icon">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                <path d="M5 12l14 0"></path>
+                                <path d="M5 12l6 6"></path>
+                                <path d="M5 12l6 -6"></path>
+                            </svg>
+                            Take me home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>

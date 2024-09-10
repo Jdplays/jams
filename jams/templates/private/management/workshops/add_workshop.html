@@ -1,0 +1,100 @@
+{% extends '_layout.html' %}
+
+{% block title %}Add Workshop{% endblock %}
+
+{% block content %}
+
+<h1>Add Workshop</h1>
+
+<a type="button" class="btn btn-link link-secondary mb-3"
+    href="{{ url_for('routes.frontend.private.management.workshops') }}">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-left">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M5 12l14 0" />
+        <path d="M5 12l6 6" />
+        <path d="M5 12l6 -6" />
+    </svg>
+    <span class="btn-text">Back</span>
+</a>
+
+<div class="card card-md">
+    <div id="main-form" class="card-body">
+        <div class="mb-3">
+            <label class="form-label">Workshop Name</label>
+            <input type="text" class="form-control" name="name" id="add-workshop-name"
+                placeholder="Your workshop name" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Workshop Description</label>
+            <textarea class="form-control" rows="5" id="add-workshop-description" name="description"></textarea>
+        </div>
+
+        <label class="form-label">Workshop Type</label>
+        <div id="workshop-type-selection-container" class="form-selectgroup-boxes row mb-3">
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 10px;">
+            <div id="min-volunteers-block" class="mb-3">
+                <label class="form-label">Minimum Volunteers</label>
+                <div class="input-icon">
+                    <input type="number" class="form-control text-center" value="0" id="add-workshop-min_volunteers"
+                        name="min_volunteers">
+                    <span class="input-icon-addon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="icon icon-tabler icons-tabler-outline icon-tabler-users">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+                            <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                            <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
+                        </svg>
+                    </span>
+                </div>
+            </div>
+            <div id="capacity-block" class="mb-3">
+                <label class="form-label">Workshop Capacity</label>
+                <div class="input-icon">
+                    <input type="number" class="form-control text-center" value="0" id="add-workshop-capacity"
+                        name="capacity">
+                    <span class="input-icon-addon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="icon icon-tabler icons-tabler-outline icon-tabler-users">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+                            <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                            <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
+                        </svg>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div id="difficulty-block" class="mb-3">
+            <label class="form-label">Difficulty</label>
+            <div id="difficulty-selection-container" class="form-selectgroup">
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<button class="btn btn-primary mt-3" onclick="addWorkshopOnClick()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        class="icon icon-tabler icons-tabler-outline icon-tabler-plus">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M12 5l0 14" />
+        <path d="M5 12l14 0" />
+    </svg>
+    <span class="btn-text">Add Workshop</span>
+</button>
+
+<script src="{{ url_for('static', filename='js/management/workshops/add_workshop.js') }}" type="module" defer></script>
+
+{% endblock %}

@@ -3,14 +3,14 @@ export interface EventLocation {
     event_id:number
     location_id:number
     order:number
-    hidden:boolean
+    publicly_visible:boolean
 }
 
 export interface EventTimeslot {
     id:number
     event_id:number
     timeslot_id:number
-    hidden:boolean
+    publicly_visible:boolean
 }
 
 export interface Location {
@@ -25,6 +25,7 @@ export interface Timeslot {
     start:string
     end:string
     range:string
+    is_break:boolean
     active:boolean
 }
 
@@ -32,10 +33,15 @@ export interface Workshop {
     id:number
     name:string
     description:string
-    min_volunteers:number
     difficulty_id:number
     has_files:boolean
     active:boolean
+    workshop_type_id:number
+    volunteer_signup:boolean
+    attendee_registration:boolean
+    publicly_visible:boolean
+    min_volunteers:number
+    capacity:number
 }
 
 export interface Session {
@@ -52,6 +58,16 @@ export interface Session {
 export interface DifficultyLevel {
     id:number
     name:string
+    display_colour:string
+}
+
+export interface WorkshopType {
+    id:number
+    name:string
+    description:string
+    volunteer_signup:boolean
+    attendee_registration:boolean
+    publicly_visible:boolean
     display_colour:string
 }
 
@@ -82,6 +98,7 @@ export interface User {
     dob:string
     bio:string
     active:boolean
+    user_induction:boolean
 }
 
 export interface Role {
@@ -182,6 +199,20 @@ export interface EventbriteEvent {
     url:string
 }
 
+export interface AuthConfiguration {
+    LOCAL_AUTH_ENABLED:boolean
+    OAUTH_ENABLED:boolean
+    OAUTH_PROVIDER_NAME:string
+    OAUTH_DISCOVERY_DOCUMENT_URL:string
+    OAUTH_CLIENT_ID:string
+    OAUTH_CLIENT_SECRET:string
+}
+
+export interface EditAuthConfigurationResponse {
+    message:string
+    config:AuthConfiguration
+}
+
 export interface RequestMultiModelJSONData extends EventLocation, EventTimeslot, Location, Timeslot, Workshop, Session, DifficultyLevel, Event, User, Role, Page, PrivateAccessLog, VolunteerAttendance, WorkshopFile, FileData, FileVersion{
     force?:boolean
 }
@@ -212,9 +243,15 @@ export interface QueryStringData extends
         $pagination_start_index?:number
         $order_by?:string
         $order_direction?:string
+        pre_induction_request?:boolean
     }
 
 export type QueryStringKey = keyof QueryStringData;
+
+export interface BackendResponse<T> {
+    message:string
+    data:T
+}
 
 export interface BackendMultiEntryResponse<T> {
     pagination:PaginationResponseData

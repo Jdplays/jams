@@ -48,7 +48,9 @@ body {
     border-radius: 30px;
     box-shadow: 4px 4px 4px 0px rgba(0, 0, 0, 0.2);
     margin-bottom: 20px;
-    position: relative;
+    position: sticky;
+    top: 10px;
+    z-index: 100;
     overflow: hidden;
 }
 
@@ -116,6 +118,14 @@ body {
     top: 0;
     left: 25%;
     border-radius: 0 30px 30px 0;
+}
+
+.theme-light .workshop-selection-search-container {
+    background-color: #F4F4F9;
+}
+
+.theme-dark .workshop-selection-search-container {
+    background-color: #1A2234;
 }
 
 .workshop-selection-search {

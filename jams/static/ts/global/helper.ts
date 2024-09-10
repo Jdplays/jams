@@ -50,7 +50,8 @@ export function buildQueryString(params:QueryStringParams):string|null {
 
             // Handle array values by joining them with the OR symbol '|'
             if (Array.isArray(processedValue)) {
-                processedValue = processedValue.join(orSeparator)
+                const filteredValues = processedValue.filter(item => item !== null && item !== undefined && item !== '')
+                processedValue = filteredValues.flat().join(orSeparator)
             }
             // Convert objects into JSON strings
             else if (typeof processedValue === 'object') {
@@ -273,3 +274,68 @@ export function getSelectValues(select:HTMLSelectElement) {
     element.removeChild(spinner)
     return element
   }
+
+  export function buildRadioInputSelectionGroup(title:string, subText:string, value:string, inputName:string, checked:boolean=false, onInputChangeFunc:((value:string) => void)=null): HTMLDivElement {
+    let optionDiv = document.createElement('div')
+        optionDiv.classList.add('col-lg-6')
+
+        let label = document.createElement('label')
+        label.classList.add('form-selectgroup-item')
+
+        let input = document.createElement('input') as HTMLInputElement
+        input.type = 'radio'
+        input.value = value
+        input.classList.add('form-selectgroup-input')
+        input.name = inputName
+        input.checked = checked
+        if (onInputChangeFunc !== null || onInputChangeFunc !== undefined) {
+            input.onchange = () => {
+                onInputChangeFunc(value)
+            }
+        }
+        label.appendChild(input)
+
+        let span1 = document.createElement('span')
+        span1.classList.add('form-selectgroup-label', 'd-flex', 'align-items-center', 'p-3')
+        let span2 = document.createElement('span')
+        span2.classList.add('me-3')
+        let span3 = document.createElement('span')
+        span3.classList.add('form-selectgroup-check')
+        span2.appendChild(span3)
+        span1.appendChild(span2)
+
+        let span4 = document.createElement('span')
+        span4.classList.add('form-selectgroup-label-content')
+        let optionTitle = document.createElement('span')
+        optionTitle.classList.add('form-selectgroup-title', 'strong', 'mb-1')
+        optionTitle.innerHTML = title
+        let optionDescription = document.createElement('span')
+        optionDescription.classList.add('d-block', 'text-secondary')
+        optionDescription.innerHTML = subText
+        span4.appendChild(optionTitle)
+        span4.appendChild(optionDescription)
+
+        span1.appendChild(span4)
+        label.appendChild(span1)
+
+        optionDiv.appendChild(label)
+        return optionDiv
+  }
+
+  export function getRadioInputGroupSelection(groupContainer:HTMLElement, inputName:string) {
+    const selectedRadio = groupContainer.querySelector(`input[name="${inputName}"]:checked`) as HTMLInputElement|null
+    const selectedValue = selectedRadio ? selectedRadio.value : null
+    return selectedValue
+  }
+
+  export function validateTextInput(inputElement:HTMLInputElement):boolean {
+    if (isNullEmptyOrSpaces(inputElement.value)) {
+        inputElement.classList.add('is-invalid')
+        inputElement.classList.remove('is-valid')
+        return false
+    } else {
+        inputElement.classList.add('is-valid')
+        inputElement.classList.remove('is-invalid')
+        return true
+    }
+}

@@ -8,12 +8,14 @@ from flask_login import LoginManager
 from minio import Minio
 from minio.error import S3Error
 from minio.versioningconfig import VersioningConfig, ENABLED
+from authlib.integrations.flask_client import OAuth
 
 load_dotenv()
 
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
+oauth = OAuth()
 
 # Initialise client MinIO for object storage
 minio_client = Minio(

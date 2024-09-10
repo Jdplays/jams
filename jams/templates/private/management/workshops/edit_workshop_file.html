@@ -4,7 +4,17 @@
 
 {% block content %}
 
-<a id="back-to-workshop-catalog" class="btn btn-primary" href="{{ url_for('routes.frontend.private.management.workshop_catalog') }}">Back to workshop Catalog</a>
+<a id="back-to-workshop-catalog" class="btn btn-link link-secondary mb-3">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-left">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M5 12l14 0" />
+        <path d="M5 12l6 6" />
+        <path d="M5 12l6 -6" />
+    </svg>
+    <span class="btn-text">Back</span>
+</a>
 
 <div id="file-tool-bar"  class="tool-bar-container tool-bar-container-style">
     <div id="tool-bar-col-1" class="tool-bar-section-container">
@@ -33,11 +43,11 @@
 <div id="file-container">
 </div>
 
-<link rel="stylesheet" href="{{ url_for('static', filename='css/management/edit_worksheet.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/management/edit_workshop_file.css') }}">
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/libs/tinymce/tinymce.min.js"></script>
 <script src="https://unpkg.com/turndown/dist/turndown.js"></script>
-<script src="{{ url_for('static', filename='js/management/edit_worksheet.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/management/workshops/edit_workshop_file.js') }}" defer></script>
 
 {% endblock %}

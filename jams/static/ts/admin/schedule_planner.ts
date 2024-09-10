@@ -31,7 +31,9 @@ var currentSearchQuery:string = ''
 const scheduleGridOptions:ScheduleGridOptions = {
     eventId: EventId,
     edit: true,
-    size: 150
+    size: 150,
+    showPrivate: true,
+    autoRefresh: true
 }
 
 const scheduleGrid = new ScheduleGrid('schedule-container', scheduleGridOptions)
