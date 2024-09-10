@@ -97,7 +97,7 @@ class Timeslot(db.Model):
         end_formatted = self.end.strftime('%H:%M') if self.end else 'N/A'
         return f"{start_formatted} - {end_formatted}"
     
-    def __init__(self, name, start, end, is_break, active=True):
+    def __init__(self, name, start, end, is_break=False, active=True):
         self.name = name
         self.start = start
         self.end = end
