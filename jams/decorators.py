@@ -65,7 +65,7 @@ def role_based_access_control_be(func):
                 if request.args is not None:
                     query_fields = request.args.keys()
                     for field in query_fields:
-                        if field not in allowed_fields:
+                        if field not in allowed_fields and field not in helper.default_field_names:
                             if not current_user.is_authenticated:
                                 login_response = enforce_login(func, *args, **kwargs)
                                 if login_response is not None:

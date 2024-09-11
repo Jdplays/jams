@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 
 from jams.util import files
 
+default_field_names = ['$pagination_block_size', '$pagination_start_index', '$order_by', '$order_direction', '$all_rows']
 
 def get_ordered_event_locations(event_id):
     return EventLocation.query.filter_by(event_id=event_id).order_by(EventLocation.order).all()
@@ -177,11 +178,11 @@ def filter_model_by_query_and_properties(model, request_args=None, requested_fie
     properties_values = {}
 
     # Default parameters
-    default_field_names = ['$pagination_block_size', '$pagination_start_index', '$order_by', '$order_direction']
     pagination_block_size = 50
     pagination_start_index = 0
     pagination_order_by = 'id'
     pagination_order_direction = 'ASC'
+    all_rows = False
 
     if input_data is not None:
         if len(input_data) <= 0 and not return_objects:
@@ -220,6 +221,12 @@ def filter_model_by_query_and_properties(model, request_args=None, requested_fie
                     if search_field == '$order_direction':
                         pagination_order_direction = search_value
                         order_direction = str(search_value).upper()
+                    
+                    if search_field == '$all_rows':
+                        all_rows = search_value.lower() == 'true'
+                        if all_rows:
+                            row_count = query.count()
+                            pagination_block_size = row_count
                     
                 except ValueError:
                     abort(400, description=f"Invalid value for field '{search_field}': {search_value}")
