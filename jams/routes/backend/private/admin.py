@@ -328,9 +328,8 @@ def get_event_locations(event_id):
     Event.query.filter_by(id=event_id).first_or_404()
     
     ordered_event_locations = helper.get_ordered_event_locations(event_id)
-    data = helper.filter_model_by_query_and_properties(EventLocation, request.args, input_data=ordered_event_locations)
 
-    return jsonify(data)
+    return jsonify([els.to_dict() for els in ordered_event_locations])
 
 
 @bp.route('/events/<int:event_id>/locations/<int:event_location_id>', methods=['GET'])
@@ -351,9 +350,8 @@ def get_event_timeslots(event_id):
     Event.query.filter_by(id=event_id).first_or_404()
     
     ordered_event_timeslots = helper.get_ordered_event_timeslots(event_id)
-    data = helper.filter_model_by_query_and_properties(EventLocation, request.args, input_data=ordered_event_timeslots)
 
-    return jsonify(data)
+    return jsonify([ets.to_dict() for ets in ordered_event_timeslots])
 
 @bp.route('/events/<int:event_id>/timeslots/<int:event_timeslot_id>', methods=['GET'])
 @role_based_access_control_be

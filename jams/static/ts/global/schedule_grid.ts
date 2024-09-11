@@ -179,10 +179,8 @@ export class ScheduleGrid {
             return
         }
         // Get the locations and timeslots assigned to the event
-        const eventLocationsResponse = await getLocationsForEvent(this.options.eventId)
-        const evenTimeslotsResponse = await getTimeslotsForEvent(this.options.eventId)
-        this.eventLocations = eventLocationsResponse.data
-        this.eventTimeslots = evenTimeslotsResponse.data
+        this.eventLocations = await getLocationsForEvent(this.options.eventId)
+        this.eventTimeslots = await getTimeslotsForEvent(this.options.eventId)
 
         // Rebuild the base grid
         await this.rebuildGrid()

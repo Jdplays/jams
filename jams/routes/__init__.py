@@ -17,9 +17,16 @@ routes_bp.register_blueprint(auth_bp)
 
 @routes_bp.after_request
 def before_all_requests(response):
+    request_path = request.path
+    if ('public' in request_path):
+        return response
     if current_user.is_authenticated:
         status_code = response.status_code
         endpoint = helper.extract_endpoint()
+
+        if endpoint == 'routes.serve_icon' or endpoint == 'routes.frontend.private.general.nav':
+            return response
+        
         user_roles = [role.name for role in current_user.roles]
         required_roles = helper.get_required_roles_for_endpoint(endpoint)
 
