@@ -16,8 +16,8 @@ import {
 
 import { WorkshopCard } from '@global/workshop_card'
 import {ScheduleGrid, ScheduleGridOptions} from '@global/schedule_grid'
-import { QueryStringData } from '@global/endpoints_interfaces';
 import TomSelect from 'tom-select';
+import { QueryStringData } from '@global/interfaces';
 
 
 // Variables
