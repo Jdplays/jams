@@ -8,6 +8,8 @@ pages:
     backend_endpoints:
       routes.backend.private.management.get_difficulty_levels:
       routes.backend.private.management.add_workshop:
+      routes.backend.private.management.get_workshops_field:
+        allowed_fields: id, name
       
   
   edit_workshop:
@@ -184,6 +186,7 @@ pages:
     endpoint: routes.frontend.private.monitoring.private_access_log
     backend_endpoints:
       routes.backend.private.monitoring.get_private_access_logs:
+      routes.backend.private.admin.archive_user:
 
 
   # -------------------------------- PUBLIC  -------------------------------- #

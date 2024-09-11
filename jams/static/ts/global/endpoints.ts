@@ -403,6 +403,26 @@ export function getWorkshops(queryString:string|null = null):Promise<BackendMult
     });
 }
 
+export function getWorkshopsField(field:string, queryString:string|null = null):Promise<BackendMultiEntryResponse<[Partial<Workshop>]>> {
+    return new Promise((resolve, reject) => {
+        let url = `/backend/workshops/${field}`
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
 export function getWorkshop(workshopId:number):Promise<Workshop> {
     return new Promise((resolve, reject) => {
         $.ajax({
