@@ -455,7 +455,7 @@ export function getWorkshopField(workshopId:number, field:string):Promise<Worksh
     });
 }
 
-export function addWorkshop(data:Partial<RequestMultiModelJSONData>):Promise<Workshop> {
+export function addWorkshop(data:Partial<RequestMultiModelJSONData>):Promise<BackendResponse<User>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             type: 'POST',
@@ -473,19 +473,19 @@ export function addWorkshop(data:Partial<RequestMultiModelJSONData>):Promise<Wor
     });
 }
 
-export function editWorkshop(workshopId:number, data:Partial<RequestMultiModelJSONData>):Promise<boolean> {
-    return new Promise((resolve) => {
+export function editWorkshop(workshopId:number, data:Partial<RequestMultiModelJSONData>):Promise<BackendResponse<User>> {
+    return new Promise((resolve, reject) => {
         $.ajax({
             type: 'PATCH',
             url: `/backend/workshops/${workshopId}`,
             data: JSON.stringify(data),
             contentType: 'application/json',
             success: function (response) {
-                resolve(true)
+                resolve(response)
             },
             error: function (error) {
                 console.log('Error fetching data:', error);
-                resolve(false)
+                reject(error)
             }
         });
     });

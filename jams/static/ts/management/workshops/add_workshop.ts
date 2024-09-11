@@ -93,11 +93,11 @@ function addWorkshopOnClick() {
     }
 
     addWorkshop(data).then((response) => {
-        successToast('Workshop Successfully Added')
-        const workshopId = response.id
+        successToast(response.message)
+        const workshopId = response.data.id
         window.location.replace(`/private/management/workshops/${workshopId}/edit`)
     }).catch(error => {
-        console.log(error)
+        const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
         errorToast()
     })
 }
@@ -166,7 +166,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Description
     const workshoDescriptionInput = document.getElementById('add-workshop-description') as HTMLInputElement
     workshoDescriptionInput.oninput = async () => {
-        descriptionInputValid = validateTextInput(workshoDescriptionInput)
+        descriptionInputValid = validateTextInput(workshoDescriptionInput, null, true)
     }
 
     // Min Volunteers

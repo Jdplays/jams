@@ -67,7 +67,10 @@ def add_workshop():
     db.session.add(new_workshop)
     db.session.commit()
 
-    return jsonify(new_workshop.to_dict())
+    return jsonify({
+        'message': 'Workshop successfully added',
+        'data': new_workshop.to_dict()
+        })
 
 
 @bp.route('/workshops/<int:workshop_id>', methods=['PATCH'])
