@@ -1,4 +1,4 @@
-import { isDefined } from "@global/helper";
+import { isDefined, validateNumberInput, validateTextInput } from "@global/helper";
 
 function loadNavigationBar() {
     const navContainer = document.getElementById('nav-container');
@@ -79,5 +79,7 @@ document.addEventListener("DOMContentLoaded", loadTheme);
 document.addEventListener("DOMContentLoaded", () => {
     if (isDefined(window)) {
         (<any>window).toggleTheme = toggleTheme;
+        (<any>window).validateTextInput = validateTextInput;
+        (<any>window).validateNumberInput = validateNumberInput;
     }
 });

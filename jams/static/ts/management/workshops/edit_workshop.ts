@@ -1,5 +1,5 @@
 import { activateWorkshopFile, archiveWorkshopFile, editWorkshop, getDifficultyLevel, getDifficultyLevels, getFilesDataForWorkshop, getIconData, getWorkshop, getWorkshopTypes, uploadFileToWorkshop } from "@global/endpoints";
-import { QueryStringData, RequestMultiModelJSONData, Workshop, WorkshopType } from "@global/endpoints_interfaces";
+import { RequestMultiModelJSONData, Workshop, WorkshopType } from "@global/endpoints_interfaces";
 import { addSpinnerToElement, buildQueryString, buildRadioInputSelectionGroup, emptyElement, errorToast, getRadioInputGroupSelection, isDefined, removeSpinnerFromElement, successToast } from "@global/helper";
 import Dropzone from "dropzone";
 

@@ -1,6 +1,7 @@
 import { editUser, getCurrentUserData } from "@global/endpoints";
-import { QueryStringData, User } from "@global/endpoints_interfaces";
+import { User } from "@global/endpoints_interfaces";
 import { buildQueryString, errorToast, isDefined, validateTextInput } from "@global/helper";
+import { QueryStringData } from "@global/interfaces";
 
 let currentUserId:number
 const queryData:Partial<QueryStringData> = {

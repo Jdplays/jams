@@ -3,8 +3,9 @@ import {
     getPrivateAccessLogs,
     getUsers
 } from '@global/endpoints'
-import { QueryStringData, QueryStringKey, User } from "@global/endpoints_interfaces";
+import { User } from "@global/endpoints_interfaces";
 import { isNullEmptyOrSpaces, buildQueryString, successToast, errorToast, debounce } from "@global/helper";
+import { QueryStringData, QueryStringKey } from '@global/interfaces';
 import { createGrid, GridApi, GridOptions, IDoesFilterPassParams, IFilterComp, IFilterParams, ITooltipComp, ITooltipParams, ValueFormatterParams } from 'ag-grid-community';
 
 class CustomToolTip implements ITooltipComp {
