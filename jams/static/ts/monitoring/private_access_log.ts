@@ -1,11 +1,90 @@
 import {
+    archiveUser,
     getPrivateAccessLogs,
     getUsers
 } from '@global/endpoints'
 import { QueryStringData, QueryStringKey, User } from "@global/endpoints_interfaces";
-import { isNullEmptyOrSpaces, buildQueryString } from "@global/helper";
-import { createGrid, GridApi, GridOptions, ValueFormatterParams } from 'ag-grid-community';
-import { param } from 'jquery';
+import { isNullEmptyOrSpaces, buildQueryString, successToast, errorToast } from "@global/helper";
+import { AgPromise, createGrid, GridApi, GridOptions, ITooltipComp, ITooltipParams, ValueFormatterParams } from 'ag-grid-community';
+
+class CustomToolTip implements ITooltipComp {
+    eGui!: HTMLElement;
+    params!: ITooltipParams & { user: User|null };
+
+    init(params: ITooltipParams & { user: User|null }) {
+        const user = usersMap[params.data.user_id]
+        if (!user) {
+            return
+        }
+
+        let avatar = document.createElement('span')
+        avatar.classList.add('avatar')
+        if (user.avatar_url) {
+            avatar.style.backgroundImage = `url(${user.avatar_url})`
+        } else {
+            let userInitials;
+            if (user.first_name) {
+                userInitials = `${user.first_name.toUpperCase()[0]}${user.last_name.toUpperCase()[0]}`
+            } else {
+                userInitials = user.display_name.toUpperCase()[0]
+            }
+            
+            avatar.innerHTML = userInitials
+        }
+
+        let button = document.createElement('button')
+        button.classList.add('btn', 'btn-danger')
+        button.innerHTML = 'Disable'
+        button.id = 'disable-user-button'
+        if (!user.active) {
+            button.disabled = true
+        }
+
+        const eGui = (this.eGui = document.createElement('div'));
+        eGui.classList.add('custom-tooltip');
+        eGui.innerHTML = `
+            <div class="card card-sm">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-auto">
+                            ${avatar.outerHTML}
+                        </div>
+                        <div class="col">
+                            <div class="text-truncate">
+                                ${user.display_name}
+                            </div>
+                            <div class="text-secondary">${user.email}</div>
+                        </div>
+                        <div class="col-auto align-self-center">
+                            ${button.outerHTML}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            `;
+
+        (eGui.querySelector('#disable-user-button') as HTMLButtonElement).onclick = () => {
+            this.onDisableClicked(user.id, params)
+        }
+    }
+
+    onDisableClicked(userId:number, params:ITooltipParams) {
+        if (params.hideTooltipCallback) {
+            params.hideTooltipCallback()
+        }
+        archiveUser(userId).then((response) => {
+            successToast(response.message)
+            populatePrivateAccessLogsTable()
+        }).catch((error) => {
+            const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
+            errorToast(errorMessage)
+        })
+    }
+
+    getGui() {
+        return this.eGui;
+    }
+}
 
 let gridApi:GridApi<any>;
 
@@ -54,7 +133,7 @@ function initialiseAgGrid() {
             type: 'fitGridWidth'
         },
         tooltipShowDelay:100,
-        tooltipMouseTrack: true,
+        tooltipInteraction: true,
         defaultColDef: {
             sortable: false
           },
@@ -67,24 +146,6 @@ function initialiseAgGrid() {
                 suppressFloatingFilterButton: true,
                 width: 300,
                 valueFormatter: dateTimeFormatter,
-            },
-            {
-                field: 'url',
-                headerName: "URL",
-                filter: 'agTextColumnFilter',
-                floatingFilter: true,
-                suppressFloatingFilterButton: true,
-                width: 400,
-                tooltipValueGetter: (params:any) => params.value,
-            },
-            {
-                field: 'internal_endpoint',
-                headerName: "Internal Endpoint",
-                filter: 'agTextColumnFilter',
-                floatingFilter: true,
-                suppressFloatingFilterButton: true,
-                width: 400,
-                tooltipValueGetter: (params:any) => params.value,
             },
             {
                 field: 'user_id',
@@ -105,6 +166,26 @@ function initialiseAgGrid() {
                 filter: 'agTextColumnFilter',
                 floatingFilter: true,
                 suppressFloatingFilterButton: true,
+                tooltipComponent: CustomToolTip,
+                tooltipField: 'user_id'
+            },
+            {
+                field: 'url',
+                headerName: "URL",
+                filter: 'agTextColumnFilter',
+                floatingFilter: true,
+                suppressFloatingFilterButton: true,
+                width: 400,
+                tooltipValueGetter: (params:any) => params.value,
+            },
+            {
+                field: 'internal_endpoint',
+                headerName: "Internal Endpoint",
+                filter: 'agTextColumnFilter',
+                floatingFilter: true,
+                suppressFloatingFilterButton: true,
+                width: 400,
+                tooltipValueGetter: (params:any) => params.value,
             },
             {
                 field: 'user_role_names',
@@ -192,6 +273,7 @@ async function populatePrivateAccessLogsTable() {
                 }
             }
 
+            gridApi.setGridOption('loading', true)
             let queryString = buildQueryString(queryData)
             let response = await getPrivateAccessLogs(queryString)
 
@@ -201,6 +283,7 @@ async function populatePrivateAccessLogsTable() {
             let lastRow = totalRecords <= endRow ? totalRecords : -1
 
             params.successCallback(allLogs, lastRow)
+            gridApi.setGridOption('loading', false)
         }
     }
 
