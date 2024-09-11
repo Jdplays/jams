@@ -149,7 +149,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     prepAddWorkshopForm()
 })
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
     // Input Validation
     // Name
     const workshopNameInput = document.getElementById('add-workshop-name') as HTMLInputElement
