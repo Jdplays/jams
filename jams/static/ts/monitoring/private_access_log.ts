@@ -274,6 +274,19 @@ function initialiseAgGrid() {
                 filter: 'agTextColumnFilter',
                 floatingFilter: true,
                 suppressFloatingFilterButton: true,
+                suppressHeaderFilterButton: true,
+                cellRenderer: (params:any) => {
+                    if (!params.value) {
+                        return 'No Roles'
+                    }
+
+                    const roleNamesText:string = params.value
+                    const cleanedString = roleNamesText.replace(/{|}/g, "");
+                    if (isNullEmptyOrSpaces(cleanedString)) {
+                        return 'No Roles'
+                    }
+                    return cleanedString
+                }
             },
             {
                 field: 'required_role_names',
@@ -281,6 +294,19 @@ function initialiseAgGrid() {
                 filter: 'agTextColumnFilter',
                 floatingFilter: true,
                 suppressFloatingFilterButton: true,
+                suppressHeaderFilterButton: true,
+                cellRenderer: (params:any) => {
+                    if (!params.value) {
+                        return 'None'
+                    }
+
+                    const roleNamesText:string = params.value
+                    const cleanedString = roleNamesText.replace(/{|}/g, "");
+                    if (isNullEmptyOrSpaces(cleanedString)) {
+                        return 'None'
+                    }
+                    return cleanedString
+                }
             },
             {
                 field: 'status_code',
