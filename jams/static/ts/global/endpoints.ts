@@ -1004,33 +1004,33 @@ export function editUser(userId:number, data:Partial<User>, queryString:string|n
     });
 }
 
-export function archiveUser(userID:number):Promise<boolean> {
-    return new Promise((resolve) => {
+export function archiveUser(userID:number):Promise<BackendResponse<User>> {
+    return new Promise((resolve, reject) => {
         $.ajax({
             type: 'POST',
             url: `/backend/users/${userID}/archive`,
             success: function (response) {
-                resolve(true)
+                resolve(response)
             },
             error: function (error) {
                 console.log('Error fetching data:', error);
-                resolve(false)
+                reject(error)
             }
         });
     });
 }
 
-export function activateUser(userID:number):Promise<boolean> {
-    return new Promise((resolve) => {
+export function activateUser(userID:number):Promise<BackendResponse<User>> {
+    return new Promise((resolve, reject) => {
         $.ajax({
             type: 'POST',
             url: `/backend/users/${userID}/activate`,
             success: function (response) {
-                resolve(true)
+                resolve(response)
             },
             error: function (error) {
                 console.log('Error fetching data:', error);
-                resolve(false)
+                reject(error)
             }
         });
     });
