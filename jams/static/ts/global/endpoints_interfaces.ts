@@ -99,6 +99,7 @@ export interface User {
     bio:string
     active:boolean
     user_induction:boolean
+    avatar_url:string
 }
 
 export interface Role {
