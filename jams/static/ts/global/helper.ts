@@ -329,7 +329,7 @@ export function getSelectValues(select:HTMLSelectElement) {
     return selectedValue
   }
 
-  export function validateTextInput(inputElement:HTMLInputElement, regexPatterns:InputValidationPattern[]|null=null, allowSpecialCharacters:boolean=false):boolean {
+  export function validateTextInput(inputElement:HTMLInputElement, regexPatterns:InputValidationPattern[]|null=null, allowSpecialCharacters:boolean=false, allowEmpty:boolean=false):boolean {
     const inputContainer:HTMLElement = inputElement.parentElement
     if (!inputContainer) {
         return false
@@ -337,10 +337,12 @@ export function getSelectValues(select:HTMLSelectElement) {
 
     
 
-    if (isNullEmptyOrSpaces(inputElement.value)) {
-        // Empty
-        markInputAsInvaid(inputElement, inputContainer, 'Input cannot be empty.')
-        return false
+    if (!allowEmpty) {
+        if (isNullEmptyOrSpaces(inputElement.value)) {
+            // Empty
+            markInputAsInvaid(inputElement, inputContainer, 'Input cannot be empty.')
+            return false
+        }
     }
 
     if (!allowSpecialCharacters) {
