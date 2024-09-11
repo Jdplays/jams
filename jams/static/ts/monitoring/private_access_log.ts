@@ -4,8 +4,8 @@ import {
     getUsers
 } from '@global/endpoints'
 import { QueryStringData, QueryStringKey, User } from "@global/endpoints_interfaces";
-import { isNullEmptyOrSpaces, buildQueryString, successToast, errorToast } from "@global/helper";
-import { AgPromise, createGrid, GridApi, GridOptions, ITooltipComp, ITooltipParams, ValueFormatterParams } from 'ag-grid-community';
+import { isNullEmptyOrSpaces, buildQueryString, successToast, errorToast, debounce } from "@global/helper";
+import { createGrid, GridApi, GridOptions, IDoesFilterPassParams, IFilterComp, IFilterParams, ITooltipComp, ITooltipParams, ValueFormatterParams } from 'ag-grid-community';
 
 class CustomToolTip implements ITooltipComp {
     eGui!: HTMLElement;
@@ -83,6 +83,87 @@ class CustomToolTip implements ITooltipComp {
 
     getGui() {
         return this.eGui;
+    }
+}
+
+export class StatusCodeFilter implements IFilterComp {
+    eGui!: HTMLDivElement;
+    chSuccess: any;
+    chError: any;
+    filterActive!: boolean;
+    filterChangedCallback!: (additionalEventAttributes?: any) => void;
+    filterSuccess: boolean = true;
+    filterError: boolean = true;
+
+    init(params: IFilterParams) {
+        this.eGui = document.createElement('div');
+        this.eGui.innerHTML = `<div class="card card-sm">
+                <div class="form-label" style="margin-left:10px; margin-top:5px">Select Status Code Type</div>
+                <div style="margin-left:10px; margin-top:5px">
+                    <label class="form-check">  
+                        <input class="form-check-input" type="checkbox" name="statusCodeFilter" checked="true" id="ch-Success" filter-checkbox="true"/>
+                        <label class="form-check-label">Success</label>
+                    </label>
+                    <label class="form-check">   
+                        <input class="form-check-input" type="checkbox" name="statusCodeFilter" checked=true id="ch-error" filter-checkbox="true"/>
+                        <label class="form-check-label">Error</label>
+                    </label>
+                </div>
+            </div>`;
+        this.chSuccess = this.eGui.querySelector('#ch-Success');
+        this.chError = this.eGui.querySelector('#ch-error');
+        this.chSuccess.addEventListener('change', this.onRbChanged.bind(this));
+        this.chError.addEventListener('change', this.onRbChanged.bind(this));
+        this.filterActive = false;
+
+
+        this.filterChangedCallback = debounce(params.filterChangedCallback, 300);
+    }
+
+    onRbChanged() {
+        this.filterSuccess = this.chSuccess.checked;
+        this.filterError = this.chError.checked;
+        this.filterActive = this.filterSuccess || this.filterError;
+        this.filterChangedCallback();
+    }
+
+    getGui() {
+        return this.eGui;
+    }
+
+    doesFilterPass(params: IDoesFilterPassParams) {
+        const statusCode = params.data.status_code;
+        const isSuccess = statusCode >= 200 && statusCode < 300;
+        const isError = statusCode >= 400 && statusCode < 600;
+
+        if (this.filterSuccess && isSuccess) return true;
+        if (this.filterError && isError) return true;
+
+        return false;
+    }
+
+    isFilterActive() {
+        return this.filterActive;
+    }
+
+    getModel() {
+        if ((this.filterSuccess && this.filterError) || (!this.filterSuccess && !this.filterError)) {
+            return null
+        } else if (this.filterSuccess) {
+            return [200]
+        } else {
+            return [400, 403, 500]
+        }
+    }
+
+    setModel(model: any) {
+        if (model) {
+            this.filterSuccess = model.filterSuccess;
+            this.filterError = model.filterError;
+            this.chSuccess.checked = this.filterSuccess;
+            this.chError.checked = this.filterError;
+            this.filterActive = this.filterSuccess || this.filterError;
+        }
     }
 }
 
@@ -204,9 +285,8 @@ function initialiseAgGrid() {
             {
                 field: 'status_code',
                 headerName: 'Status Code',
-                filter: 'agNumberColumnFilter',
+                filter: StatusCodeFilter,
                 floatingFilter: true,
-                suppressFloatingFilterButton: true,
             },
         ],
         rowModelType: 'infinite',
@@ -255,6 +335,8 @@ async function populatePrivateAccessLogsTable() {
                     ).map(([key]) => Number(key))
 
                     filter = filteredUserKeys
+                } else if (filterKey === 'status_code') {
+                    filter = value
                 } else {
                     filter = value.filter
                 }

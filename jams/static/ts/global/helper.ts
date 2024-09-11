@@ -339,3 +339,11 @@ export function getSelectValues(select:HTMLSelectElement) {
         return true
     }
 }
+
+export function debounce(func:Function, wait:number) {
+    let timeout:number|undefined
+    return function(this:any, ...args:any[]) {
+        if (timeout) clearTimeout(timeout)
+            timeout = window.setTimeout(() => func.apply(this, args), wait)
+    }
+}
