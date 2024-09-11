@@ -17,7 +17,7 @@ import {
     getWorkshopTypes
 } from '@global/endpoints'
 import { EventLocation, EventTimeslot, Location, Timeslot } from '@global/endpoints_interfaces'
-import {buildQueryString, emptyElement, allowDrop, waitForTransitionEnd} from '@global/helper'
+import {buildQueryString, emptyElement, allowDrop, waitForTransitionEnd, debounce} from '@global/helper'
 import {WorkshopCard, WorkshopCardOptions} from '@global/workshop_card'
 
 type Icons = {[key: string]: any}
@@ -179,10 +179,8 @@ export class ScheduleGrid {
             return
         }
         // Get the locations and timeslots assigned to the event
-        const eventLocationsResponse = await getLocationsForEvent(this.options.eventId)
-        const evenTimeslotsResponse = await getTimeslotsForEvent(this.options.eventId)
-        this.eventLocations = eventLocationsResponse.data
-        this.eventTimeslots = evenTimeslotsResponse.data
+        this.eventLocations = await getLocationsForEvent(this.options.eventId)
+        this.eventTimeslots = await getTimeslotsForEvent(this.options.eventId)
 
         // Rebuild the base grid
         await this.rebuildGrid()
@@ -975,14 +973,6 @@ export class ScheduleGrid {
     }
 }
 
-// Debounce function to limt the rate of scroll events
-function debounce(func:Function, wait:number) {
-    let timeout:number|undefined
-    return function(this:any, ...args:any[]) {
-        if (timeout) clearTimeout(timeout)
-            timeout = window.setTimeout(() => func.apply(this, args), wait)
-    }
-}
 
 document.addEventListener("scroll", debounce(function () {
     let workshopSelectionContainer = document.querySelector('.workshop-selection-container')

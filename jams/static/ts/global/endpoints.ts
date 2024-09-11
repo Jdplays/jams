@@ -29,7 +29,7 @@ import {
 // This is a script where all then endpoint calls will live to prevent duplication across scripts
 
 // #region Event Locations
-export function getLocationsForEvent(eventId:number, queryString:string|null = null):Promise<BackendMultiEntryResponse<[EventLocation]>> {
+export function getLocationsForEvent(eventId:number, queryString:string|null = null):Promise<[EventLocation]> {
     return new Promise((resolve, reject) => {
         let url = `/backend/events/${eventId}/locations`
         if (queryString != null) {
@@ -217,7 +217,7 @@ export function activateLocation(locationId:number):Promise<boolean> {
 // #endregion
 
 // #region Event Timeslots
-export function getTimeslotsForEvent(eventId:number, queryString:string|null = null):Promise<BackendMultiEntryResponse<[EventTimeslot]>> {
+export function getTimeslotsForEvent(eventId:number, queryString:string|null = null):Promise<[EventTimeslot]> {
     return new Promise((resolve, reject) => {
         let url = `/backend/events/${eventId}/timeslots`
         if (queryString != null) {
@@ -1004,33 +1004,33 @@ export function editUser(userId:number, data:Partial<User>, queryString:string|n
     });
 }
 
-export function archiveUser(userID:number):Promise<boolean> {
-    return new Promise((resolve) => {
+export function archiveUser(userID:number):Promise<BackendResponse<User>> {
+    return new Promise((resolve, reject) => {
         $.ajax({
             type: 'POST',
             url: `/backend/users/${userID}/archive`,
             success: function (response) {
-                resolve(true)
+                resolve(response)
             },
             error: function (error) {
                 console.log('Error fetching data:', error);
-                resolve(false)
+                reject(error)
             }
         });
     });
 }
 
-export function activateUser(userID:number):Promise<boolean> {
-    return new Promise((resolve) => {
+export function activateUser(userID:number):Promise<BackendResponse<User>> {
+    return new Promise((resolve, reject) => {
         $.ajax({
             type: 'POST',
             url: `/backend/users/${userID}/activate`,
             success: function (response) {
-                resolve(true)
+                resolve(response)
             },
             error: function (error) {
                 console.log('Error fetching data:', error);
-                resolve(false)
+                reject(error)
             }
         });
     });

@@ -17,26 +17,24 @@ let gridApi:GridApi<any>;
 let roleNamesMap:Record<number,string> = {};
 let currentUserId:number;
 
-async function archiveUserOnClick(userId:number) {
-    const response = await archiveUser(userId)
-    if (response) {
-        successToast('User Successfully Archived')
+function archiveUserOnClick(userId:number) {
+    archiveUser(userId).then((response) => {
+        successToast(response.message)
         populateUserManagementTable()
-    }
-    else {
-        errorToast()
-    }
+    }).catch((error) => {
+        const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
+        errorToast(errorMessage)
+    })
 }
 
-async function activateUserOnClick(userId:number) {
-    const response = await activateUser(userId)
-    if (response) {
-        successToast('User Successfully Activated')
+function activateUserOnClick(userId:number) {
+    activateUser(userId).then((response) => {
+        successToast(response.message)
         populateUserManagementTable()
-    }
-    else {
-        errorToast()
-    }
+    }).catch((error) => {
+        const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
+        errorToast(errorMessage)
+    })
 }
 
 function editUserOnClick() {

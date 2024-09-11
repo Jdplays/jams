@@ -281,15 +281,22 @@ def filter_model_by_query_and_properties(model, request_args=None, requested_fie
         
         if filters:
             query = query.filter(*filters)
+    
+    pagination_record_count = query.count()
     if input_data == None:
         if order_direction == 'ASC':
-            objects = query.order_by(asc(order_by)).all()
+            query = query.order_by(asc(order_by))
         elif order_direction == 'DESC':
-            objects = query.order_by(desc(order_by)).all()
+            query = query.order_by(desc(order_by))
         else:
             abort(400, description=f"Invalid Order Direction value: {order_direction}")
     else:
         objects = input_data
+    
+    if not properties_values:
+        query = query.offset(pagination_start_index).limit(pagination_block_size)
+    
+    objects = query.all()
 
     if properties_values:
         for obj in objects[:]:
@@ -297,26 +304,34 @@ def filter_model_by_query_and_properties(model, request_args=None, requested_fie
                 if not contains_value(getattr(obj, prop), value):
                     objects.remove(obj)
     
-    trimmed_objects = objects[pagination_start_index:pagination_start_index+pagination_block_size]
+        objects = objects[pagination_start_index:pagination_start_index+pagination_block_size]
 
     data_list = []
 
     if requested_field:
         if requested_field not in allowed_fields:
             abort(404, description=f"Field '{requested_field}' not found or allowed")
-        for obj in trimmed_objects:
+        for obj in objects:
             data_list.append({
                 'id': obj.id,
                 requested_field: getattr(obj, requested_field)
             })
     else:
-        data_list = [obj.to_dict() for obj in trimmed_objects]
+        data_list = [obj.to_dict() for obj in objects]
 
-    pagination_record_count = len(data_list)
-    return_obj = build_multi_object_paginated_return_obj(data_list, pagination_block_size, pagination_start_index, pagination_order_by, pagination_order_direction, pagination_record_count)
+    return_obj = {
+        'data': data_list,
+        'pagination': {
+            'pagination_block_size': pagination_block_size,
+            'pagination_start_index': pagination_start_index,
+            'order_by': pagination_order_by,
+            'order_direction': pagination_order_direction,
+            'pagination_total_records': pagination_record_count
+        }
+    }
 
     if return_objects:
-        return trimmed_objects
+        return objects
     
     return return_obj
 
