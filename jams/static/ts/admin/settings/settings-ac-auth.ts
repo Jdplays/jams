@@ -1,8 +1,14 @@
 import { deleteOAuthConfiguration, editAuthConfiguration, getAuthConfiguration } from "@global/endpoints";
 import { AuthConfiguration } from "@global/endpoints_interfaces";
-import { isDefined, emptyElement, isNullEmptyOrSpaces, successToast, errorToast } from "@global/helper";
+import { isDefined, emptyElement, isNullEmptyOrSpaces, successToast, errorToast, validateTextInput, animateElement } from "@global/helper";
+import { InputValidationPattern } from "@global/interfaces";
 
 let clientSecretPlaceholder:string = '*****************'
+
+let providerNameInputValid:boolean = false
+let configUrlInputValid:boolean = false
+let clientIdInputValid:boolean = false
+let clientSecretInputValid:boolean = false
 
 let currentConfig:Partial<AuthConfiguration>|null=null
 
@@ -48,11 +54,22 @@ function addButtonOAuthOnClick() {
 
 function saveOAuthOnClick() {
     const oauthForm = document.getElementById('oauth-config-form') as HTMLElement
+    const oauthSaveButton = document.getElementById('oauth-save-button') as HTMLButtonElement
 
     const editOAuthProviderName = document.getElementById('edit-oauth-provider-name') as HTMLInputElement
     const editOAuthConfigURL = document.getElementById('edit-oauth-config-url') as HTMLInputElement
     const editOAuthClientID = document.getElementById('edit-oauth-client-id') as HTMLInputElement
     const editOAuthClientSecret = document.getElementById('edit-oauth-client-secret') as HTMLInputElement
+
+    editOAuthProviderName.dispatchEvent(new Event('input', { bubbles: true }))
+    editOAuthConfigURL.dispatchEvent(new Event('input', { bubbles: true }))
+    editOAuthClientID.dispatchEvent(new Event('input', { bubbles: true }))
+    editOAuthClientSecret.dispatchEvent(new Event('input', { bubbles: true }))
+
+    if (!providerNameInputValid || !configUrlInputValid || !clientIdInputValid || !clientSecretInputValid) {
+        animateElement(oauthSaveButton, 'element-shake')
+        return
+    }
 
     const data:Partial<AuthConfiguration> = {
         OAUTH_PROVIDER_NAME: editOAuthProviderName.value,
@@ -64,8 +81,8 @@ function saveOAuthOnClick() {
         data.OAUTH_CLIENT_SECRET = editOAuthClientSecret.value
     }
 
-    editAuthConfiguration(data).then(() => {
-        successToast('OAuth Configuration successfully updated')
+    editAuthConfiguration(data).then((response) => {
+        successToast(response.message)
     }).catch((error) => {
         const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
         errorToast(errorMessage)
@@ -198,15 +215,44 @@ document.addEventListener("DOMContentLoaded", () => {
     oAuthclientSecretInput.addEventListener('focus', function() {
         if (this.value === clientSecretPlaceholder) {
             this.value = '';
+            oAuthclientSecretInput.dispatchEvent(new Event('input', { bubbles: true }))
         }
     });
 
     oAuthclientSecretInput.addEventListener('blur', function() {
         if (this.value === '') {
             this.value = clientSecretPlaceholder;
+            oAuthclientSecretInput.dispatchEvent(new Event('input', { bubbles: true }))
         }
     });
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+    // Input Validation
+    // Provider Name
+    const oAuthProviderNameInput = document.getElementById('edit-oauth-provider-name') as HTMLInputElement
+    oAuthProviderNameInput.oninput = async () => {
+        providerNameInputValid = validateTextInput(oAuthProviderNameInput)
+    }
+
+    // Config URL
+    const oAuthConfigUrlInput = document.getElementById('edit-oauth-config-url') as HTMLInputElement
+    oAuthConfigUrlInput.oninput = async () => {
+        configUrlInputValid = validateTextInput(oAuthConfigUrlInput, null, true)
+    }
+
+    // Client ID
+    const oAuthClientIdInput = document.getElementById('edit-oauth-client-id') as HTMLInputElement
+    oAuthClientIdInput.oninput = async () => {
+        clientIdInputValid = validateTextInput(oAuthClientIdInput, null, true)
+    }
+
+    // Client Secret
+    const oAuthClientSecretInput = document.getElementById('edit-oauth-client-secret') as HTMLInputElement
+    oAuthClientSecretInput.oninput = async () => {
+        clientSecretInputValid = validateTextInput(oAuthClientSecretInput, null, true)
+    }
+})
 
 document.addEventListener("DOMContentLoaded", () => {
     if (isDefined(window)) {
