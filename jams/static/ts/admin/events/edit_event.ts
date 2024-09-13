@@ -1,9 +1,19 @@
-import { addNewEvent, editEvent, getEvent, getEventbriteEvents } from "@global/endpoints"
+import { addNewEvent, editEvent, getEvent, getEventbriteEvents, getEventsField } from "@global/endpoints"
 import { EventbriteEvent, Event } from "@global/endpoints_interfaces"
-import { addSpinnerToElement, createDropdown, errorToast, isDefined, isNullEmptyOrSpaces, removeSpinnerFromElement } from "@global/helper"
+import { addSpinnerToElement, animateElement, buildQueryString, createDropdown, createRegexFromList, errorToast, isDefined, isNullEmptyOrSpaces, removeSpinnerFromElement, validateNumberInput, validateTextInput } from "@global/helper"
+import { InputValidationPattern, QueryStringData } from "@global/interfaces"
 
 let EventId:number
 let EventData:Event
+let currentEventNames:string[];
+
+let nameInputValid:boolean = false
+let descriptionInputValid:boolean = false
+let dateInputValid:boolean = false
+let startInputValid:boolean = false
+let endInputValid:boolean = false
+let capacityInputValid:boolean = false
+let passwordInputValid:boolean = false
 
 async function prepEditEventForm() {
     const eventNameInput = document.getElementById('edit-event-name') as HTMLInputElement
@@ -130,6 +140,8 @@ function eventbriteEventsDropdownOnChange(events:EventbriteEvent[]) {
 }
 
 async function editEventOnclick() {
+    const editButton = document.getElementById('edit-event-button') as HTMLButtonElement
+
     const eventNameInput = document.getElementById('edit-event-name') as HTMLInputElement
     const eventDescriptionInput = document.getElementById('edit-event-description') as HTMLInputElement
     const eventDateInput = document.getElementById('edit-event-date') as HTMLInputElement
@@ -139,6 +151,19 @@ async function editEventOnclick() {
     const eventPasswordInput = document.getElementById('edit-event-password') as HTMLInputElement
     const eventUrlHiddenInput = document.getElementById('edit-eventbrite-url') as HTMLInputElement
     const eventbriteIdHiddenInput = document.getElementById('edit-eventbrite-id') as HTMLInputElement
+
+    eventNameInput.dispatchEvent(new Event('input', { bubbles: true }))
+    eventDescriptionInput.dispatchEvent(new Event('input', { bubbles: true }))
+    eventDateInput.dispatchEvent(new Event('input', { bubbles: true }))
+    eventStartInput.dispatchEvent(new Event('input', { bubbles: true }))
+    eventEndInput.dispatchEvent(new Event('input', { bubbles: true }))
+    eventCapacityInput.dispatchEvent(new Event('input', { bubbles: true }))
+    eventPasswordInput.dispatchEvent(new Event('input', { bubbles: true }))
+
+    if (!nameInputValid || !descriptionInputValid || !dateInputValid || !startInputValid || !endInputValid || !capacityInputValid || !passwordInputValid) {
+        animateElement(editButton, 'element-shake')
+        return
+    }
 
     let external = false
     if (!isNullEmptyOrSpaces(eventbriteIdHiddenInput.value)) {
@@ -195,13 +220,73 @@ document.addEventListener("DOMContentLoaded", async () => {
     const pathParts = pagePath.split('/')
     EventId = Number(pathParts[pathParts.length - 2])
     EventData = await getEvent(EventId)
+
+    const queryData:Partial<QueryStringData> = {
+        $all_rows: true
+    }
+    const queryString = buildQueryString(queryData)
+    
+    const currentEvents = (await getEventsField('name', queryString)).data
+    currentEventNames = currentEvents.map(e => e.name).filter(name => name !== EventData.name)
+    
     prepEditEventForm()
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+    // Input Validation
+    // Name
+    const eventNameInput = document.getElementById('edit-event-name') as HTMLInputElement
+    eventNameInput.oninput = async () => {
+        let patterns:InputValidationPattern[] = null
+        if (currentEventNames) {
+            patterns = [
+            {pattern: createRegexFromList(currentEventNames), errorMessage: 'Already exists'}
+            ]
+        }
+
+        nameInputValid = validateTextInput(eventNameInput, patterns)
+    }
+
+    // Description
+    const eventDescriptionInput = document.getElementById('edit-event-description') as HTMLInputElement
+    eventDescriptionInput.oninput = async () => {
+        descriptionInputValid = validateTextInput(eventDescriptionInput, null, true)
+    }
+
+    // Date
+    const eventDateInput = document.getElementById('edit-event-date') as HTMLInputElement
+    eventDateInput.oninput = () => {
+        dateInputValid = validateTextInput(eventDateInput)
+    }
+
+    // Date
+    const eventstartInput = document.getElementById('edit-event-start') as HTMLInputElement
+    eventstartInput.oninput = () => {
+        startInputValid = validateTextInput(eventstartInput, null, true)
+    }
+
+    // Date
+    const eventEndInput = document.getElementById('edit-event-end') as HTMLInputElement
+    eventEndInput.oninput = () => {
+        endInputValid = validateTextInput(eventEndInput, null, true)
+    }
+
+    // Capacity
+    const eventCapacityInput = document.getElementById('edit-event-capacity') as HTMLInputElement
+    eventCapacityInput.oninput = () => {
+        capacityInputValid = validateNumberInput(eventCapacityInput)
+    }
+
+    // Date
+    const eventPasswordInput = document.getElementById('edit-event-password') as HTMLInputElement
+    eventPasswordInput.oninput = () => {
+        passwordInputValid = validateTextInput(eventPasswordInput, null, true)
+    }
+})
 
 document.addEventListener("DOMContentLoaded", () => {
     if (isDefined(window)) {
         (<any>window).toggleEventbriteImportOnChange = toggleEventbriteImportOnChange;
         (<any>window).editEventOnclick = editEventOnclick;
-        (<any>window).onInputChangeValidate = onInputChangeValidate;
     }
 });

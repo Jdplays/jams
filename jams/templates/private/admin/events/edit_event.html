@@ -7,7 +7,20 @@
 <h1>Edit Event</h1>
 <h3> Here you can edit an event or link it to one from eventbrite</h3>
 
-<div>
+<a type="button" class="btn btn-link link-secondary mb-3" href="{{ url_for('routes.frontend.private.admin.events') }}">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-left">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M5 12l14 0" />
+        <path d="M5 12l6 6" />
+        <path d="M5 12l6 -6" />
+    </svg>
+    <span class="btn-text">Back</span>
+</a>
+
+<div class="card card-md">
+    <div id="main-form" class="card-body">
         {% if get_config_value('EVENTBRITE_ENABLED') %}
         <div>
             <div class="mb-3">
@@ -21,60 +34,79 @@
                 <label class="form-label">Select Event from Eventbrite</label>
                 <div id="eventbrite-import-dropdown-container">
                 </div>
-                <p class="text-yellow"><strong>Warning: Adding an event from Eventbrite will limit yor control in editing. You will only be able to update the event password. All other values will be inherited from eventbrite</strong></p>
+                <p class="text-yellow"><strong>Warning: Adding an event from Eventbrite will limit yor control in
+                        editing. You will only be able to update the event password. All other values will be inherited
+                        from eventbrite</strong></p>
             </div>
         </div>
         {% endif %}
         <div id="main-form">
             <div class="mb-3">
                 <label class="form-label required">Event Name</label>
-                <input type="text" class="form-control" name="name" id="edit-event-name" oninput="onInputChangeValidate(this)"/>
+                <input type="text" class="form-control" name="name" id="edit-event-name"
+                    oninput="onInputChangeValidate(this)" />
             </div>
 
             <div class="mb-3">
                 <label class="form-label required">Event Description</label>
-                <textarea class="form-control" rows="5" id="edit-event-description" name="description" oninput="onInputChangeValidate(this)"></textarea>
+                <textarea class="form-control" rows="5" id="edit-event-description" name="description"
+                    oninput="onInputChangeValidate(this)"></textarea>
             </div>
 
             <div style="display: flex; justify-content: space-between;">
                 <div style="flex: 1; margin: 5px;">
                     <div class="mb-3">
                         <label class="form-label required">Date</label>
-                        <input type="date" class="form-control" name="date" id="edit-event-date" oninput="onInputChangeValidate(this)"/>
+                        <input type="date" class="form-control" name="date" id="edit-event-date"
+                            oninput="onInputChangeValidate(this)" />
                     </div>
                 </div>
 
                 <div style="flex: 1; margin: 5px;">
                     <div class="mb-3">
                         <label class="form-label required">Start Time</label>
-                        <input type="time" class="form-control" name="start" id="edit-event-start" oninput="onInputChangeValidate(this)"/>
+                        <input type="time" class="form-control" name="start" id="edit-event-start"
+                            oninput="onInputChangeValidate(this)" />
                     </div>
                 </div>
 
                 <div style="flex: 1; margin: 5px;">
                     <div class="mb-3">
                         <label class="form-label required">End Time</label>
-                        <input type="time" class="form-control" name="end" id="edit-event-end" oninput="onInputChangeValidate(this)"/>
+                        <input type="time" class="form-control" name="end" id="edit-event-end"
+                            oninput="onInputChangeValidate(this)" />
                     </div>
                 </div>
             </div>
 
             <div class="mb-3">
                 <label class="form-label required">Event Capacity</label>
-                <input type="number" class="form-control" name="name" id="edit-event-capacity" value="0" oninput="onInputChangeValidate(this)"/>
+                <input type="number" class="form-control" name="name" id="edit-event-capacity" value="0"
+                    oninput="onInputChangeValidate(this)" />
             </div>
         </div>
 
         <div class="mb-3">
             <label class="form-label required">Event Password</label>
-            <input type="text" class="form-control" name="name" id="edit-event-password" oninput="onInputChangeValidate(this)"/>
+            <input type="text" class="form-control" name="name" id="edit-event-password"
+                oninput="onInputChangeValidate(this)" />
         </div>
 
         <input type="hidden" id="edit-eventbrite-id" name="eventbrite_id">
         <input type="hidden" id="edit-eventbrite-url" name="eventbrite_url">
-
-        <button class="btn btn-primary" onclick="editEventOnclick()">Edit Event</button>
+    </div>
 </div>
+
+<button id="add-event-button" class="btn btn-primary mt-3" onclick="editEventOnclick()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        class="icon icon-tabler icons-tabler-outline icon-tabler-pencil">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+        <path d="M13.5 6.5l4 4" />
+    </svg>
+    <span class="btn-text">Edit Event</span>
+</button>
 
 <script src="{{ url_for('static', filename='js/admin/events/edit_event.js') }}" type="module" defer></script>
 
