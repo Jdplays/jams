@@ -800,6 +800,26 @@ export function getEvents(queryString:string|null = null):Promise<BackendMultiEn
     });
 }
 
+export function getEventsField(field:string, queryString:string|null = null):Promise<BackendMultiEntryResponse<[Event]>> {
+    return new Promise((resolve, reject) => {
+        let url = `/backend/events/${field}`
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);   
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error);
+            }
+        });
+    });
+}
+
 export function getEventNames(queryString:string|null = null):Promise<BackendMultiEntryResponse<[Partial<Event>]>> {
     return new Promise((resolve, reject) => {
         let url = '/backend/events/name'

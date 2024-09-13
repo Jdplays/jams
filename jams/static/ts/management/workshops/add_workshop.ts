@@ -164,9 +164,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Description
-    const workshoDescriptionInput = document.getElementById('add-workshop-description') as HTMLInputElement
-    workshoDescriptionInput.oninput = async () => {
-        descriptionInputValid = validateTextInput(workshoDescriptionInput, null, true)
+    const workshopDescriptionInput = document.getElementById('add-workshop-description') as HTMLInputElement
+    workshopDescriptionInput.oninput = async () => {
+        descriptionInputValid = validateTextInput(workshopDescriptionInput, null, true)
     }
 
     // Min Volunteers
