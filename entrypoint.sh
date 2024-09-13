@@ -23,7 +23,7 @@ if [ $DB_STATUS -eq 1 ]; then
     flask shell <<EOF
 from jams import create_app, seed_database
 app = create_app()
-seed_databse(app)
+seed_database(app)
 EOF
 
     # Start Gunicorn
