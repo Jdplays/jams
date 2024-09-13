@@ -6,8 +6,8 @@ import {
     getWorkshops,
     getWorkshopTypes,
 } from "@global/endpoints";
-import { FileData, Workshop, QueryStringData, DifficultyLevel, WorkshopType } from "@global/endpoints_interfaces";
-import { successToast, errorToast, buildQueryString, buildArchiveActivateButtonForModel } from "@global/helper";
+import { DifficultyLevel, WorkshopType } from "@global/endpoints_interfaces";
+import { successToast, errorToast, buildArchiveActivateButtonForModel } from "@global/helper";
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
 
 let gridApi: GridApi<any>;

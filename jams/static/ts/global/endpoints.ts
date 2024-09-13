@@ -403,6 +403,26 @@ export function getWorkshops(queryString:string|null = null):Promise<BackendMult
     });
 }
 
+export function getWorkshopsField(field:string, queryString:string|null = null):Promise<BackendMultiEntryResponse<[Partial<Workshop>]>> {
+    return new Promise((resolve, reject) => {
+        let url = `/backend/workshops/${field}`
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
 export function getWorkshop(workshopId:number):Promise<Workshop> {
     return new Promise((resolve, reject) => {
         $.ajax({
@@ -435,7 +455,7 @@ export function getWorkshopField(workshopId:number, field:string):Promise<Worksh
     });
 }
 
-export function addWorkshop(data:Partial<RequestMultiModelJSONData>):Promise<Workshop> {
+export function addWorkshop(data:Partial<RequestMultiModelJSONData>):Promise<BackendResponse<User>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             type: 'POST',
@@ -453,19 +473,19 @@ export function addWorkshop(data:Partial<RequestMultiModelJSONData>):Promise<Wor
     });
 }
 
-export function editWorkshop(workshopId:number, data:Partial<RequestMultiModelJSONData>):Promise<boolean> {
-    return new Promise((resolve) => {
+export function editWorkshop(workshopId:number, data:Partial<RequestMultiModelJSONData>):Promise<BackendResponse<User>> {
+    return new Promise((resolve, reject) => {
         $.ajax({
             type: 'PATCH',
             url: `/backend/workshops/${workshopId}`,
             data: JSON.stringify(data),
             contentType: 'application/json',
             success: function (response) {
-                resolve(true)
+                resolve(response)
             },
             error: function (error) {
                 console.log('Error fetching data:', error);
-                resolve(false)
+                reject(error)
             }
         });
     });
@@ -763,6 +783,26 @@ export function getWorkshopTypes(queryString:string|null = null):Promise<Backend
 export function getEvents(queryString:string|null = null):Promise<BackendMultiEntryResponse<[Event]>> {
     return new Promise((resolve, reject) => {
         let url = '/backend/events'
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);   
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error);
+            }
+        });
+    });
+}
+
+export function getEventsField(field:string, queryString:string|null = null):Promise<BackendMultiEntryResponse<[Event]>> {
+    return new Promise((resolve, reject) => {
+        let url = `/backend/events/${field}`
         if (queryString != null) {
             url += `?${queryString}`
         }

@@ -1,4 +1,5 @@
 import {Toast} from "@global/sweet_alert"
+import { InputValidationPattern } from "./interfaces";
 
 type QueryStringParams = {[key: string]: any}
 type ModelModityFunc = ((arg1:number) => void)
@@ -328,15 +329,118 @@ export function getSelectValues(select:HTMLSelectElement) {
     return selectedValue
   }
 
-  export function validateTextInput(inputElement:HTMLInputElement):boolean {
-    if (isNullEmptyOrSpaces(inputElement.value)) {
-        inputElement.classList.add('is-invalid')
-        inputElement.classList.remove('is-valid')
+  export function validateTextInput(inputElement:HTMLInputElement, regexPatterns:InputValidationPattern[]|null=null, allowSpecialCharacters:boolean=false, allowEmpty:boolean=false):boolean {
+    const inputContainer:HTMLElement = inputElement.parentElement
+    if (!inputContainer) {
         return false
-    } else {
-        inputElement.classList.add('is-valid')
-        inputElement.classList.remove('is-invalid')
-        return true
+    }
+
+    
+
+    if (!allowEmpty) {
+        if (isNullEmptyOrSpaces(inputElement.value)) {
+            // Empty
+            markInputAsInvaid(inputElement, inputContainer, 'Input cannot be empty.')
+            return false
+        }
+    }
+
+    if (!allowSpecialCharacters) {
+        const specialCharRegex = /[!@#$%^&*,.?":{}|<>[\]\\\/]/;
+        if(specialCharRegex.test(inputElement.value)) {
+            markInputAsInvaid(inputElement, inputContainer, 'Special characters are not allowed, except for underscores "_" hyphens "-" and rounded brackets "()". Please update your input.')
+            return false
+        }
+    }
+
+    if (regexPatterns) {
+        for (const {pattern, errorMessage} of regexPatterns) {
+            if (pattern.test(inputElement.value)) {
+                markInputAsInvaid(inputElement, inputContainer, errorMessage)
+                return false
+            }
+        }
+    }
+
+
+    inputElement.classList.add('is-valid')
+    inputElement.classList.remove('is-invalid')
+    let errors = inputContainer.querySelectorAll('.invalid-feedback')
+    for (const el of Array.from(errors)) {
+        inputContainer.removeChild(el)
+    }
+    return true
+}
+
+export function validateNumberInput(inputElement:HTMLInputElement, allowNegatives:boolean=false, min:number|null=null, max:number|null=null) {
+    const inputContainer:HTMLElement = inputElement.parentElement
+    if (!inputContainer) {
+        return false
+    }
+
+    if (isNullEmptyOrSpaces(inputElement.value)) {
+        markInputAsInvaid(inputElement, inputContainer, 'Input must be a number')
+        return false
+    }
+
+    if (!allowNegatives) {
+        if (Number(inputElement.value) < 0) {
+            markInputAsInvaid(inputElement, inputContainer, 'Input must be a positive number')
+            return false
+        }
+    }
+
+    if (min) {
+        if (Number(inputElement.value) < min) {
+            markInputAsInvaid(inputElement, inputContainer, `Input must be a more than or equal to ${min}`)
+            return false
+        }
+    }
+
+    if (max) {
+        if (Number(inputElement.value) > max) {
+            markInputAsInvaid(inputElement, inputContainer, `Input must be a less than or equal to ${max}`)
+            return false
+        }
+    }
+
+    inputElement.classList.add('is-valid')
+    inputElement.classList.remove('is-invalid')
+    let errors = inputContainer.querySelectorAll('.invalid-feedback')
+    for (const el of Array.from(errors)) {
+        inputContainer.removeChild(el)
+    }
+    return true
+}
+
+export function createRegexFromList(list: string[]): RegExp {
+    // Escape special characters and join the strings with the '|' (OR) operator
+    const escapedList = list.map(str => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const regexPattern = `^(${escapedList.join('|')})$`;
+    return new RegExp(regexPattern, 'i'); // 'i' makes the regex case-insensitive
+}
+
+export function markInputAsInvaid(inputElement:HTMLInputElement, inputContainer:HTMLElement|null=null, errorMessage:string|null=null) {
+    // remove old error messages
+    let oldErrors = inputContainer.querySelectorAll('.invalid-feedback')
+    for (const el of Array.from(oldErrors)) {
+        inputContainer.removeChild(el)
+    }
+
+    inputElement.classList.add('is-invalid')
+    inputElement.classList.remove('is-valid')
+
+    if (inputContainer) {
+        let errorElement = document.createElement('div')
+        errorElement.classList.add('invalid-feedback')
+
+        if (errorMessage) {
+            errorElement.innerHTML = errorMessage
+        } else {
+            errorElement.innerHTML = 'Invalid Input.'
+        }
+
+        inputContainer.appendChild(errorElement)
     }
 }
 
@@ -346,4 +450,15 @@ export function debounce(func:Function, wait:number) {
         if (timeout) clearTimeout(timeout)
             timeout = window.setTimeout(() => func.apply(this, args), wait)
     }
+}
+
+export function animateElement(element:HTMLElement, animationClass:string) {
+    element.classList.add(animationClass)
+
+    const handleAnimationEnd = () => {
+        element.classList.remove(animationClass)
+        element.removeEventListener('animationend', handleAnimationEnd)
+    }
+
+    element.addEventListener('animationend', handleAnimationEnd)
 }

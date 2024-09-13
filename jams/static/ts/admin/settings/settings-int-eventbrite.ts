@@ -222,7 +222,7 @@ async function verifyPrivateApiToken() {
     iconDiv.innerHTML = loadingIcon
     verifyButton.innerHTML = ''
     verifyButton.appendChild(iconDiv)
-    iconDiv.classList.add('icon-spin')
+    iconDiv.classList.add('element-spin')
 
     tokenUpdated = true
 
@@ -245,7 +245,7 @@ async function verifyPrivateApiToken() {
 
         populateOrgSelect(organisations)
 
-        iconDiv.classList.remove('icon-spin')
+        iconDiv.classList.remove('element-spin')
         iconDiv.innerHTML = tickIcon
         verifyButton.disabled = true
 
@@ -255,8 +255,8 @@ async function verifyPrivateApiToken() {
             xIcon = await getIconData('x')
         }
 
-        iconDiv.classList.remove('icon-spin')
-        iconDiv.classList.add('icon-shake')
+        iconDiv.classList.remove('element-spin')
+        iconDiv.classList.add('element-shake')
         iconDiv.innerHTML = xIcon
         verifyButton.disabled = true
     }

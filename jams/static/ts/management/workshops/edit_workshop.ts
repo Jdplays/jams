@@ -1,12 +1,19 @@
-import { activateWorkshopFile, archiveWorkshopFile, editWorkshop, getDifficultyLevel, getDifficultyLevels, getFilesDataForWorkshop, getIconData, getWorkshop, getWorkshopTypes, uploadFileToWorkshop } from "@global/endpoints";
-import { QueryStringData, RequestMultiModelJSONData, Workshop, WorkshopType } from "@global/endpoints_interfaces";
-import { addSpinnerToElement, buildQueryString, buildRadioInputSelectionGroup, emptyElement, errorToast, getRadioInputGroupSelection, isDefined, removeSpinnerFromElement, successToast } from "@global/helper";
+import { activateWorkshopFile, archiveWorkshopFile, editWorkshop, getDifficultyLevel, getDifficultyLevels, getFilesDataForWorkshop, getIconData, getWorkshop, getWorkshopsField, getWorkshopTypes, uploadFileToWorkshop } from "@global/endpoints";
+import { RequestMultiModelJSONData, Workshop, WorkshopType } from "@global/endpoints_interfaces";
+import { addSpinnerToElement, animateElement, buildQueryString, buildRadioInputSelectionGroup, createRegexFromList, emptyElement, errorToast, getRadioInputGroupSelection, isDefined, removeSpinnerFromElement, successToast, validateNumberInput, validateTextInput } from "@global/helper";
+import { InputValidationPattern, QueryStringData } from "@global/interfaces";
 import Dropzone from "dropzone";
 
 let WorkshopId:number
 let WorkshopData:Workshop
 let workshopTypesMap:Record<number, WorkshopType> = {};
 let SelectedWorkshopTypeId:number
+let currentWorkshopNames:string[];
+
+let nameInputValid:boolean = false
+let descriptionInputValid:boolean = false
+let minVolunteersInputValid:boolean = false
+let capacityInputValid:boolean = false
 
 let xIconData:string
 let editIconData:string
@@ -208,8 +215,24 @@ async function archiveWorkshopFileOnClick(fileUUID:string, removeButton:HTMLAnch
 }
 
 function editWorkshopOnClick() {
-    const workshopTypeSelect = document.getElementById('workshop-type-selection-container') as HTMLDivElement
+    const editButton = document.getElementById('edit-workshop-button') as HTMLButtonElement
+
+    const workshopNameInput = document.getElementById('edit-workshop-name') as HTMLInputElement
+    const workshopDescriptionInput = document.getElementById('edit-workshop-description') as HTMLInputElement
+    const workshopMinVolunteersInput = document.getElementById('edit-workshop-min_volunteers') as HTMLInputElement
+    const workshopCapacityInput = document.getElementById('edit-workshop-capacity') as HTMLInputElement
     const workshopDifficultySelect = document.getElementById('difficulty-selection-container') as HTMLInputElement
+    const workshopTypeSelect = document.getElementById('workshop-type-selection-container') as HTMLDivElement
+
+    workshopNameInput.dispatchEvent(new Event('input', { bubbles: true }))
+    workshopDescriptionInput.dispatchEvent(new Event('input', { bubbles: true }))
+    workshopMinVolunteersInput.dispatchEvent(new Event('input', { bubbles: true }))
+    workshopCapacityInput.dispatchEvent(new Event('input', { bubbles: true }))
+
+    if (!nameInputValid || !descriptionInputValid || !minVolunteersInputValid || !capacityInputValid) {
+        animateElement(editButton, 'element-shake')
+        return
+    }
 
     const workshopTypeId = getRadioInputGroupSelection(workshopTypeSelect, 'workshop-type')
     const difficultyIdStr = getRadioInputGroupSelection(workshopDifficultySelect, 'difficulty-level')
@@ -220,21 +243,20 @@ function editWorkshopOnClick() {
     }
 
     const data:Partial<RequestMultiModelJSONData> = {
-        name: (document.getElementById('edit-workshop-name') as HTMLInputElement).value,
-        description: (document.getElementById('edit-workshop-description') as HTMLInputElement).value,
-        difficulty_id: difficultyId,
-        min_volunteers: Number((document.getElementById('edit-workshop-min_volunteers') as HTMLInputElement).value),
-        capacity: Number((document.getElementById('edit-workshop-capacity') as HTMLInputElement).value),
+        name: workshopNameInput.value,
+        description: workshopDescriptionInput.value,
+        difficulty_id: Number(difficultyId),
+        min_volunteers: Number(workshopMinVolunteersInput.value),
+        capacity: Number(workshopCapacityInput.value),
         workshop_type_id: Number(workshopTypeId)
     }
 
-    console.log(data)
-
-    editWorkshop(WorkshopId, data).then(async () => {
-        successToast('Workshop Successfully Edited')
+    editWorkshop(WorkshopId, data).then((response) => {
+        successToast(response.message)
         window.location.replace('/private/management/workshops')
-    }).catch(() => {
-        errorToast()
+    }).catch((error) => {
+        const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
+        errorToast(errorMessage)
     })
 }
 
@@ -299,8 +321,50 @@ document.addEventListener("DOMContentLoaded", async () => {
     workshopTypesMap = await preLoadWorkshopTypes()
     await loadIcons()
     initialiseDropzone()
+
+    const queryData:Partial<QueryStringData> = {
+        $all_rows: true
+    }
+    const queryString = buildQueryString(queryData)
+
+    const currentWorkshops = (await getWorkshopsField('name', queryString)).data
+    currentWorkshopNames = currentWorkshops.map(ws => ws.name).filter(name => name !== WorkshopData.name)
+
     prepEditWorkshopForm()
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+    // Input Validation
+    // Name
+    const workshopNameInput = document.getElementById('edit-workshop-name') as HTMLInputElement
+    workshopNameInput.oninput = async () => {
+        let patterns:InputValidationPattern[] = null
+        if (currentWorkshopNames) {
+            patterns = [
+            {pattern: createRegexFromList(currentWorkshopNames), errorMessage: 'Already exists'}
+        ]
+    }
+        nameInputValid = validateTextInput(workshopNameInput, patterns)
+    }
+
+    // Description
+    const workshoDescriptionInput = document.getElementById('edit-workshop-description') as HTMLInputElement
+    workshoDescriptionInput.oninput = async () => {
+        descriptionInputValid = validateTextInput(workshoDescriptionInput, null, true)
+    }
+
+    // Min Volunteers
+    const workshopMinVolunteersInput = document.getElementById('edit-workshop-min_volunteers') as HTMLInputElement
+    workshopMinVolunteersInput.oninput = () => {
+        minVolunteersInputValid = validateNumberInput(workshopMinVolunteersInput)
+    }
+
+    // Capacity
+    const workshopCapacityInput = document.getElementById('edit-workshop-capacity') as HTMLInputElement
+    workshopCapacityInput.oninput = () => {
+        capacityInputValid = validateNumberInput(workshopCapacityInput)
+    }
+})
 
 document.addEventListener("DOMContentLoaded", () => {
     if (isDefined(window)) {

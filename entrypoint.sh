@@ -21,9 +21,9 @@ if [ $DB_STATUS -eq 1 ]; then
 
     # Prepare the application
     flask shell <<EOF
-from jams import create_app, prep_app
+from jams import create_app, seed_database
 app = create_app()
-prep_app(app)
+seed_database(app)
 EOF
 
     # Start Gunicorn

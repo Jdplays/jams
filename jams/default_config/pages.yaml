@@ -8,6 +8,8 @@ pages:
     backend_endpoints:
       routes.backend.private.management.get_difficulty_levels:
       routes.backend.private.management.add_workshop:
+      routes.backend.private.management.get_workshops_field:
+        allowed_fields: id, name
       
   
   edit_workshop:
@@ -16,6 +18,8 @@ pages:
       routes.backend.private.management.get_workshop:
       routes.backend.private.management.get_difficulty_levels:
       routes.backend.private.management.get_difficulty_level:
+      routes.backend.private.management.get_workshops_field:
+        allowed_fields: id, name
       routes.backend.private.management.edit_workshop:
       routes.backend.private.management.add_workshop_file:
 
@@ -69,12 +73,16 @@ pages:
     backend_endpoints:
       routes.backend.private.admin.add_event:
       routes.backend.integrations.eventbrite.get_events:
+      routes.backend.private.admin.get_events_field:
+        allowed_fields: id, name
   
   edit_event:
     endpoint: routes.frontend.private.admin.edit_event
     backend_endpoints:
       routes.backend.private.admin.get_event:
       routes.backend.private.admin.edit_event:
+      routes.backend.private.admin.get_events_field:
+        allowed_fields: id, name
 
 # Normal Pages
   # Admin
@@ -184,6 +192,7 @@ pages:
     endpoint: routes.frontend.private.monitoring.private_access_log
     backend_endpoints:
       routes.backend.private.monitoring.get_private_access_logs:
+      routes.backend.private.admin.archive_user:
 
 
   # -------------------------------- PUBLIC  -------------------------------- #

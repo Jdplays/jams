@@ -5,7 +5,7 @@ from sqlalchemy.orm import relationship, backref
 class Event(db.Model):
     __tablename__ = 'event'
     id = Column(Integer, primary_key=True)
-    name = Column(String(80), unique=True, nullable=False)
+    name = Column(String(100), unique=True, nullable=False)
     description = Column(String(255), unique=False, nullable=True)
     date = Column(DATE, nullable=False)
     start_time = Column(TIME, nullable=False)
