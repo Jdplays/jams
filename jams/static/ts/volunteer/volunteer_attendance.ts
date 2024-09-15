@@ -1,134 +1,302 @@
 import {
     getRoleNames,
-    getUsersDisplayNames,
     getAttendanceForEvent,
-    getAttendanceForVolunteer,
     addAttendance,
     editAttendance,
-    getCurrentUserId
+    getCurrentUserId,
+    getUsersField,
+    getAttendanceForUser
 } from '@global/endpoints'
-import { RequestMultiModelJSONData, VolunteerAttendance } from "@global/endpoints_interfaces";
+import { VolunteerAttendance } from "@global/endpoints_interfaces";
+import { animateElement, buildQueryString, errorToast, successToast, validateNumberInput, validateTextInput } from '@global/helper';
+import { QueryStringData } from '@global/interfaces';
+import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
 
+let gridApi:GridApi<any>;
+
+let volunteerRoleIds:number[] = []
 let EventId = 1
 let CurrentUserId = 0
+let currentAttendanceData:VolunteerAttendance|null = null
 
+let userDisplayNamesMap:Record<number, string> = {}
 
+let noteInputValid:boolean = false
 
+function initialiseAgGrid() {
+    const gridOptions:GridOptions = {
+        domLayout: 'autoHeight',
+        autoSizeStrategy: {
+            type: 'fitCellContents'
+        },
+        columnDefs: [
+            {
+                field: 'user_display_name',
+                headerName: 'Name',
+                cellClassRules: {
+                    'current-user': params => {
+                        if (params.data[1].user_id === CurrentUserId) {
+                            return true
+                        }
+                    }
+                },
+                cellRenderer: (params:any) => {
+                    const data = params.data[1]
+                    if (data.user_id) {
+                        if (userDisplayNamesMap[data.user_id]) {
+                            return userDisplayNamesMap[data.user_id]
+                        } else {
+                            return 'Unknown User'
+                        }
+                    }
+                },
+                pinned: true,
+                maxWidth: 200,
+                flex: 1
+            },
+            {
+                field: 'setup',
+                cellDataType: 'boolean',
+                colSpan: (params:any) => {
+                    const data = params.data[1]
 
-async function addAttendanceOnClick(event:Event) {
-    event.preventDefault()
-    const data:Partial<RequestMultiModelJSONData> = {
-        'setup': (document.getElementById('update-volunteer-attendance-setup') as HTMLInputElement).checked,
-        'main': (document.getElementById('update-volunteer-attendance-main') as HTMLInputElement).checked,
-        'packdown': (document.getElementById('update-volunteer-attendance-packdown') as HTMLInputElement).checked,
-        'note': (document.getElementById('update-volunteer-attendance-note') as HTMLInputElement).value
+                    if (data.setup === undefined || data.setup === null) {
+                        return 5
+                    } else {
+                        return 1
+                    }
+                },
+                cellClassRules: {
+                    'status-yes': params => params.data[1].setup && !params.data[1].noReply,
+                    'status-no': params => !params.data[1].setup && !params.data[1].noReply,
+                    'status-no-reply': params => params.data[1].noReply,
+                },
+                cellRenderer: (params:any) => {
+                    const data = params.data[1]
+                    if (data.setup === undefined || data.setup === null) {
+                        return 'Not Replied'
+                    } else {
+                        return data.setup
+                    }
+                },
+                maxWidth: 100,
+                flex: 1
+            },
+            {
+                field: 'main',
+                cellDataType: 'boolean',
+                cellClassRules: {
+                    'status-yes': params => params.data[1].main && !params.data[1].noReply,
+                    'status-no': params => !params.data[1].main && !params.data[1].noReply,
+                },
+                cellRenderer: (params:any) => {
+                    const data = params.data[1]
+                    if (data.main !== null && data.main !== undefined) {
+                        return data.main
+                    }
+                },
+                maxWidth: 100,
+                flex: 1
+            },
+            {
+                field: 'packdown',
+                cellClassRules: {
+                    'status-yes': params => params.data[1].packdown && !params.data[1].noReply,
+                    'status-no': params => !params.data[1].packdown && !params.data[1].noReply,
+                },
+                cellRenderer: (params:any) => {
+                    const data = params.data[1]
+                    if (data.packdown !== null && data.packdown !== undefined) {
+                        console.log(data)
+                        return data.packdown
+                    }
+                },
+                maxWidth: 100,
+                flex: 1
+            },
+            {
+                field: 'note',
+                wrapText: true,
+                autoHeight: true,
+                cellStyle: {lineHeight: 1.6},
+                cellRenderer: (params:any) => {
+                    const data = params.data[1]
+                    if (data.note) {
+                        return data.note
+                    }
+                },
+                maxWidth: 800,
+                flex: 1
+            },
+        ]
     }
 
-    const response = await addAttendance(CurrentUserId, EventId, data)
-    if (response) {
-        populateVolunteerAttendanceTable()
-        populateUpdateForm()
-    }
+    const gridElement = document.getElementById('volunteer-attendance-data-grid')
+    gridApi = createGrid(gridElement, gridOptions)
+    populateVolunteerAttendanceTable()
 }
 
-async function editAttendanceOnClick(event:Event) {
-    event.preventDefault()
-    const data:Partial<RequestMultiModelJSONData> = {
-        'id': Number((document.getElementById('update-volunteer-attendance-id') as HTMLInputElement).value),
-        'setup': (document.getElementById('update-volunteer-attendance-setup') as HTMLInputElement).checked,
-        'main': (document.getElementById('update-volunteer-attendance-main') as HTMLInputElement).checked,
-        'packdown': (document.getElementById('update-volunteer-attendance-packdown') as HTMLInputElement).checked,
-        'note': (document.getElementById('update-volunteer-attendance-note') as HTMLInputElement).value
-    }
 
-    const response = await editAttendance(CurrentUserId, EventId, data)
-    if (response) {
-        populateVolunteerAttendanceTable()
+async function preLoadUserDisplayNames() {
+    const data:Partial<QueryStringData> = {
+        role_ids: volunteerRoleIds
     }
-}
-
-function createAndAppendCell(row:HTMLElement, content:any) {
-    const cell = document.createElement('td');
-    cell.innerHTML = content
-    row.appendChild(cell)
+    const queryString = buildQueryString(data)
+    const response = await getUsersField('display_name', queryString)
+    let userDisplayNames = response.data
+    let userDisplayNamesMap:Record<number, string> = {}
+    userDisplayNames.forEach(userInfo => {
+        userDisplayNamesMap[userInfo.id] = userInfo.display_name
+    })
+    return userDisplayNamesMap
 }
 
 async function populateVolunteerAttendanceTable() {
-    const roleIdResponse = await getRoleNames('name=volunteer')
-    let roleId = roleIdResponse.data[0].id
+    const eventAttendanceResponses = (await getAttendanceForEvent(EventId)).data
+    userDisplayNamesMap = await preLoadUserDisplayNames()
 
-    const allVolunteersResponse = await getUsersDisplayNames(`role_ids=${roleId}`)
-    let allVolunteers = allVolunteersResponse.data
-
-    $('#volunteer-attendance-table tbody').empty();
-
-    for (const volunteer of allVolunteers) {
-        let attendance:VolunteerAttendance
-        await getAttendanceForVolunteer(volunteer.id, EventId).then(att => {
-            attendance = att
-        }).catch(error => {
-            console.log(error)
-        })
-
-        var row = document.createElement('tr')
-        createAndAppendCell(row, volunteer.display_name)
-
-        if (attendance == null) {
-            createAndAppendCell(row, "No Data")
-            createAndAppendCell(row, "No Data")
-            createAndAppendCell(row, "No Data")
-            createAndAppendCell(row, "No Data")
+    let eventAttendances:Partial<VolunteerAttendance>[] = Object.keys(userDisplayNamesMap).map((id) => {
+        for (const attendance of eventAttendanceResponses) {
+            if (attendance.user_id === Number(id)) {
+                return attendance
+            }
         }
-        else
-        {
-            createAndAppendCell(row, attendance.setup)
-            createAndAppendCell(row, attendance.main)
-            createAndAppendCell(row, attendance.packdown)
-            createAndAppendCell(row, attendance.note)
+        const notRepliedAttendance:Partial<VolunteerAttendance> = {
+            user_id: Number(id),
+            noReply:true
         }
 
-        $('#volunteer-attendance-table').append(row)
-    };
+        return notRepliedAttendance
+    })
+    .sort((a, b) => {
+        const getScore = (item:Partial<VolunteerAttendance>) => {
+            return (item.user_id === CurrentUserId ? 10 : 0) + (item.main ? 4 : 0) + (item.setup ? 2 : 0) + (item.packdown ? 1 : 0)
+        }
+
+        return getScore(b) - getScore(a)
+    })
+
+    gridApi.setGridOption('rowData', Object.entries(eventAttendances))
+}
+
+
+async function addAttendanceOnClick() {
+    const updateButton = document.getElementById('update-attendance-button') as HTMLButtonElement
+
+    const setupInput = document.getElementById('update-attendance-setup') as HTMLInputElement
+    const mainEventInput = document.getElementById('update-attendance-main') as HTMLInputElement
+    const packdownInput = document.getElementById('update-attendance-packdown') as HTMLInputElement
+    const noteInput = document.getElementById('update-attendance-note') as HTMLInputElement
+
+    noteInput.dispatchEvent(new Event('input', { bubbles: true }))
+
+    if (!noteInputValid) {
+        animateElement(updateButton, 'element-shake')
+        return
+    }
+    
+    const data:Partial<VolunteerAttendance> = {
+        setup: setupInput.checked,
+        main: mainEventInput.checked,
+        packdown: packdownInput.checked,
+        note: noteInput.value
+    }
+
+    addAttendance(CurrentUserId, EventId, data).then((response) => {
+        currentAttendanceData = response.data
+
+        successToast(response.message)
+        populateVolunteerAttendanceTable()
+        populateUpdateForm()
+    }).catch((error) => {
+        const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
+        errorToast(errorMessage)
+    })
+}
+
+async function editAttendanceOnClick() {
+    const updateButton = document.getElementById('update-attendance-button') as HTMLButtonElement
+
+    const setupInput = document.getElementById('update-attendance-setup') as HTMLInputElement
+    const mainEventInput = document.getElementById('update-attendance-main') as HTMLInputElement
+    const packdownInput = document.getElementById('update-attendance-packdown') as HTMLInputElement
+    const noteInput = document.getElementById('update-attendance-note') as HTMLInputElement
+
+    noteInput.dispatchEvent(new Event('input', { bubbles: true }))
+
+    if (!noteInputValid) {
+        animateElement(updateButton, 'element-shake')
+        return
+    }
+    
+    const data:Partial<VolunteerAttendance> = {
+        setup: setupInput.checked,
+        main: mainEventInput.checked,
+        packdown: packdownInput.checked,
+        note: noteInput.value
+    }
+
+    editAttendance(CurrentUserId, EventId, data).then((response) => {
+        currentAttendanceData = response.data
+
+        successToast(response.message)
+        populateVolunteerAttendanceTable()
+        populateUpdateForm()
+    }).catch((error) => {
+        const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
+        errorToast(errorMessage)
+    })
 }
 
 async function populateUpdateForm() {
-    let loggedInUserID = await getCurrentUserId()
-    CurrentUserId = loggedInUserID
-    let loggedInUserAttendance:VolunteerAttendance;
-    await getAttendanceForVolunteer(CurrentUserId, EventId).then(att => {
-        loggedInUserAttendance = att
-    }).catch(error => {
-        console.log(error)
-    })
+    const updateButton = document.getElementById('update-attendance-button') as HTMLButtonElement
+    const updateAttendanceFormTitle = document.getElementById('update-attendance-title')
 
-
-    let updateAttendanceFormButton = document.getElementById('update-volunteer-attendance-submit')
-    let updateAttendanceFormTitle = document.getElementById('update-volunteer-attendance-title')
-
-    if (loggedInUserAttendance == null) {
+    if (currentAttendanceData == null) {
         // User hasnt submitted attendance yet
-        updateAttendanceFormButton.onclick = addAttendanceOnClick
+        updateButton.onclick = addAttendanceOnClick
+        updateButton.querySelector('.btn-text').innerHTML = 'Add Attendance'
         updateAttendanceFormTitle.innerHTML = 'Add Attendance'
     }
     else {
-        updateAttendanceFormButton.onclick = editAttendanceOnClick
+        updateButton.onclick = editAttendanceOnClick
+        updateButton.querySelector('.btn-text').innerHTML = 'Update Attendance'
         updateAttendanceFormTitle.innerHTML = 'Update Attendance'
 
-        const hiddenIdInput = (document.getElementById('update-volunteer-attendance-id') as HTMLInputElement)
-        const setupInput = (document.getElementById('update-volunteer-attendance-setup') as HTMLInputElement)
-        const mainInput = (document.getElementById('update-volunteer-attendance-main') as HTMLInputElement)
-        const packdownInput = (document.getElementById('update-volunteer-attendance-packdown') as HTMLInputElement)
-        const noteInput = (document.getElementById('update-volunteer-attendance-note') as HTMLInputElement)
+        const setupInput = (document.getElementById('update-attendance-setup') as HTMLInputElement)
+        const mainInput = (document.getElementById('update-attendance-main') as HTMLInputElement)
+        const packdownInput = (document.getElementById('update-attendance-packdown') as HTMLInputElement)
+        const noteInput = (document.getElementById('update-attendance-note') as HTMLInputElement)
 
-        hiddenIdInput.value = String(CurrentUserId)
-        setupInput.checked = Boolean(loggedInUserAttendance.setup)
-        mainInput.checked = Boolean(loggedInUserAttendance.main)
-        packdownInput.checked = Boolean(loggedInUserAttendance.packdown)
-        noteInput.value = String(loggedInUserAttendance.note)
+        setupInput.checked = Boolean(currentAttendanceData.setup)
+        mainInput.checked = Boolean(currentAttendanceData.main)
+        packdownInput.checked = Boolean(currentAttendanceData.packdown)
+        noteInput.value = String(currentAttendanceData.note)
         
     }
 }
 
+document.addEventListener("DOMContentLoaded", async () => {
+    CurrentUserId = await getCurrentUserId()
+    await getAttendanceForUser(CurrentUserId, EventId).then((response) => {
+        currentAttendanceData = response
+    }).catch(() => {
+        return
+    })
 
-document.addEventListener("DOMContentLoaded", populateVolunteerAttendanceTable);
-document.addEventListener("DOMContentLoaded", populateUpdateForm);
+    const roleIdResponse = await getRoleNames('name=volunteer')
+    let roleId = roleIdResponse.data[0].id
+    volunteerRoleIds.push(roleId)
+
+    populateUpdateForm()
+    initialiseAgGrid()
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    // Input Validation
+    // Note
+    const attendanceNoteInput = document.getElementById('update-attendance-note') as HTMLInputElement
+    attendanceNoteInput.oninput = () => {
+        noteInputValid = validateTextInput(attendanceNoteInput, null, false, true)
+    }
+})

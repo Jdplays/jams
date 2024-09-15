@@ -140,6 +140,7 @@ export interface VolunteerAttendance {
     main:boolean
     packdown:boolean
     note:string
+    noReply?:boolean
 }
 
 export interface WorkshopFile {
