@@ -6,6 +6,10 @@
     background-color: #d44949 !important;
   }
 
+  .colored-toast.swal2-icon-warning {
+    background-color: #f5b223 !important;
+  }
+
   .colored-toast .swal2-title {
     color: white;
   }

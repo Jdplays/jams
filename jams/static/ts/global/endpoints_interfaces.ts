@@ -140,6 +140,7 @@ export interface VolunteerAttendance {
     main:boolean
     packdown:boolean
     note:string
+    noReply?:boolean
 }
 
 export interface WorkshopFile {
@@ -223,7 +224,14 @@ export interface BackendResponse<T> {
     data:T
 }
 
+export interface Metadata {
+    setup_count?:number
+    main_count?:number
+    packdown_count?:number
+}
+
 export interface BackendMultiEntryResponse<T> {
     pagination:PaginationResponseData
     data:T
+    metadata:Metadata
 }

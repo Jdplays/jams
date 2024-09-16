@@ -4,52 +4,57 @@
 
 {% block content %}
 
-<div class="row row-deck row-cards">
-    <div class="col-4">
-        <div class="card">
-            <div class="card-body" style="height: 10rem">
-                <h1>Volunteer Attendance</h1>
-                <p>This is the Volunteer Attendance page!</p>
-            </div>
+<h1>Volunteer Attendance</h1>
+<p class="event-info"></p>
+
+
+<div class="card card-md">
+    <div id="main-form" class="card-body">
+        <div class="mb-3">
+            <h3 id="update-attendance-title">Add Attendance</h1>
+        </div>
+        <div class="mb-3">
+            <label class="form-check form-switch">
+                <input id="update-attendance-setup" class="form-check-input" type="checkbox">
+                <span class="form-check-label">Attending Setup</span>
+            </label>
+        </div>
+        <div class="mb-3">
+            <label class="form-check form-switch">
+                <input id="update-attendance-main" class="form-check-input" type="checkbox">
+                <span class="form-check-label">Attending Main Event</span>
+            </label>
+        </div>
+        <div class="mb-3">
+            <label class="form-check form-switch">
+                <input id="update-attendance-packdown" class="form-check-input" type="checkbox">
+                <span class="form-check-label">Attending packdown</span>
+            </label>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Note</label>
+            <textarea id="update-attendance-note" class="form-control" name="note" maxlength="255"></textarea>
         </div>
     </div>
 </div>
 
-<div>
-    <h1 id="update-volunteer-attendance-title">Add Attendance</h1>
-    <form id="update-volunteer-attendanceform">
-        <input type="hidden" id="update-volunteer-attendance-id" name="volunteer_attendance"><br><br>
-        <label for="name">Attending Setup:</label>
-        <input type="checkbox" id="update-volunteer-attendance-setup" name="setup"><br><br>
-        <label for="name">Attending Main Event:</label>
-        <input type="checkbox" id="update-volunteer-attendance-main" name="main"><br><br>
-        <label for="name">Attending Packdown:</label>
-        <input type="checkbox" id="update-volunteer-attendance-packdown" name="packdown"><br><br>
-        <label for="description">Note:</label>
-        <textarea id="update-volunteer-attendance-note" name="note"></textarea><br><br>
-        <button id="update-volunteer-attendance-submit"  type="submit">Submit</button>
-    </form>
-</div>
+<button id="update-attendance-button" class="btn btn-primary m-3" onclick="updateAttendanceOnClick()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        class="icon icon-tabler icons-tabler-outline icon-tabler-user-check">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
+        <path d="M6 21v-2a4 4 0 0 1 4 -4h4" />
+        <path d="M15 19l2 2l4 -4" />
+    </svg>
+    <span class="btn-text">Update Attendance</span>
+</button>
 
-<div>
-    <table id="volunteer-attendance-table">
-        <thead>
-            <tr>
-                <th>Volunteer Name</th>
-                <th>Attending Setup</th>
-                <th>Attending Main Event</th>
-                <th>Attending Packdown</th>
-                <th>Note</th>
-            </tr>
-        </thead>
-        <tbody id="table-body">
-            <!-- Data will be dynamically added here -->
-        </tbody>
-    </table>
+<div id="volunteer-attendance-data-grid-container"></div>
+<div id="volunteer-attendance-data-grid" class="ag-theme-quartz" style="height: 500px"></div>
 </div>
-
-<p id="volunteer-attendance-request-response"></p>
 
 <script src="{{ url_for('static', filename='js/volunteer/volunteer_attendance.js') }}" defer></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/volunteer/volunteer_attendance.css') }}">
 
 {% endblock %}

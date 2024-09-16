@@ -986,6 +986,26 @@ export function getUsers(queryString:string|null = null):Promise<BackendMultiEnt
     });
 }
 
+export function getUsersField(field:string, queryString:string|null = null):Promise<BackendMultiEntryResponse<[Partial<User>]>> {
+    return new Promise((resolve, reject) => {
+        let url = `/backend/users/${field}`
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
 export function getUsersDisplayNames(queryString:string|null = null):Promise<BackendMultiEntryResponse<[Partial<User>]>> {
     return new Promise((resolve, reject) => {
         let url = `/backend/users/display_name`
@@ -1236,7 +1256,7 @@ export function getPrivateAccessLogs(queryString:string|null=null):Promise<Backe
 
 export function getAttendanceForEvent(eventID:number, queryString:string|null = null):Promise<BackendMultiEntryResponse<[VolunteerAttendance]>> {
     return new Promise((resolve, reject) => {
-        let url = `/backend/events/voluteer_attendences/${eventID}`
+        let url = `/backend/events/${eventID}/volunteer_attendences`
         if (queryString) {
             url += `?${queryString}`
         }
@@ -1254,13 +1274,13 @@ export function getAttendanceForEvent(eventID:number, queryString:string|null = 
     });
 }
 
-export function getAttendanceForVolunteer(userID:number, eventID:number):Promise<VolunteerAttendance> {
+export function getAttendanceForUser(userID:number, eventID:number):Promise<VolunteerAttendance> {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: `/backend/users/${userID}/voluteer_attendences/${eventID}`,
+            url: `/backend/users/${userID}/volunteer_attendences/${eventID}`,
             type: 'GET',
             success: function(response) {
-                resolve(response.voluteer_attendence);   
+                resolve(response.volunteer_attendence);   
             },
             error: function(error) {
                 console.log('Error fetching data:', error);
@@ -1270,37 +1290,37 @@ export function getAttendanceForVolunteer(userID:number, eventID:number):Promise
     });
 }
 
-export function addAttendance(userID:number, eventID:number, data:Partial<RequestMultiModelJSONData>):Promise<boolean> {
-    return new Promise((resolve) => {
+export function addAttendance(userID:number, eventID:number, data:Partial<VolunteerAttendance>):Promise<BackendResponse<VolunteerAttendance>> {
+    return new Promise((resolve, reject) => {
         $.ajax({
             type: 'POST',
-            url: `/backend/users/${userID}/voluteer_attendences/${eventID}`,
+            url: `/backend/users/${userID}/volunteer_attendences/${eventID}`,
             data: JSON.stringify(data),
             contentType: 'application/json',
             success: function (response) {
-                resolve(true)
+                resolve(response)
             },
             error: function (error) {
                 console.log('Error fetching data:', error);
-                resolve(false)
+                reject(error)
             }
         });
     });
 }
 
-export function editAttendance(userID:number, eventID:number, data:Partial<RequestMultiModelJSONData>):Promise<boolean> {
-    return new Promise((resolve) => {
+export function editAttendance(userID:number, eventID:number, data:Partial<VolunteerAttendance>):Promise<BackendResponse<VolunteerAttendance>> {
+    return new Promise((resolve, reject) => {
         $.ajax({
             type: 'PATCH',
-            url: `/backend/users/${userID}/voluteer_attendences/${eventID}`,
+            url: `/backend/users/${userID}/volunteer_attendences/${eventID}`,
             data: JSON.stringify(data),
             contentType: 'application/json',
             success: function (response) {
-                resolve(true)
+                resolve(response)
             },
             error: function (error) {
                 console.log('Error fetching data:', error);
-                resolve(false)
+                reject(error)
             }
         });
     });

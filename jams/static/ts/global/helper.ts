@@ -235,6 +235,13 @@ export function errorToast(message:string|null=null) {
     })
 }
 
+export function warningToast(message:string) {
+    Toast.fire({
+        icon: 'warning',
+        title: message
+    })
+}
+
 
 export function getSelectValues(select:HTMLSelectElement) {
     var result = [];
@@ -346,7 +353,7 @@ export function getSelectValues(select:HTMLSelectElement) {
     }
 
     if (!allowSpecialCharacters) {
-        const specialCharRegex = /[!@#$%^&*,.?":{}|<>[\]\\\/]/;
+        const specialCharRegex = /[@$%^&*":{}|<>[\]\\\/]/;
         if(specialCharRegex.test(inputElement.value)) {
             markInputAsInvaid(inputElement, inputContainer, 'Special characters are not allowed, except for underscores "_" hyphens "-" and rounded brackets "()". Please update your input.')
             return false

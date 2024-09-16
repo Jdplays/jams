@@ -11,21 +11,31 @@ bp = Blueprint('volunteer', __name__)
 
 #------------------------------------------ Volunteer Attendance ------------------------------------------#
 
-@bp.route('/events/<int:event_id>/voluteer_attendences', methods=['GET'])
+@bp.route('/events/<int:event_id>/volunteer_attendences', methods=['GET'])
 @role_based_access_control_be
 def get_event_attendance(event_id):
     attendances = VolunteerAttendance.query.filter_by(event_id=event_id).all()
     data = helper.filter_model_by_query_and_properties(VolunteerAttendance, request.args, input_data=attendances)
+    setup_count = VolunteerAttendance.query.filter_by(event_id=event_id, setup=True).count()
+    main_count = VolunteerAttendance.query.filter_by(event_id=event_id, main=True).count()
+    packdown_count = VolunteerAttendance.query.filter_by(event_id=event_id, packdown=True).count()
+
+    data['metadata'] = {
+        'setup_count': setup_count,
+        'main_count': main_count,
+        'packdown_count': packdown_count
+    }
+
     return jsonify(data)
 
-@bp.route('/users/<int:user_id>/voluteer_attendences/<int:event_id>', methods=['GET'])
+@bp.route('/users/<int:user_id>/volunteer_attendences/<int:event_id>', methods=['GET'])
 @role_based_access_control_be
 def get_user_attendance(user_id, event_id):
     attendance = VolunteerAttendance.query.filter_by(user_id=user_id, event_id=event_id).first_or_404()
-    return jsonify({'voluteer_attendence': attendance.to_dict()})
+    return jsonify({'volunteer_attendence': attendance.to_dict()})
 
 
-@bp.route('/users/<int:user_id>/voluteer_attendences/<int:event_id>', methods=['POST'])
+@bp.route('/users/<int:user_id>/volunteer_attendences/<int:event_id>', methods=['POST'])
 @protect_user_updates
 @role_based_access_control_be
 def add_user_attendance(user_id, event_id):
@@ -49,11 +59,11 @@ def add_user_attendance(user_id, event_id):
 
     return jsonify({
         'message': 'Volunteer Attendance has been successfully added',
-        'voluteer_attendence': attendance.to_dict()
+        'data': attendance.to_dict()
     })
 
 
-@bp.route('/users/<int:user_id>/voluteer_attendences/<int:event_id>', methods=['PATCH'])
+@bp.route('/users/<int:user_id>/volunteer_attendences/<int:event_id>', methods=['PATCH'])
 @protect_user_updates
 @role_based_access_control_be
 def edit_user_attendance(user_id, event_id):
@@ -73,5 +83,5 @@ def edit_user_attendance(user_id, event_id):
 
     return jsonify({
         'message': 'Volunteer Attendance has been successfully edited',
-        'voluteer_attendence': attendance.to_dict()
+        'data': attendance.to_dict()
     })
