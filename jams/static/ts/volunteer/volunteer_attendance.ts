@@ -7,7 +7,7 @@ import {
     getUsersField,
     getAttendanceForUser
 } from '@global/endpoints'
-import { VolunteerAttendance } from "@global/endpoints_interfaces";
+import { Metadata, VolunteerAttendance } from "@global/endpoints_interfaces";
 import { animateElement, buildQueryString, errorToast, successToast, validateNumberInput, validateTextInput } from '@global/helper';
 import { QueryStringData } from '@global/interfaces';
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
@@ -20,6 +20,7 @@ let CurrentUserId = 0
 let currentAttendanceData:VolunteerAttendance|null = null
 
 let userDisplayNamesMap:Record<number, string> = {}
+let eventAttendancesMetaData:Metadata = {}
 
 let noteInputValid:boolean = false
 
@@ -28,6 +29,10 @@ function initialiseAgGrid() {
         domLayout: 'autoHeight',
         autoSizeStrategy: {
             type: 'fitCellContents'
+        },
+        defaultColDef: {
+            wrapHeaderText: true,
+            autoHeaderHeight: true
         },
         columnDefs: [
             {
@@ -55,7 +60,7 @@ function initialiseAgGrid() {
                 flex: 1
             },
             {
-                field: 'setup',
+                field: `setup (${eventAttendancesMetaData.setup_count}/${Object.keys(userDisplayNamesMap).length})`,
                 cellDataType: 'boolean',
                 colSpan: (params:any) => {
                     const data = params.data[1]
@@ -79,11 +84,11 @@ function initialiseAgGrid() {
                         return data.setup
                     }
                 },
-                maxWidth: 100,
+                maxWidth: 97,
                 flex: 1
             },
             {
-                field: 'main',
+                field: `main (${eventAttendancesMetaData.main_count}/${Object.keys(userDisplayNamesMap).length})`,
                 cellDataType: 'boolean',
                 cellClassRules: {
                     'status-yes': params => params.data[1].main && !params.data[1].noReply,
@@ -95,11 +100,11 @@ function initialiseAgGrid() {
                         return data.main
                     }
                 },
-                maxWidth: 100,
+                maxWidth: 97,
                 flex: 1
             },
             {
-                field: 'packdown',
+                field: `packdown (${eventAttendancesMetaData.packdown_count}/${Object.keys(userDisplayNamesMap).length})`,
                 cellClassRules: {
                     'status-yes': params => params.data[1].packdown && !params.data[1].noReply,
                     'status-no': params => !params.data[1].packdown && !params.data[1].noReply,
@@ -107,11 +112,10 @@ function initialiseAgGrid() {
                 cellRenderer: (params:any) => {
                     const data = params.data[1]
                     if (data.packdown !== null && data.packdown !== undefined) {
-                        console.log(data)
                         return data.packdown
                     }
                 },
-                maxWidth: 100,
+                maxWidth: 97,
                 flex: 1
             },
             {
@@ -125,7 +129,7 @@ function initialiseAgGrid() {
                         return data.note
                     }
                 },
-                maxWidth: 800,
+                maxWidth: 900,
                 flex: 1
             },
         ]
@@ -133,7 +137,6 @@ function initialiseAgGrid() {
 
     const gridElement = document.getElementById('volunteer-attendance-data-grid')
     gridApi = createGrid(gridElement, gridOptions)
-    populateVolunteerAttendanceTable()
 }
 
 
@@ -152,11 +155,12 @@ async function preLoadUserDisplayNames() {
 }
 
 async function populateVolunteerAttendanceTable() {
-    const eventAttendanceResponses = (await getAttendanceForEvent(EventId)).data
+    const eventAttendanceResponse = await getAttendanceForEvent(EventId)
     userDisplayNamesMap = await preLoadUserDisplayNames()
+    eventAttendancesMetaData = eventAttendanceResponse.metadata
 
     let eventAttendances:Partial<VolunteerAttendance>[] = Object.keys(userDisplayNamesMap).map((id) => {
-        for (const attendance of eventAttendanceResponses) {
+        for (const attendance of eventAttendanceResponse.data) {
             if (attendance.user_id === Number(id)) {
                 return attendance
             }
@@ -175,6 +179,8 @@ async function populateVolunteerAttendanceTable() {
 
         return getScore(b) - getScore(a)
     })
+
+    initialiseAgGrid()
 
     gridApi.setGridOption('rowData', Object.entries(eventAttendances))
 }
@@ -289,7 +295,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     volunteerRoleIds.push(roleId)
 
     populateUpdateForm()
-    initialiseAgGrid()
+    populateVolunteerAttendanceTable()
 });
 
 document.addEventListener("DOMContentLoaded", () => {
