@@ -8,7 +8,7 @@ import {
     getAttendanceForUser
 } from '@global/endpoints'
 import { Metadata, VolunteerAttendance } from "@global/endpoints_interfaces";
-import { animateElement, buildQueryString, errorToast, successToast, validateNumberInput, validateTextInput } from '@global/helper';
+import { animateElement, buildQueryString, emptyElement, errorToast, successToast, validateNumberInput, validateTextInput, warningToast } from '@global/helper';
 import { QueryStringData } from '@global/interfaces';
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
 
@@ -21,6 +21,7 @@ let currentAttendanceData:VolunteerAttendance|null = null
 
 let userDisplayNamesMap:Record<number, string> = {}
 let eventAttendancesMetaData:Metadata = {}
+let eventAttendances:Partial<VolunteerAttendance>[] = []
 
 let noteInputValid:boolean = false
 
@@ -154,12 +155,12 @@ async function preLoadUserDisplayNames() {
     return userDisplayNamesMap
 }
 
-async function populateVolunteerAttendanceTable() {
+async function loadAttendanceData() {
     const eventAttendanceResponse = await getAttendanceForEvent(EventId)
     userDisplayNamesMap = await preLoadUserDisplayNames()
     eventAttendancesMetaData = eventAttendanceResponse.metadata
 
-    let eventAttendances:Partial<VolunteerAttendance>[] = Object.keys(userDisplayNamesMap).map((id) => {
+    eventAttendances = Object.keys(userDisplayNamesMap).map((id) => {
         for (const attendance of eventAttendanceResponse.data) {
             if (attendance.user_id === Number(id)) {
                 return attendance
@@ -179,9 +180,16 @@ async function populateVolunteerAttendanceTable() {
 
         return getScore(b) - getScore(a)
     })
+}
 
+async function populateVolunteerAttendanceTable(loadData:boolean=true) {
+    const gridElement = document.getElementById('volunteer-attendance-data-grid')
+    if (loadData) {
+        await loadAttendanceData()
+    }
+
+    emptyElement(gridElement)
     initialiseAgGrid()
-
     gridApi.setGridOption('rowData', Object.entries(eventAttendances))
 }
 
@@ -287,7 +295,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     await getAttendanceForUser(CurrentUserId, EventId).then((response) => {
         currentAttendanceData = response
     }).catch(() => {
-        return
+        warningToast('You have not filled out your attendance')
+        return null
     })
 
     const roleIdResponse = await getRoleNames('name=volunteer')
@@ -295,7 +304,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     volunteerRoleIds.push(roleId)
 
     populateUpdateForm()
-    populateVolunteerAttendanceTable()
+    
+    await loadAttendanceData()
+    populateVolunteerAttendanceTable(false)
 });
 
 document.addEventListener("DOMContentLoaded", () => {

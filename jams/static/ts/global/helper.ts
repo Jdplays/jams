@@ -235,6 +235,13 @@ export function errorToast(message:string|null=null) {
     })
 }
 
+export function warningToast(message:string) {
+    Toast.fire({
+        icon: 'warning',
+        title: message
+    })
+}
+
 
 export function getSelectValues(select:HTMLSelectElement) {
     var result = [];
