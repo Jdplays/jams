@@ -28,12 +28,10 @@ let noteInputValid:boolean = false
 function initialiseAgGrid() {
     const gridOptions:GridOptions = {
         domLayout: 'autoHeight',
-        autoSizeStrategy: {
-            type: 'fitCellContents'
-        },
         defaultColDef: {
             wrapHeaderText: true,
-            autoHeaderHeight: true
+            autoHeaderHeight: true,
+            resizable:false
         },
         columnDefs: [
             {
@@ -56,9 +54,12 @@ function initialiseAgGrid() {
                         }
                     }
                 },
+                wrapText: true,
+                autoHeight: true,
+                cellStyle: {lineHeight: 1.6},
                 pinned: true,
                 maxWidth: 200,
-                flex: 1
+                initialWidth: 150
             },
             {
                 field: `setup (${eventAttendancesMetaData.setup_count}/${Object.keys(userDisplayNamesMap).length})`,
@@ -85,8 +86,7 @@ function initialiseAgGrid() {
                         return data.setup
                     }
                 },
-                maxWidth: 97,
-                flex: 1
+                width: 97,
             },
             {
                 field: `main (${eventAttendancesMetaData.main_count}/${Object.keys(userDisplayNamesMap).length})`,
@@ -101,8 +101,7 @@ function initialiseAgGrid() {
                         return data.main
                     }
                 },
-                maxWidth: 97,
-                flex: 1
+                width: 97,
             },
             {
                 field: `packdown (${eventAttendancesMetaData.packdown_count}/${Object.keys(userDisplayNamesMap).length})`,
@@ -116,8 +115,7 @@ function initialiseAgGrid() {
                         return data.packdown
                     }
                 },
-                maxWidth: 97,
-                flex: 1
+                width: 97,
             },
             {
                 field: 'note',
@@ -130,8 +128,8 @@ function initialiseAgGrid() {
                         return data.note
                     }
                 },
-                maxWidth: 900,
-                flex: 1
+                flex: 1,
+                minWidth: 200
             },
         ]
     }
@@ -304,7 +302,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     volunteerRoleIds.push(roleId)
 
     populateUpdateForm()
-    
+
     await loadAttendanceData()
     populateVolunteerAttendanceTable(false)
 });
