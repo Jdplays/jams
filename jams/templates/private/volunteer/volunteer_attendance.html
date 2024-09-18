@@ -4,11 +4,18 @@
 
 {% block content %}
 
-<h1>Volunteer Attendance</h1>
-<p class="event-info"></p>
+<div class="content-wrapper">
+    <div class="main-content">
+        <h1>Volunteer Attendance</h1>
+        <p id="event-info" class="event-info"></p>
+        <div class="select-event mb-3" id="event-selection">
+            <h4 style="margin-right: 10px;">Select Event: </h4>
+        </div>
+    </div>
+</div>
 
 
-<div class="card card-md">
+<div id="update-attendance-card" class="card card-md">
     <div id="main-form" class="card-body">
         <div class="mb-3">
             <h3 id="update-attendance-title">Add Attendance</h1>

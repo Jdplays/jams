@@ -780,6 +780,27 @@ export function getWorkshopTypes(queryString:string|null = null):Promise<Backend
 // #endregion
 
 // #region Events
+
+export function getnextEvent(queryString:string|null = null):Promise<BackendResponse<number>> {
+    return new Promise((resolve, reject) => {
+        let url = '/backend/get_next_event'
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);   
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error);
+            }
+        });
+    });
+}
+
 export function getEvents(queryString:string|null = null):Promise<BackendMultiEntryResponse<[Event]>> {
     return new Promise((resolve, reject) => {
         let url = '/backend/events'
