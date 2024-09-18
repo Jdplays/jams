@@ -16,6 +16,7 @@ bp = Blueprint('volunteer', __name__)
 def get_event_attendance(event_id):
     attendances = VolunteerAttendance.query.filter_by(event_id=event_id).all()
     data = helper.filter_model_by_query_and_properties(VolunteerAttendance, request.args, input_data=attendances)
+    
     setup_count = VolunteerAttendance.query.filter_by(event_id=event_id, setup=True).count()
     main_count = VolunteerAttendance.query.filter_by(event_id=event_id, main=True).count()
     packdown_count = VolunteerAttendance.query.filter_by(event_id=event_id, packdown=True).count()
