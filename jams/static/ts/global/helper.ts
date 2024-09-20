@@ -469,3 +469,26 @@ export function animateElement(element:HTMLElement, animationClass:string) {
 
     element.addEventListener('animationend', handleAnimationEnd)
 }
+
+// Formats a date from numbers to words (24-09-15 to 15th Spetember 2024)
+export function formatDate(dateString:string) {
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const month = date.toLocaleString('default', { month: 'long' });
+    const year = date.getFullYear();
+    
+    // Function to get the ordinal suffix for the day
+    function getOrdinalSuffix(n:any) {
+        if (n > 3 && n < 21) return 'th';
+        switch (n % 10) {
+            case 1: return 'st';
+            case 2: return 'nd';
+            case 3: return 'rd';
+            default: return 'th';
+        }
+    }
+    
+    const dayWithSuffix = day + getOrdinalSuffix(day);
+    
+    return `${dayWithSuffix} ${month} ${year}`;
+}

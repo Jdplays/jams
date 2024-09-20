@@ -28,6 +28,7 @@ export interface QueryStringData extends
         $order_direction?:string
         $all_rows?:boolean
         pre_induction_request?:boolean
+        inclusive?:boolean
     }
 
 export type QueryStringKey = keyof QueryStringData;

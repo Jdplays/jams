@@ -5,10 +5,13 @@ import {
     editAttendance,
     getCurrentUserId,
     getUsersField,
-    getAttendanceForUser
+    getAttendanceForUser,
+    getnextEvent,
+    getEventNames,
+    getEvent
 } from '@global/endpoints'
-import { Metadata, VolunteerAttendance } from "@global/endpoints_interfaces";
-import { animateElement, buildQueryString, emptyElement, errorToast, successToast, validateNumberInput, validateTextInput, warningToast } from '@global/helper';
+import { Metadata, VolunteerAttendance, Event } from "@global/endpoints_interfaces";
+import { animateElement, buildQueryString, createDropdown, emptyElement, errorToast, formatDate, successToast, validateTextInput, warningToast } from '@global/helper';
 import { QueryStringData } from '@global/interfaces';
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
 
@@ -20,6 +23,7 @@ let CurrentUserId = 0
 let currentAttendanceData:VolunteerAttendance|null = null
 
 let userDisplayNamesMap:Record<number, string> = {}
+let eventNamesMap:Record<number, Partial<Event>> = {}
 let eventAttendancesMetaData:Metadata = {}
 let eventAttendances:Partial<VolunteerAttendance>[] = []
 
@@ -220,6 +224,7 @@ async function addAttendanceOnClick() {
         successToast(response.message)
         populateVolunteerAttendanceTable()
         populateUpdateForm()
+        loadAttendance()
     }).catch((error) => {
         const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
         errorToast(errorMessage)
@@ -254,6 +259,7 @@ async function editAttendanceOnClick() {
         successToast(response.message)
         populateVolunteerAttendanceTable()
         populateUpdateForm()
+        loadAttendance()
     }).catch((error) => {
         const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
         errorToast(errorMessage)
@@ -264,21 +270,26 @@ async function populateUpdateForm() {
     const updateButton = document.getElementById('update-attendance-button') as HTMLButtonElement
     const updateAttendanceFormTitle = document.getElementById('update-attendance-title')
 
-    if (currentAttendanceData == null) {
+    const setupInput = (document.getElementById('update-attendance-setup') as HTMLInputElement)
+    const mainInput = (document.getElementById('update-attendance-main') as HTMLInputElement)
+    const packdownInput = (document.getElementById('update-attendance-packdown') as HTMLInputElement)
+    const noteInput = (document.getElementById('update-attendance-note') as HTMLInputElement)
+
+    if (currentAttendanceData === null) {
         // User hasnt submitted attendance yet
         updateButton.onclick = addAttendanceOnClick
         updateButton.querySelector('.btn-text').innerHTML = 'Add Attendance'
         updateAttendanceFormTitle.innerHTML = 'Add Attendance'
+
+        setupInput.checked = false
+        mainInput.checked = false
+        packdownInput.checked = false
+        noteInput.value = ''
     }
     else {
         updateButton.onclick = editAttendanceOnClick
         updateButton.querySelector('.btn-text').innerHTML = 'Update Attendance'
         updateAttendanceFormTitle.innerHTML = 'Update Attendance'
-
-        const setupInput = (document.getElementById('update-attendance-setup') as HTMLInputElement)
-        const mainInput = (document.getElementById('update-attendance-main') as HTMLInputElement)
-        const packdownInput = (document.getElementById('update-attendance-packdown') as HTMLInputElement)
-        const noteInput = (document.getElementById('update-attendance-note') as HTMLInputElement)
 
         setupInput.checked = Boolean(currentAttendanceData.setup)
         mainInput.checked = Boolean(currentAttendanceData.main)
@@ -288,15 +299,58 @@ async function populateUpdateForm() {
     }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-    CurrentUserId = await getCurrentUserId()
+// Populates the Event selection dropdown with all of the events
+async function populateEventSelectionDropdown() {
+    let eventSelectionDropdown = document.getElementById('event-selection')
+
+    let defaultValue = 'Select an Event'
+    if (eventNamesMap[EventId] !== undefined && eventNamesMap[EventId] !== null) {
+        defaultValue = eventNamesMap[EventId].name
+    }
+    let select = createDropdown(Object.values(eventNamesMap), defaultValue, eventSelectionDropdownOnChange)
+    select.id = 'event-select'
+    select.classList.add('select-event-dropdown', 'form-control')
+    eventSelectionDropdown.appendChild(select)
+}
+
+// Handles the onchange event for the Event selction dropdown 
+function eventSelectionDropdownOnChange(event:any) {
+    const element = event.target as HTMLInputElement
+    const selectedValue = Number(element.value)
+    EventId = selectedValue
+    getEvent(EventId)
+    populateEventDetails()
+    loadAttendance()
+}
+
+async function populateEventDetails() {
+    const eventInfoText = document.getElementById('event-info')
+
+    const updateAttendanceCard = document.getElementById('update-attendance-card') as HTMLDivElement
+    const updateAttendanceButton = document.getElementById('update-attendance-button') as HTMLButtonElement
+
+    if (EventId !== -1) {
+        let event = await getEvent(EventId)
+        eventInfoText.innerHTML = `<strong>${event.name}</strong> - ${formatDate(event.date)}`
+        updateAttendanceCard.style.display = 'block'
+        updateAttendanceButton.style.display = 'block'
+        return
+    }
+
+    eventInfoText.innerHTML = 'No Upcomming Events. Please select one from the dropdown'
+    updateAttendanceCard.style.display = 'none'
+    updateAttendanceButton.style.display = 'none'
+}
+
+async function loadAttendance() {
     await getAttendanceForUser(CurrentUserId, EventId).then((response) => {
         currentAttendanceData = response
     }).catch(() => {
         warningToast('You have not filled out your attendance')
-        return null
+        currentAttendanceData = null
     })
 
+    volunteerRoleIds = []
     const roleIdResponse = await getRoleNames('name=volunteer')
     let roleId = roleIdResponse.data[0].id
     volunteerRoleIds.push(roleId)
@@ -305,6 +359,37 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     await loadAttendanceData()
     populateVolunteerAttendanceTable(false)
+}
+
+async function preLoadEventNames() {
+    const response = await getEventNames()
+    let eventNames = response.data
+    let eventNamesMap:Record<number, Partial<Event>> = {}
+    eventNames.forEach(event => {
+        eventNamesMap[event.id] = event
+    })
+    return eventNamesMap
+}
+
+
+document.addEventListener("DOMContentLoaded", async () => {
+    const queryData:Partial<QueryStringData> = {
+        inclusive: false
+    }
+    const queryString = buildQueryString(queryData)
+    EventId = (await getnextEvent(queryString)).data
+
+    CurrentUserId = await getCurrentUserId()
+    eventNamesMap = await preLoadEventNames()
+    populateEventDetails()
+    populateEventSelectionDropdown()
+
+    if (EventId === -1) {
+        return
+    }
+
+    loadAttendance()
+    
 });
 
 document.addEventListener("DOMContentLoaded", () => {

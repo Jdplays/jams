@@ -303,7 +303,8 @@ def filter_model_by_query_and_properties(model, request_args=None, requested_fie
     if not properties_values:
         query = query.offset(pagination_start_index).limit(pagination_block_size)
     
-    objects = query.all()
+    if not input_data or len(request_args) > 0:
+        objects = query.all()
 
     if properties_values:
         for obj in objects[:]:
