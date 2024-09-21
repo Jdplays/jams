@@ -6,24 +6,21 @@ import {
     getCurrentUserId,
     getUsersField,
     getAttendanceForUser,
-    getnextEvent,
-    getEventNames,
-    getEvent
 } from '@global/endpoints'
-import { Metadata, VolunteerAttendance, Event } from "@global/endpoints_interfaces";
-import { animateElement, buildQueryString, createDropdown, emptyElement, errorToast, formatDate, successToast, validateTextInput, warningToast } from '@global/helper';
+import { Metadata, VolunteerAttendance } from "@global/endpoints_interfaces";
+import { EventDetails, EventDetailsOptions } from '@global/event_details';
+import { animateElement, buildQueryString, emptyElement, errorToast, successToast, validateTextInput, warningToast } from '@global/helper';
 import { QueryStringData } from '@global/interfaces';
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
 
 let gridApi:GridApi<any>;
+let eventDetails:EventDetails;
 
 let volunteerRoleIds:number[] = []
-let EventId = 1
 let CurrentUserId = 0
 let currentAttendanceData:VolunteerAttendance|null = null
 
 let userDisplayNamesMap:Record<number, string> = {}
-let eventNamesMap:Record<number, Partial<Event>> = {}
 let eventAttendancesMetaData:Metadata = {}
 let eventAttendances:Partial<VolunteerAttendance>[] = []
 
@@ -158,7 +155,7 @@ async function preLoadUserDisplayNames() {
 }
 
 async function loadAttendanceData() {
-    const eventAttendanceResponse = await getAttendanceForEvent(EventId)
+    const eventAttendanceResponse = await getAttendanceForEvent(eventDetails.eventId)
     userDisplayNamesMap = await preLoadUserDisplayNames()
     eventAttendancesMetaData = eventAttendanceResponse.metadata
 
@@ -218,7 +215,7 @@ async function addAttendanceOnClick() {
         note: noteInput.value
     }
 
-    addAttendance(CurrentUserId, EventId, data).then((response) => {
+    addAttendance(CurrentUserId, eventDetails.eventId, data).then((response) => {
         currentAttendanceData = response.data
 
         successToast(response.message)
@@ -253,7 +250,7 @@ async function editAttendanceOnClick() {
         note: noteInput.value
     }
 
-    editAttendance(CurrentUserId, EventId, data).then((response) => {
+    editAttendance(CurrentUserId, eventDetails.eventId, data).then((response) => {
         currentAttendanceData = response.data
 
         successToast(response.message)
@@ -299,51 +296,9 @@ async function populateUpdateForm() {
     }
 }
 
-// Populates the Event selection dropdown with all of the events
-async function populateEventSelectionDropdown() {
-    let eventSelectionDropdown = document.getElementById('event-selection')
-
-    let defaultValue = 'Select an Event'
-    if (eventNamesMap[EventId] !== undefined && eventNamesMap[EventId] !== null) {
-        defaultValue = eventNamesMap[EventId].name
-    }
-    let select = createDropdown(Object.values(eventNamesMap), defaultValue, eventSelectionDropdownOnChange)
-    select.id = 'event-select'
-    select.classList.add('select-event-dropdown', 'form-control')
-    eventSelectionDropdown.appendChild(select)
-}
-
-// Handles the onchange event for the Event selction dropdown 
-function eventSelectionDropdownOnChange(event:any) {
-    const element = event.target as HTMLInputElement
-    const selectedValue = Number(element.value)
-    EventId = selectedValue
-    getEvent(EventId)
-    populateEventDetails()
-    loadAttendance()
-}
-
-async function populateEventDetails() {
-    const eventInfoText = document.getElementById('event-info')
-
-    const updateAttendanceCard = document.getElementById('update-attendance-card') as HTMLDivElement
-    const updateAttendanceButton = document.getElementById('update-attendance-button') as HTMLButtonElement
-
-    if (EventId !== -1) {
-        let event = await getEvent(EventId)
-        eventInfoText.innerHTML = `<strong>${event.name}</strong> - ${formatDate(event.date)}`
-        updateAttendanceCard.style.display = 'block'
-        updateAttendanceButton.style.display = 'block'
-        return
-    }
-
-    eventInfoText.innerHTML = 'No Upcomming Events. Please select one from the dropdown'
-    updateAttendanceCard.style.display = 'none'
-    updateAttendanceButton.style.display = 'none'
-}
 
 async function loadAttendance() {
-    await getAttendanceForUser(CurrentUserId, EventId).then((response) => {
+    await getAttendanceForUser(CurrentUserId, eventDetails.eventId).then((response) => {
         currentAttendanceData = response
     }).catch(() => {
         warningToast('You have not filled out your attendance')
@@ -361,30 +316,21 @@ async function loadAttendance() {
     populateVolunteerAttendanceTable(false)
 }
 
-async function preLoadEventNames() {
-    const response = await getEventNames()
-    let eventNames = response.data
-    let eventNamesMap:Record<number, Partial<Event>> = {}
-    eventNames.forEach(event => {
-        eventNamesMap[event.id] = event
-    })
-    return eventNamesMap
-}
-
 
 document.addEventListener("DOMContentLoaded", async () => {
-    const queryData:Partial<QueryStringData> = {
-        inclusive: false
+    const eventDetailsOptions:EventDetailsOptions = {
+        dateInclusive: false,
+        eventDependentElements: [document.getElementById('update-attendance-button'), document.getElementById('update-attendance-card')],
+        eventOnChangeFunc: loadAttendance
     }
-    const queryString = buildQueryString(queryData)
-    EventId = (await getnextEvent(queryString)).data
+
+    eventDetails = new EventDetails('event-details', eventDetailsOptions)
+    await eventDetails.init()
+
 
     CurrentUserId = await getCurrentUserId()
-    eventNamesMap = await preLoadEventNames()
-    populateEventDetails()
-    populateEventSelectionDropdown()
 
-    if (EventId === -1) {
+    if (eventDetails.eventId === -1) {
         return
     }
 

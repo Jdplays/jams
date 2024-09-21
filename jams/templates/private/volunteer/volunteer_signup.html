@@ -1,0 +1,25 @@
+{% extends '_layout.html' %}
+
+{% block title %}Volunteer Signup{% endblock %}
+
+{% block content %}
+
+<div class="content-wrapper">
+    <div class="main-content">
+        <div class="card card-md mb-3">
+            <div class="card-body mb-3">
+                <h1>Volunteer Signup</h1>
+                <p class="event-info"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="schedule-container" class="schedule-container">
+    <div class="grid-container" id="grid-container"></div>
+</div>
+
+<script src="{{ url_for('static', filename='js/public/public_schedule.js') }}" type="module" defer></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/general/schedule_grid.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/general/workshop_card.css') }}">
+{% endblock %}
