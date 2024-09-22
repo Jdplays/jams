@@ -7,7 +7,7 @@ export interface EventDetailsOptions {
     eventId?:number|null
     showEventSelection?:boolean
     dateInclusive?:boolean
-    eventDependentElements?:HTMLElement[]|null
+    eventDependentElements?:HTMLElement[]
     eventOnChangeFunc?:(() => void)
 }
 
@@ -19,14 +19,14 @@ export class EventDetails {
 
     public eventId:number
 
-    constructor(detailsContainerId:string, options:EventDetailsOptions|null) {
+    constructor(detailsContainerId:string, options:EventDetailsOptions = {}) {
         this.detailsContainer = document.getElementById(detailsContainerId) as HTMLDivElement
 
         let {
             eventId = null,
             showEventSelection = true,
             dateInclusive = true,
-            eventDependentElements = null,
+            eventDependentElements = [],
             eventOnChangeFunc = null
         } = options
 
@@ -57,7 +57,7 @@ export class EventDetails {
 
         let infoTextDiv = document.createElement('div')
         infoTextDiv.id = 'info-text'
-        this.detailsContainer.appendChild(infoTextDiv)
+        this.detailsContainer.insertBefore(infoTextDiv, this.detailsContainer.firstChild)
 
         this.eventNamesMap = await this.preLoadEventNames()
         await this.populateEventDetails()
@@ -109,7 +109,8 @@ export class EventDetails {
         let eventSelectionDropdown = document.createElement('div')
         eventSelectionDropdown.classList.add('mb-3')
 
-        let selectionHeader = document.createElement('h4')
+        let selectionHeader = document.createElement('div')
+        selectionHeader.classList.add('form-label')
         selectionHeader.style.marginRight = '10px'
         selectionHeader.innerHTML = 'Select Event:'
 
@@ -121,10 +122,16 @@ export class EventDetails {
         }
         let select = createDropdown(Object.values(this.eventNamesMap), defaultValue, this.eventSelectionDropdownOnChange)
         select.id = 'event-select'
-        select.classList.add('select-event-dropdown', 'form-control')
+        select.classList.add('form-select')
         eventSelectionDropdown.appendChild(select)
 
         eventSelectionDropdown.appendChild(select)
+
+        const dropdownsContainer = this.detailsContainer.querySelector('.grid-columns-flex')
+        if (dropdownsContainer) {
+            dropdownsContainer.insertBefore(eventSelectionDropdown, dropdownsContainer.firstChild)
+            return
+        }
 
         this.detailsContainer.appendChild(eventSelectionDropdown)
     }
@@ -135,6 +142,9 @@ export class EventDetails {
         const selectedValue = Number(element.value)
         this.eventId = selectedValue
         this.populateEventDetails()
-        this.options.eventOnChangeFunc()
+
+        if (this.options.eventOnChangeFunc) {
+            this.options.eventOnChangeFunc()
+        }
     }
 }

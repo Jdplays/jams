@@ -167,7 +167,7 @@ def activate_workshop_file(workshop_id, file_uuid):
 def get_workshop_files(workshop_id):
     args = request.args.to_dict()
     args['workshop_id'] = str(workshop_id)
-    workshop_files = helper.filter_model_by_query_and_properties(WorkshopFile, args, return_objects=True)
+    workshop_files, row_count = helper.filter_model_by_query_and_properties(WorkshopFile, args, return_objects=True)
     files = [wf.file for wf in workshop_files]
     data = helper.filter_model_by_query_and_properties(File, input_data=files)
     return jsonify(data)

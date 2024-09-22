@@ -1007,6 +1007,26 @@ export function getUsers(queryString:string|null = null):Promise<BackendMultiEnt
     });
 }
 
+export function getUsersPublicInfo(queryString:string|null = null):Promise<BackendMultiEntryResponse<[Partial<User>]>> {
+    return new Promise((resolve, reject) => {
+        let url = '/backend/users/public_info'
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
 export function getUsersField(field:string, queryString:string|null = null):Promise<BackendMultiEntryResponse<[Partial<User>]>> {
     return new Promise((resolve, reject) => {
         let url = `/backend/users/${field}`

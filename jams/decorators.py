@@ -64,14 +64,18 @@ def role_based_access_control_be(func):
             if requested_field in allowed_fields:
                 if request.args is not None:
                     query_fields = request.args.keys()
+                    if len(query_fields) == 0:
+                        return func(*args, **kwargs)
                     for field in query_fields:
-                        if field not in allowed_fields and field not in helper.default_field_names:
+                        default_args_list = helper.DefaultRequestArgs.list()
+                        if field not in allowed_fields and field not in default_args_list:
                             if not current_user.is_authenticated:
                                 login_response = enforce_login(func, *args, **kwargs)
                                 if login_response is not None:
                                     return login_response
-                            abort(403, description='You do not have access to the requested resource with your current role')
-                return func(*args, **kwargs)
+                        elif field in allowed_fields or field in default_args_list:
+                            return func(*args, **kwargs)
+                        
         if not current_user.is_authenticated:
             login_response = enforce_login(func, *args, **kwargs)
             if login_response is not None:
