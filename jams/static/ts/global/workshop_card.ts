@@ -13,10 +13,11 @@ export interface WorkshopCardOptions {
     cardRemoveIcon?:string|null
     cardRemoveFunc?:((arg1:number, arg2:any) => void)
     cardBodyText?:string|null
-    cardBodyIcon?:string|null
+    cardBodyElement?:HTMLElement|null
     cardBodyActionText?:string|null
+    cardBodyActionIcon?:string|null
     cardBodyActionFunc?:(() => void) | null
-    bodyText?:string|null
+    backgroundColour?:string|null
     scheduleGrid?:ScheduleGrid|null
 
 }
@@ -47,10 +48,11 @@ export class WorkshopCard {
             cardRemoveIcon = null,
             cardRemoveFunc,
             cardBodyText = null,
-            cardBodyIcon = null,
+            cardBodyElement = null,
             cardBodyActionText = null,
+            cardBodyActionIcon = null,
             cardBodyActionFunc = null,
-            bodyText = null,
+            backgroundColour = null,
             scheduleGrid = null
         } = options
 
@@ -64,17 +66,18 @@ export class WorkshopCard {
             cardRemoveIcon,
             cardRemoveFunc,
             cardBodyText,
-            cardBodyIcon,
+            cardBodyElement,
             cardBodyActionText,
+            cardBodyActionIcon,
             cardBodyActionFunc,
-            bodyText,
+            backgroundColour,
             scheduleGrid
         }
 
-        this.initWorshopCard()
+        this.init()
     }
 
-    async initWorshopCard() {
+    async init() {
         // If the workshop wasn't passed it, return null as we can't create a card without them
         if (!this.workshop) {
             return null
@@ -100,8 +103,10 @@ export class WorkshopCard {
 
         // Set the text font sizes
         if (this.options.width && this.options.height) {
-            this.titleFontSize = this.options.height * 0.15
-            this.bodyFontSize = this.options.height * 0.1
+            const minDimension = Math.min(this.options.width, this.options.height);
+
+            this.titleFontSize = minDimension * 0.13;
+            this.bodyFontSize = minDimension * 0.13;
         }
 
         this.workshopDifficulty = this.options.difficultyLevels.find(level => level.id === this.workshop.difficulty_id)
@@ -111,17 +116,21 @@ export class WorkshopCard {
     }
 
     async element() {
-         if (!await this.initWorshopCard()) {
+         if (!await this.init()) {
             return null
          }
 
         // Set the background colour based on the difficulty level
         const workshopCard = document.createElement('div')
         workshopCard.classList.add('workshop-card')
-        if (this.workshopDifficulty != null) {
+        if (this.workshopDifficulty !== null && this.workshopDifficulty !== undefined) {
             workshopCard.style.backgroundColor = hexToRgba(this.workshopDifficulty.display_colour, 0.5)
-        } else if (this.workshopType !== null) {
+        } else if (this.workshopType !== null && this.workshopType !== undefined) {
             workshopCard.style.backgroundColor = hexToRgba(this.workshopType.display_colour, 0.5)
+        }
+
+        if (this.options.backgroundColour !== null && this.options.backgroundColour !== undefined) {
+            workshopCard.style.backgroundColor = hexToRgba(this.options.backgroundColour, 0.5)
         }
 
         // Set the size of the card based on the options
@@ -170,43 +179,53 @@ export class WorkshopCard {
 
         workshopTitleContainer.appendChild(workshopTitleContianerRemove)
 
-        const workshopBodyText = document.createElement('p')
-        if (!this.options.bodyText) {
-            workshopBodyText.innerHTML = this.workshop.description
-        } else {
-            workshopBodyText.innerHTML = this.options.bodyText
-        }
-        workshopBodyText.style.fontSize = `${this.bodyFontSize}px`
-        workshopBodyText.classList.add('workshop-body-text', 'truncate')
-
-        // Set available height for body text
         let availableHeight = 0
-        if (this.options.height) {
-            availableHeight = this.options.height - this.calculateElementHeight(workshopTitleContainer) - 20 // 20px for some padding
-        }
-        
 
-        const workshopActionButton = document.createElement('button')
-        if (this.options.cardBodyActionFunc && this.options.cardBodyActionText) {
-            workshopActionButton.classList.add('btn', 'btn-secondary')
+        let workshopBody;
+        let workshopActionButton = document.createElement('div')
+
+        if (this.options.cardBodyActionFunc && (this.options.cardBodyActionText || this.options.cardBodyActionIcon)) {
             workshopActionButton.innerText = this.options.cardBodyActionText
-            workshopActionButton.onclick = () => {
-                this.options.cardBodyActionFunc
+            if (this.options.cardBodyActionIcon) {
+                workshopActionButton.innerHTML += this.options.cardBodyActionIcon
             }
-            workshopActionButton.classList.add('workshop-body-action')
+
+            workshopCard.onclick = () => {
+                this.options.cardBodyActionFunc()
+            }
+
+            workshopCard.classList.add('workshop-body-action')
 
             // If there is an action button, adjust availavle height for body text
             availableHeight -= this.calculateElementHeight(workshopActionButton)
         }
 
-        // Calculate the max number of lines for the body text
-        let maxLines = Math.floor(availableHeight / (this.bodyFontSize * 1.2))
-        workshopBodyText.style.webkitLineClamp = `${maxLines}`
+        if (!this.options.cardBodyElement) {
+            workshopBody = document.createElement('p')
+            if (!this.options.cardBodyText) {
+                workshopBody.innerHTML = this.workshop.description
+            } else {
+                workshopBody.innerHTML = this.options.cardBodyText
+            }
+            workshopBody.style.fontSize = `${this.bodyFontSize}px`
+            workshopBody.classList.add('workshop-body-text', 'truncate')
+
+            // Set available height for body text
+            if (this.options.height) {
+                availableHeight = this.options.height - this.calculateElementHeight(workshopTitleContainer) - 20 // 20px for some padding
+            }
+
+            // Calculate the max number of lines for the body text
+            let maxLines = Math.floor(availableHeight / (this.bodyFontSize * 1.2))
+            workshopBody.style.webkitLineClamp = `${maxLines}`
+        } else {
+            workshopBody = this.options.cardBodyElement
+        }
 
         workshopCard.appendChild(workshopTitleContainer)
-        workshopCard.appendChild(workshopBodyText)
+        workshopCard.appendChild(workshopBody)
 
-        if (this.options.cardBodyActionFunc && this.options.cardBodyActionText) {
+        if (this.options.cardBodyActionFunc && (this.options.cardBodyActionText || this.options.cardBodyActionIcon)) {
             workshopCard.appendChild(workshopActionButton)
         }
 

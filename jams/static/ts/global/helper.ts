@@ -1,5 +1,7 @@
 import {Toast} from "@global/sweet_alert"
-import { InputValidationPattern } from "./interfaces";
+import { InputValidationPattern, QueryStringData } from "./interfaces";
+import { User } from "./endpoints_interfaces";
+import { getUsersPublicInfo } from "./endpoints";
 
 type QueryStringParams = {[key: string]: any}
 type ModelModityFunc = ((arg1:number) => void)
@@ -491,4 +493,48 @@ export function formatDate(dateString:string) {
     const dayWithSuffix = day + getOrdinalSuffix(day);
     
     return `${dayWithSuffix} ${month} ${year}`;
+}
+
+export function buildUserAvatar(UserAvatarInfo:Partial<User>|null=null, size:number|null=null, customText:string|null=null):HTMLSpanElement {
+    let avatar = document.createElement('span')
+    avatar.classList.add('avatar')
+    if (!customText && UserAvatarInfo) {
+        if (UserAvatarInfo.avatar_url) {
+            avatar.style.backgroundImage = `url(${UserAvatarInfo.avatar_url})`
+        } else {
+            let userInitials;
+            if (UserAvatarInfo.first_name) {
+                userInitials = `${UserAvatarInfo.first_name.toUpperCase()[0]}${UserAvatarInfo.last_name.toUpperCase()[0]}`
+            } else {
+                userInitials = UserAvatarInfo.display_name.toUpperCase()[0]
+            }
+            
+            avatar.innerHTML = userInitials
+        }
+    } else {
+        avatar.innerHTML = customText
+    }
+
+    if (size) {
+        avatar.style.width = `${size}px`
+        avatar.style.height = `${size}px`
+    }
+
+    return avatar
+}
+
+export async function preloadUsersInfoMap() {
+    let usersInfoMap:Record<number, Partial<User>> = {}
+
+    const queryData:Partial<QueryStringData> = {
+        $all_rows: true
+    }
+    const queryString = buildQueryString(queryData)
+    const usersInfoResponse = await getUsersPublicInfo(queryString)
+
+    usersInfoResponse.data.forEach(userInfo => {
+        usersInfoMap[userInfo.id] = userInfo
+    })
+
+    return usersInfoMap
 }

@@ -29,3 +29,10 @@
   .element-shake {
     animation: shake 0.25s;
   }
+
+  .grid-columns-flex {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    gap: 10px;
+  }
+  

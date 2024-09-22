@@ -182,10 +182,40 @@ pages:
         allowed_fields: id, name
       routes.backend.private.admin.get_users_field:
         allowed_fields: id, display_name, role_ids
+      routes.backend.private.admin.get_event_field:
+        allowed_fields: id, name, date
       routes.backend.private.volunteer.get_event_attendance:
       routes.backend.private.volunteer.get_user_attendance:
       routes.backend.private.volunteer.add_user_attendance:
       routes.backend.private.volunteer.edit_user_attendance:
+
+  volunteer_signup:
+    endpoint: routes.frontend.private.volunteer.volunteer_signup
+    backend_endpoints:
+      routes.backend.private.admin.get_users_field:
+        allowed_fields: id, display_name
+      routes.backend.private.admin.get_event_field:
+        allowed_fields: id, name, date
+      routes.backend.private.admin.get_events_field:
+        allowed_fields: id, name
+      routes.backend.private.admin.get_users_public_info:
+      routes.backend.private.admin.get_user_public_info:
+      routes.backend.private.volunteer.get_event_attendance:
+      routes.backend.private.volunteer.get_user_attendance:
+      routes.backend.private.volunteer.get_event_volunteer_signups:
+      routes.backend.private.volunteer.get_user_signups:
+      routes.backend.private.volunteer.add_volunteer_signup:
+      routes.backend.private.volunteer.remove_volunteer_signup:
+      # Schedule Grid
+      routes.backend.private.management.get_workshops:
+      routes.backend.private.management.get_difficulty_levels:
+      routes.backend.private.management.get_workshop_types:
+      routes.backend.private.admin.get_event_locations:
+      routes.backend.private.management.get_locations:
+      routes.backend.private.admin.get_event_timeslots:
+      routes.backend.private.management.get_timeslots:
+      routes.backend.private.admin.get_event_sessions:
+      
 
   # Monitoring
   private_access_log:

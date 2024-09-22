@@ -13,3 +13,9 @@ bp = Blueprint('volunteer', __name__, url_prefix='volunteer')
 @role_based_access_control_fe
 def volunteer_attendance():
     return render_template(f'{url_prefix}/volunteer_attendance.html')
+
+@bp.route('/volunteer_signup')
+@login_required
+@role_based_access_control_fe
+def volunteer_signup():
+    return render_template(f'{url_prefix}/volunteer_signup.html')

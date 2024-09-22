@@ -143,6 +143,13 @@ export interface VolunteerAttendance {
     noReply?:boolean
 }
 
+export interface VolunteerSignup {
+    id:number
+    event_id:number
+    user_id:number
+    session_id:number
+}
+
 export interface WorkshopFile {
     id:number
     workshop_id:number

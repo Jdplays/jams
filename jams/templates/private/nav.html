@@ -72,7 +72,7 @@
 
         <!-- Other Navigation Items -->
         {% if current_user.is_authenticated %}
-        {% if user_has_access_to_page('volunteer_attendance') %}
+        {% if user_has_access_to_page('volunteer_attendance', 'volunteer_signup') %}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" data-bs-auto-close="outside"
             role="button" aria-expanded="false">
@@ -84,6 +84,11 @@
             {% if user_has_access_to_page('volunteer_attendance') %}
             <a class="dropdown-item" href="{{ url_for('routes.frontend.private.volunteer.volunteer_attendance')}}">
               Volunteer Attendance
+            </a>
+            {% endif %}
+            {% if user_has_access_to_page('volunteer_signup') %}
+            <a class="dropdown-item" href="{{ url_for('routes.frontend.private.volunteer.volunteer_signup')}}">
+              Volunteer Signup
             </a>
             {% endif %}
           </div>
