@@ -11,8 +11,7 @@ bp = Blueprint('genral', __name__)
 @bp.route('/get_next_event', methods=['GET'])
 def get_next_event():
     args = request.args
-    print(args)
-
+    
     inclusive = True
     inc_arg = args.get('inclusive')
 
