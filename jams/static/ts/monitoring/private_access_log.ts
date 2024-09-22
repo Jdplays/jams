@@ -4,7 +4,7 @@ import {
     getUsers
 } from '@global/endpoints'
 import { User } from "@global/endpoints_interfaces";
-import { isNullEmptyOrSpaces, buildQueryString, successToast, errorToast, debounce } from "@global/helper";
+import { isNullEmptyOrSpaces, buildQueryString, successToast, errorToast, debounce, buildUserAvatar } from "@global/helper";
 import { QueryStringData, QueryStringKey } from '@global/interfaces';
 import { createGrid, GridApi, GridOptions, IDoesFilterPassParams, IFilterComp, IFilterParams, ITooltipComp, ITooltipParams, ValueFormatterParams } from 'ag-grid-community';
 
@@ -18,20 +18,15 @@ class CustomToolTip implements ITooltipComp {
             return
         }
 
-        let avatar = document.createElement('span')
-        avatar.classList.add('avatar')
-        if (user.avatar_url) {
-            avatar.style.backgroundImage = `url(${user.avatar_url})`
-        } else {
-            let userInitials;
-            if (user.first_name) {
-                userInitials = `${user.first_name.toUpperCase()[0]}${user.last_name.toUpperCase()[0]}`
-            } else {
-                userInitials = user.display_name.toUpperCase()[0]
-            }
-            
-            avatar.innerHTML = userInitials
-        }
+        const userAvatarInfo = (({id, display_name, first_name, last_name, avatar_url}) => ({
+            id,
+            display_name,
+            first_name,
+            last_name,
+            avatar_url
+        }))(user)
+
+        const avatar = buildUserAvatar(userAvatarInfo)
 
         let button = document.createElement('button')
         button.classList.add('btn', 'btn-danger')
