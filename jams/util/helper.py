@@ -7,7 +7,24 @@ from datetime import datetime, timedelta
 
 from jams.util import files
 
-default_field_names = ['$pagination_block_size', '$pagination_start_index', '$order_by', '$order_direction', '$all_rows']
+class DefaultRequestArgs():
+    pagination_block_size = int
+    pagination_start_index = int
+    order_by = str
+    order_direction = str
+    all_rows = bool
+
+    def __init__(self, pagination_block_size=50, pagination_start_index=0, order_by='id', order_direction='ASC', all_rows=False):
+        self.pagination_block_size = pagination_block_size
+        self.pagination_start_index = pagination_start_index
+        self.order_by = order_by
+        self.order_direction = order_direction
+        self.all_rows = all_rows
+    
+    @staticmethod
+    def list():
+        return ['$pagination_block_size', '$pagination_start_index', '$order_by', '$order_direction', '$all_rows']
+
 
 def get_ordered_event_locations(event_id):
     return EventLocation.query.filter_by(event_id=event_id).order_by(EventLocation.order).all()
@@ -59,10 +76,14 @@ def prep_delete_event_Timeslot(event_timeslot_id):
     return True
 
 def prep_delete_session(session_id):
-    ############ This is not needed anymore, but will be needed in the future. So will leave it #######
     session = Session.query.filter_by(id=session_id).first()
+    session_volunteer_signups = session.volunteer_signups
+
+    for volunteer_signup in session_volunteer_signups:
+        db.session.delete(volunteer_signup)
     
     # TODO: Remove anything else here in future (Not needed at the time of writing)
+    db.session.commit()
     
     # Everything is removed, so return true
     return True
@@ -172,6 +193,30 @@ def build_multi_object_paginated_return_obj(data_list, pagination_block_size, pa
 
     return return_obj
 
+def extract_default_args_from_request(request_args)->DefaultRequestArgs:
+    default_args = DefaultRequestArgs()
+    for search_field, search_value in request_args.items():
+        try:
+            if search_field == '$pagination_block_size':
+                default_args.pagination_block_size = int(search_value)
+
+            if search_field == '$pagination_start_index':
+                default_args.pagination_start_index = int(search_value)
+            
+            if search_field == '$order_by':
+                default_args.order_by = search_value
+            
+            if search_field == '$order_direction':
+                default_args.order_direction = search_value
+            
+            if search_field == '$all_rows':
+                default_args.all_rows = search_value.lower() == 'true'
+            
+        except ValueError:
+            abort(400, description=f"Invalid value for field '{search_field}': {search_value}")
+    
+    return default_args
+
 def filter_model_by_query_and_properties(model, request_args=None, requested_field=None, input_data=None, return_objects=False):
     query = model.query
     objects = []
@@ -182,7 +227,6 @@ def filter_model_by_query_and_properties(model, request_args=None, requested_fie
     pagination_start_index = 0
     pagination_order_by = 'id'
     pagination_order_direction = 'ASC'
-    all_rows = False
 
     if input_data is not None:
         if len(input_data) <= 0 and not return_objects:
@@ -202,89 +246,76 @@ def filter_model_by_query_and_properties(model, request_args=None, requested_fie
 
     # Check if things are being searched for
     if request_args:
+        # Check for default fields
+        default_args = extract_default_args_from_request(request_args)
+        pagination_block_size = default_args.pagination_block_size
+        pagination_start_index = default_args.pagination_start_index
+        order_by = getattr(model, default_args.order_by)
+        order_direction = str(default_args.order_direction).upper()
+        if default_args.all_rows:
+            row_count = query.count()
+            pagination_block_size = row_count
+
         filters = []
 
         for search_field, search_value in request_args.items():
-            # Check for default fields
-            if search_field in default_field_names:
-                try:
-                    if search_field == '$pagination_block_size':
-                        pagination_block_size = int(search_value)
+            field_conditions = []
 
-                    if search_field == '$pagination_start_index':
-                        pagination_start_index = int(search_value)
-                    
-                    if search_field == '$order_by':
-                        pagination_order_by = search_value
-                        order_by = getattr(model, search_value)
-                    
-                    if search_field == '$order_direction':
-                        pagination_order_direction = search_value
-                        order_direction = str(search_value).upper()
-                    
-                    if search_field == '$all_rows':
-                        all_rows = search_value.lower() == 'true'
-                        if all_rows:
-                            row_count = query.count()
-                            pagination_block_size = row_count
-                    
-                except ValueError:
-                    abort(400, description=f"Invalid value for field '{search_field}': {search_value}")
-            else:
-                field_conditions = []
-
-                # Split the search fields and values on the pipe char '|'
-                search_fields = search_field.split('|')
-                search_values = search_value.split('|')
+            # Split the search fields and values on the pipe char '|'
+            search_fields = search_field.split('|')
+            search_values = search_value.split('|')
 
 
-                for field in search_fields:
-                    if field == '':
-                        continue
+            for field in search_fields:
+                if field == '':
+                    continue
 
-                    if field not in allowed_fields:
-                        abort(404, description=f"Search field '{field}' not found or allowed")
-                    
-                    field_attr = getattr(model, field)
+                if field in DefaultRequestArgs.list():
+                    continue
 
-                    if isinstance(field_attr, property):
-                        properties_values.update({search_field: search_value})
-                        continue
-                    
-                    field_type = field_attr.property.columns[0].type
+                if field not in allowed_fields:
+                    abort(404, description=f"Search field '{field}' not found or allowed")
+                
+                field_attr = getattr(model, field)
 
-                    for value in search_values:
-                        if value == '':
-                            abort(400, description='All query values must have a value')
-                        elif value == 'null' or value == 'None':
-                            field_conditions.append(field_attr == None)
-                        elif isinstance(field_type, String):
-                            field_conditions.append(field_attr.ilike(f'%{value}%'))
-                        elif isinstance(field_type, Boolean):
-                            field_conditions.append(field_attr == (value.lower() in ['true', '1', 't', 'y', 'yes']))
-                        elif isinstance(field_type, Integer):
-                            try:
-                                field_conditions.append(field_attr == int(value))
-                            except ValueError:
-                                abort(400, description=f"Invalid value for integer field '{field}': {value}")
-                        elif isinstance(field_type, DateTime):
-                            try:
-                                datetime_value = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
-                                date_value = datetime_value.date()
+                if isinstance(field_attr, property):
+                    properties_values.update({search_field: search_value})
+                    continue
+                
+                field_type = field_attr.property.columns[0].type
 
-                                start_datetime = datetime.combine(date_value, datetime.min.time())
-                                end_datetime = start_datetime + timedelta(days=1)
-                                
-                                field_conditions.append(field_attr.between(start_datetime, end_datetime))
-                                #field_conditions.append(field_attr < end_datetime)
-                            except ValueError as e:
-                                abort(400, description=f"Invalid value for DateTime field '{field}': {value}")
-                        else:
-                            # For other types, add appropriate handling if needed
-                            field_conditions.append(field_attr == value)
+                for value in search_values:
+                    if value == '':
+                        abort(400, description='All query values must have a value')
+                    elif value == 'null' or value == 'None':
+                        field_conditions.append(field_attr == None)
+                    elif isinstance(field_type, String):
+                        field_conditions.append(field_attr.ilike(f'%{value}%'))
+                    elif isinstance(field_type, Boolean):
+                        field_conditions.append(field_attr == (value.lower() in ['true', '1', 't', 'y', 'yes']))
+                    elif isinstance(field_type, Integer):
+                        try:
+                            field_conditions.append(field_attr == int(value))
+                        except ValueError:
+                            abort(400, description=f"Invalid value for integer field '{field}': {value}")
+                    elif isinstance(field_type, DateTime):
+                        try:
+                            datetime_value = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
+                            date_value = datetime_value.date()
 
-                if field_conditions:
-                    filters.append(or_(*field_conditions))
+                            start_datetime = datetime.combine(date_value, datetime.min.time())
+                            end_datetime = start_datetime + timedelta(days=1)
+                            
+                            field_conditions.append(field_attr.between(start_datetime, end_datetime))
+                            #field_conditions.append(field_attr < end_datetime)
+                        except ValueError as e:
+                            abort(400, description=f"Invalid value for DateTime field '{field}': {value}")
+                    else:
+                        # For other types, add appropriate handling if needed
+                        field_conditions.append(field_attr == value)
+
+            if field_conditions:
+                filters.append(or_(*field_conditions))
         
         if filters:
             query = query.filter(*filters)
@@ -303,7 +334,7 @@ def filter_model_by_query_and_properties(model, request_args=None, requested_fie
     if not properties_values:
         query = query.offset(pagination_start_index).limit(pagination_block_size)
     
-    if not input_data or len(request_args) > 0:
+    if input_data == None or (request_args and len(request_args) > 0):
         objects = query.all()
 
     if properties_values:
@@ -327,19 +358,10 @@ def filter_model_by_query_and_properties(model, request_args=None, requested_fie
     else:
         data_list = [obj.to_dict() for obj in objects]
 
-    return_obj = {
-        'data': data_list,
-        'pagination': {
-            'pagination_block_size': pagination_block_size,
-            'pagination_start_index': pagination_start_index,
-            'order_by': pagination_order_by,
-            'order_direction': pagination_order_direction,
-            'pagination_total_records': pagination_record_count
-        }
-    }
+    return_obj = build_multi_object_paginated_return_obj(data_list, pagination_block_size, pagination_start_index, pagination_order_by, pagination_order_direction, pagination_record_count)
 
     if return_objects:
-        return objects
+        return (objects, pagination_record_count)
     
     return return_obj
 

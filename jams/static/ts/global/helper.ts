@@ -1,5 +1,7 @@
 import {Toast} from "@global/sweet_alert"
-import { InputValidationPattern } from "./interfaces";
+import { InputValidationPattern, QueryStringData } from "./interfaces";
+import { User } from "./endpoints_interfaces";
+import { getUsersPublicInfo } from "./endpoints";
 
 type QueryStringParams = {[key: string]: any}
 type ModelModityFunc = ((arg1:number) => void)
@@ -353,7 +355,7 @@ export function getSelectValues(select:HTMLSelectElement) {
     }
 
     if (!allowSpecialCharacters) {
-        const specialCharRegex = /[@$%^&*":{}|<>[\]\\\/]/;
+        const specialCharRegex = /[@$%^&*"{}|<>[\]\\\/]/;
         if(specialCharRegex.test(inputElement.value)) {
             markInputAsInvaid(inputElement, inputContainer, 'Special characters are not allowed, except for underscores "_" hyphens "-" and rounded brackets "()". Please update your input.')
             return false
@@ -491,4 +493,59 @@ export function formatDate(dateString:string) {
     const dayWithSuffix = day + getOrdinalSuffix(day);
     
     return `${dayWithSuffix} ${month} ${year}`;
+}
+
+export function formatDateToShort(dateString: string): string {
+    const date = new Date(dateString);
+
+    // Get the day, month, and year
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+    const year = String(date.getUTCFullYear()).slice(-2); // Get last 2 digits of the year
+
+    return `${day}/${month}/${year}`;
+}
+
+export function buildUserAvatar(UserAvatarInfo:Partial<User>|null=null, size:number|null=null, customText:string|null=null):HTMLSpanElement {
+    let avatar = document.createElement('span')
+    avatar.classList.add('avatar')
+    if (!customText && UserAvatarInfo) {
+        if (UserAvatarInfo.avatar_url) {
+            avatar.style.backgroundImage = `url(${UserAvatarInfo.avatar_url})`
+        } else {
+            let userInitials;
+            if (UserAvatarInfo.first_name) {
+                userInitials = `${UserAvatarInfo.first_name.toUpperCase()[0]}${UserAvatarInfo.last_name.toUpperCase()[0]}`
+            } else {
+                userInitials = UserAvatarInfo.display_name.toUpperCase()[0]
+            }
+            
+            avatar.innerHTML = userInitials
+        }
+    } else {
+        avatar.innerHTML = customText
+    }
+
+    if (size) {
+        avatar.style.width = `${size}px`
+        avatar.style.height = `${size}px`
+    }
+
+    return avatar
+}
+
+export async function preloadUsersInfoMap() {
+    let usersInfoMap:Record<number, Partial<User>> = {}
+
+    const queryData:Partial<QueryStringData> = {
+        $all_rows: true
+    }
+    const queryString = buildQueryString(queryData)
+    const usersInfoResponse = await getUsersPublicInfo(queryString)
+
+    usersInfoResponse.data.forEach(userInfo => {
+        usersInfoMap[userInfo.id] = userInfo
+    })
+
+    return usersInfoMap
 }

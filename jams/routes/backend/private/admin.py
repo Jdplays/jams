@@ -32,6 +32,23 @@ def get_user(user_id):
     user = User.query.filter_by(id=user_id).first_or_404()
     return jsonify(user.to_dict())
 
+@bp.route('/users/<int:user_id>/public_info', methods=['GET'])
+@role_based_access_control_be
+def get_user_public_info(user_id):
+    user = User.query.filter_by(id=user_id).first_or_404()
+    return jsonify(user.public_info_dict())
+
+@bp.route('/users/public_info', methods=['GET'])
+@role_based_access_control_be
+def get_users_public_info():
+    users, row_count = helper.filter_model_by_query_and_properties(User, request.args, return_objects=True)
+    data_list = [user.public_info_dict() for user in users]
+
+    default_args = helper.extract_default_args_from_request(request.args)
+
+    return_obj = helper.build_multi_object_paginated_return_obj(data_list, default_args.pagination_block_size, default_args.pagination_start_index, default_args.order_by, default_args.order_direction, row_count)
+    return jsonify(return_obj)
+
 @bp.route('/users/<int:user_id>/<field>', methods=['GET'])
 @role_based_access_control_be
 def get_user_field(user_id, field):
@@ -527,16 +544,18 @@ def delete_event_timeslot(event_id, event_timeslot_id):
 @role_based_access_control_be
 def get_event_sessions(event_id):
     # Check if the event exists
-    event = Event.query.filter_by(id=event_id).first_or_404()
-    sessions = event.sessions
+    Event.query.filter_by(id=event_id).first_or_404()
+    sessions = Session.query.filter_by(event_id=event_id).all()
 
     mutable_args = request.args.to_dict()
     show_private = mutable_args.pop('show_private', None).lower() == 'true'
     
-    data = helper.filter_model_by_query_and_properties(Session, mutable_args, input_data=sessions, return_objects=True)
+    data, row_count = helper.filter_model_by_query_and_properties(Session, mutable_args, input_data=sessions, return_objects=True)
     
-    for session in data.copy():
+    tmp_data = data.copy()
+    for session in tmp_data:
         if (not session.event_location.publicly_visible and not show_private) or (not session.event_timeslot.publicly_visible and not show_private) and not session.event_timeslot.timeslot.is_break:
+
             data.remove(session)
 
     return_obj = [session.to_dict() for session in data]
@@ -612,6 +631,10 @@ def remove_workshop_from_session(session_id):
     
     session.workshop_id = None
     session.publicly_visible = True
+    session_volunteer_signups = session.volunteer_signups
+
+    for volunteer_signup in session_volunteer_signups:
+        db.session.delete(volunteer_signup)
     db.session.commit()
     
     helper.update_session_event_location_visibility(session)

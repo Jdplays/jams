@@ -1,4 +1,4 @@
-import { EventLocation, EventTimeslot, Session, Location, Timeslot, Workshop, Event, DifficultyLevel, User, Role, Page, VolunteerAttendance, PrivateAccessLog, WorkshopFile, FileData, FileVersion } from "./endpoints_interfaces";
+import { EventLocation, EventTimeslot, Session, Location, Timeslot, Workshop, Event, DifficultyLevel, User, Role, Page, VolunteerAttendance, PrivateAccessLog, WorkshopFile, FileData, FileVersion, VolunteerSignup } from "./endpoints_interfaces";
 
 type SingularOrArray<T> = T | T[];
 type TransformToSingularOrArray<T> = {
@@ -19,6 +19,7 @@ export interface QueryStringData extends
     TransformToSingularOrArray<Page>,
     TransformToSingularOrArray<PrivateAccessLog>,
     TransformToSingularOrArray<VolunteerAttendance>,
+    TransformToSingularOrArray<VolunteerSignup>,
     TransformToSingularOrArray<WorkshopFile>,
     TransformToSingularOrArray<FileData>,
     TransformToSingularOrArray<FileVersion> {

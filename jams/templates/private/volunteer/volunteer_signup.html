@@ -1,0 +1,76 @@
+{% extends '_layout.html' %}
+
+{% block title %}Volunteer Signup{% endblock %}
+
+{% block content %}
+
+<div class="content-wrapper">
+    <div class="main-content">
+        <div class="card"></div>
+        <div class="card-body" style="height: 10rem">
+
+            <h1>Volunteer Signup</h1>
+            <div class="col" id="event-details">
+                <div class="grid-columns-flex">
+                    {% if user_has_access_to_page('user_management') %}
+                    <div class="mb-3">
+                        <div class="form-label">Select User</div>
+                        <a id="select-user-dropdown-button" href="#" class="btn dropdown-toggle"
+                            data-bs-toggle="dropdown">Select User</a>
+                        <div id="select-user-dropdown" class="dropdown-menu">
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="schedule-container" class="schedule-container">
+        <div class="grid-container" id="grid-container"></div>
+    </div>
+
+
+    <div class="modal modal-blur fade" id="user-no-attendance-modal" tabindex="-1" style="display: none;"
+        aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-status bg-warning"></div>
+                <div class="modal-body text-center py-4">
+                    <!-- Download SVG icon from http://tabler-icons.io/i/alert-triangle -->
+
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="icon mb-2 text-warning icon-lg">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M12 9v4"></path>
+                        <path
+                            d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z">
+                        </path>
+                        <path d="M12 16h.01"></path>
+                    </svg>
+                    <h3>Are you at the Event?</h3>
+                    <div id="user-no-attendance-text" class="text-secondary"></div>
+                </div>
+                <div class="modal-footer">
+                    <div class="w-100">
+                        <div class="row">
+                            <div id="user-no-attendance-update" class="col"><a href="#" class="btn btn-success w-100"
+                                    data-bs-dismiss="modal">
+                                    Yes
+                                </a></div>
+                            <div class="col"><a href="#" class="btn w-100" data-bs-dismiss="modal">
+                                    No
+                                </a></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/volunteer/volunteer_signup.js') }}" defer></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/general/schedule_grid.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/general/workshop_card.css') }}">
+{% endblock %}

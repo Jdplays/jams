@@ -24,10 +24,6 @@ body {
     margin-bottom: 20px;
 }
 
-.select-event-dropdown {
-    width: 60%;
-}
-
 .event-details {
     display: flex;
     flex-direction: column;

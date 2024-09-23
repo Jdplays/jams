@@ -23,7 +23,8 @@ import {
     WorkshopType,
     AuthConfiguration,
     EditAuthConfigurationResponse,
-    BackendResponse
+    BackendResponse,
+    VolunteerSignup
 } from "@global/endpoints_interfaces";
 
 // This is a script where all then endpoint calls will live to prevent duplication across scripts
@@ -821,7 +822,7 @@ export function getEvents(queryString:string|null = null):Promise<BackendMultiEn
     });
 }
 
-export function getEventsField(field:string, queryString:string|null = null):Promise<BackendMultiEntryResponse<[Event]>> {
+export function getEventsField(field:string, queryString:string|null = null):Promise<BackendMultiEntryResponse<[Partial<Event>]>> {
     return new Promise((resolve, reject) => {
         let url = `/backend/events/${field}`
         if (queryString != null) {
@@ -841,19 +842,15 @@ export function getEventsField(field:string, queryString:string|null = null):Pro
     });
 }
 
-export function getEventNames(queryString:string|null = null):Promise<BackendMultiEntryResponse<[Partial<Event>]>> {
+export function getEvent(eventID:number):Promise<Event> {
     return new Promise((resolve, reject) => {
-        let url = '/backend/events/name'
-        if (queryString != null) {
-            url += `?${queryString}`
-        }
         $.ajax({
-            url: url,
+            url: `/backend/events/${eventID}`,
             type: 'GET',
-            success: function (response) {
-                resolve(response)
+            success: function(response) {
+                resolve(response);   
             },
-            error: function (error) {
+            error: function(error) {
                 console.log('Error fetching data:', error);
                 reject(error);
             }
@@ -861,10 +858,10 @@ export function getEventNames(queryString:string|null = null):Promise<BackendMul
     });
 }
 
-export function getEvent(eventID:number):Promise<Event> {
+export function getEventField(eventID:number, field:string):Promise<Partial<Event>> {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: `/backend/events/${eventID}`,
+            url: `/backend/events/${eventID}/${field}`,
             type: 'GET',
             success: function(response) {
                 resolve(response);   
@@ -990,6 +987,26 @@ export function getCurrentUserData(queryString:string|null=null):Promise<User> {
 export function getUsers(queryString:string|null = null):Promise<BackendMultiEntryResponse<[User]>> {
     return new Promise((resolve, reject) => {
         let url = '/backend/users'
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function getUsersPublicInfo(queryString:string|null = null):Promise<BackendMultiEntryResponse<[Partial<User>]>> {
+    return new Promise((resolve, reject) => {
+        let url = '/backend/users/public_info'
         if (queryString != null) {
             url += `?${queryString}`
         }
@@ -1273,7 +1290,7 @@ export function getPrivateAccessLogs(queryString:string|null=null):Promise<Backe
 
 // #endregion
 
-// # region Volunteer Attendance
+// #region Volunteer Attendance
 
 export function getAttendanceForEvent(eventID:number, queryString:string|null = null):Promise<BackendMultiEntryResponse<[VolunteerAttendance]>> {
     return new Promise((resolve, reject) => {
@@ -1346,6 +1363,80 @@ export function editAttendance(userID:number, eventID:number, data:Partial<Volun
         });
     });
 }
+// #endregion
+
+// #region
+
+export function getVolunteerSignupsForEvent(eventID:number, queryString:string|null = null):Promise<BackendMultiEntryResponse<[VolunteerSignup]>> {
+    return new Promise((resolve, reject) => {
+        let url = `/backend/events/${eventID}/volunteer_signups`
+        if (queryString) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);   
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error);
+            }
+        });
+    });
+}
+
+export function getSignupsForUser(eventId:number, userId:number):Promise<BackendMultiEntryResponse<[VolunteerSignup]>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `/backend/events/${eventId}/volunteer_signups/${userId}`,
+            type: 'GET',
+            success: function(response) {
+                resolve(response.volunteer_attendence);   
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error);
+            }
+        });
+    });
+}
+
+export function addVolunteerSignup(eventId:number, userId:number, data:Partial<VolunteerSignup>):Promise<BackendResponse<VolunteerSignup>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: `/backend/events/${eventId}/volunteer_signups/${userId}`,
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function removeVolunteerSignup(eventId:number, userId:number, session_id:number):Promise<BackendResponse<VolunteerSignup>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'DELETE',
+            url: `/backend/events/${eventId}/volunteer_signups/${userId}/sessions/${session_id}`,
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
 // #endregion
 
 // #region Files

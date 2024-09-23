@@ -14,10 +14,13 @@ import {
     removeLocationFromEvent,
     removeTimeslotFromEvent,
     getIconData,
-    getWorkshopTypes
+    getWorkshopTypes,
+    getVolunteerSignupsForEvent,
+    removeVolunteerSignup,
+    addVolunteerSignup
 } from '@global/endpoints'
-import { EventLocation, EventTimeslot, Location, Timeslot } from '@global/endpoints_interfaces'
-import {buildQueryString, emptyElement, allowDrop, waitForTransitionEnd, debounce} from '@global/helper'
+import { EventLocation, EventTimeslot, Location, Timeslot, User, VolunteerSignup } from '@global/endpoints_interfaces'
+import {buildQueryString, emptyElement, allowDrop, waitForTransitionEnd, debounce, successToast, errorToast, buildUserAvatar, preloadUsersInfoMap} from '@global/helper'
 import {WorkshopCard, WorkshopCardOptions} from '@global/workshop_card'
 
 type Icons = {[key: string]: any}
@@ -33,6 +36,7 @@ interface TimeslotsInEvent extends Timeslot {
 
 export interface ScheduleGridOptions {
     eventId?: number
+    userId?:number
     width?:number
     height?:number
     size?:number
@@ -40,8 +44,12 @@ export interface ScheduleGridOptions {
     updateInterval?:number
     workshopCardOptions?:WorkshopCardOptions
     autoScale?:boolean
+    autoResize?:boolean
     autoRefresh?:boolean
     showPrivate?:boolean
+    showVolunteerSignup?:boolean
+    volunteerSignup?:boolean
+    userInfoMap?:Record<number, Partial<User>>
 }
 
 export class ScheduleGrid {
@@ -54,6 +62,9 @@ export class ScheduleGrid {
     private locationsInEvent:LocationsInEvent[]
     private timeslotsInEvent:TimeslotsInEvent[]
 
+    private volunteerSignupsMap:Record<number, number[]> = {}
+    private usersInfoMap:Record<number, Partial<User>> = {}
+
     public currentDragType:string
 
 
@@ -61,6 +72,7 @@ export class ScheduleGrid {
         // Set options (use defaults for options not provided)
         const {
             eventId = 1,
+            userId = 1,
             width = 150,
             height = 150,
             size = 150,
@@ -68,12 +80,17 @@ export class ScheduleGrid {
             updateInterval = 1,
             workshopCardOptions = {},
             autoScale = false,
+            autoResize = false,
             autoRefresh = true,
-            showPrivate = true
+            showPrivate = true,
+            showVolunteerSignup = false,
+            volunteerSignup = false,
+            userInfoMap = {}
         } = options || {}
        
         this.options = {
             eventId,
+            userId,
             width,
             height,
             size,
@@ -81,8 +98,12 @@ export class ScheduleGrid {
             updateInterval,
             workshopCardOptions,
             autoScale,
+            autoResize,
             autoRefresh,
-            showPrivate
+            showPrivate,
+            showVolunteerSignup,
+            volunteerSignup,
+            userInfoMap
         }
 
         // Set the schedule container element from html
@@ -104,16 +125,42 @@ export class ScheduleGrid {
         }
 
         // Initialise the grid
-        this.initialiseScheduleGrid()
+        this.init()
+    }
+
+    // Clear resources and clean up if you ever need to reinitialise schedule grid
+    public teardown() {
+        this.scheduleContainer = null
+        this.options = null
+        this.icons = null
+        this.sessionCount = null
+        this.eventLocations = null
+        this.eventTimeslots = null
+        this.locationsInEvent = null
+        this.timeslotsInEvent = null
+        this.volunteerSignupsMap = null
+        this.usersInfoMap = null
+        this.currentDragType = null
     }
 
     // Get the grid ready
-    async initialiseScheduleGrid() {
-        // Pre load in all of the icons to reduce server calls
-        this.icons = {
-            remove: await getIconData('remove'),
-            addToGrid: await getIconData('table-add'),
-            grabPoint: await getIconData('grab-point')
+    async init(reInit:boolean=false) {
+        if (!reInit) {
+            // Pre load in all of the icons to reduce server calls
+            this.icons = {
+                remove: await getIconData('remove'),
+                addToGrid: await getIconData('table-add'),
+                grabPoint: await getIconData('grab-point'),
+                userAdd: await getIconData('user-add'),
+                userRemove: await getIconData('user-remove')
+            }
+        }
+
+        // Preload users Info Map
+        if (Object.keys(this.options.userInfoMap).length <= 0) {
+            this.usersInfoMap = await preloadUsersInfoMap()
+        } else {
+            this.usersInfoMap = this.options.userInfoMap
         }
 
         // Build the workshop card options based on the grid's options
@@ -122,17 +169,33 @@ export class ScheduleGrid {
         // Build the grid
         await this.updateSchedule()
 
-        // Set the update grid size function to run on window resize
-        window.onresize = () => {
-            this.updateGridSize(this)
-        }
+        if (!reInit) {
+            // Set the update grid size function to run on window resize
+            if (this.options.autoResize) {
+                window.onresize = () => {
+                    this.updateGridSize(this)
+                }
+            }
 
-        if (this.options.autoRefresh && this.options.updateInterval) {
-            // Run populate sessions x seconds
-            window.setInterval(() => {
-                this.populateSessions()
-            }, this.options.updateInterval * 1000)
+            if (this.options.autoRefresh && this.options.updateInterval) {
+                // Run populate sessions x seconds
+                window.setInterval(() => {
+                    this.populateSessions()
+                }, this.options.updateInterval * 1000)
+            }
         }
+    }
+
+    async preloadVolunteerSignupsMap() {
+        this.volunteerSignupsMap = {}
+        const volunteerSignupsResponse = await getVolunteerSignupsForEvent(this.options.eventId)
+
+        volunteerSignupsResponse.data.forEach(signup => {
+            if (!this.volunteerSignupsMap[signup.session_id]) {
+                this.volunteerSignupsMap[signup.session_id] = []
+            }
+            this.volunteerSignupsMap[signup.session_id].push(signup.user_id)
+        })
     }
 
     // Setup the options object for workshop cards within the grid
@@ -194,10 +257,25 @@ export class ScheduleGrid {
         await this.populateSessions()
     }
 
-    // Allows the eventId to be updated from outside of this script
-    changeEvent(newEventId:number) {
+    // Allows the eventId to be updated from outside of this module
+    async changeEvent(newEventId:number) {
         this.options.eventId = newEventId
+        this.volunteerSignupsMap = {}
+        await this.preloadVolunteerSignupsMap()
         this.updateSchedule()
+
+    }
+
+    // Allows the selected userId to be updated from outside of this module
+    changeSelectedUser(newUserId:number) {
+        this.options.userId = newUserId
+        this.updateSchedule()
+    }
+
+    // Allows the options to be updated from outside of this module
+    updateOptions(newOptions:Partial<ScheduleGridOptions>) {
+        this.options = {...this.options, ...newOptions}
+        this.init(true)
     }
 
     // This preps all of the data required to build the grid
@@ -534,6 +612,13 @@ export class ScheduleGrid {
         const sessionsResponse = await getSessionsForEvent(this.options.eventId, queryString)
         let sessions = sessionsResponse.data
 
+        const oldSignups:Record<number, number[]> = this.volunteerSignupsMap
+        let currentSignups:Record<number, number[]> = {}
+        if (this.options.showVolunteerSignup) {
+            await this.preloadVolunteerSignupsMap()
+            currentSignups = this.volunteerSignupsMap
+        }
+
         // If the grid session count is not equal to the length of the sessions justed pulled down, reload the grid
         if (this.sessionCount != sessions.length) {
             await this.updateSchedule()
@@ -585,6 +670,19 @@ export class ScheduleGrid {
                     sessionBlock.addEventListener('dragover', allowDrop);
                 }
             }
+
+            // If volunteeres can signup on this grid, check for differences
+            if (this.options.showVolunteerSignup) {
+                const areEqual = 
+                    oldSignups[session.id] === undefined && currentSignups[session.id] === undefined
+                    ? true
+                    : oldSignups[session.id]?.length === currentSignups[session.id]?.length &&
+                    oldSignups[session.id]?.every((value, index) => value === currentSignups[session.id][index])
+
+                if (!areEqual) {
+                    sessionWorkshopsToAdd.push(session)
+                }
+            }
         }
 
         // Generate the objects for the workshops to add to avoid doing extra unnessessary server calls
@@ -627,6 +725,7 @@ export class ScheduleGrid {
                 })
                 .filter(sw => sw != null)
 
+
             // Iterate over each workshop to be added and trigger an animation to set the workshop
             for (const workshop of workshopsToAdd) {
                 let sessionBlock = document.getElementById(`session-${workshop.event_location_id}-${workshop.event_timeslot_id}`)
@@ -635,6 +734,98 @@ export class ScheduleGrid {
                 }
 
                 let cardOptions = { ...this.options.workshopCardOptions, sessionId: workshop.session_id}
+                if (this.options.showVolunteerSignup) {
+                    let workshopSignups = 0
+                    let selectedUserSignupUp = false
+                    if (currentSignups[workshop.session_id] !== null && currentSignups[workshop.session_id] !== undefined) {
+                        workshopSignups = currentSignups[workshop.session_id].length
+                        selectedUserSignupUp = currentSignups[workshop.session_id].includes(this.options.userId)
+                    }
+
+                    if (workshop.min_volunteers !== null && workshop.min_volunteers !== undefined) {
+                        let cardBody = document.createElement('div')
+                        cardBody.style.marginTop = '-15px'
+                        let volunteerCountText = document.createElement('p')
+                        volunteerCountText.innerHTML = `${workshopSignups}/${workshop.min_volunteers}`
+
+                        cardBody.appendChild(volunteerCountText)
+
+                        if (workshopSignups > 0) {
+                            const numberOfAvatarsFit = Math.floor(this.options.width / 30)
+
+                            let index = 0
+                            for (const userId of currentSignups[workshop.session_id]) {
+                                const user = this.usersInfoMap[userId]
+                                if (!user) {
+                                    continue
+                                }
+
+                                if (index >= numberOfAvatarsFit-2) {
+                                    break
+                                }
+
+                                let volunteerAvatar = buildUserAvatar(this.usersInfoMap[userId], 25)
+
+                                if (index+1 < workshopSignups) {
+                                    volunteerAvatar.style.marginRight = '5px'
+                                }
+
+                                volunteerAvatar.style.marginBottom = '5px'
+                                volunteerAvatar.style.marginTop = '-30px'
+                                cardBody.appendChild(volunteerAvatar)
+
+                                index++
+                            }
+
+                            if (index < workshopSignups) {
+                                let volunteerAvatar = buildUserAvatar(null, 25, `+${workshopSignups - index}`)
+                                volunteerAvatar.style.marginBottom = '5px'
+                                cardBody.appendChild(volunteerAvatar)
+                            }
+                        }
+
+                        cardOptions.cardBodyElement = cardBody
+                        if (workshopSignups < workshop.min_volunteers) {
+                            cardOptions.backgroundColour = '#ff5838b3'
+                        } else {
+                            cardOptions.backgroundColour = '#b3ff4fb3'
+                        }
+
+                        if (this.options.volunteerSignup) {
+                            if (selectedUserSignupUp) {
+                                cardOptions.backgroundColour = '#38aaffb3'
+                                cardOptions.cardBodyActionIcon = this.icons.userRemove
+                                cardOptions.cardBodyActionFunc = () => {
+                                    removeVolunteerSignup(this.options.eventId, this.options.userId, workshop.session_id).then((response) => {
+                                        successToast(response.message)
+                                        this.populateSessions()
+                                    }).catch((error) => {
+                                        const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
+                                        errorToast(errorMessage)
+                                    })
+                                }
+                            } else {
+                                cardOptions.cardBodyActionIcon = this.icons.userAdd
+                                cardOptions.cardBodyActionFunc = () => {
+                                    const data:Partial<VolunteerSignup> = {
+                                        session_id: workshop.session_id
+                                    }
+
+                                    addVolunteerSignup(this.options.eventId, this.options.userId, data).then((response) => {
+                                        successToast(response.message)
+                                        this.populateSessions()
+                                    }).catch((error) => {
+                                        const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
+                                        errorToast(errorMessage)
+                                    })
+                                }
+                            }
+                        }
+                    } else {
+                        cardOptions.cardBodyText = ' '
+                        cardOptions.backgroundColour = '#7e827f'
+                    }
+                }
                 let workshopCard = new WorkshopCard(workshop, cardOptions)
                 let workshopCardElement = await workshopCard.element() as HTMLElement
                 this.animateWorkshopDrop(sessionBlock, workshopCardElement)
@@ -950,8 +1141,8 @@ export class ScheduleGrid {
             let windowHeight = window.innerHeight
             
             // Round the width to the nearest 50px. Then take 50 px away for side padding
-            let roundedWindowWidth = (50 * Math.round(windowWidth / 50)) * 0.9
-            let roundedWindowHeight = (50 * Math.round(windowHeight / 50)) * 0.8
+            let roundedWindowWidth = (50 * Math.round(windowWidth / 50)) * 0.95
+            let roundedWindowHeight = (50 * Math.round(windowHeight / 50)) * 0.72
 
             if (scheduleGrid.options.edit) {
                 roundedWindowWidth -= 100

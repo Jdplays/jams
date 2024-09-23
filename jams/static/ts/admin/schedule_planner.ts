@@ -1,7 +1,7 @@
 // Event Schedule Page
 
 import {
-    getEventNames,
+    getEventsField,
     getEvent,
     getWorkshops,
     getIconData,
@@ -11,7 +11,8 @@ import {
 import {
     buildQueryString,
     emptyElement,
-    createDropdown
+    createDropdown,
+    formatDate
 } from '@global/helper'
 
 import { WorkshopCard } from '@global/workshop_card'
@@ -44,7 +45,7 @@ const scheduleGrid = new ScheduleGrid('schedule-container', scheduleGridOptions)
 
 // Populates the Event selection dropdown with all of the events
 async function populateEventSelectionDropdown() {
-    const eventsResponse = await getEventNames()
+    const eventsResponse = await getEventsField('name')
     let events = eventsResponse.data
 
     let eventSelectionDropdown = document.getElementById('event-selection')
@@ -288,29 +289,6 @@ function drag(ev:DragEvent, value:string) {
     ev.dataTransfer.setData("workshop-id", value);
     ev.dataTransfer.setData("drag-type", "blah");
     scheduleGrid.currentDragType = 'workshop-add'
-}
-
-// Formats a date from numbers to words (24-09-15 to 15th Spetember 2024)
-function formatDate(dateString:string) {
-    const date = new Date(dateString);
-    const day = date.getDate();
-    const month = date.toLocaleString('default', { month: 'long' });
-    const year = date.getFullYear();
-    
-    // Function to get the ordinal suffix for the day
-    function getOrdinalSuffix(n:any) {
-        if (n > 3 && n < 21) return 'th';
-        switch (n % 10) {
-            case 1: return 'st';
-            case 2: return 'nd';
-            case 3: return 'rd';
-            default: return 'th';
-        }
-    }
-    
-    const dayWithSuffix = day + getOrdinalSuffix(day);
-    
-    return `${dayWithSuffix} ${month} ${year}`;
 }
 
 // Event Listeners
