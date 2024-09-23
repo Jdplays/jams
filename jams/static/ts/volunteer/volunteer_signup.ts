@@ -1,7 +1,7 @@
-import { getAttendanceForEvent, getCurrentUserId } from "@global/endpoints";
+import { addAttendance, getAttendanceForEvent, getCurrentUserId } from "@global/endpoints";
 import { User, VolunteerAttendance } from "@global/endpoints_interfaces";
 import { EventDetails, EventDetailsOptions } from "@global/event_details";
-import { buildUserAvatar, preloadUsersInfoMap } from "@global/helper";
+import { buildUserAvatar, emptyElement, errorToast, preloadUsersInfoMap, successToast } from "@global/helper";
 import { ScheduleGrid, ScheduleGridOptions } from "@global/schedule_grid";
 
 const eventDetailsOptions:EventDetailsOptions = {
@@ -14,17 +14,20 @@ const scheduleGridOptions:ScheduleGridOptions = {
     edit: false,
     autoScale: true,
     showPrivate: true,
-    volunteerSignup:true
+    showVolunteerSignup:true
 }
 
 let scheduleGrid:ScheduleGrid
 
 let CurrentUserId:number = 1
+let selectedUserId:number = CurrentUserId
 let usersInfoMap:Record<number, Partial<User>> = {}
 let eventAttendances:Partial<VolunteerAttendance>[] = []
 
 function onEventChangeFunc() {
     scheduleGrid.changeEvent(eventDetails.eventId)
+    loadSignupData(true)
+
 }
 
 function populateUsersDropdown() {
@@ -33,9 +36,10 @@ function populateUsersDropdown() {
         return
     }
 
-    dropdownButton.innerHTML = usersInfoMap[CurrentUserId].display_name
+    dropdownButton.innerHTML = usersInfoMap[selectedUserId].display_name
 
     const dropdown = document.getElementById('select-user-dropdown') as HTMLDivElement
+    emptyElement(dropdown)
 
     for (const attendance of eventAttendances) {
         let item = document.createElement('a')
@@ -75,10 +79,12 @@ function populateUsersDropdown() {
     }
 }
 
-function userSelectItemOnClick(userId:number) {
+async function userSelectItemOnClick(userId:number) {
     const dropdownButton = document.getElementById('select-user-dropdown-button') as HTMLAnchorElement
     dropdownButton.innerHTML = usersInfoMap[userId].display_name
 
+    selectedUserId = userId
+    await loadSignupData(true)
     scheduleGrid.changeSelectedUser(userId)
 }
 
@@ -105,26 +111,67 @@ async function loadUsersAttendingEvent() {
     })
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-    eventDetails = new EventDetails('event-details', eventDetailsOptions)
-    await eventDetails.init()
-    usersInfoMap = await preloadUsersInfoMap()
+function checkUserIsAttendingEvent() {
+    scheduleGridOptions.volunteerSignup = false
+    for (const attendance of eventAttendances) {
+        if (attendance.user_id === selectedUserId && attendance.main) {
+            scheduleGridOptions.volunteerSignup = true
+        }
+    }
 
-    const selectedUserId = await getCurrentUserId()
-    CurrentUserId = selectedUserId
+    if (!scheduleGridOptions.volunteerSignup) {
+        let confirmDeleteModal = $('#user-no-attendance-modal')
+        confirmDeleteModal.modal('show')
+        confirmDeleteModal.find('#user-no-attendance-text').html(`
+            It appears that "${usersInfoMap[selectedUserId].display_name}" is not attending this event. Would you like to update your attendance?<br><br>If you select 'No,' you won't be able to sign up for workshops, but you can still view the schedule. 
+        `);
 
+        confirmDeleteModal.find('#user-no-attendance-update').click(() => {
+            const data:Partial<VolunteerAttendance> = {
+                main:true,
+                note: 'I Forgot to update my attendance, so JAMS had to do it for me :('
+            }
+            addAttendance(selectedUserId, eventDetails.eventId, data).then((response) => {
+                successToast(response.message)
+                loadSignupData(true)
+            }).catch((error) => {
+                const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
+                errorToast(errorMessage)
+            })
+        })
+    }
+}
+
+async function loadSignupData(reloadGrid:boolean=false) {
     await loadUsersAttendingEvent()
 
     populateUsersDropdown()
+
+    checkUserIsAttendingEvent()
 
     scheduleGridOptions.eventId = eventDetails.eventId
     scheduleGridOptions.userId = selectedUserId
     scheduleGridOptions.userInfoMap = usersInfoMap
 
-    scheduleGrid = new ScheduleGrid('schedule-container', scheduleGridOptions)
+    if (reloadGrid) {
+        scheduleGrid.updateOptions(scheduleGridOptions)
+    } else {
+        scheduleGrid = new ScheduleGrid('schedule-container', scheduleGridOptions)
+    }
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+    eventDetails = new EventDetails('event-details', eventDetailsOptions)
+    await eventDetails.init()
+    usersInfoMap = await preloadUsersInfoMap()
+
+    CurrentUserId = await getCurrentUserId()
+    selectedUserId = CurrentUserId
+
+    loadSignupData()
 });
 
-document.addEventListener("DOMContentLoaded", async function () {
+document.addEventListener("DOMContentLoaded", function () {
     let bodyContainer = document.getElementById('body-container')
     bodyContainer.classList.remove('container')
     bodyContainer.classList.add('container-fluid')

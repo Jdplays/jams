@@ -47,7 +47,7 @@ def add_user_attendance(user_id, event_id):
     att = VolunteerAttendance.query.filter_by(user_id=user_id, event_id=event_id).first()
 
     if att is not None:
-        abort(400, description="User already has attendance for this event")
+        return edit_user_attendance(user_id=user_id, event_id=event_id)
 
     data = request.get_json()
     if not data:
