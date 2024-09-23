@@ -495,6 +495,17 @@ export function formatDate(dateString:string) {
     return `${dayWithSuffix} ${month} ${year}`;
 }
 
+export function formatDateToShort(dateString: string): string {
+    const date = new Date(dateString);
+
+    // Get the day, month, and year
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+    const year = String(date.getUTCFullYear()).slice(-2); // Get last 2 digits of the year
+
+    return `${day}/${month}/${year}`;
+}
+
 export function buildUserAvatar(UserAvatarInfo:Partial<User>|null=null, size:number|null=null, customText:string|null=null):HTMLSpanElement {
     let avatar = document.createElement('span')
     avatar.classList.add('avatar')

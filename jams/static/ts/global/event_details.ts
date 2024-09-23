@@ -1,6 +1,6 @@
-import { getEvent, getEventField, getEventsField, getnextEvent } from "./endpoints"
+import { getEventField, getEventsField, getnextEvent } from "./endpoints"
 import { BackendResponse, Event } from "./endpoints_interfaces"
-import { buildQueryString, createDropdown, emptyElement, formatDate } from "./helper"
+import { buildQueryString, emptyElement, formatDate, formatDateToShort } from "./helper"
 import { QueryStringData } from "./interfaces"
 
 export interface EventDetailsOptions {
@@ -15,7 +15,7 @@ export interface EventDetailsOptions {
 export class EventDetails {
     private detailsContainer:HTMLDivElement
     private options:EventDetailsOptions
-    private eventNamesMap:Record<number, Partial<Event>> = {}
+    private eventDetailsMap:Record<number, Partial<Event>> = {}
 
     public eventId:number
 
@@ -37,8 +37,6 @@ export class EventDetails {
             eventDependentElements,
             eventOnChangeFunc
         }
-
-        this.eventSelectionDropdownOnChange = this.eventSelectionDropdownOnChange.bind(this)
     }
 
     async init() {
@@ -59,20 +57,30 @@ export class EventDetails {
         infoTextDiv.id = 'info-text'
         this.detailsContainer.insertBefore(infoTextDiv, this.detailsContainer.firstChild)
 
-        this.eventNamesMap = await this.preLoadEventNames()
+        this.eventDetailsMap = await this.preLoadEventNames()
         await this.populateEventDetails()
 
         await this.populateEventSelectionDropdown()
     }
 
     async preLoadEventNames() {
-        const response = await getEventsField('name')
-        let eventNames = response.data
-        let eventNamesMap:Record<number, Partial<Event>> = {}
-        eventNames.forEach((event: Partial<Event>) => {
-            eventNamesMap[event.id] = event
-        })
-        return eventNamesMap
+        const namesResponse = await getEventsField('name')
+        const datesResponse = await getEventsField('date')
+        let eventNames = namesResponse.data
+        let eventDates = datesResponse.data
+        let eventDetailsMap:Record<number, Partial<Event>> = eventNames.reduce((acc, en) => {
+            const matchedEvent = eventDates.find((ed) => en.id === ed.id)
+            if (matchedEvent && en.id !== undefined) {
+                acc[en.id] = {...en, ...matchedEvent}
+            } else if (en.id !== undefined) {
+                acc[en.id] = {...en}
+            }
+            return acc
+            },
+            {} as Record<number, Partial<Event>>
+        )
+
+        return eventDetailsMap
     }
 
     async populateEventDetails() {
@@ -107,8 +115,14 @@ export class EventDetails {
 
     // Populates the Event selection dropdown with all of the events
     async populateEventSelectionDropdown() {
-        let eventSelectionDropdown = document.createElement('div')
+        let eventSelectionDropdown = document.querySelector('#select-event-dropdown-container') as HTMLElement
+        if (eventSelectionDropdown) {
+            emptyElement(eventSelectionDropdown)
+        }
+
+        eventSelectionDropdown = document.createElement('div')
         eventSelectionDropdown.classList.add('mb-3')
+        eventSelectionDropdown.id = 'select-event-dropdown-container'
 
         let selectionHeader = document.createElement('div')
         selectionHeader.classList.add('form-label')
@@ -117,16 +131,44 @@ export class EventDetails {
 
         eventSelectionDropdown.appendChild(selectionHeader)
 
-        let defaultValue = 'Select an Event'
-        if (this.eventNamesMap[this.eventId] !== undefined && this.eventNamesMap[this.eventId] !== null) {
-            defaultValue = this.eventNamesMap[this.eventId].name
+        let dropdownButton = document.createElement('a')
+        dropdownButton.id = 'select-event-dropdown-button'
+        dropdownButton.classList.add('btn', 'dropdown-toggle')
+        dropdownButton.setAttribute('data-bs-toggle', 'dropdown')
+        dropdownButton.innerHTML = 'Select Event'
+        if (this.eventId) {
+            dropdownButton.innerHTML = this.eventDropdownItemText(this.eventDetailsMap[this.eventId])
         }
-        let select = createDropdown(Object.values(this.eventNamesMap), defaultValue, this.eventSelectionDropdownOnChange)
-        select.id = 'event-select'
-        select.classList.add('form-select')
-        eventSelectionDropdown.appendChild(select)
 
-        eventSelectionDropdown.appendChild(select)
+        eventSelectionDropdown.appendChild(dropdownButton)
+
+        let dropdown = document.createElement('div')
+        dropdown.id = 'select-event-dropdown'
+        dropdown.classList.add('dropdown-menu')
+
+        Object.entries(this.eventDetailsMap).forEach(([id, event]) => {
+            let item = document.createElement('a')
+            item.classList.add('dropdown-item')
+
+            let text = document.createElement('span')
+            text.innerHTML = this.eventDropdownItemText(event)
+
+            item.appendChild(text)
+
+            item.onclick =  () => {
+                this.eventId = Number(id)
+                this.populateEventDetails()
+                dropdownButton.innerHTML = this.eventDropdownItemText(this.eventDetailsMap[this.eventId])
+
+                if (this.options.eventOnChangeFunc) {
+                    this.options.eventOnChangeFunc()
+                }
+            }
+
+            dropdown.appendChild(item)
+        })
+
+        eventSelectionDropdown.appendChild(dropdown)
 
         const dropdownsContainer = this.detailsContainer.querySelector('.grid-columns-flex')
         if (dropdownsContainer) {
@@ -137,15 +179,7 @@ export class EventDetails {
         this.detailsContainer.appendChild(eventSelectionDropdown)
     }
 
-    // Handles the onchange event for the Event selction dropdown 
-    eventSelectionDropdownOnChange(event:any) {
-        const element = event.target as HTMLInputElement
-        const selectedValue = Number(element.value)
-        this.eventId = selectedValue
-        this.populateEventDetails()
-
-        if (this.options.eventOnChangeFunc) {
-            this.options.eventOnChangeFunc()
-        }
+    eventDropdownItemText(event:Partial<Event>) {
+        return `${event.name} - ${formatDateToShort(event.date)}`
     }
 }
