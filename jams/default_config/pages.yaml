@@ -192,18 +192,14 @@ pages:
   volunteer_signup:
     endpoint: routes.frontend.private.volunteer.volunteer_signup
     backend_endpoints:
-      routes.backend.private.admin.get_users_field:
-        allowed_fields: id, display_name
       routes.backend.private.admin.get_event_field:
         allowed_fields: id, name, date
       routes.backend.private.admin.get_events_field:
         allowed_fields: id, name
       routes.backend.private.admin.get_users_public_info:
-      routes.backend.private.admin.get_user_public_info:
       routes.backend.private.volunteer.get_event_attendance:
-      routes.backend.private.volunteer.get_user_attendance:
+      routes.backend.private.volunteer.add_user_attendance:
       routes.backend.private.volunteer.get_event_volunteer_signups:
-      routes.backend.private.volunteer.get_user_signups:
       routes.backend.private.volunteer.add_volunteer_signup:
       routes.backend.private.volunteer.remove_volunteer_signup:
       # Schedule Grid

@@ -1403,7 +1403,7 @@ export function getSignupsForUser(eventId:number, userId:number):Promise<Backend
     });
 }
 
-export function addVolunteerSignup(eventId:number, userId:number, data:Partial<VolunteerSignup>):Promise<BackendResponse<VolunteerAttendance>> {
+export function addVolunteerSignup(eventId:number, userId:number, data:Partial<VolunteerSignup>):Promise<BackendResponse<VolunteerSignup>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             type: 'POST',
@@ -1421,7 +1421,7 @@ export function addVolunteerSignup(eventId:number, userId:number, data:Partial<V
     });
 }
 
-export function removeVolunteerSignup(eventId:number, userId:number, session_id:number):Promise<BackendResponse<VolunteerAttendance>> {
+export function removeVolunteerSignup(eventId:number, userId:number, session_id:number):Promise<BackendResponse<VolunteerSignup>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             type: 'DELETE',
