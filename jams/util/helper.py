@@ -76,10 +76,14 @@ def prep_delete_event_Timeslot(event_timeslot_id):
     return True
 
 def prep_delete_session(session_id):
-    ############ This is not needed anymore, but will be needed in the future. So will leave it #######
     session = Session.query.filter_by(id=session_id).first()
+    session_volunteer_signups = session.volunteer_signups
+
+    for volunteer_signup in session_volunteer_signups:
+        db.session.delete(volunteer_signup)
     
     # TODO: Remove anything else here in future (Not needed at the time of writing)
+    db.session.commit()
     
     # Everything is removed, so return true
     return True

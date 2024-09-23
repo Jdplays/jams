@@ -631,6 +631,10 @@ def remove_workshop_from_session(session_id):
     
     session.workshop_id = None
     session.publicly_visible = True
+    session_volunteer_signups = session.volunteer_signups
+
+    for volunteer_signup in session_volunteer_signups:
+        db.session.delete(volunteer_signup)
     db.session.commit()
     
     helper.update_session_event_location_visibility(session)
