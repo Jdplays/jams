@@ -47,6 +47,7 @@ export interface ScheduleGridOptions {
     autoResize?:boolean
     autoRefresh?:boolean
     showPrivate?:boolean
+    showVolunteerSignup?:boolean
     volunteerSignup?:boolean
     userInfoMap?:Record<number, Partial<User>>
 }
@@ -82,6 +83,7 @@ export class ScheduleGrid {
             autoResize = false,
             autoRefresh = true,
             showPrivate = true,
+            showVolunteerSignup = false,
             volunteerSignup = false,
             userInfoMap = {}
         } = options || {}
@@ -99,6 +101,7 @@ export class ScheduleGrid {
             autoResize,
             autoRefresh,
             showPrivate,
+            showVolunteerSignup,
             volunteerSignup,
             userInfoMap
         }
@@ -122,18 +125,35 @@ export class ScheduleGrid {
         }
 
         // Initialise the grid
-        this.initialiseScheduleGrid()
+        this.init()
+    }
+
+    // Clear resources and clean up if you ever need to reinitialise schedule grid
+    public teardown() {
+        this.scheduleContainer = null
+        this.options = null
+        this.icons = null
+        this.sessionCount = null
+        this.eventLocations = null
+        this.eventTimeslots = null
+        this.locationsInEvent = null
+        this.timeslotsInEvent = null
+        this.volunteerSignupsMap = null
+        this.usersInfoMap = null
+        this.currentDragType = null
     }
 
     // Get the grid ready
-    async initialiseScheduleGrid() {
-        // Pre load in all of the icons to reduce server calls
-        this.icons = {
-            remove: await getIconData('remove'),
-            addToGrid: await getIconData('table-add'),
-            grabPoint: await getIconData('grab-point'),
-            userAdd: await getIconData('user-add'),
-            userRemove: await getIconData('user-remove')
+    async init(reInit:boolean=false) {
+        if (!reInit) {
+            // Pre load in all of the icons to reduce server calls
+            this.icons = {
+                remove: await getIconData('remove'),
+                addToGrid: await getIconData('table-add'),
+                grabPoint: await getIconData('grab-point'),
+                userAdd: await getIconData('user-add'),
+                userRemove: await getIconData('user-remove')
+            }
         }
 
         // Preload users Info Map
@@ -149,18 +169,20 @@ export class ScheduleGrid {
         // Build the grid
         await this.updateSchedule()
 
-        // Set the update grid size function to run on window resize
-        if (this.options.autoResize) {
-            window.onresize = () => {
-                this.updateGridSize(this)
+        if (!reInit) {
+            // Set the update grid size function to run on window resize
+            if (this.options.autoResize) {
+                window.onresize = () => {
+                    this.updateGridSize(this)
+                }
             }
-        }
 
-        if (this.options.autoRefresh && this.options.updateInterval) {
-            // Run populate sessions x seconds
-            window.setInterval(() => {
-                this.populateSessions()
-            }, this.options.updateInterval * 1000)
+            if (this.options.autoRefresh && this.options.updateInterval) {
+                // Run populate sessions x seconds
+                window.setInterval(() => {
+                    this.populateSessions()
+                }, this.options.updateInterval * 1000)
+            }
         }
     }
 
@@ -235,7 +257,7 @@ export class ScheduleGrid {
         await this.populateSessions()
     }
 
-    // Allows the eventId to be updated from outside of this script
+    // Allows the eventId to be updated from outside of this module
     async changeEvent(newEventId:number) {
         this.options.eventId = newEventId
         this.volunteerSignupsMap = {}
@@ -248,6 +270,12 @@ export class ScheduleGrid {
     changeSelectedUser(newUserId:number) {
         this.options.userId = newUserId
         this.updateSchedule()
+    }
+
+    // Allows the options to be updated from outside of this module
+    updateOptions(newOptions:Partial<ScheduleGridOptions>) {
+        this.options = {...this.options, ...newOptions}
+        this.init(true)
     }
 
     // This preps all of the data required to build the grid
@@ -586,7 +614,7 @@ export class ScheduleGrid {
 
         const oldSignups:Record<number, number[]> = this.volunteerSignupsMap
         let currentSignups:Record<number, number[]> = {}
-        if (this.options.volunteerSignup) {
+        if (this.options.showVolunteerSignup) {
             await this.preloadVolunteerSignupsMap()
             currentSignups = this.volunteerSignupsMap
         }
@@ -644,7 +672,7 @@ export class ScheduleGrid {
             }
 
             // If volunteeres can signup on this grid, check for differences
-            if (this.options.volunteerSignup) {
+            if (this.options.showVolunteerSignup) {
                 const areEqual = 
                     oldSignups[session.id] === undefined && currentSignups[session.id] === undefined
                     ? true
@@ -706,7 +734,7 @@ export class ScheduleGrid {
                 }
 
                 let cardOptions = { ...this.options.workshopCardOptions, sessionId: workshop.session_id}
-                if (this.options.volunteerSignup) {
+                if (this.options.showVolunteerSignup) {
                     let workshopSignups = 0
                     let selectedUserSignupUp = false
                     if (currentSignups[workshop.session_id] !== null && currentSignups[workshop.session_id] !== undefined) {
@@ -763,33 +791,34 @@ export class ScheduleGrid {
                             cardOptions.backgroundColour = '#b3ff4fb3'
                         }
 
-                        
-                        if (selectedUserSignupUp) {
-                            cardOptions.backgroundColour = '#38aaffb3'
-                            cardOptions.cardBodyActionIcon = this.icons.userRemove
-                            cardOptions.cardBodyActionFunc = () => {
-                                removeVolunteerSignup(this.options.eventId, this.options.userId, workshop.session_id).then((response) => {
-                                    successToast(response.message)
-                                    this.populateSessions()
-                                }).catch((error) => {
-                                    const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
-                                    errorToast(errorMessage)
-                                })
-                            }
-                        } else {
-                            cardOptions.cardBodyActionIcon = this.icons.userAdd
-                            cardOptions.cardBodyActionFunc = () => {
-                                const data:Partial<VolunteerSignup> = {
-                                    session_id: workshop.session_id
+                        if (this.options.volunteerSignup) {
+                            if (selectedUserSignupUp) {
+                                cardOptions.backgroundColour = '#38aaffb3'
+                                cardOptions.cardBodyActionIcon = this.icons.userRemove
+                                cardOptions.cardBodyActionFunc = () => {
+                                    removeVolunteerSignup(this.options.eventId, this.options.userId, workshop.session_id).then((response) => {
+                                        successToast(response.message)
+                                        this.populateSessions()
+                                    }).catch((error) => {
+                                        const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
+                                        errorToast(errorMessage)
+                                    })
                                 }
+                            } else {
+                                cardOptions.cardBodyActionIcon = this.icons.userAdd
+                                cardOptions.cardBodyActionFunc = () => {
+                                    const data:Partial<VolunteerSignup> = {
+                                        session_id: workshop.session_id
+                                    }
 
-                                addVolunteerSignup(this.options.eventId, this.options.userId, data).then((response) => {
-                                    successToast(response.message)
-                                    this.populateSessions()
-                                }).catch((error) => {
-                                    const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
-                                    errorToast(errorMessage)
-                                })
+                                    addVolunteerSignup(this.options.eventId, this.options.userId, data).then((response) => {
+                                        successToast(response.message)
+                                        this.populateSessions()
+                                    }).catch((error) => {
+                                        const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
+                                        errorToast(errorMessage)
+                                    })
+                                }
                             }
                         }
                     } else {
