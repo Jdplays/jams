@@ -25,6 +25,10 @@ let usersInfoMap:Record<number, Partial<User>> = {}
 let eventAttendances:Partial<VolunteerAttendance>[] = []
 
 function onEventChangeFunc() {
+    if (!scheduleGrid) {
+        loadSignupData()
+        return
+    }
     scheduleGrid.changeEvent(eventDetails.eventId)
     loadSignupData(true)
 
@@ -89,6 +93,9 @@ async function userSelectItemOnClick(userId:number) {
 }
 
 async function loadUsersAttendingEvent() {
+    if (!eventDetails.eventId) {
+        return
+    }
     const eventAttendanceResponse = await getAttendanceForEvent(eventDetails.eventId)
     eventAttendances = Object.keys(usersInfoMap).map((id) => {
         for (const attendance of eventAttendanceResponse.data) {
@@ -143,6 +150,9 @@ function checkUserIsAttendingEvent() {
 }
 
 async function loadSignupData(reloadGrid:boolean=false) {
+    if (!eventDetails.eventId) {
+        return
+    }
     await loadUsersAttendingEvent()
 
     populateUsersDropdown()

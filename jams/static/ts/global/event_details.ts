@@ -81,7 +81,7 @@ export class EventDetails {
 
         const eventInfoText = document.createElement('p')
     
-        if (this.eventId !== null) {
+        if (this.eventId !== null && this.eventId !== -1) {
             let eventName = await getEventField(this.eventId, 'name')
             let eventDate = await getEventField(this.eventId, 'date')
             eventInfoText.innerHTML = `<strong>${eventName.name}</strong> - ${formatDate(eventDate.date)}`
@@ -95,6 +95,7 @@ export class EventDetails {
             return
         }
     
+        this.eventId = null
         eventInfoText.innerHTML = 'No Upcomming Events. Please select one from the dropdown'
         
         for (const element of this.options.eventDependentElements) {
