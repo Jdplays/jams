@@ -1,8 +1,6 @@
 // Event Schedule Page
 
 import {
-    getEventsField,
-    getEvent,
     getWorkshops,
     getIconData,
     getDifficultyLevels
@@ -10,9 +8,7 @@ import {
 
 import {
     buildQueryString,
-    emptyElement,
-    createDropdown,
-    formatDate
+    emptyElement
 } from '@global/helper'
 
 import { WorkshopCard } from '@global/workshop_card'
