@@ -19,72 +19,39 @@ import { WorkshopCard } from '@global/workshop_card'
 import {ScheduleGrid, ScheduleGridOptions} from '@global/schedule_grid'
 import TomSelect from 'tom-select';
 import { QueryStringData } from '@global/interfaces';
+import { EventDetails, EventDetailsOptions } from '@global/event_details';
 
 
 // Variables
-var EventId:number = 1
-
 var selectDifficultyIds:number[] = []
 var selectedTags:number[] = []
 var currentSearchQuery:string = ''
 
+// Event Details
+const eventDetailsOptions:EventDetailsOptions = {
+    eventDependentElements: [document.getElementById('workshop-selection-container'), document.getElementById('schedule-block')],
+    eventOnChangeFunc: onEventChangeFunc
+}
+let eventDetails:EventDetails;
+
 // Schedule Grid
 const scheduleGridOptions:ScheduleGridOptions = {
-    eventId: EventId,
+    eventId: 1,
     edit: true,
     size: 150,
     showPrivate: true,
     autoRefresh: true
 }
 
-const scheduleGrid = new ScheduleGrid('schedule-container', scheduleGridOptions)
+let scheduleGrid:ScheduleGrid
 
 // General Methods
 
-// Event Selection
-
-// Populates the Event selection dropdown with all of the events
-async function populateEventSelectionDropdown() {
-    const eventsResponse = await getEventsField('name')
-    let events = eventsResponse.data
-
-    let eventSelectionDropdown = document.getElementById('event-selection')
-    let select = createDropdown(events, events[0].name, eventSelectionDropdownOnChange)
-    select.id = 'event-select'
-    select.classList.add('select-event-dropdown', 'form-control')
-    eventSelectionDropdown.appendChild(select)
-}
-
 // Handles the onchange event for the Event selction dropdown 
-function eventSelectionDropdownOnChange(event:Event) {
-    const element = event.target as HTMLInputElement
-    const selectedValue = Number(element.value)
-    EventId = selectedValue
-    getEvent(EventId)
-    populateEventDetails()
-    scheduleGrid.changeEvent(EventId)
+async function onEventChangeFunc() {
+    await scheduleGrid.changeEvent(eventDetails.eventId)
+    checkForFatalGridError()
 }
-
-// Event Details
-// Populates the selected events details (name and date)
-async function populateEventDetails() {
-    let event = await getEvent(EventId)
-    let eventDetailsContainer = document.getElementById('event-details-container')
-    eventDetailsContainer.classList.add('event-details')
-    
-    let title = document.createElement('h2')
-    title.innerHTML = event.name
-    title.classList.add('event-details-element')
-
-    let date = document.createElement('p')
-    date.innerHTML = formatDate(event.date)
-    title.classList.add('event-details-element')
-
-    emptyElement(eventDetailsContainer)
-    eventDetailsContainer.appendChild(title)
-    eventDetailsContainer.appendChild(date)
-}
-
 
 // Workshop Selction
 // Populates the list of workshop cards
@@ -291,11 +258,34 @@ function drag(ev:DragEvent, value:string) {
     scheduleGrid.currentDragType = 'workshop-add'
 }
 
+function checkForFatalGridError() {
+    if (scheduleGrid.fatalError) {
+        const workshopSelectionContainer = document.getElementById('workshop-selection-container')
+        workshopSelectionContainer.style.display = 'none'
+        return
+    }
+}
+
 // Event Listeners
-document.addEventListener("DOMContentLoaded", populateEventSelectionDropdown);
-document.addEventListener("DOMContentLoaded", populateEventDetails);
-document.addEventListener("DOMContentLoaded", populateWorkshopList);
-document.addEventListener("DOMContentLoaded", populateWorkshopSelectionTools);
+document.addEventListener("DOMContentLoaded", async () => {
+    eventDetails = new EventDetails('event-details', eventDetailsOptions)
+    await eventDetails.init()
+
+    if (eventDetails.eventId === -1) {
+        return
+    }
+
+    scheduleGridOptions.eventId = eventDetails.eventId
+
+    scheduleGrid = new ScheduleGrid('schedule-container', scheduleGridOptions)
+    await scheduleGrid.init()
+
+    checkForFatalGridError()    
+
+    populateWorkshopList()
+    populateWorkshopSelectionTools()
+});
+
 document.addEventListener("DOMContentLoaded", function () {
     let search = document.getElementById('workshop-search-box')
     search.oninput = workshopSearchOnChange
