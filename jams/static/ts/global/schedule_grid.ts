@@ -128,9 +128,6 @@ export class ScheduleGrid {
             this.options.width = this.options.size
             this.options.height = this.options.size
         }
-
-        // Initialise the grid
-        this.init()
     }
 
     // Clear resources and clean up if you ever need to reinitialise schedule grid
@@ -326,9 +323,9 @@ export class ScheduleGrid {
     }
 
     // Allows the options to be updated from outside of this module
-    updateOptions(newOptions:Partial<ScheduleGridOptions>) {
+    async updateOptions(newOptions:Partial<ScheduleGridOptions>) {
         this.options = {...this.options, ...newOptions}
-        this.init(true)
+        await this.init(true)
     }
 
     // This preps all of the data required to build the grid
@@ -400,10 +397,39 @@ export class ScheduleGrid {
             timeslotsForAddDropdown,
         )
 
+        if (locationsInEvent.length === 0 && timeslotsInEvent.length === 0) {
+            if (!this.options.edit) {
+                tmpGridContainer = document.createElement('div')
+                tmpGridContainer.classList.add('center-container')
+                
+                let warningTitle = document.createElement('h4')
+                warningTitle.classList.add('warning-text')
+                warningTitle.innerHTML = 'This event has no schedule!'
+
+                let searchIconData = await getIconData('search-warning')
+                let iconContainer = document.createElement('div')
+                iconContainer.innerHTML = searchIconData
+
+                let icon = iconContainer.querySelector('svg')
+                icon.classList.remove('icon-tabler-zoom-exclamation')
+                icon.classList.add('icon-search-grid')
+
+                tmpGridContainer.appendChild(iconContainer)
+                tmpGridContainer.appendChild(warningTitle)
+            }
+            this.scheduleValid = false
+        } else {
+            this.scheduleValid = true
+        }
+
         // Set the new grid
         if (this.scheduleContainer) {
             emptyElement(this.scheduleContainer)
             this.scheduleContainer.appendChild(tmpGridContainer)
+
+            if (!this.scheduleValid && !this.options.edit) {
+                animateElement(tmpGridContainer, 'warning-error-shake')
+            }
         }
     }
 
