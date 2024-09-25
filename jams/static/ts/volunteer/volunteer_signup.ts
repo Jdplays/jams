@@ -29,7 +29,6 @@ function onEventChangeFunc() {
         loadSignupData()
         return
     }
-    scheduleGrid.changeEvent(eventDetails.eventId)
     loadSignupData(true)
 
 }
@@ -89,7 +88,6 @@ async function userSelectItemOnClick(userId:number) {
 
     selectedUserId = userId
     await loadSignupData(true)
-    scheduleGrid.changeSelectedUser(userId)
 }
 
 async function loadUsersAttendingEvent() {
@@ -119,14 +117,7 @@ async function loadUsersAttendingEvent() {
 }
 
 function checkUserIsAttendingEvent() {
-    scheduleGridOptions.volunteerSignup = false
-    for (const attendance of eventAttendances) {
-        if (attendance.user_id === selectedUserId && attendance.main) {
-            scheduleGridOptions.volunteerSignup = true
-        }
-    }
-
-    if (!scheduleGridOptions.volunteerSignup) {
+    if (!scheduleGridOptions.volunteerSignup && scheduleGrid.scheduleValid) {
         let confirmDeleteModal = $('#user-no-attendance-modal')
         confirmDeleteModal.modal('show')
         confirmDeleteModal.find('#user-no-attendance-text').html(`
@@ -149,6 +140,15 @@ function checkUserIsAttendingEvent() {
     }
 }
 
+function updateSignupPermissions() {
+    scheduleGridOptions.volunteerSignup = false
+    for (const attendance of eventAttendances) {
+        if (attendance.user_id === selectedUserId && attendance.main) {
+            scheduleGridOptions.volunteerSignup = true
+        }
+    }
+}
+
 async function loadSignupData(reloadGrid:boolean=false) {
     if (!eventDetails.eventId) {
         return
@@ -157,17 +157,20 @@ async function loadSignupData(reloadGrid:boolean=false) {
 
     populateUsersDropdown()
 
-    checkUserIsAttendingEvent()
-
     scheduleGridOptions.eventId = eventDetails.eventId
     scheduleGridOptions.userId = selectedUserId
     scheduleGridOptions.userInfoMap = usersInfoMap
 
+    updateSignupPermissions()
+
     if (reloadGrid) {
-        scheduleGrid.updateOptions(scheduleGridOptions)
+        await scheduleGrid.updateOptions(scheduleGridOptions)
     } else {
         scheduleGrid = new ScheduleGrid('schedule-container', scheduleGridOptions)
+        await scheduleGrid.init()
     }
+
+    checkUserIsAttendingEvent()
 }
 
 document.addEventListener("DOMContentLoaded", async () => {

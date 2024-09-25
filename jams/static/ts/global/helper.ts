@@ -549,3 +549,8 @@ export async function preloadUsersInfoMap() {
 
     return usersInfoMap
 }
+
+export function isTouchDevice() {
+    return (('ontouchstart' in window) ||
+       (navigator.maxTouchPoints > 0));
+  }

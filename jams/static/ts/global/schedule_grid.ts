@@ -20,7 +20,7 @@ import {
     addVolunteerSignup
 } from '@global/endpoints'
 import { EventLocation, EventTimeslot, Location, Timeslot, User, VolunteerSignup } from '@global/endpoints_interfaces'
-import {buildQueryString, emptyElement, allowDrop, waitForTransitionEnd, debounce, successToast, errorToast, buildUserAvatar, preloadUsersInfoMap} from '@global/helper'
+import {buildQueryString, emptyElement, allowDrop, waitForTransitionEnd, debounce, successToast, errorToast, buildUserAvatar, preloadUsersInfoMap, animateElement, isTouchDevice} from '@global/helper'
 import {WorkshopCard, WorkshopCardOptions} from '@global/workshop_card'
 
 type Icons = {[key: string]: any}
@@ -66,6 +66,8 @@ export class ScheduleGrid {
     private usersInfoMap:Record<number, Partial<User>> = {}
 
     public currentDragType:string
+    public scheduleValid:boolean
+    public fatalError:boolean
 
 
     constructor(scheduleContainerId:string, options:ScheduleGridOptions = {}) {
@@ -118,14 +120,14 @@ export class ScheduleGrid {
         this.locationsInEvent = []
         this.timeslotsInEvent = []
 
+        this.scheduleValid = true
+        this.fatalError = false
+
         // Set width and height if size is set
         if (this.options.size !== null && this.options.size !== undefined) {
             this.options.width = this.options.size
             this.options.height = this.options.size
         }
-
-        // Initialise the grid
-        this.init()
     }
 
     // Clear resources and clean up if you ever need to reinitialise schedule grid
@@ -141,10 +143,54 @@ export class ScheduleGrid {
         this.volunteerSignupsMap = null
         this.usersInfoMap = null
         this.currentDragType = null
+        this.scheduleValid = null
+        this.fatalError = false
     }
 
     // Get the grid ready
     async init(reInit:boolean=false) {
+
+        if (isTouchDevice() && this.options.edit) {
+            // Editing is currently not available on touch devices due to drag and drop not working well on them
+            // TODO: Add mobile friendly way to edit the schedule
+
+            let tmpGridContainer = document.createElement('div')
+            tmpGridContainer.classList.add('center-container')
+            
+            let warningTitle = document.createElement('h4')
+            warningTitle.classList.add('error-text')
+            warningTitle.innerHTML = 'Editing the event schedule is not currently supported on touch devices'
+
+            let searchIconData = await getIconData('touch')
+            let iconContainer = document.createElement('div')
+            iconContainer.innerHTML = searchIconData
+
+            let icon = iconContainer.querySelector('svg')
+            icon.classList.remove('icon-tabler-hand-click')
+            icon.classList.add('icon-touch-grid')
+
+            let homeButton = document.createElement('a') as HTMLAnchorElement
+            homeButton.classList.add('btn', 'btn-primary', 'mb-3')
+            homeButton.innerHTML = await getIconData('home')
+            homeButton.href = '/private'
+
+            let homeText = document.createElement('span')
+            homeText.classList.add('btn-text')
+            homeText.innerHTML = 'Go back Home'
+            homeButton.appendChild(homeText)
+
+
+            tmpGridContainer.appendChild(iconContainer)
+            tmpGridContainer.appendChild(warningTitle)
+            tmpGridContainer.appendChild(homeButton)
+
+            this.scheduleContainer.appendChild(tmpGridContainer)
+
+            animateElement(tmpGridContainer, 'warning-error-shake')
+            this.fatalError = true
+            return
+        }
+
         if (!reInit) {
             // Pre load in all of the icons to reduce server calls
             this.icons = {
@@ -238,6 +284,10 @@ export class ScheduleGrid {
 
     // Do a full update of the schedule grid
     async updateSchedule() {
+        if (this.fatalError) {
+            return
+        }
+
         if (!this.options.eventId) {
             return
         }
@@ -273,9 +323,9 @@ export class ScheduleGrid {
     }
 
     // Allows the options to be updated from outside of this module
-    updateOptions(newOptions:Partial<ScheduleGridOptions>) {
+    async updateOptions(newOptions:Partial<ScheduleGridOptions>) {
         this.options = {...this.options, ...newOptions}
-        this.init(true)
+        await this.init(true)
     }
 
     // This preps all of the data required to build the grid
@@ -347,10 +397,39 @@ export class ScheduleGrid {
             timeslotsForAddDropdown,
         )
 
+        if (locationsInEvent.length === 0 && timeslotsInEvent.length === 0) {
+            if (!this.options.edit) {
+                tmpGridContainer = document.createElement('div')
+                tmpGridContainer.classList.add('center-container')
+                
+                let warningTitle = document.createElement('h4')
+                warningTitle.classList.add('warning-text')
+                warningTitle.innerHTML = 'This event has no schedule!'
+
+                let searchIconData = await getIconData('search-warning')
+                let iconContainer = document.createElement('div')
+                iconContainer.innerHTML = searchIconData
+
+                let icon = iconContainer.querySelector('svg')
+                icon.classList.remove('icon-tabler-zoom-exclamation')
+                icon.classList.add('icon-search-grid')
+
+                tmpGridContainer.appendChild(iconContainer)
+                tmpGridContainer.appendChild(warningTitle)
+            }
+            this.scheduleValid = false
+        } else {
+            this.scheduleValid = true
+        }
+
         // Set the new grid
         if (this.scheduleContainer) {
             emptyElement(this.scheduleContainer)
             this.scheduleContainer.appendChild(tmpGridContainer)
+
+            if (!this.scheduleValid && !this.options.edit) {
+                animateElement(tmpGridContainer, 'warning-error-shake')
+            }
         }
     }
 

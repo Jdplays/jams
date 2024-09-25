@@ -155,9 +155,9 @@ export class EventDetails {
 
             item.appendChild(text)
 
-            item.onclick =  () => {
+            item.onclick =  async () => {
                 this.eventId = Number(id)
-                this.populateEventDetails()
+                await this.populateEventDetails()
                 dropdownButton.innerHTML = this.eventDropdownItemText(this.eventDetailsMap[this.eventId])
 
                 if (this.options.eventOnChangeFunc) {
