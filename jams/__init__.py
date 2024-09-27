@@ -80,7 +80,7 @@ def prep_app(app):
     
     # Setup the task scheduler
     global scheduler
-    scheduler = TaskScheduler(app=app, interval=5)
+    scheduler = TaskScheduler(app=app, interval=5, max_workers=4)
     scheduler_thread = threading.Thread(target=scheduler.run)
     scheduler_thread.daemon = True
     scheduler_thread.start()

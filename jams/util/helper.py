@@ -504,3 +504,31 @@ def update_event_timeslot_visibility(event_timeslot:EventTimeslot):
     event_timeslot.publicly_visible = visibility
 
     db.session.commit()
+
+def format_timedelta(td: timedelta) -> str:
+    days = td.days
+    seconds = td.seconds
+    microseconds = td.microseconds
+    hours, seconds = divmod(seconds, 3600)
+    minutes, seconds = divmod(seconds, 60)
+
+    # Build the formatted string
+    parts = []
+    
+    if days > 0:
+        parts.append(f"{days} day{'s' if days > 1 else ''}")
+    
+    if hours > 0:
+        parts.append(f"{hours} hour{'s' if hours > 1 else ''}")
+    
+    if minutes > 0:
+        parts.append(f"{minutes} minute{'s' if minutes > 1 else ''}")
+    
+    if seconds > 0:
+        parts.append(f"{seconds} second{'s' if seconds > 1 else ''}")
+    
+    if microseconds > 0:
+        parts.append(f"{microseconds} microsecond{'s' if microseconds > 1 else ''}")
+    
+    # Join the parts into a readable string
+    return ", ".join(parts) if parts else "0 seconds"
