@@ -1,4 +1,5 @@
 import os
+import threading
 from dotenv import load_dotenv
 from flask import Flask
 from flask_security import Security, SQLAlchemyUserDatastore
@@ -14,6 +15,9 @@ from jams.configuration import get_config_value
 from jams.integrations.oauth import setup_oauth
 from jams.routes.error import not_found, server_error, forbidden
 from jams.configuration import ConfigType, set_config_value
+from jams.util.task_scheduler import TaskScheduler
+
+scheduler = None
 
 def create_app():
     app = Flask(__name__)
@@ -52,7 +56,7 @@ def create_app():
     with app.app_context():
         # Create database tables
         db.create_all()
-        prep_app()
+        prep_app(app)
         
 
     return app
@@ -61,7 +65,7 @@ def seed_database(app):
     with app.app_context():
         preform_seed()
 
-def prep_app():
+def prep_app(app):
     setup_oauth()
 
     app_url =  os.getenv('APP_URL', 'http://127.0.0.1:5000')
@@ -73,3 +77,10 @@ def prep_app():
         set_config_value(ConfigType.HTTP_SCHEME, 'https')
     else:
         set_config_value(ConfigType.HTTP_SCHEME, 'http')
+    
+    # Setup the task scheduler
+    global scheduler
+    scheduler = TaskScheduler(app=app, interval=5, max_workers=4)
+    scheduler_thread = threading.Thread(target=scheduler.run)
+    scheduler_thread.daemon = True
+    scheduler_thread.start()
