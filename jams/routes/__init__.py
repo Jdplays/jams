@@ -3,14 +3,14 @@ from flask_security import current_user
 from jams.util import helper
 from jams.models import db, PrivateAccessLog
 
-from jams.routes.backend import backend_bp
+from jams.routes.api_v1 import api_v1_bp
 from jams.routes.frontend import frontend_bp
 from jams.routes.resources import bp as resources_bp
 from jams.routes.auth import bp as auth_bp
 
 routes_bp = Blueprint('routes', __name__)
 
-routes_bp.register_blueprint(backend_bp)
+routes_bp.register_blueprint(api_v1_bp)
 routes_bp.register_blueprint(frontend_bp)
 routes_bp.register_blueprint(resources_bp)
 routes_bp.register_blueprint(auth_bp)
@@ -51,7 +51,7 @@ def check_user_induction():
     pre_induction_request = False
     if pre_induction_request_data:
         pre_induction_request = pre_induction_request_data.lower() == 'true'
-    if 'backend' in request_path and pre_induction_request:
+    if 'api' in request_path and pre_induction_request:
         return
     
     if current_user.is_authenticated:

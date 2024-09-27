@@ -68,7 +68,7 @@ class TaskSchedulerLog(db.Model):
 
     task = relationship('TaskSchedulerModel', backref='logs')
 
-    def __init__(self, task_id, log, date_time=datetime.now(UTC)):
-        self.date_time = date_time
+    def __init__(self, task_id, log):
+        self.date_time = datetime.now(UTC)
         self.task_id = task_id
         self.log = log

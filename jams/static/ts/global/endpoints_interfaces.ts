@@ -226,7 +226,7 @@ export interface RequestMultiModelJSONData extends EventLocation, EventTimeslot,
     force?:boolean
 }
 
-export interface BackendResponse<T> {
+export interface ApiResponse<T> {
     message:string
     data:T
 }
@@ -237,7 +237,7 @@ export interface Metadata {
     packdown_count?:number
 }
 
-export interface BackendMultiEntryResponse<T> {
+export interface ApiMultiEntryResponse<T> {
     pagination:PaginationResponseData
     data:T
     metadata:Metadata

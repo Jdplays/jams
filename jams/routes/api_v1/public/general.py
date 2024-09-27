@@ -6,7 +6,7 @@ from jams.models import Event
 
 bp = Blueprint('genral', __name__)
 
-# URL PREFIX = /backend
+# URL PREFIX = /api/v1
 
 @bp.route('/get_next_event', methods=['GET'])
 def get_next_event():

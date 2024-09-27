@@ -11,7 +11,7 @@ import {
     User,
     Role,
     Page,
-    BackendMultiEntryResponse,
+    ApiMultiEntryResponse,
     PrivateAccessLog,
     VolunteerAttendance,
     FileData,
@@ -23,16 +23,18 @@ import {
     WorkshopType,
     AuthConfiguration,
     EditAuthConfigurationResponse,
-    BackendResponse,
+    ApiResponse,
     VolunteerSignup
 } from "@global/endpoints_interfaces";
 
 // This is a script where all then endpoint calls will live to prevent duplication across scripts
 
+const baseURL = '/api/v1'
+
 // #region Event Locations
 export function getLocationsForEvent(eventId:number, queryString:string|null = null):Promise<[EventLocation]> {
     return new Promise((resolve, reject) => {
-        let url = `/backend/events/${eventId}/locations`
+        let url = `${baseURL}/events/${eventId}/locations`
         if (queryString != null) {
             url += `?${queryString}`
         }
@@ -57,7 +59,7 @@ export function addLocationToEvent(eventId:number, locationId:number, order:numb
             'order': order
         }
         $.ajax({
-            url: `/backend/events/${eventId}/locations`,
+            url: `${baseURL}/events/${eventId}/locations`,
             type: 'POST',
             data: JSON.stringify(data),
             contentType: 'application/json',
@@ -79,7 +81,7 @@ export function updateEventLocationOrder(eventId:number, eventLocationId:number,
         }
 
         $.ajax({
-            url: `/backend/events/${eventId}/locations/${eventLocationId}/update_order`,
+            url: `${baseURL}/events/${eventId}/locations/${eventLocationId}/update_order`,
             type: 'POST',
             data: JSON.stringify(data),
             contentType: 'application/json',
@@ -97,7 +99,7 @@ export function updateEventLocationOrder(eventId:number, eventLocationId:number,
 export function removeLocationFromEvent(eventId:number, eventLocationId:number):Promise<boolean> {
     return new Promise((resolve) => {
         $.ajax({
-            url: `/backend/events/${eventId}/locations/${eventLocationId}`,
+            url: `${baseURL}/events/${eventId}/locations/${eventLocationId}`,
             type: 'DELETE',
             success: function (response) {
                 resolve(true)
@@ -112,9 +114,9 @@ export function removeLocationFromEvent(eventId:number, eventLocationId:number):
 // #endregion
 
 // #region Locations
-export function getLocations(queryString:string|null = null):Promise<BackendMultiEntryResponse<[Location]>> {
+export function getLocations(queryString:string|null = null):Promise<ApiMultiEntryResponse<[Location]>> {
     return new Promise((resolve, reject) => {
-        let url = '/backend/locations'
+        let url = `${baseURL}/locations`
         if (queryString != null) {
             url += `?${queryString}`
         }
@@ -135,7 +137,7 @@ export function getLocations(queryString:string|null = null):Promise<BackendMult
 export function getLocation(locationId:number):Promise<Location> {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: `/backend/locations/${locationId}`,
+            url: `${baseURL}/locations/${locationId}`,
             type: 'GET',
             success: function(response) {
                 resolve(response);
@@ -152,7 +154,7 @@ export function addLocation(data:Partial<RequestMultiModelJSONData>):Promise<boo
     return new Promise((resolve) => {
         $.ajax({
             type: 'POST',
-            url: '/backend/locations',
+            url: `${baseURL}/locations`,
             data: JSON.stringify(data),
             contentType: 'application/json',
             success: function (response) {
@@ -170,7 +172,7 @@ export function editLocation(locationId:number, data:Partial<RequestMultiModelJS
     return new Promise((resolve) => {
         $.ajax({
             type: 'PATCH',
-            url: `/backend/locations/${locationId}`,
+            url: `${baseURL}/locations/${locationId}`,
             data: JSON.stringify(data),
             contentType: 'application/json',
             success: function (response) {
@@ -188,7 +190,7 @@ export function archiveLocation(locationId:number):Promise<boolean> {
     return new Promise((resolve) => {
         $.ajax({
             type: 'POST',
-            url: `/backend/locations/${locationId}/archive`,
+            url: `${baseURL}/locations/${locationId}/archive`,
             success: function (response) {
                 resolve(true)
             },
@@ -204,7 +206,7 @@ export function activateLocation(locationId:number):Promise<boolean> {
     return new Promise((resolve) => {
         $.ajax({
             type: 'POST',
-            url: `/backend/locations/${locationId}/activate`,
+            url: `${baseURL}/locations/${locationId}/activate`,
             success: function (response) {
                 resolve(true)
             },
@@ -220,7 +222,7 @@ export function activateLocation(locationId:number):Promise<boolean> {
 // #region Event Timeslots
 export function getTimeslotsForEvent(eventId:number, queryString:string|null = null):Promise<[EventTimeslot]> {
     return new Promise((resolve, reject) => {
-        let url = `/backend/events/${eventId}/timeslots`
+        let url = `${baseURL}/events/${eventId}/timeslots`
         if (queryString != null) {
             url += `?${queryString}`
         }
@@ -245,7 +247,7 @@ export function addTimeslotToEvent(eventId:number, timeslotId:number):Promise<bo
         }
 
         $.ajax({
-            url: `/backend/events/${eventId}/timeslots`,
+            url: `${baseURL}/events/${eventId}/timeslots`,
             type: 'POST',
             data: JSON.stringify(data),
             contentType: 'application/json',
@@ -263,7 +265,7 @@ export function addTimeslotToEvent(eventId:number, timeslotId:number):Promise<bo
 export function removeTimeslotFromEvent(eventId:number, eventTimeslotId:number):Promise<boolean> {
     return new Promise((resolve) => {
         $.ajax({
-            url: `/backend/events/${eventId}/timeslots/${eventTimeslotId}`,
+            url: `${baseURL}/events/${eventId}/timeslots/${eventTimeslotId}`,
             type: 'DELETE',
             success: function (response) {
                 resolve(true)
@@ -278,9 +280,9 @@ export function removeTimeslotFromEvent(eventId:number, eventTimeslotId:number):
 // #endregion
 
 // #region Timeslots
-export function getTimeslots(queryString:string|null = null):Promise<BackendMultiEntryResponse<[Timeslot]>> {
+export function getTimeslots(queryString:string|null = null):Promise<ApiMultiEntryResponse<[Timeslot]>> {
     return new Promise((resolve, reject) => {
-        let url = '/backend/timeslots'
+        let url = `${baseURL}/timeslots`
         if (queryString != null) {
             url += `?${queryString}`
         }
@@ -301,7 +303,7 @@ export function getTimeslots(queryString:string|null = null):Promise<BackendMult
 export function getTimeslot(timeslotId:number):Promise<Timeslot> {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: `/backend/timeslots/${timeslotId}`,
+            url: `${baseURL}/timeslots/${timeslotId}`,
             type: 'GET',
             success: function(response) {
                 resolve(response);
@@ -318,7 +320,7 @@ export function addTimeslot(data:Partial<RequestMultiModelJSONData>):Promise<boo
     return new Promise((resolve) => {
         $.ajax({
             type: 'POST',
-            url: '/backend/timeslots',
+            url: `${baseURL}/timeslots`,
             data: JSON.stringify(data),
             contentType: 'application/json',
             success: function (response) {
@@ -336,7 +338,7 @@ export function editTimeslot(timeslotId:number, data:Partial<RequestMultiModelJS
     return new Promise((resolve) => {
         $.ajax({
             type: 'PATCH',
-            url: `/backend/timeslots/${timeslotId}`,
+            url: `${baseURL}/timeslots/${timeslotId}`,
             data: JSON.stringify(data),
             contentType: 'application/json',
             success: function (response) {
@@ -354,7 +356,7 @@ export function archiveTimeslot(timeslotId:number):Promise<boolean> {
     return new Promise((resolve) => {
         $.ajax({
             type: 'POST',
-            url: `/backend/timeslots/${timeslotId}/archive`,
+            url: `${baseURL}/timeslots/${timeslotId}/archive`,
             success: function (response) {
                 resolve(true)
             },
@@ -370,7 +372,7 @@ export function activateTimeslot(timeslotId:number):Promise<boolean> {
     return new Promise((resolve) => {
         $.ajax({
             type: 'POST',
-            url: `/backend/timeslots/${timeslotId}/activate`,
+            url: `${baseURL}/timeslots/${timeslotId}/activate`,
             success: function (response) {
                 resolve(true)
             },
@@ -384,9 +386,9 @@ export function activateTimeslot(timeslotId:number):Promise<boolean> {
 // #endregion
 
 // #region Workshops
-export function getWorkshops(queryString:string|null = null):Promise<BackendMultiEntryResponse<[Workshop]>> {
+export function getWorkshops(queryString:string|null = null):Promise<ApiMultiEntryResponse<[Workshop]>> {
     return new Promise((resolve, reject) => {
-        let url = "/backend/workshops"
+        let url = `${baseURL}/workshops`
         if (queryString != null) {
             url += `?${queryString}`
         }
@@ -404,9 +406,9 @@ export function getWorkshops(queryString:string|null = null):Promise<BackendMult
     });
 }
 
-export function getWorkshopsField(field:string, queryString:string|null = null):Promise<BackendMultiEntryResponse<[Partial<Workshop>]>> {
+export function getWorkshopsField(field:string, queryString:string|null = null):Promise<ApiMultiEntryResponse<[Partial<Workshop>]>> {
     return new Promise((resolve, reject) => {
-        let url = `/backend/workshops/${field}`
+        let url = `${baseURL}/workshops/${field}`
         if (queryString != null) {
             url += `?${queryString}`
         }
@@ -427,7 +429,7 @@ export function getWorkshopsField(field:string, queryString:string|null = null):
 export function getWorkshop(workshopId:number):Promise<Workshop> {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: `/backend/workshops/${workshopId}`,
+            url: `${baseURL}/workshops/${workshopId}`,
             type: 'GET',
             success: function(response) {
                 resolve(response);  
@@ -443,7 +445,7 @@ export function getWorkshop(workshopId:number):Promise<Workshop> {
 export function getWorkshopField(workshopId:number, field:string):Promise<Workshop> {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: `/backend/workshops/${workshopId}/${field}`,
+            url: `${baseURL}/workshops/${workshopId}/${field}`,
             type: 'GET',
             success: function(response) {
                 resolve(response);  
@@ -456,11 +458,11 @@ export function getWorkshopField(workshopId:number, field:string):Promise<Worksh
     });
 }
 
-export function addWorkshop(data:Partial<RequestMultiModelJSONData>):Promise<BackendResponse<User>> {
+export function addWorkshop(data:Partial<RequestMultiModelJSONData>):Promise<ApiResponse<User>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             type: 'POST',
-            url: '/backend/workshops',
+            url: `${baseURL}/workshops`,
             data: JSON.stringify(data),
             contentType: 'application/json',
             success: function (response) {
@@ -474,11 +476,11 @@ export function addWorkshop(data:Partial<RequestMultiModelJSONData>):Promise<Bac
     });
 }
 
-export function editWorkshop(workshopId:number, data:Partial<RequestMultiModelJSONData>):Promise<BackendResponse<User>> {
+export function editWorkshop(workshopId:number, data:Partial<RequestMultiModelJSONData>):Promise<ApiResponse<User>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             type: 'PATCH',
-            url: `/backend/workshops/${workshopId}`,
+            url: `${baseURL}/workshops/${workshopId}`,
             data: JSON.stringify(data),
             contentType: 'application/json',
             success: function (response) {
@@ -497,7 +499,7 @@ export function archiveWorkshop(workshopId:number):Promise<boolean> {
     return new Promise((resolve) => {
         $.ajax({
             type: 'POST',
-            url: `/backend/workshops/${workshopId}/archive`,
+            url: `${baseURL}/workshops/${workshopId}/archive`,
             success: function (response) {
                 resolve(true)
             },
@@ -513,7 +515,7 @@ export function activateWorkshop(workshopId:number):Promise<boolean> {
     return new Promise((resolve) => {
         $.ajax({
             type: 'POST',
-            url: `/backend/workshops/${workshopId}/activate`,
+            url: `${baseURL}/workshops/${workshopId}/activate`,
             success: function (response) {
                 resolve(true)
             },
@@ -525,9 +527,9 @@ export function activateWorkshop(workshopId:number):Promise<boolean> {
     });
 }
 
-export function getWorkshopFilesData(queryString:string|null = null):Promise<BackendMultiEntryResponse<[FileData]>> {
+export function getWorkshopFilesData(queryString:string|null = null):Promise<ApiMultiEntryResponse<[FileData]>> {
     return new Promise((resolve, reject) => {
-        let url = "/backend/workshops/files"
+        let url = `${baseURL}/workshops/files`
         if (queryString != null) {
             url += `?${queryString}`
         }
@@ -549,9 +551,9 @@ export function getWorkshopFilesData(queryString:string|null = null):Promise<Bac
     });
 }
 
-export function getFilesDataForWorkshop(workshopId:number, queryString:string|null = null):Promise<BackendMultiEntryResponse<[FileData]>> {
+export function getFilesDataForWorkshop(workshopId:number, queryString:string|null = null):Promise<ApiMultiEntryResponse<[FileData]>> {
     return new Promise((resolve, reject) => {
-        let url = `/backend/workshops/${workshopId}/files`
+        let url = `${baseURL}/workshops/${workshopId}/files`
         if (queryString != null) {
             url += `?${queryString}`
         }
@@ -576,7 +578,7 @@ export function getFilesDataForWorkshop(workshopId:number, queryString:string|nu
 export function getWorkshopFileData(workshopId:number, fileUUID:string):Promise<FileData> {
     return new Promise((resolve, reject) => {
       $.ajax({
-        url: `/backend/workshops/${workshopId}/files/${fileUUID}/data`,
+        url: `${baseURL}/workshops/${workshopId}/files/${fileUUID}/data`,
         type: "GET",
         success: function (response) {
           resolve(response);
@@ -592,7 +594,7 @@ export function getWorkshopFileData(workshopId:number, fileUUID:string):Promise<
   export function editFileData(workshopId:number, fileUUID:string, data:Partial<FileData>):Promise<boolean> {
     return new Promise((resolve) => {
       $.ajax({
-        url: `/backend/workshops/${workshopId}/files/${fileUUID}/data`,
+        url: `${baseURL}/workshops/${workshopId}/files/${fileUUID}/data`,
         type: "PATCH",
         data: JSON.stringify(data),
         contentType: 'application/json',
@@ -611,7 +613,7 @@ export function uploadFileToWorkshop(workshopId:number, fileData:FormData):Promi
     return new Promise((resolve, reject) => {
         $.ajax({
             type: 'POST',
-            url: `/backend/workshops/${workshopId}/files`,
+            url: `${baseURL}/workshops/${workshopId}/files`,
             data: fileData,
             processData: false,
             contentType: false,
@@ -630,7 +632,7 @@ export function archiveWorkshopFile(workshopId:number, fileUUID:string):Promise<
     return new Promise((resolve) => {
         $.ajax({
             type: 'POST',
-            url: `/backend/workshops/${workshopId}/files/${fileUUID}/archive`,
+            url: `${baseURL}/workshops/${workshopId}/files/${fileUUID}/archive`,
             success: function () {
                 resolve(true)
             },
@@ -646,7 +648,7 @@ export function activateWorkshopFile(workshopId:number, fileUUID:string):Promise
     return new Promise((resolve) => {
         $.ajax({
             type: 'POST',
-            url: `/backend/workshops/${workshopId}/files/${fileUUID}/activate`,
+            url: `${baseURL}/workshops/${workshopId}/files/${fileUUID}/activate`,
             success: function () {
                 resolve(true)
             },
@@ -661,9 +663,9 @@ export function activateWorkshopFile(workshopId:number, fileUUID:string):Promise
 // #endregion
 
 // #region Sessions
-export function getSessionsForEvent(eventId:number, queryString:string|null = null):Promise<BackendMultiEntryResponse<[Session]>> {
+export function getSessionsForEvent(eventId:number, queryString:string|null = null):Promise<ApiMultiEntryResponse<[Session]>> {
     return new Promise((resolve, reject) => {
-        let url = `/backend/events/${eventId}/sessions`
+        let url = `${baseURL}/events/${eventId}/sessions`
         if (queryString != null) {
             url += `?${queryString}`
         }
@@ -692,7 +694,7 @@ export function addWorkshopToSession(sessionId:number, workshopId:number, force:
         }
 
         $.ajax({
-            url: `/backend/sessions/${sessionId}/workshop`,
+            url: `${baseURL}/sessions/${sessionId}/workshop`,
             type: 'POST',
             data: JSON.stringify(data),
             contentType: 'application/json',
@@ -710,7 +712,7 @@ export function addWorkshopToSession(sessionId:number, workshopId:number, force:
 export function removeWorkshopFromSession(sessionId:number):Promise<boolean> {
     return new Promise((resolve) => {
         $.ajax({
-            url: `/backend/sessions/${sessionId}/workshop`,
+            url: `${baseURL}/sessions/${sessionId}/workshop`,
             type: 'DELETE',
             success: function (response) {
                 resolve(true)
@@ -725,10 +727,14 @@ export function removeWorkshopFromSession(sessionId:number):Promise<boolean> {
 // #endregion
 
 // #region Difficulty Levels
-export function getDifficultyLevels():Promise<BackendMultiEntryResponse<[DifficultyLevel]>> {
+export function getDifficultyLevels(queryString:string|null = null):Promise<ApiMultiEntryResponse<[DifficultyLevel]>> {
     return new Promise((resolve, reject) => {
+        let url = `${baseURL}/difficulty_levels`
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
         $.ajax({
-            url: '/backend/difficulty_levels',
+            url: url,
             type: 'GET',
             success: function(response) {
                 resolve(response);  
@@ -744,7 +750,7 @@ export function getDifficultyLevels():Promise<BackendMultiEntryResponse<[Difficu
 export function getDifficultyLevel(difficultyLevelId:number):Promise<DifficultyLevel> {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: `/backend/difficulty_levels/${difficultyLevelId}`,
+            url: `${baseURL}/difficulty_levels/${difficultyLevelId}`,
             type: 'GET',
             success: function(response) {
                 resolve(response);  
@@ -759,9 +765,9 @@ export function getDifficultyLevel(difficultyLevelId:number):Promise<DifficultyL
 // #endregion
 
 // #region Workshop Types
-export function getWorkshopTypes(queryString:string|null = null):Promise<BackendMultiEntryResponse<[WorkshopType]>> {
+export function getWorkshopTypes(queryString:string|null = null):Promise<ApiMultiEntryResponse<[WorkshopType]>> {
     return new Promise((resolve, reject) => {
-        let url = '/backend/workshop_types'
+        let url = `${baseURL}/workshop_types`
         if (queryString != null) {
             url += `?${queryString}`
         }
@@ -782,9 +788,9 @@ export function getWorkshopTypes(queryString:string|null = null):Promise<Backend
 
 // #region Events
 
-export function getnextEvent(queryString:string|null = null):Promise<BackendResponse<number>> {
+export function getnextEvent(queryString:string|null = null):Promise<ApiResponse<number>> {
     return new Promise((resolve, reject) => {
-        let url = '/backend/get_next_event'
+        let url = `${baseURL}/get_next_event`
         if (queryString != null) {
             url += `?${queryString}`
         }
@@ -802,9 +808,9 @@ export function getnextEvent(queryString:string|null = null):Promise<BackendResp
     });
 }
 
-export function getEvents(queryString:string|null = null):Promise<BackendMultiEntryResponse<[Event]>> {
+export function getEvents(queryString:string|null = null):Promise<ApiMultiEntryResponse<[Event]>> {
     return new Promise((resolve, reject) => {
-        let url = '/backend/events'
+        let url = `${baseURL}/events`
         if (queryString != null) {
             url += `?${queryString}`
         }
@@ -822,9 +828,9 @@ export function getEvents(queryString:string|null = null):Promise<BackendMultiEn
     });
 }
 
-export function getEventsField(field:string, queryString:string|null = null):Promise<BackendMultiEntryResponse<[Partial<Event>]>> {
+export function getEventsField(field:string, queryString:string|null = null):Promise<ApiMultiEntryResponse<[Partial<Event>]>> {
     return new Promise((resolve, reject) => {
-        let url = `/backend/events/${field}`
+        let url = `${baseURL}/events/${field}`
         if (queryString != null) {
             url += `?${queryString}`
         }
@@ -845,7 +851,7 @@ export function getEventsField(field:string, queryString:string|null = null):Pro
 export function getEvent(eventID:number):Promise<Event> {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: `/backend/events/${eventID}`,
+            url: `${baseURL}/events/${eventID}`,
             type: 'GET',
             success: function(response) {
                 resolve(response);   
@@ -861,7 +867,7 @@ export function getEvent(eventID:number):Promise<Event> {
 export function getEventField(eventID:number, field:string):Promise<Partial<Event>> {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: `/backend/events/${eventID}/${field}`,
+            url: `${baseURL}/events/${eventID}/${field}`,
             type: 'GET',
             success: function(response) {
                 resolve(response);   
@@ -878,7 +884,7 @@ export function addNewEvent(data:Partial<RequestMultiModelJSONData>):Promise<boo
     return new Promise((resolve) => {
         $.ajax({
             type: 'POST',
-            url: '/backend/events',
+            url: `${baseURL}/events`,
             data: JSON.stringify(data),
             contentType: 'application/json',
             success: function (response) {
@@ -896,7 +902,7 @@ export function editEvent(eventID:number, data:Partial<RequestMultiModelJSONData
     return new Promise((resolve) => {
         $.ajax({
             type: 'PATCH',
-            url: `/backend/events/${eventID}`,
+            url: `${baseURL}/events/${eventID}`,
             data: JSON.stringify(data),
             contentType: 'application/json',
             success: function (response) {
@@ -914,7 +920,7 @@ export function archiveEvent(eventID:number):Promise<boolean> {
     return new Promise((resolve) => {
         $.ajax({
             type: 'POST',
-            url: `/backend/events/${eventID}/archive`,
+            url: `${baseURL}/events/${eventID}/archive`,
             success: function (response) {
                 resolve(true)
             },
@@ -930,7 +936,7 @@ export function activateEvent(eventID:number):Promise<boolean> {
     return new Promise((resolve) => {
         $.ajax({
             type: 'POST',
-            url: `/backend/events/${eventID}/activate`,
+            url: `${baseURL}/events/${eventID}/activate`,
             success: function (response) {
                 resolve(true)
             },
@@ -946,7 +952,7 @@ export function activateEvent(eventID:number):Promise<boolean> {
 // #region Users
 export function getCurrentUserId(queryString:string|null=null):Promise<number> {
     return new Promise((resolve, reject) => {
-        let url = '/backend/get_current_user_id'
+        let url = `${baseURL}/get_current_user_id`
         if (queryString) {
             url += `?${queryString}`
         } 
@@ -966,7 +972,7 @@ export function getCurrentUserId(queryString:string|null=null):Promise<number> {
 
 export function getCurrentUserData(queryString:string|null=null):Promise<User> {
     return new Promise((resolve, reject) => {
-        let url = '/backend/get_current_user_data'
+        let url = `${baseURL}/get_current_user_data`
         if (queryString) {
             url += `?${queryString}`
         } 
@@ -984,9 +990,9 @@ export function getCurrentUserData(queryString:string|null=null):Promise<User> {
     });
 }
 
-export function getUsers(queryString:string|null = null):Promise<BackendMultiEntryResponse<[User]>> {
+export function getUsers(queryString:string|null = null):Promise<ApiMultiEntryResponse<[User]>> {
     return new Promise((resolve, reject) => {
-        let url = '/backend/users'
+        let url = `${baseURL}/users`
         if (queryString != null) {
             url += `?${queryString}`
         }
@@ -1004,9 +1010,9 @@ export function getUsers(queryString:string|null = null):Promise<BackendMultiEnt
     });
 }
 
-export function getUsersPublicInfo(queryString:string|null = null):Promise<BackendMultiEntryResponse<[Partial<User>]>> {
+export function getUsersPublicInfo(queryString:string|null = null):Promise<ApiMultiEntryResponse<[Partial<User>]>> {
     return new Promise((resolve, reject) => {
-        let url = '/backend/users/public_info'
+        let url = `${baseURL}/users/public_info`
         if (queryString != null) {
             url += `?${queryString}`
         }
@@ -1024,9 +1030,9 @@ export function getUsersPublicInfo(queryString:string|null = null):Promise<Backe
     });
 }
 
-export function getUsersField(field:string, queryString:string|null = null):Promise<BackendMultiEntryResponse<[Partial<User>]>> {
+export function getUsersField(field:string, queryString:string|null = null):Promise<ApiMultiEntryResponse<[Partial<User>]>> {
     return new Promise((resolve, reject) => {
-        let url = `/backend/users/${field}`
+        let url = `${baseURL}/users/${field}`
         if (queryString != null) {
             url += `?${queryString}`
         }
@@ -1044,9 +1050,9 @@ export function getUsersField(field:string, queryString:string|null = null):Prom
     });
 }
 
-export function getUsersDisplayNames(queryString:string|null = null):Promise<BackendMultiEntryResponse<[Partial<User>]>> {
+export function getUsersDisplayNames(queryString:string|null = null):Promise<ApiMultiEntryResponse<[Partial<User>]>> {
     return new Promise((resolve, reject) => {
-        let url = `/backend/users/display_name`
+        let url = `${baseURL}/users/display_name`
         if (queryString != null) {
             url += `?${queryString}`
         }
@@ -1067,7 +1073,7 @@ export function getUsersDisplayNames(queryString:string|null = null):Promise<Bac
 export function getUserRoles(userId:number):Promise<Partial<User>> {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: `/backend/users/${userId}/role_ids`,
+            url: `${baseURL}/users/${userId}/role_ids`,
             type: 'GET',
             success: function(response) {
                 resolve(response);
@@ -1080,9 +1086,9 @@ export function getUserRoles(userId:number):Promise<Partial<User>> {
     });
 }
 
-export function editUser(userId:number, data:Partial<User>, queryString:string|null=null):Promise<BackendResponse<User>> {
+export function editUser(userId:number, data:Partial<User>, queryString:string|null=null):Promise<ApiResponse<User>> {
     return new Promise((resolve, reject) => {
-        let url = `/backend/users/${userId}`
+        let url = `${baseURL}/users/${userId}`
         if (queryString) {
             url += `?${queryString}`
         } 
@@ -1102,11 +1108,11 @@ export function editUser(userId:number, data:Partial<User>, queryString:string|n
     });
 }
 
-export function archiveUser(userID:number):Promise<BackendResponse<User>> {
+export function archiveUser(userID:number):Promise<ApiResponse<User>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             type: 'POST',
-            url: `/backend/users/${userID}/archive`,
+            url: `${baseURL}/users/${userID}/archive`,
             success: function (response) {
                 resolve(response)
             },
@@ -1118,11 +1124,11 @@ export function archiveUser(userID:number):Promise<BackendResponse<User>> {
     });
 }
 
-export function activateUser(userID:number):Promise<BackendResponse<User>> {
+export function activateUser(userID:number):Promise<ApiResponse<User>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             type: 'POST',
-            url: `/backend/users/${userID}/activate`,
+            url: `${baseURL}/users/${userID}/activate`,
             success: function (response) {
                 resolve(response)
             },
@@ -1136,9 +1142,9 @@ export function activateUser(userID:number):Promise<BackendResponse<User>> {
 // #endregion
 
 // #region Roles
-export function getRoles(queryString:string|null = null):Promise<BackendMultiEntryResponse<[Role]>> {
+export function getRoles(queryString:string|null = null):Promise<ApiMultiEntryResponse<[Role]>> {
     return new Promise((resolve, reject) => {
-        let url = '/backend/roles'
+        let url = `${baseURL}/roles`
         if (queryString != null) {
             url += `?${queryString}`
         }
@@ -1159,7 +1165,7 @@ export function getRoles(queryString:string|null = null):Promise<BackendMultiEnt
 export function getRole(roleId:number):Promise<Role> {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: `/backend/roles/${roleId}`,
+            url: `${baseURL}/roles/${roleId}`,
             type: 'GET',
             success: function(response) {
                 resolve(response);   
@@ -1172,9 +1178,9 @@ export function getRole(roleId:number):Promise<Role> {
     });
 }
 
-export function getRoleNames(queryString:string=null):Promise<BackendMultiEntryResponse<[Partial<Role>]>> {
+export function getRoleNames(queryString:string=null):Promise<ApiMultiEntryResponse<[Partial<Role>]>> {
     return new Promise((resolve, reject) => {
-        let url = '/backend/roles/name'
+        let url = `${baseURL}/roles/name`
         if (queryString != null) {
             url += `?${queryString}`
         }
@@ -1196,7 +1202,7 @@ export function addNewRole(data:Partial<RequestMultiModelJSONData>):Promise<bool
     return new Promise((resolve) => {
         $.ajax({
             type: 'POST',
-            url: '/backend/roles',
+            url: `${baseURL}/roles`,
             data: JSON.stringify(data),
             contentType: 'application/json',
             success: function (response) {
@@ -1214,7 +1220,7 @@ export function editRole(roleId:number, data:Partial<RequestMultiModelJSONData>)
     return new Promise((resolve) => {
         $.ajax({
             type: 'PATCH',
-            url: `/backend/roles/${roleId}`,
+            url: `${baseURL}/roles/${roleId}`,
             data: JSON.stringify(data),
             contentType: 'application/json',
             success: function (response) {
@@ -1232,7 +1238,7 @@ export function deleteRole(roleId:number):Promise<boolean> {
     return new Promise((resolve) => {
         $.ajax({
             type: 'DELETE',
-            url: `/backend/roles/${roleId}`,
+            url: `${baseURL}/roles/${roleId}`,
             success: function (response) {
                 resolve(true)
             },
@@ -1246,9 +1252,9 @@ export function deleteRole(roleId:number):Promise<boolean> {
 // #endregion
 
 // #region Pages
-export function getPageNames(queryString:string|null=null):Promise<BackendMultiEntryResponse<[Partial<Page>]>> {
+export function getPageNames(queryString:string|null=null):Promise<ApiMultiEntryResponse<[Partial<Page>]>> {
     return new Promise((resolve, reject) => {
-        let url = '/backend/pages/name'
+        let url = `${baseURL}/pages/name`
         if (queryString != null) {
             url += `?${queryString}`
         }   
@@ -1268,9 +1274,9 @@ export function getPageNames(queryString:string|null=null):Promise<BackendMultiE
 // #endregion
 
 // #region Audit
-export function getPrivateAccessLogs(queryString:string|null=null):Promise<BackendMultiEntryResponse<PrivateAccessLog>> {
+export function getPrivateAccessLogs(queryString:string|null=null):Promise<ApiMultiEntryResponse<PrivateAccessLog>> {
     return new Promise((resolve, reject) => {
-        let url = '/backend/private_access_logs'
+        let url = `${baseURL}/private_access_logs`
         if (queryString) {
             url += `?${queryString}`
         }
@@ -1292,9 +1298,9 @@ export function getPrivateAccessLogs(queryString:string|null=null):Promise<Backe
 
 // #region Volunteer Attendance
 
-export function getAttendanceForEvent(eventID:number, queryString:string|null = null):Promise<BackendMultiEntryResponse<[VolunteerAttendance]>> {
+export function getAttendanceForEvent(eventID:number, queryString:string|null = null):Promise<ApiMultiEntryResponse<[VolunteerAttendance]>> {
     return new Promise((resolve, reject) => {
-        let url = `/backend/events/${eventID}/volunteer_attendences`
+        let url = `${baseURL}/events/${eventID}/volunteer_attendences`
         if (queryString) {
             url += `?${queryString}`
         }
@@ -1315,7 +1321,7 @@ export function getAttendanceForEvent(eventID:number, queryString:string|null = 
 export function getAttendanceForUser(userID:number, eventID:number):Promise<VolunteerAttendance> {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: `/backend/users/${userID}/volunteer_attendences/${eventID}`,
+            url: `${baseURL}/users/${userID}/volunteer_attendences/${eventID}`,
             type: 'GET',
             success: function(response) {
                 resolve(response.volunteer_attendence);   
@@ -1328,11 +1334,11 @@ export function getAttendanceForUser(userID:number, eventID:number):Promise<Volu
     });
 }
 
-export function addAttendance(userID:number, eventID:number, data:Partial<VolunteerAttendance>):Promise<BackendResponse<VolunteerAttendance>> {
+export function addAttendance(userID:number, eventID:number, data:Partial<VolunteerAttendance>):Promise<ApiResponse<VolunteerAttendance>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             type: 'POST',
-            url: `/backend/users/${userID}/volunteer_attendences/${eventID}`,
+            url: `${baseURL}/users/${userID}/volunteer_attendences/${eventID}`,
             data: JSON.stringify(data),
             contentType: 'application/json',
             success: function (response) {
@@ -1346,11 +1352,11 @@ export function addAttendance(userID:number, eventID:number, data:Partial<Volunt
     });
 }
 
-export function editAttendance(userID:number, eventID:number, data:Partial<VolunteerAttendance>):Promise<BackendResponse<VolunteerAttendance>> {
+export function editAttendance(userID:number, eventID:number, data:Partial<VolunteerAttendance>):Promise<ApiResponse<VolunteerAttendance>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             type: 'PATCH',
-            url: `/backend/users/${userID}/volunteer_attendences/${eventID}`,
+            url: `${baseURL}/users/${userID}/volunteer_attendences/${eventID}`,
             data: JSON.stringify(data),
             contentType: 'application/json',
             success: function (response) {
@@ -1367,9 +1373,9 @@ export function editAttendance(userID:number, eventID:number, data:Partial<Volun
 
 // #region
 
-export function getVolunteerSignupsForEvent(eventID:number, queryString:string|null = null):Promise<BackendMultiEntryResponse<[VolunteerSignup]>> {
+export function getVolunteerSignupsForEvent(eventID:number, queryString:string|null = null):Promise<ApiMultiEntryResponse<[VolunteerSignup]>> {
     return new Promise((resolve, reject) => {
-        let url = `/backend/events/${eventID}/volunteer_signups`
+        let url = `${baseURL}/events/${eventID}/volunteer_signups`
         if (queryString) {
             url += `?${queryString}`
         }
@@ -1387,10 +1393,10 @@ export function getVolunteerSignupsForEvent(eventID:number, queryString:string|n
     });
 }
 
-export function getSignupsForUser(eventId:number, userId:number):Promise<BackendMultiEntryResponse<[VolunteerSignup]>> {
+export function getSignupsForUser(eventId:number, userId:number):Promise<ApiMultiEntryResponse<[VolunteerSignup]>> {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: `/backend/events/${eventId}/volunteer_signups/${userId}`,
+            url: `${baseURL}/events/${eventId}/volunteer_signups/${userId}`,
             type: 'GET',
             success: function(response) {
                 resolve(response.volunteer_attendence);   
@@ -1403,11 +1409,11 @@ export function getSignupsForUser(eventId:number, userId:number):Promise<Backend
     });
 }
 
-export function addVolunteerSignup(eventId:number, userId:number, data:Partial<VolunteerSignup>):Promise<BackendResponse<VolunteerSignup>> {
+export function addVolunteerSignup(eventId:number, userId:number, data:Partial<VolunteerSignup>):Promise<ApiResponse<VolunteerSignup>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             type: 'POST',
-            url: `/backend/events/${eventId}/volunteer_signups/${userId}`,
+            url: `${baseURL}/events/${eventId}/volunteer_signups/${userId}`,
             data: JSON.stringify(data),
             contentType: 'application/json',
             success: function (response) {
@@ -1421,11 +1427,11 @@ export function addVolunteerSignup(eventId:number, userId:number, data:Partial<V
     });
 }
 
-export function removeVolunteerSignup(eventId:number, userId:number, session_id:number):Promise<BackendResponse<VolunteerSignup>> {
+export function removeVolunteerSignup(eventId:number, userId:number, session_id:number):Promise<ApiResponse<VolunteerSignup>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             type: 'DELETE',
-            url: `/backend/events/${eventId}/volunteer_signups/${userId}/sessions/${session_id}`,
+            url: `${baseURL}/events/${eventId}/volunteer_signups/${userId}/sessions/${session_id}`,
             success: function (response) {
                 resolve(response)
             },
@@ -1489,7 +1495,7 @@ export function verifyEventbriteApiToken(token:string):Promise<boolean> {
         }
 
         $.ajax({
-            url: `/backend/integrations/eventbrite/verify`,
+            url: `${baseURL}/integrations/eventbrite/verify`,
             type: 'POST',
             data: JSON.stringify(data),
             contentType: 'application/json',
@@ -1513,7 +1519,7 @@ export function getEventbriteUserOrganisations(token:string|null=null):Promise<[
             } 
         }
         $.ajax({
-            url: `/backend/integrations/eventbrite/organisations`,
+            url: `${baseURL}/integrations/eventbrite/organisations`,
             type: 'POST',
             data: JSON.stringify(data),
             contentType: 'application/json',
@@ -1532,7 +1538,7 @@ export function getEventbriteUserOrganisations(token:string|null=null):Promise<[
 export function enableEventbriteIntegration(data:Partial<EventbriteIntegrationConfig>):Promise<boolean> {
     return new Promise((resolve) => {
         $.ajax({
-            url: `/backend/integrations/eventbrite/enable`,
+            url: `${baseURL}/integrations/eventbrite/enable`,
             type: 'POST',
             data: JSON.stringify(data),
             contentType: 'application/json',
@@ -1550,7 +1556,7 @@ export function enableEventbriteIntegration(data:Partial<EventbriteIntegrationCo
 export function disableEventbriteIntegration():Promise<boolean> {
     return new Promise((resolve) => {
         $.ajax({
-            url: `/backend/integrations/eventbrite/disable`,
+            url: `${baseURL}/integrations/eventbrite/disable`,
             type: 'DELETE',
             success: function (response) {
                 resolve(true)
@@ -1566,7 +1572,7 @@ export function disableEventbriteIntegration():Promise<boolean> {
 export function getEventbriteIntegrationConfig():Promise<EventbriteIntegrationConfig> {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: `/backend/integrations/eventbrite/config`,
+            url: `${baseURL}/integrations/eventbrite/config`,
             type: 'GET',
             success: function (response) {
                 resolve(response.eventbrite_config)
@@ -1582,7 +1588,7 @@ export function getEventbriteIntegrationConfig():Promise<EventbriteIntegrationCo
 export function editEventbriteIntegrationConfig(data:Partial<EventbriteIntegrationConfig>):Promise<EventbriteIntegrationConfig> {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: `/backend/integrations/eventbrite/config`,
+            url: `${baseURL}/integrations/eventbrite/config`,
             type: 'PATCH',
             data: JSON.stringify(data),
             contentType: 'application/json',
@@ -1600,7 +1606,7 @@ export function editEventbriteIntegrationConfig(data:Partial<EventbriteIntegrati
 export function getEventbriteEvents():Promise<[EventbriteEvent]> {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: `/backend/integrations/eventbrite/events`,
+            url: `${baseURL}/integrations/eventbrite/events`,
             type: 'GET',
             success: function (response) {
                 resolve(response.events)
@@ -1619,7 +1625,7 @@ export function getEventbriteEvents():Promise<[EventbriteEvent]> {
 export function getAuthConfiguration():Promise<AuthConfiguration> {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: `/backend/integrations/auth/config`,
+            url: `${baseURL}/integrations/auth/config`,
             type: 'GET',
             success: function (response) {
                 resolve(response.auth_config)
@@ -1635,7 +1641,7 @@ export function getAuthConfiguration():Promise<AuthConfiguration> {
 export function editAuthConfiguration(data:Partial<AuthConfiguration>):Promise<EditAuthConfigurationResponse> {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: `/backend/integrations/auth/config`,
+            url: `${baseURL}/integrations/auth/config`,
             type: 'PATCH',
             data: JSON.stringify(data),
             contentType: 'application/json',
@@ -1653,7 +1659,7 @@ export function editAuthConfiguration(data:Partial<AuthConfiguration>):Promise<E
 export function deleteOAuthConfiguration():Promise<boolean> {
     return new Promise((resolve) => {
         $.ajax({
-            url: `/backend/integrations/auth/config`,
+            url: `${baseURL}/integrations/auth/config`,
             type: 'DELETE',
             success: function (response) {
                 resolve(true)
