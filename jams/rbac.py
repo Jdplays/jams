@@ -49,9 +49,9 @@ def generate_endpoints_structure():
                         db.session.commit()
             
 
-            backend_endpoints = page_data.get('backend_endpoints', [])
-            if backend_endpoints:
-                for endpoint_name, endpoint_data in backend_endpoints.items():
+            api_endpoints = page_data.get('api_endpoints', [])
+            if api_endpoints:
+                for endpoint_name, endpoint_data in api_endpoints.items():
                     allowed_fields = None
                     if endpoint_data:
                         allowed_fields = endpoint_data.get('allowed_fields', [])

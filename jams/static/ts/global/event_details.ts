@@ -1,5 +1,5 @@
 import { getEventField, getEventsField, getnextEvent } from "./endpoints"
-import { BackendResponse, Event } from "./endpoints_interfaces"
+import { ApiResponse, Event } from "./endpoints_interfaces"
 import { buildQueryString, emptyElement, formatDate, formatDateToShort } from "./helper"
 import { QueryStringData } from "./interfaces"
 
@@ -46,7 +46,7 @@ export class EventDetails {
         const queryString = buildQueryString(queryData)
         
         if (this.options.eventId === null || this.options.eventId === undefined) {
-           await getnextEvent(queryString).then((response:BackendResponse<number>) => {
+           await getnextEvent(queryString).then((response:ApiResponse<number>) => {
             this.eventId = response.data
            }).catch(() => {
             this.eventId = 1

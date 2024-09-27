@@ -1,4 +1,4 @@
-# Backend is just for serving data to javascript
+# API is for serving data to Typscript/Javascript
 from flask import Blueprint, request, jsonify, abort
 from jams.decorators import role_based_access_control_be, eventbrite_inetegration_route
 from jams.integrations import eventbrite
@@ -6,7 +6,7 @@ from jams.configuration import ConfigType, get_config_value, set_config_value, c
 
 bp = Blueprint('eventbrite', __name__, url_prefix='/eventbrite')
 
-# URL PREFIX = /backend
+# URL PREFIX = /api/v1
 @bp.route('/verify', methods=['POST'])
 @role_based_access_control_be
 def verify():

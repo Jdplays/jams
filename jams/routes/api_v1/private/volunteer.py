@@ -1,4 +1,4 @@
-# Backend is just for serving data to javascript
+# API is for serving data to Typscript/Javascript
 from flask import Blueprint, request, jsonify, abort
 from flask_security import login_required
 from jams.decorators import role_based_access_control_be, protect_user_updates
@@ -7,7 +7,7 @@ from jams.util import helper
 
 bp = Blueprint('volunteer', __name__)
 
-# URL PREFIX = /backend
+# URL PREFIX = /api/v1
 
 #------------------------------------------ Volunteer Attendance ------------------------------------------#
 

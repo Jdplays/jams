@@ -374,9 +374,6 @@ def check_roles(user_role_ids, role_id):
 
 def extract_endpoint():
     endpoint = request.endpoint
-    view_args = request.view_args
-    for key, value in view_args.items():
-        endpoint = endpoint.replace(str(value), f"<{key}>")
     return endpoint
 
 def get_endpoint_rules_for_roles(endpoint, role_ids, public=False):

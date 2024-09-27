@@ -1,10 +1,10 @@
-# Backend is just for serving data to javascript
+# API is for serving data to Typscript/Javascript
 from flask import Blueprint, jsonify
 from flask_security import login_required, current_user
 
 bp = Blueprint('general', __name__)
 
-# URL PREFIX = /backend
+# URL PREFIX = /api/v1
 
 @bp.route('/get_current_user_id', methods=['GET'])
 @login_required

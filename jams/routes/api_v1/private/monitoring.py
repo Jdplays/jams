@@ -1,4 +1,4 @@
-# Backend is just for serving data to javascript
+# API is for serving data to Typscript/Javascript
 from flask import Blueprint, jsonify, request
 from jams.decorators import role_based_access_control_be
 from flask_security import login_required

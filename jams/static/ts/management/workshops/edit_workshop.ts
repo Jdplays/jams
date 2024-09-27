@@ -1,4 +1,4 @@
-import { activateWorkshopFile, archiveWorkshopFile, editWorkshop, getDifficultyLevel, getDifficultyLevels, getFilesDataForWorkshop, getIconData, getWorkshop, getWorkshopsField, getWorkshopTypes, uploadFileToWorkshop } from "@global/endpoints";
+import { activateWorkshopFile, archiveWorkshopFile, editWorkshop, getDifficultyLevels, getFilesDataForWorkshop, getIconData, getWorkshop, getWorkshopsField, getWorkshopTypes } from "@global/endpoints";
 import { RequestMultiModelJSONData, Workshop, WorkshopType } from "@global/endpoints_interfaces";
 import { addSpinnerToElement, animateElement, buildQueryString, buildRadioInputSelectionGroup, createRegexFromList, emptyElement, errorToast, getRadioInputGroupSelection, isDefined, removeSpinnerFromElement, successToast, validateNumberInput, validateTextInput } from "@global/helper";
 import { InputValidationPattern, QueryStringData } from "@global/interfaces";
@@ -297,7 +297,7 @@ async function preLoadWorkshopTypes() {
 function initialiseDropzone() {
     const dropzoneElement = document.getElementById('workshop-files-dropzone')
 
-    const dropzone = new Dropzone('form#workshop-files-dropzone', {url: `/backend/workshops/${WorkshopId}/files`, parallelUploads: 1})
+    const dropzone = new Dropzone('form#workshop-files-dropzone', {url: `/api/v1/workshops/${WorkshopId}/files`, parallelUploads: 1})
 
     dropzone.on("complete", async function(file) {
         await populateWorkshopFiles()
