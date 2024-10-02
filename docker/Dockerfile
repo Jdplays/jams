@@ -31,6 +31,9 @@ COPY ./package.json .
 COPY ./tsconfig.json .
 COPY ./docker/webpack-prod.config.mjs ./webpack.config.mjs
 
+# Copy the licence into the container
+COPY ./LICENSE .
+
 # Install node packages
 RUN npm i
 
