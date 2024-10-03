@@ -189,6 +189,10 @@ export interface EventbriteIntegrationConfig {
     EVENTBRITE_BEARER_TOKEN:string
     EVENTBRITE_ORGANISATION_ID:string
     EVENTBRITE_ORGANISATION_NAME:string
+    EVENTBRITE_CONFIG_EVENT_ID:string
+    EVENTBRITE_REGISTERABLE_TICKET_TYPES:string
+    EVENTBRITE_IMPORT_AGE:number
+    EVENTBRITE_IMPORT_AGE_FIELD:string
 }
 
 export interface EventbriteOrganisation {
@@ -206,6 +210,11 @@ export interface EventbriteEvent {
     end_time:string
     capacity:number
     url:string
+}
+
+export interface EventbriteTicketType {
+    name:string
+    description:string
 }
 
 export interface AuthConfiguration {

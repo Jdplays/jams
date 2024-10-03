@@ -34,8 +34,26 @@
                 <div id="eventbrite-org-selection-block" style="display: none;">
                     <div class="mb-3">
                         <label class="form-label">Select Organisation to pull events from</label>
-                        <select id="eventbrite-org-select" class="form-control" onchange="checkIfConentUpdated()"></select> 
+                        <select id="eventbrite-org-select" class="form-control" onchange="orgSelectOnChange()"></select> 
                     </div>
+                </div>
+                <div id="eventbrite-advanced-config-block" style="display: none;">
+                    <h2 class="mb-3">Advanced Configuration</h2>
+                    <div id="eventbrite-event-select-container" class="mb-3">
+                        <label class="form-label">Select Event from Eventbrite</label>
+                        <p>This event will be used to configure settings that depend on an event. It is recomened that you use a template event that you create all of your events from.</p>
+                        <select id="eventbrite-event-select" class="form-control" onchange="eventSelectOnChange()"></select>
+                    </div>
+
+                    <div id="attendee-import-options-block">
+                        <h3>Attendee Import Options</h3>
+                        <div id="eventbrite-ticket-types" class="mb-3">
+                            <label class="form-label">Registerable Ticket Types</label>
+                            <p>Select which ticket types are registerable (can sign up to workshops)</p>
+                            <div id="ticket-type-selection-container" class="form-selectgroup-boxes row mb-3"></div>
+                        </div>
+                    </div>
+                    
                 </div>
             </form>
             <button id="eventbrite-save-button" class="btn btn-primary" onclick="eventbriteIntegrationSaveOnClick()" disabled style="display: none;">Save</button>

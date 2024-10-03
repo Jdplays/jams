@@ -24,7 +24,8 @@ import {
     AuthConfiguration,
     EditAuthConfigurationResponse,
     ApiResponse,
-    VolunteerSignup
+    VolunteerSignup,
+    EventbriteTicketType
 } from "@global/endpoints_interfaces";
 
 // This is a script where all then endpoint calls will live to prevent duplication across scripts
@@ -1575,6 +1576,7 @@ export function getEventbriteIntegrationConfig():Promise<EventbriteIntegrationCo
             url: `${baseURL}/integrations/eventbrite/config`,
             type: 'GET',
             success: function (response) {
+                console.log(response.eventbrite_config)
                 resolve(response.eventbrite_config)
             },
             error: function (error) {
@@ -1610,6 +1612,22 @@ export function getEventbriteEvents():Promise<[EventbriteEvent]> {
             type: 'GET',
             success: function (response) {
                 resolve(response.events)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(false)
+            }
+        });
+    });
+}
+
+export function getEventbriteTicketTypes():Promise<[EventbriteTicketType]> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/eventbrite/ticket_types`,
+            type: 'GET',
+            success: function (response) {
+                resolve(response.ticket_types)
             },
             error: function (error) {
                 console.log('Error fetching data:', error);

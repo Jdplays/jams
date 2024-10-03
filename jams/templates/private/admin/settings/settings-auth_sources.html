@@ -13,15 +13,15 @@
 </div>
 <div id="auth-sources-container">
     <div class="card mb-3">
-        <div class="settings-auth-card">
-            <label class="form-label settings-auth-card-item">Local Authentication</label>
-            <label id="local-auth-status" class="form-label settings-auth-card-item">
+        <div class="settings-card">
+            <label class="form-label settings-card-item">Local Authentication</label>
+            <label id="local-auth-status" class="form-label settings-card-item">
             </label>
-            <label class="form-check form-switch settings-auth-card-item">
-                <span class="settings-auth-card-item-text">Enable/Disable</span>
+            <label class="form-check form-switch settings-card-item">
+                <span class="settings-card-item-text">Enable/Disable</span>
                 <input id="toggle-local-auth-switch" class="form-check-input" type="checkbox" onchange="toggleLocalAuthOnChange()">
             </label>
-            <button class="btn btn-link mt-3 settings-auth-card-item" disabled>
+            <button class="btn btn-link mt-3 settings-card-item" disabled>
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                     class="icon icon-tabler icons-tabler-outline icon-tabler-pencil">
@@ -29,7 +29,7 @@
                     <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
                     <path d="M13.5 6.5l4 4" />
                 </svg>
-                <span class="btn-text settings-auth-card-item-text">Edit</span>
+                <span class="btn-text settings-card-item-text">Edit</span>
             </button>
         </div>
     </div>
@@ -47,16 +47,16 @@
     </button>
 
     <div id="oauth-card" class="card mb-3">
-        <div class="settings-auth-card">
-            <label id="oauth-provider-name" class="form-label settings-auth-card-item">
+        <div class="settings-card">
+            <label id="oauth-provider-name" class="form-label settings-card-item">
             </label>
-            <label id="oauth-status" class="form-label settings-auth-card-item">
+            <label id="oauth-status" class="form-label settings-card-item">
             </label>
-            <label class="form-check form-switch settings-auth-card-item">
-                <span class="settings-auth-card-item-text">Enable/Disable</span>
+            <label class="form-check form-switch settings-card-item">
+                <span class="settings-card-item-text">Enable/Disable</span>
                 <input id="toggle-oauth-switch" class="form-check-input" type="checkbox" onchange="toggleOAuthOnChange()">
             </label>
-            <button class="btn btn-link mt-3 settings-auth-card-item" onclick="editButtonOAuthOnClick()">
+            <button class="btn btn-link mt-3 settings-card-item" onclick="editButtonOAuthOnClick()">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                     class="icon icon-tabler icons-tabler-outline icon-tabler-pencil">
@@ -64,7 +64,7 @@
                     <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
                     <path d="M13.5 6.5l4 4" />
                 </svg>
-                <span class="btn-text settings-auth-card-item-text">Edit</span>
+                <span class="btn-text settings-card-item-text">Edit</span>
             </button>
         </div>
         <div id="oauth-config-form" style="display: none;">

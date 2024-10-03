@@ -285,7 +285,7 @@ export function getSelectValues(select:HTMLSelectElement) {
     return element
   }
 
-  export function buildRadioInputSelectionGroup(title:string, subText:string, value:string, inputName:string, checked:boolean=false, onInputChangeFunc:((value:string) => void)=null): HTMLDivElement {
+  export function buildRadioInputSelectionGroup(title:string, subText:string, value:string, inputName:string, checked:boolean=false, onInputChangeFunc:((value:string) => void)=null, radio:boolean=true): HTMLDivElement {
     let optionDiv = document.createElement('div')
         optionDiv.classList.add('col-lg-6')
 
@@ -293,12 +293,12 @@ export function getSelectValues(select:HTMLSelectElement) {
         label.classList.add('form-selectgroup-item')
 
         let input = document.createElement('input') as HTMLInputElement
-        input.type = 'radio'
+        input.type = radio ? 'radio' : 'checkbox'
         input.value = value
         input.classList.add('form-selectgroup-input')
         input.name = inputName
         input.checked = checked
-        if (onInputChangeFunc !== null || onInputChangeFunc !== undefined) {
+        if (onInputChangeFunc !== null && onInputChangeFunc !== undefined) {
             input.onchange = () => {
                 onInputChangeFunc(value)
             }
@@ -336,6 +336,20 @@ export function getSelectValues(select:HTMLSelectElement) {
     const selectedRadio = groupContainer.querySelector(`input[name="${inputName}"]:checked`) as HTMLInputElement|null
     const selectedValue = selectedRadio ? selectedRadio.value : null
     return selectedValue
+  }
+
+  
+  export function getCheckboxInputGroupSelection(groupContainer:HTMLElement, inputName:string) {
+    const selectedBoxes = groupContainer.querySelectorAll(`input[name="${inputName}"]:checked`) as NodeListOf<HTMLInputElement>|null
+    let selectedValues:string[] = [];
+    selectedBoxes.forEach(checkbox => {
+        const value = checkbox?.value ?? null;
+        if (value !== null) {
+            selectedValues.push(value)
+        }
+    })
+    
+    return selectedValues
   }
 
   export function validateTextInput(inputElement:HTMLInputElement, regexPatterns:InputValidationPattern[]|null=null, allowSpecialCharacters:boolean=false, allowEmpty:boolean=false):boolean {

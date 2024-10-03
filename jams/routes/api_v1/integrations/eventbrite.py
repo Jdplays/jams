@@ -43,9 +43,7 @@ def get_config():
     if enabled == None:
         enabled = False
 
-    eventbrite_config[ConfigType.EVENTBRITE_ENABLED.name] = enabled if enabled != None else False
-    eventbrite_config[ConfigType.EVENTBRITE_ORGANISATION_ID.name] = get_config_value(ConfigType.EVENTBRITE_ORGANISATION_ID)
-    eventbrite_config[ConfigType.EVENTBRITE_ORGANISATION_NAME.name] = get_config_value(ConfigType.EVENTBRITE_ORGANISATION_NAME)
+    eventbrite_config = eventbrite.eventbrite_config_dict()
 
     return jsonify({'eventbrite_config': eventbrite_config})
 
@@ -59,6 +57,9 @@ def edit_config():
     allowed_fields = list(config_item.name for config_item in eventbrite.configItems)
     for config_name, value in data.items():
         if config_name in allowed_fields:
+            if config_name == ConfigType.EVENTBRITE_ORGANISATION_ID.name:
+                if value != get_config_value(ConfigType.EVENTBRITE_ORGANISATION_ID):
+                    remove_config_entry(ConfigType.EVENTBRITE_CONFIG_EVENT_ID)
             set_config_value(ConfigType[config_name], value)
 
     eventbrite_config = {}
@@ -68,10 +69,7 @@ def edit_config():
         enabled = False
 
 
-    eventbrite_config[ConfigType.EVENTBRITE_ENABLED.value] = enabled if enabled != None else False
-    eventbrite_config[ConfigType.EVENTBRITE_BEARER_TOKEN.value] = get_config_value(ConfigType.EVENTBRITE_BEARER_TOKEN)
-    eventbrite_config[ConfigType.EVENTBRITE_ORGANISATION_ID.value] = get_config_value(ConfigType.EVENTBRITE_ORGANISATION_ID)
-    eventbrite_config[ConfigType.EVENTBRITE_ORGANISATION_NAME.value] = get_config_value(ConfigType.EVENTBRITE_ORGANISATION_NAME)
+    eventbrite_config = eventbrite.eventbrite_config_dict()
 
     return jsonify({'eventbrite_config': eventbrite_config})
 
@@ -109,3 +107,11 @@ def get_events():
     events = eventbrite.get_events()
 
     return jsonify({'events': [event.to_dict() for event in events]})
+
+
+@bp.route('/ticket_types', methods=['GET'])
+@role_based_access_control_be
+def get_ticket_types():
+    ticket_types = eventbrite.get_ticket_types()
+
+    return jsonify({'ticket_types': [tt.to_dict() for tt in ticket_types]})

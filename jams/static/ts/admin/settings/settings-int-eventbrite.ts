@@ -1,6 +1,6 @@
-import { verifyEventbriteApiToken, getIconData, getEventbriteUserOrganisations, enableEventbriteIntegration, getEventbriteIntegrationConfig, editEventbriteIntegrationConfig, disableEventbriteIntegration } from "@global/endpoints"
-import { emptyElement, errorToast, getSelectedDropdownText, isDefined, isNullEmptyOrSpaces, successToast } from "@global/helper"
-import { EventbriteIntegrationConfig, EventbriteOrganisation } from "@global/endpoints_interfaces"
+import { verifyEventbriteApiToken, getIconData, getEventbriteUserOrganisations, enableEventbriteIntegration, getEventbriteIntegrationConfig, editEventbriteIntegrationConfig, disableEventbriteIntegration, getEventbriteEvents, getEventbriteTicketTypes } from "@global/endpoints"
+import { buildRadioInputSelectionGroup, createDropdown, emptyElement, errorToast, getCheckboxInputGroupSelection, getRadioInputGroupSelection, getSelectedDropdownText, isDefined, isNullEmptyOrSpaces, successToast } from "@global/helper"
+import { EventbriteEvent, EventbriteIntegrationConfig, EventbriteOrganisation } from "@global/endpoints_interfaces"
 
 let loadingIcon:string;
 let tickIcon:string;
@@ -23,11 +23,14 @@ async function setupPage() {
 
     const tokenBlock = document.getElementById('eventbrite-token-block') as HTMLElement
     const orgSelectBlock = document.getElementById('eventbrite-org-selection-block') as HTMLElement
+    const advancedConfigBlock = document.getElementById('eventbrite-advanced-config-block') as HTMLElement
 
     const toggle = document.getElementById('toggle-eventbrite-switch') as HTMLInputElement
     const tokenInput = document.getElementById('eventbrite-api-token-input') as HTMLInputElement
     const verifyButton = document.getElementById('eventbrite-api-token-verify-button') as HTMLButtonElement
     const enableButton = document.getElementById('eventbrite-enable-button') as HTMLButtonElement
+    const eventSelectContainer = document.getElementById('eventbrite-event-select-container') as HTMLElement
+    const attendeeImportConfigBlock = document.getElementById('attendee-import-options-block') as HTMLDivElement
 
     enableButton.disabled = true
     tokenInput.value = ''
@@ -39,6 +42,7 @@ async function setupPage() {
         toggleOnUpdate()
         tokenBlock.style.display = 'block'
         orgSelectBlock.style.display = 'block'
+        advancedConfigBlock.style.display = 'block'
         
         if (!tickIcon) {
             tickIcon = await getIconData('check')
@@ -49,6 +53,15 @@ async function setupPage() {
         tokenInput.value = currentConfig.EVENTBRITE_BEARER_TOKEN
         if (!isNullEmptyOrSpaces(currentConfig.EVENTBRITE_ORGANISATION_ID)) {
             populateOrgSelect(organisations, currentConfig.EVENTBRITE_ORGANISATION_ID)
+
+            // Populate the event select
+            const events = await getEventbriteEvents()
+            populateEventSelect(events, eventSelectContainer)
+
+            if (!isNullEmptyOrSpaces(currentConfig.EVENTBRITE_CONFIG_EVENT_ID)) {
+                attendeeImportConfigBlock.style.display = 'block'
+                populateTicketTypeSelectGroup()
+            }
         } else {
             populateOrgSelect(organisations)
         }
@@ -93,11 +106,20 @@ function toggleOnUpdate() {
 async function eventbriteIntegrationSaveOnClick() {
     const tokenInput = document.getElementById('eventbrite-api-token-input') as HTMLInputElement
     const orgSelect = document.getElementById('eventbrite-org-select') as HTMLSelectElement
+    const eventSelect = document.getElementById('eventbrite-event-select') as HTMLSelectElement
+
+    const ticketTypeSelectionGroup = document.getElementById('ticket-type-selection-container')
+
     const saveButton = document.getElementById('eventbrite-save-button') as HTMLButtonElement
+
+    const selectedTicketTypes = getCheckboxInputGroupSelection(ticketTypeSelectionGroup, 'ticket-type')
+    const selectedTicketTypesString = selectedTicketTypes.join(',')
 
     const data:Partial<EventbriteIntegrationConfig> = {
         EVENTBRITE_ORGANISATION_ID: orgSelect.value,
-        EVENTBRITE_ORGANISATION_NAME: getSelectedDropdownText(orgSelect)
+        EVENTBRITE_ORGANISATION_NAME: getSelectedDropdownText(orgSelect),
+        EVENTBRITE_CONFIG_EVENT_ID: eventSelect.value,
+        EVENTBRITE_REGISTERABLE_TICKET_TYPES: selectedTicketTypesString
     }
 
     if (tokenInput.value !== tokenPlaceholder) {
@@ -165,9 +187,14 @@ function checkIfConentUpdated() {
     const saveButton = document.getElementById('eventbrite-save-button') as HTMLButtonElement
     const enableButton = document.getElementById('eventbrite-enable-button') as HTMLButtonElement
     const orgSelect = document.getElementById('eventbrite-org-select') as HTMLSelectElement
+    const eventSelect = document.getElementById('eventbrite-event-select') as HTMLSelectElement
+    const ticketTypeSelectionGroup = document.getElementById('ticket-type-selection-container') as HTMLDivElement
+
+    const selectedTicketTypes = getCheckboxInputGroupSelection(ticketTypeSelectionGroup, 'ticket-type')
+    const selectedTicketTypesString = selectedTicketTypes.join(',')
 
     if (currentConfig.EVENTBRITE_ENABLED) {
-        if (orgSelect.value !== currentConfig.EVENTBRITE_ORGANISATION_ID || tokenUpdated) {
+        if (orgSelect.value !== currentConfig.EVENTBRITE_ORGANISATION_ID || eventSelect.value !== currentConfig.EVENTBRITE_CONFIG_EVENT_ID || selectedTicketTypesString !== currentConfig.EVENTBRITE_REGISTERABLE_TICKET_TYPES || tokenUpdated) {
             saveButton.disabled = false
         } else {
             saveButton.disabled = true
@@ -181,11 +208,27 @@ function checkIfConentUpdated() {
     }
 }
 
+function orgSelectOnChange() {
+    const orgSelect = document.getElementById('eventbrite-org-select') as HTMLSelectElement
+    const advancedConfigBlock = document.getElementById('eventbrite-advanced-config-block') as HTMLElement
+
+    if (orgSelect.value !== currentConfig.EVENTBRITE_ORGANISATION_ID) {
+        advancedConfigBlock.style.display = 'none'
+    }
+    else {
+        advancedConfigBlock.style.display = 'block'
+    }
+    
+
+    checkIfConentUpdated()
+}
+
 function toggleEventbriteIntegrationOnChange() {
     const toggle = document.getElementById('toggle-eventbrite-switch') as HTMLInputElement
     const tokenBlock = document.getElementById('eventbrite-token-block') as HTMLElement
     const orgSelectBlock = document.getElementById('eventbrite-org-selection-block') as HTMLElement
     const verifyButton = document.getElementById('eventbrite-api-token-verify-button') as HTMLButtonElement
+    const advancedConfigBlock = document.getElementById('eventbrite-advanced-config-block') as HTMLElement
 
     toggleOnUpdate()
 
@@ -198,10 +241,12 @@ function toggleEventbriteIntegrationOnChange() {
         tokenBlock.style.display = 'block'
         if (currentConfig.EVENTBRITE_ENABLED) {
             orgSelectBlock.style.display = 'block'
+            advancedConfigBlock.style.display = 'block'
         }
     } else {
         tokenBlock.style.display = 'none'
         orgSelectBlock.style.display = 'none'
+        advancedConfigBlock.style.display = 'none'
     }
 
     if (!currentConfig.EVENTBRITE_ENABLED) {
@@ -294,8 +339,63 @@ function tokenTextBoxOnInput() {
     enableButton.disabled = true
 
     const orgSelectBlock = document.getElementById('eventbrite-org-selection-block')
+    const advancedConfigBlock = document.getElementById('eventbrite-advanced-config-block') as HTMLElement
 
     orgSelectBlock.style.display = 'none'
+    advancedConfigBlock.style.display = 'none'
+}
+
+function populateEventSelect(events:EventbriteEvent[], parent:HTMLElement) {
+    const eventSelect = document.getElementById('eventbrite-event-select')
+
+    emptyElement(eventSelect)
+
+    let defaultOption = document.createElement('option')
+    defaultOption.disabled = true
+    defaultOption.value = '-1'
+    defaultOption.text = 'Select an Event'
+    defaultOption.selected = true
+    eventSelect.appendChild(defaultOption)
+    for (const event of events) {
+        let option = document.createElement('option')
+        option.value = event.id
+        option.text = event.name
+        if (event.id === currentConfig.EVENTBRITE_CONFIG_EVENT_ID) {
+            option.selected = true
+        }
+        eventSelect.appendChild(option)
+    }
+}
+
+function eventSelectOnChange() {
+    const eventSelect = document.getElementById('eventbrite-event-select') as HTMLSelectElement
+    const attendeeImportConfigBlock = document.getElementById('attendee-import-options-block') as HTMLDivElement
+
+    if (eventSelect.value !== currentConfig.EVENTBRITE_CONFIG_EVENT_ID) {
+        attendeeImportConfigBlock.style.display = 'none'
+    } else {
+        attendeeImportConfigBlock.style.display = 'block'
+    }
+
+    checkIfConentUpdated()
+}
+
+async function populateTicketTypeSelectGroup() {
+    const selectGroup = document.getElementById('ticket-type-selection-container')
+    emptyElement(selectGroup)
+
+    const response = await getEventbriteTicketTypes()
+
+    for(const type of response) {
+        let checked = false
+
+        if (currentConfig.EVENTBRITE_REGISTERABLE_TICKET_TYPES) {
+            checked = true ? currentConfig.EVENTBRITE_REGISTERABLE_TICKET_TYPES.split(',').includes(type.name) : false
+        }
+
+        const option = buildRadioInputSelectionGroup(type.name, type.description, type.name, 'ticket-type', checked, checkIfConentUpdated, false)
+        selectGroup.appendChild(option)
+    }
 }
 
 // EVent Listeners
@@ -333,7 +433,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 document.addEventListener("DOMContentLoaded", () => {
     if (isDefined(window)) {
-        (<any>window).checkIfConentUpdated = checkIfConentUpdated;
+        (<any>window).orgSelectOnChange = orgSelectOnChange;
+        (<any>window).eventSelectOnChange = eventSelectOnChange;
         (<any>window).toggleEventbriteIntegrationOnChange = toggleEventbriteIntegrationOnChange;
         (<any>window).eventbriteIntegrationSaveOnClick = eventbriteIntegrationSaveOnClick;
         (<any>window).eventbriteIntegrationEnableOnClick = eventbriteIntegrationEnableOnClick;
