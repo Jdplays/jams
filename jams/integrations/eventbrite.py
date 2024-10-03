@@ -9,7 +9,11 @@ configItems = [
     ConfigType.EVENTBRITE_BEARER_TOKEN,
     ConfigType.EVENTBRITE_ENABLED,
     ConfigType.EVENTBRITE_ORGANISATION_ID,
-    ConfigType.EVENTBRITE_ORGANISATION_NAME
+    ConfigType.EVENTBRITE_ORGANISATION_NAME,
+    ConfigType.EVENTBRITE_CONFIG_EVENT_ID,
+    ConfigType.EVENTBRITE_REGISTERABLE_TICKET_TYPES,
+    ConfigType.EVENTBRITE_IMPORT_AGE,
+    ConfigType.EVENTBRITE_IMPORT_AGE_FIELD
 ]
 
 defaultHeaders = {
@@ -77,6 +81,13 @@ def get_events():
         events.append(event)
     
     return events
+
+def eventbrite_config_dict():
+    dict = {}
+    for item in configItems:
+        dict[item.name] = get_config_value(item)
+    
+    return dict
 
 
 class EventbriteOrgainisation():
