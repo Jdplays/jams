@@ -1,15 +1,14 @@
 import threading
 import time
 import functools
-import json
 from enum import Enum
 from datetime import datetime, timedelta, UTC
 from concurrent.futures import ThreadPoolExecutor
 from jams.models import db, TaskSchedulerModel
+from jams.util import task_scheduler_funcs
 
 class TaskActionEnum(Enum):
-    TEST_TASK = 'test_task'
-    SLEEP_TASK = 'sleep_task'
+    UPDATE_EVENTBRITE_EVENT_ATTENDEES = 'update_eventbrite_event_attendees'
 
 class TaskScheduler:
     def __init__(self, app, interval=60, max_workers=4) -> None:
@@ -44,7 +43,15 @@ class TaskScheduler:
     def task_done_callback(self, future, task_id):
          with self.app.app_context():
             task = TaskSchedulerModel.query.filter_by(id=task_id).first()
+            now = datetime.now(UTC)
             try:
+                # Ensure last_run_datetime is also offset-aware by assuming it's in UTC
+                if task.last_run_datetime.tzinfo is None:
+                    task.last_run_datetime = task.last_run_datetime.replace(tzinfo=UTC)
+                task.last_run_duration = now - task.last_run_datetime
+
+                db.session.commit()
+
                 # Check if the task was completed successfully
                 if future.exception() is None:
                     task.log_finished()
@@ -56,14 +63,8 @@ class TaskScheduler:
                 task.running = False
 
                 # Set the last run duration, next run time and run count
-                now = datetime.now(UTC)
                 task.run_count += 1
                 task.next_run_datetime = (task.last_run_datetime + task.interval).replace(microsecond=0)
-
-                # Ensure last_run_datetime is also offset-aware by assuming it's in UTC
-                if task.last_run_datetime.tzinfo is None:
-                    task.last_run_datetime = task.last_run_datetime.replace(tzinfo=UTC)
-                task.last_run_duration = now - task.last_run_datetime
 
                 task.queued = False
 
@@ -111,19 +112,32 @@ class TaskScheduler:
 
                 task.log_started()
 
-                if task.action_enum == TaskActionEnum.SLEEP_TASK.name:
-                    sleep_task(task.params)
-                elif task.action_enum == TaskActionEnum.TEST_TASK.name:
-                    test_task(**task.params)
+                if task.action_enum == TaskActionEnum.UPDATE_EVENTBRITE_EVENT_ATTENDEES.name:
+                    task_scheduler_funcs.update_event_attendees_task(**task.params)
             except Exception as e:
                 db.session.rollback()
                 raise e
 
-def sleep_task(params):
-    duration = params.get('duration')
-    print('Starting sleep Task')
-    time.sleep(duration)
-    print('Sleep task finished')
 
-def test_task(name, value):
-    print(f'Test task. params = Name: {name}, value: {value}')
+def create_task(name, action_enum:TaskActionEnum, interval, params=None, start_datetime=datetime.now(UTC), end_datetime=datetime.now(UTC), run_quantity=None, private=True):
+    new_task:TaskSchedulerModel = TaskSchedulerModel(name=name, action_enum=action_enum.name, interval=interval, params=params, start_datetime=start_datetime, end_datetime=end_datetime, run_quantity=run_quantity, private=private)
+    existing_task:TaskSchedulerModel = TaskSchedulerModel.query.filter_by(name=name).first()
+
+    if existing_task:
+        existing_task.enable_task()
+        existing_task.action_enum = new_task.action_enum
+        existing_task.interval = new_task.interval
+        existing_task.params = new_task.params
+        existing_task.start_datetime = new_task.start_datetime
+        existing_task.end_datetime = new_task.end_datetime
+        existing_task.next_run_datetime = new_task.next_run_datetime
+        existing_task.private = new_task.private
+
+        db.session.commit()
+        return
+    
+    
+    db.session.add(new_task)
+    db.session.commit()
+
+    new_task.log('created')
