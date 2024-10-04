@@ -9,10 +9,14 @@ bp = Blueprint('webhooks', __name__, url_prefix='/webhooks')
 def get_config(id):
     webhook:Webhook = Webhook.query.filter_by(id=id).first_or_404()
 
+    if not webhook.active:
+        return "Webhook Archived", 410
+
     data = request.get_json()
     if webhook.authenticated:
         # Check auth token in the future
         print('This is an Authenticated webhook')
+    
     
     if webhook.external_id:
         if webhook.external_id != data.get('config').get('webhook_id'):

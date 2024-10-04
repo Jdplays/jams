@@ -54,13 +54,20 @@ def edit_config():
     if not data:
         abort(400, description="No data provided")
     
+    new_org = False
     allowed_fields = list(config_item.name for config_item in eventbrite.configItems)
     for config_name, value in data.items():
         if config_name in allowed_fields:
+            if value == '' or value == None:
+                remove_config_entry(ConfigType[config_name])
             if config_name == ConfigType.EVENTBRITE_ORGANISATION_ID.name:
                 if value != get_config_value(ConfigType.EVENTBRITE_ORGANISATION_ID):
-                    remove_config_entry(ConfigType.EVENTBRITE_CONFIG_EVENT_ID)
+                    new_org = True
             set_config_value(ConfigType[config_name], value)
+
+    if new_org:
+        remove_config_entry(ConfigType.EVENTBRITE_CONFIG_EVENT_ID)
+        eventbrite.create_eventbrite_webhooks()
 
     eventbrite_config = {}
 
@@ -86,6 +93,8 @@ def enable():
             if not value:
                 value = ''
             create_config_entry(ConfigType[config_name], value)
+    
+    eventbrite.create_eventbrite_webhooks()
 
     return jsonify({'message': 'Eventbrite Integration has been successfully enabled'})
 
@@ -93,10 +102,9 @@ def enable():
 @role_based_access_control_be
 @eventbrite_inetegration_route
 def disable():
-    remove_config_entry(ConfigType.EVENTBRITE_ENABLED)
-    remove_config_entry(ConfigType.EVENTBRITE_BEARER_TOKEN)
-    remove_config_entry(ConfigType.EVENTBRITE_ORGANISATION_ID)
-    remove_config_entry(ConfigType.EVENTBRITE_ORGANISATION_NAME)
+    for config in eventbrite.configItems:
+        remove_config_entry(config)
+    eventbrite.deactivate_eventbrite_webhooks()
     return jsonify({'message': 'Eventbrite Integration has been successfully enabled'})
 
 
@@ -115,3 +123,10 @@ def get_ticket_types():
     ticket_types = eventbrite.get_ticket_types()
 
     return jsonify({'ticket_types': [tt.to_dict() for tt in ticket_types]})
+
+@bp.route('/custom_questions', methods=['GET'])
+@role_based_access_control_be
+def get_custom_questions():
+    questions = eventbrite.get_custom_questions()
+
+    return jsonify({'questions': [q for q in questions]})

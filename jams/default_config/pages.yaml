@@ -47,6 +47,8 @@ pages:
       routes.api_v1.integrations.eventbrite.edit_config:
       routes.api_v1.integrations.eventbrite.enable:
       routes.api_v1.integrations.eventbrite.disable:
+      routes.api_v1.integrations.eventbrite.get_ticket_types:
+      routes.api_v1.integrations.eventbrite.get_custom_questions:
 
   settings_auth_sources:
     endpoint: routes.frontend.private.admin.settings_auth_sources

@@ -191,7 +191,7 @@ export interface EventbriteIntegrationConfig {
     EVENTBRITE_ORGANISATION_NAME:string
     EVENTBRITE_CONFIG_EVENT_ID:string
     EVENTBRITE_REGISTERABLE_TICKET_TYPES:string
-    EVENTBRITE_IMPORT_AGE:number
+    EVENTBRITE_IMPORT_AGE:boolean
     EVENTBRITE_IMPORT_AGE_FIELD:string
 }
 

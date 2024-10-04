@@ -1,5 +1,5 @@
-import { verifyEventbriteApiToken, getIconData, getEventbriteUserOrganisations, enableEventbriteIntegration, getEventbriteIntegrationConfig, editEventbriteIntegrationConfig, disableEventbriteIntegration, getEventbriteEvents, getEventbriteTicketTypes } from "@global/endpoints"
-import { buildRadioInputSelectionGroup, createDropdown, emptyElement, errorToast, getCheckboxInputGroupSelection, getRadioInputGroupSelection, getSelectedDropdownText, isDefined, isNullEmptyOrSpaces, successToast } from "@global/helper"
+import { verifyEventbriteApiToken, getIconData, getEventbriteUserOrganisations, enableEventbriteIntegration, getEventbriteIntegrationConfig, editEventbriteIntegrationConfig, disableEventbriteIntegration, getEventbriteEvents, getEventbriteTicketTypes, getEventbriteCustomQuestions } from "@global/endpoints"
+import { addSpinnerToElement, buildRadioInputSelectionGroup, createDropdown, emptyElement, errorToast, getCheckboxInputGroupSelection, getRadioInputGroupSelection, getSelectedDropdownText, isDefined, isNullEmptyOrSpaces, removeSpinnerFromElement, successToast } from "@global/helper"
 import { EventbriteEvent, EventbriteIntegrationConfig, EventbriteOrganisation } from "@global/endpoints_interfaces"
 
 let loadingIcon:string;
@@ -11,8 +11,12 @@ let tokenPlaceholder:string = '*****************'
 let currentConfig:Partial<EventbriteIntegrationConfig>|null=null
 
 async function setupPage() {
+    const formContainer = document.getElementById('form-container') as HTMLDivElement
     const formElement = document.getElementById('eventbrite-config-form') as HTMLElement
-    const loadingBarElement = document.getElementById('eventbrite-config-loading-bar') as HTMLElement
+
+    if (!currentConfig) {
+        addSpinnerToElement(formContainer)
+    }
 
     if (currentConfig === null || currentConfig.EVENTBRITE_ENABLED === null) {
         const eventbriteConfig = await getEventbriteIntegrationConfig()
@@ -35,6 +39,10 @@ async function setupPage() {
     enableButton.disabled = true
     tokenInput.value = ''
 
+    // Reset optional blocks to be hidden
+    eventSelectContainer.style.display = 'none'
+    attendeeImportConfigBlock.style.display = 'none'
+
     if (currentConfig.EVENTBRITE_ENABLED) {
         let organisations = await getEventbriteUserOrganisations()
 
@@ -55,12 +63,19 @@ async function setupPage() {
             populateOrgSelect(organisations, currentConfig.EVENTBRITE_ORGANISATION_ID)
 
             // Populate the event select
+            addSpinnerToElement(advancedConfigBlock)
             const events = await getEventbriteEvents()
             populateEventSelect(events, eventSelectContainer)
-
+            removeSpinnerFromElement(advancedConfigBlock)
+            eventSelectContainer.style.display = 'block'
             if (!isNullEmptyOrSpaces(currentConfig.EVENTBRITE_CONFIG_EVENT_ID)) {
                 attendeeImportConfigBlock.style.display = 'block'
-                populateTicketTypeSelectGroup()
+                addSpinnerToElement(attendeeImportConfigBlock)
+                await populateTicketTypeSelectGroup()
+                await populateOptionalImportsSection()
+                removeSpinnerFromElement(attendeeImportConfigBlock)
+            } else {
+                attendeeImportConfigBlock.style.display = 'none'
             }
         } else {
             populateOrgSelect(organisations)
@@ -68,7 +83,7 @@ async function setupPage() {
     }
 
     formElement.style.display = 'block'
-    loadingBarElement.style.display = 'none'
+    removeSpinnerFromElement(formContainer)
 }
 
 function toggleOnUpdate() {
@@ -115,11 +130,22 @@ async function eventbriteIntegrationSaveOnClick() {
     const selectedTicketTypes = getCheckboxInputGroupSelection(ticketTypeSelectionGroup, 'ticket-type')
     const selectedTicketTypesString = selectedTicketTypes.join(',')
 
+    const ageToggle = document.getElementById('eventbrite-age-toggle') as HTMLInputElement
+    const ageFormMapSelect = document.getElementById('eventbrite-age-form-question-select') as HTMLInputElement
+
+    if (ageToggle.checked && ageFormMapSelect.value === '-1') {
+        // Cannot save with the default value selected
+        errorToast("Please select a Form Question for 'Age'")
+        return
+    }
+
     const data:Partial<EventbriteIntegrationConfig> = {
         EVENTBRITE_ORGANISATION_ID: orgSelect.value,
         EVENTBRITE_ORGANISATION_NAME: getSelectedDropdownText(orgSelect),
-        EVENTBRITE_CONFIG_EVENT_ID: eventSelect.value,
-        EVENTBRITE_REGISTERABLE_TICKET_TYPES: selectedTicketTypesString
+        EVENTBRITE_CONFIG_EVENT_ID: eventSelect.value !== '-1' ? eventSelect.value: null,
+        EVENTBRITE_REGISTERABLE_TICKET_TYPES: selectedTicketTypesString,
+        EVENTBRITE_IMPORT_AGE: ageToggle.checked,
+        EVENTBRITE_IMPORT_AGE_FIELD: ageFormMapSelect.value !== '-1' ? ageFormMapSelect.value : null
     }
 
     if (tokenInput.value !== tokenPlaceholder) {
@@ -189,12 +215,20 @@ function checkIfConentUpdated() {
     const orgSelect = document.getElementById('eventbrite-org-select') as HTMLSelectElement
     const eventSelect = document.getElementById('eventbrite-event-select') as HTMLSelectElement
     const ticketTypeSelectionGroup = document.getElementById('ticket-type-selection-container') as HTMLDivElement
+    const ageToggle = document.getElementById('eventbrite-age-toggle') as HTMLInputElement
+    const ageFormMapSelect = document.getElementById('eventbrite-age-form-question-select') as HTMLInputElement
 
     const selectedTicketTypes = getCheckboxInputGroupSelection(ticketTypeSelectionGroup, 'ticket-type')
     const selectedTicketTypesString = selectedTicketTypes.join(',')
 
     if (currentConfig.EVENTBRITE_ENABLED) {
-        if (orgSelect.value !== currentConfig.EVENTBRITE_ORGANISATION_ID || eventSelect.value !== currentConfig.EVENTBRITE_CONFIG_EVENT_ID || selectedTicketTypesString !== currentConfig.EVENTBRITE_REGISTERABLE_TICKET_TYPES || tokenUpdated) {
+        if (orgSelect.value !== currentConfig.EVENTBRITE_ORGANISATION_ID ||
+            eventSelect.value !== currentConfig.EVENTBRITE_CONFIG_EVENT_ID ||
+            selectedTicketTypesString !== currentConfig.EVENTBRITE_REGISTERABLE_TICKET_TYPES ||
+            ageToggle.checked !== currentConfig.EVENTBRITE_IMPORT_AGE ||
+            ageFormMapSelect.value !== currentConfig.EVENTBRITE_IMPORT_AGE_FIELD ||
+            tokenUpdated) 
+            {
             saveButton.disabled = false
         } else {
             saveButton.disabled = true
@@ -384,6 +418,10 @@ async function populateTicketTypeSelectGroup() {
     const selectGroup = document.getElementById('ticket-type-selection-container')
     emptyElement(selectGroup)
 
+    if (!currentConfig.EVENTBRITE_CONFIG_EVENT_ID) {
+        return
+    }
+    console.log(currentConfig.EVENTBRITE_CONFIG_EVENT_ID)
     const response = await getEventbriteTicketTypes()
 
     for(const type of response) {
@@ -393,9 +431,62 @@ async function populateTicketTypeSelectGroup() {
             checked = true ? currentConfig.EVENTBRITE_REGISTERABLE_TICKET_TYPES.split(',').includes(type.name) : false
         }
 
+        if (isNullEmptyOrSpaces(currentConfig.EVENTBRITE_REGISTERABLE_TICKET_TYPES)) {
+            // If none are selected, all ticket types are registerable
+            checked = true
+        }
+
         const option = buildRadioInputSelectionGroup(type.name, type.description, type.name, 'ticket-type', checked, checkIfConentUpdated, false)
         selectGroup.appendChild(option)
     }
+}
+
+async function populateOptionalImportsSection() {
+    const ageToggle = document.getElementById('eventbrite-age-toggle') as HTMLInputElement
+    const ageFormMapSelect = document.getElementById('eventbrite-age-form-question-select')
+
+    const questions = await getEventbriteCustomQuestions()
+
+    ageToggle.checked = currentConfig.EVENTBRITE_IMPORT_AGE
+
+    emptyElement(ageFormMapSelect)
+
+    let defaultOption = document.createElement('option')
+    defaultOption.disabled = true
+    defaultOption.value = '-1'
+    defaultOption.text = 'Select Question'
+    defaultOption.selected = true
+
+    ageFormMapSelect.appendChild(defaultOption)
+
+    for (const question of questions) {
+        let option = document.createElement('option')
+        option.text = question
+        option.value = question
+        if (question === currentConfig.EVENTBRITE_IMPORT_AGE_FIELD) {
+            option.selected = true
+        }
+        ageFormMapSelect.appendChild(option)
+    }
+
+    ageToggleOnChange()
+}
+
+function ageToggleOnChange() {
+    const ageToggle = document.getElementById('eventbrite-age-toggle') as HTMLInputElement
+    const ageFormMapSelect = document.getElementById('eventbrite-age-form-question-select') as HTMLInputElement
+
+    ageFormMapSelect.disabled = !ageToggle.checked
+
+    if (!ageToggle.checked) {
+        ageFormMapSelect.value = '-1'
+    }
+
+    checkIfConentUpdated()
+}
+
+function ageFieldSelectOnChamge() {
+    checkIfConentUpdated()
 }
 
 // EVent Listeners
@@ -439,5 +530,7 @@ document.addEventListener("DOMContentLoaded", () => {
         (<any>window).eventbriteIntegrationSaveOnClick = eventbriteIntegrationSaveOnClick;
         (<any>window).eventbriteIntegrationEnableOnClick = eventbriteIntegrationEnableOnClick;
         (<any>window).eventbriteIntegrationDisableOnClick = eventbriteIntegrationDisableOnClick;
+        (<any>window).ageToggleOnChange = ageToggleOnChange;
+        (<any>window).ageFieldSelectOnChamge = ageFieldSelectOnChamge;
     }
 });

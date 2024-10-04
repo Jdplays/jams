@@ -10,18 +10,31 @@ class Webhook(db.Model):
     __tablename__ = 'webhook'
 
     id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, server_default=text('gen_random_uuid()'))
-    name = Column(String(100), nullable=False, unique=True)
+    name = Column(String(100), nullable=False, unique=False)
     action_enum = Column(String(100), nullable=False)
     external_id = Column(String, nullable=True)
     authenticated = Column(Boolean, nullable=False, default=True, server_default='true')
     auth_token: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), nullable=True)
+    owner = Column(String(100), nullable=False, default='SYSTEM', server_default='SYSTEM')
+    active = Column(Boolean, nullable=False, default=True, server_default='true')
 
-    def __init__(self, name, action_enum, external_id=None, authenticated=True, auth_token=uuid4()):
+    def __init__(self, name, action_enum, external_id=None, authenticated=True, auth_token=uuid4(), owner='SYSTEM', active=True):
         self.name = name
         self.action_enum = action_enum
         self.external_id = external_id
         self.authenticated = authenticated
-        self.auth_token = auth_token
+        if self.authenticated:
+            self.auth_token = auth_token
+        self.owner = owner
+        self.active = active
+    
+    def archive(self):
+        self.active = False
+        self.log('archived')
+
+    def activate(self):
+        self.active = True
+        self.log('activated')
     
     def log(self, message, success=True):
         log = WebhookLog(webhook_id=self.id, log=f'Webhook - {self.id}: {message}', success=success)

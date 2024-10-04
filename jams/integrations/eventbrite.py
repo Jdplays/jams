@@ -1,8 +1,11 @@
 import requests
+from flask import jsonify
 from datetime import timedelta, datetime, time, UTC
 from jams.configuration import ConfigType, get_config_value
-from jams.models import db, Attendee, Event, TaskSchedulerModel
+from jams.models import db, Attendee, Event, TaskSchedulerModel, Webhook
 from jams.util.task_scheduler import TaskActionEnum, create_task
+from jams.util.webhooks import WebhookActionEnum, WebhookOwnerEnum
+from jams.util import helper
 
 base_url = 'https://www.eventbriteapi.com/v3'
 #base_url = 'https://private-anon-60974f3b0d-eventbriteapiv3public.apiary-mock.com/v3' # This is just the mock server and should be updated later.
@@ -22,21 +25,31 @@ defaultHeaders = {
     'Authorization': ''
 }
 
-def send_eventbrite_api_request(path, custom_token=None):
+def send_eventbrite_api_request(path, method='GET', data=None, custom_token=None):
+    # Set the Authorization header
     if custom_token:
         defaultHeaders['Authorization'] = f'Bearer {custom_token}'
     else:
         defaultHeaders['Authorization'] = f'Bearer {get_config_value(ConfigType.EVENTBRITE_BEARER_TOKEN)}'
-    response = requests.get(f'{base_url}/{path}', headers=defaultHeaders)
 
+    # Select the request method
+    if method == 'GET':
+        response = requests.get(f'{base_url}/{path}', headers=defaultHeaders)
+    elif method == 'POST':
+        response = requests.post(f'{base_url}/{path}', headers=defaultHeaders, json=data)
+    elif method == 'DELETE':
+        response = requests.delete(f'{base_url}/{path}', headers=defaultHeaders)
+    else:
+        raise ValueError(f'Unsupported method: {method}')
+
+    # Check for successful response
     if response.status_code != 200:
         return None
-    
+
     return response
 
-
 def verify(custom_token=None):
-    response = send_eventbrite_api_request('users/me/', custom_token)
+    response = send_eventbrite_api_request('users/me/', custom_token=custom_token)
 
     if not response:
         return False
@@ -44,7 +57,7 @@ def verify(custom_token=None):
     return True
 
 def get_organisations(custom_token=None):
-    response = send_eventbrite_api_request('users/me/organizations/', custom_token)
+    response = send_eventbrite_api_request('users/me/organizations/', custom_token=custom_token)
 
     orgainisationsJson = response.json()['organizations']
     orgainisations = []
@@ -161,6 +174,26 @@ def update_or_add_attendee_from_data(attendee_JSON):
     external_attendee_id = attendee_JSON.get('id')
     external_event_id = attendee_JSON.get('event_id')
 
+    registerable = False
+    ticket_type = attendee_JSON.get('ticket_class_name')
+    registerable_ticket_types_text = get_config_value(ConfigType.EVENTBRITE_REGISTERABLE_TICKET_TYPES)
+    if not registerable_ticket_types_text:
+        registerable = True
+    else:
+        registerable_ticket_types = registerable_ticket_types_text.split(',')
+        if ticket_type in registerable_ticket_types:
+            registerable = True
+
+    age = None
+    if get_config_value(ConfigType.EVENTBRITE_IMPORT_AGE):
+        answers = attendee_JSON.get('answers')
+        for answer in answers:
+            question = answer.get('question')
+            if question == get_config_value(ConfigType.EVENTBRITE_IMPORT_AGE_FIELD):
+                age_text = answer.get('answer')
+                age = helper.try_parse_int(age_text)
+
+
     event = Event.query.filter_by(external_id=external_event_id).first()
     if not event:
         raise Exception('Requested event does not exist in the database')
@@ -168,13 +201,15 @@ def update_or_add_attendee_from_data(attendee_JSON):
     attendee = Attendee.query.filter_by(external_id=external_attendee_id).first()
 
     if not attendee:
-        attendee = Attendee(name=name, email=email, checked_in=checked_in, external_order_id=external_order_id, external_id=external_attendee_id, event_id=event.id)
+        attendee = Attendee(name=name, email=email, checked_in=checked_in, external_order_id=external_order_id, external_id=external_attendee_id, event_id=event.id, registerable=registerable, age=age)
         db.session.add(attendee)
         db.session.commit()
     else:
         attendee.name = name
         attendee.email = email
         attendee.checked_in = checked_in
+        attendee.registerable = registerable
+        attendee.age = age
 
         db.session.commit()
 
@@ -186,8 +221,8 @@ def get_ticket_types(event_id=None):
     
     response = send_eventbrite_api_request(f'events/{event_id}/ticket_classes')
 
-    if response.status_code != 200:
-        return 'An Unexpected Error Occurred!'
+    if not response:
+        return
     
     response_JSON = response.json()
 
@@ -204,12 +239,83 @@ def get_ticket_types(event_id=None):
     
     return ticket_classes
 
+def get_custom_questions(event_id=None):
+    if not event_id:
+        event_id = get_config_value(ConfigType.EVENTBRITE_CONFIG_EVENT_ID)
+        if not event_id:
+            return None
+        
+    response = send_eventbrite_api_request(f'events/{event_id}/questions')
+
+    if not response:
+        return
+    
+    response_JSON = response.json()
+    questions_JSON = response_JSON.get('questions')
+
+    questions = []
+
+    for q_JSON in questions_JSON:
+        q_question = q_JSON.get('question')
+        text = q_question.get('text')
+        questions.append(text)
+    
+    return questions
+
 def eventbrite_config_dict():
     dict = {}
     for item in configItems:
+        if item == ConfigType.EVENTBRITE_BEARER_TOKEN:
+            continue
         dict[item.name] = get_config_value(item)
     
     return dict
+
+def add_webhook_to_eventbrite(url, action):
+    data = {
+        'endpoint_url': url,
+        'actions': action
+    }
+
+    response = send_eventbrite_api_request(f'organizations/{get_config_value(ConfigType.EVENTBRITE_ORGANISATION_ID)}/webhooks/', method='POST', data=data)
+
+    json = response.json()
+    webhook_id = json.get('id')
+    return webhook_id
+
+def deactivate_eventbrite_webhooks():
+    webhooks = Webhook.query.filter_by(owner=WebhookOwnerEnum.EVENTBRITE.name, active=True).all()
+
+    for webhook in webhooks:
+        webhook.name = f'{webhook.name} - OLD'
+        webhook.archive()
+        db.session.commit()
+
+def create_eventbrite_webhooks():
+    deactivate_eventbrite_webhooks()
+
+    
+    checkin_webhook = Webhook(name=f'Eventbrite Check In - {get_config_value(ConfigType.EVENTBRITE_ORGANISATION_NAME)}', action_enum=WebhookActionEnum.EVENTBRITE_CHECK_IN.name, authenticated=False, owner=WebhookOwnerEnum.EVENTBRITE.name)
+    db.session.add(checkin_webhook)
+
+
+    checkout_webhook = Webhook(name=f'Eventbrite Check Out - {get_config_value(ConfigType.EVENTBRITE_ORGANISATION_NAME)}', action_enum=WebhookActionEnum.EVENTBRITE_CHECK_OUT.name, authenticated=False, owner=WebhookOwnerEnum.EVENTBRITE.name)
+    db.session.add(checkout_webhook)
+    
+    checkin_webhook.activate()
+    checkout_webhook.activate()
+
+    checkin_webhook.log('created')
+    checkout_webhook.log('created')
+
+    # Api requests to add webhooks
+    checkin_webhook_id = add_webhook_to_eventbrite(url=f'{get_config_value(ConfigType.APP_URL)}/api/v1/webhooks/{checkin_webhook.id}', action='attendee.checked_in')
+    checkin_webhook.external_id = checkin_webhook_id
+
+    checkout_webhook_id = add_webhook_to_eventbrite(url=f'{get_config_value(ConfigType.APP_URL)}/api/v1/webhooks/{checkout_webhook.id}', action='attendee.checked_out')
+    checkout_webhook.external_id = checkout_webhook_id
+
+    db.session.commit()
 
 
 class EventbriteOrgainisation():

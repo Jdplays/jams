@@ -1,9 +1,13 @@
 from enum import Enum
-from jams.integrations.eventbrite import get_attendee_data, update_or_add_attendee_from_data
+import jams.integrations.eventbrite as eventbrite
 
 class WebhookActionEnum(Enum):
     EVENTBRITE_CHECK_IN = 'EVENTBRITE_CHECK_IN'
     EVENTBRITE_CHECK_OUT = 'EVENTBRITE_CHECK_OUT'
+
+class WebhookOwnerEnum(Enum):
+    SYSTEM = 'SYSTEM'
+    EVENTBRITE = 'EVENTBRITE'
 
 
 def execute_webhook(webhook, request_body):
@@ -23,8 +27,8 @@ def trim_and_split_eventbrite_api_url(api_url):
 
 def update_attendee(webhook, event_id, attendee_id):
     try:
-        data = get_attendee_data(event_id, attendee_id)
-        update_or_add_attendee_from_data(data)
+        data = eventbrite.get_attendee_data(event_id, attendee_id)
+        eventbrite.update_or_add_attendee_from_data(data)
         webhook.log_success()
     except Exception as e:
         webhook.log(message=e, success=False)

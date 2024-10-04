@@ -32,7 +32,11 @@ def get_config_value(key:Union[str, ConfigType]):
 
     if not config:
         return None
-    
+    else:
+        if not config.value:
+            return None
+
+
     config_value = config.value.strip()
 
     if config_value.lower() in ['true', 'false']:

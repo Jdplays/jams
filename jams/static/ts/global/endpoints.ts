@@ -1576,7 +1576,6 @@ export function getEventbriteIntegrationConfig():Promise<EventbriteIntegrationCo
             url: `${baseURL}/integrations/eventbrite/config`,
             type: 'GET',
             success: function (response) {
-                console.log(response.eventbrite_config)
                 resolve(response.eventbrite_config)
             },
             error: function (error) {
@@ -1628,6 +1627,22 @@ export function getEventbriteTicketTypes():Promise<[EventbriteTicketType]> {
             type: 'GET',
             success: function (response) {
                 resolve(response.ticket_types)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(false)
+            }
+        });
+    });
+}
+
+export function getEventbriteCustomQuestions():Promise<[string]> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/eventbrite/custom_questions`,
+            type: 'GET',
+            success: function (response) {
+                resolve(response.questions)
             },
             error: function (error) {
                 console.log('Error fetching data:', error);
