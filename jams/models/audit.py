@@ -1,6 +1,7 @@
 from . import db
 from sqlalchemy  import Column, String, Integer, DateTime, ForeignKey, func
 from sqlalchemy.orm import relationship
+from jams.util import helper
 
 class PrivateAccessLog(db.Model):
     __tablename__ = 'private_access_log'
@@ -35,6 +36,10 @@ class PrivateAccessLog(db.Model):
         self.user_role_names = user_role_names
         self.required_role_names = required_role_names
         self.status_code = status_code
+
+    @staticmethod
+    def size():
+        return helper.get_table_size(PrivateAccessLog.__tablename__)
 
     
     def to_dict(self):

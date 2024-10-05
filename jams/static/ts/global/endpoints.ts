@@ -25,7 +25,11 @@ import {
     EditAuthConfigurationResponse,
     ApiResponse,
     VolunteerSignup,
-    EventbriteTicketType
+    EventbriteTicketType,
+    Metadata,
+    WebhookLog,
+    ExternalAPILog,
+    TaskSchedulerLog
 } from "@global/endpoints_interfaces";
 
 // This is a script where all then endpoint calls will live to prevent duplication across scripts
@@ -1274,13 +1278,145 @@ export function getPageNames(queryString:string|null=null):Promise<ApiMultiEntry
 }
 // #endregion
 
-// #region Audit
+// #region Logs
+// Private access Log
 export function getPrivateAccessLogs(queryString:string|null=null):Promise<ApiMultiEntryResponse<PrivateAccessLog>> {
     return new Promise((resolve, reject) => {
         let url = `${baseURL}/private_access_logs`
         if (queryString) {
             url += `?${queryString}`
         }
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);   
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error);
+            }
+        });
+    });
+}
+
+export function getPrivateAccessLogsMetadata():Promise<Partial<Metadata>> {
+    return new Promise((resolve, reject) => {
+        let url = `${baseURL}/private_access_logs/metadata`
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);   
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error);
+            }
+        });
+    });
+}
+
+// Task Scheduler Logs
+export function getTaskSchedulerLogs(queryString:string|null=null):Promise<ApiMultiEntryResponse<TaskSchedulerLog>> {
+    return new Promise((resolve, reject) => {
+        let url = `${baseURL}/task_scheduler_logs`
+        if (queryString) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);   
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error);
+            }
+        });
+    });
+}
+
+export function getTaskSchedulerLogsMetadata():Promise<Partial<Metadata>> {
+    return new Promise((resolve, reject) => {
+        let url = `${baseURL}/task_scheduler_logs/metadata`
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);   
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error);
+            }
+        });
+    });
+}
+
+// Webhook Logs
+export function getWebhookLogs(queryString:string|null=null):Promise<ApiMultiEntryResponse<WebhookLog>> {
+    return new Promise((resolve, reject) => {
+        let url = `${baseURL}/webhook_logs`
+        if (queryString) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);   
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error);
+            }
+        });
+    });
+}
+
+export function getWebhookLogsMetadata():Promise<Partial<Metadata>> {
+    return new Promise((resolve, reject) => {
+        let url = `${baseURL}/webhook_logs/metadata`
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);   
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error);
+            }
+        });
+    });
+}
+
+// External API Logs
+export function getExternalApiLogs(queryString:string|null=null):Promise<ApiMultiEntryResponse<ExternalAPILog>> {
+    return new Promise((resolve, reject) => {
+        let url = `${baseURL}/external_api_logs`
+        if (queryString) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);   
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error);
+            }
+        });
+    });
+}
+
+export function getExternalApiLogsMetadata():Promise<Partial<Metadata>> {
+    return new Promise((resolve, reject) => {
+        let url = `${baseURL}/external_api_logs/metadata`
         $.ajax({
             url: url,
             type: 'GET',

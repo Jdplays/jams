@@ -2,7 +2,7 @@ import requests
 from flask import jsonify
 from datetime import timedelta, datetime, time, UTC
 from jams.configuration import ConfigType, get_config_value
-from jams.models import db, Attendee, Event, TaskSchedulerModel, Webhook
+from jams.models import db, Attendee, Event, TaskSchedulerModel, Webhook, ExternalAPILog
 from jams.util.task_scheduler import TaskActionEnum, create_task
 from jams.util.webhooks import WebhookActionEnum, WebhookOwnerEnum
 from jams.util import helper
@@ -18,7 +18,8 @@ configItems = [
     ConfigType.EVENTBRITE_CONFIG_EVENT_ID,
     ConfigType.EVENTBRITE_REGISTERABLE_TICKET_TYPES,
     ConfigType.EVENTBRITE_IMPORT_AGE,
-    ConfigType.EVENTBRITE_IMPORT_AGE_FIELD
+    ConfigType.EVENTBRITE_IMPORT_AGE_FIELD,
+    ConfigType.EVENTBRITE_IMPORT_GENDER
 ]
 
 defaultHeaders = {
@@ -41,6 +42,11 @@ def send_eventbrite_api_request(path, method='GET', data=None, custom_token=None
         response = requests.delete(f'{base_url}/{path}', headers=defaultHeaders)
     else:
         raise ValueError(f'Unsupported method: {method}')
+    
+    # Log the api call
+    log = ExternalAPILog(url=f'{base_url}/{path}', status_code=response.status_code)
+    db.session.add(log)
+    db.session.commit()
 
     # Check for successful response
     if response.status_code != 200:
@@ -192,6 +198,11 @@ def update_or_add_attendee_from_data(attendee_JSON):
             if question == get_config_value(ConfigType.EVENTBRITE_IMPORT_AGE_FIELD):
                 age_text = answer.get('answer')
                 age = helper.try_parse_int(age_text)
+    
+    gender = None
+    if get_config_value(ConfigType.EVENTBRITE_IMPORT_GENDER):
+        gender = attendee_profile.get('gender')
+
 
 
     event = Event.query.filter_by(external_id=external_event_id).first()
@@ -201,7 +212,7 @@ def update_or_add_attendee_from_data(attendee_JSON):
     attendee = Attendee.query.filter_by(external_id=external_attendee_id).first()
 
     if not attendee:
-        attendee = Attendee(name=name, email=email, checked_in=checked_in, external_order_id=external_order_id, external_id=external_attendee_id, event_id=event.id, registerable=registerable, age=age)
+        attendee = Attendee(name=name, email=email, checked_in=checked_in, external_order_id=external_order_id, external_id=external_attendee_id, event_id=event.id, registerable=registerable, age=age, gender=gender)
         db.session.add(attendee)
         db.session.commit()
     else:
@@ -210,6 +221,7 @@ def update_or_add_attendee_from_data(attendee_JSON):
         attendee.checked_in = checked_in
         attendee.registerable = registerable
         attendee.age = age
+        attendee.gender = gender
 
         db.session.commit()
 

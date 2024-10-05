@@ -1,4 +1,6 @@
 from datetime import UTC, datetime
+
+from jams.util import helper
 from . import db
 from sqlalchemy  import Boolean, Column, DateTime, ForeignKey, String, Integer, text
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
@@ -61,3 +63,41 @@ class WebhookLog(db.Model):
         self.date_time = datetime.now(UTC)
         self.log = log
         self.success = success
+    
+    @staticmethod
+    def size():
+        return helper.get_table_size(WebhookLog.__tablename__)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'webhook_id': self.webhook_id,
+            'date_time': self.date_time,
+            'log': self.log,
+            'success': self.success
+        }
+
+class ExternalAPILog(db.Model):
+    __tablename__ = 'external_api_log'
+
+    id = Column(Integer(), primary_key=True)
+    date_time = Column(DateTime, nullable=False, default=datetime.now(UTC))
+    url = Column(String, nullable=False)
+    status_code = Column(Integer, nullable=False)
+
+    def __init__(self, url, status_code):
+        self.date_time = datetime.now(UTC)
+        self.url = url
+        self.status_code = status_code
+
+    @staticmethod
+    def size():
+        return helper.get_table_size(ExternalAPILog.__tablename__)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'date_time': self.date_time,
+            'url': self.url,
+            'status_code': self.status_code
+        }

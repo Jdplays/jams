@@ -8,7 +8,7 @@ from.files import File, FileVersion, WorkshopFile
 from .audit import PrivateAccessLog
 from .config import Config
 from .task_scheduler import TaskSchedulerModel, TaskSchedulerLog
-from .api import Webhook
+from .api import Webhook, WebhookLog, ExternalAPILog
 from .attendee import Attendee
 
 __all__ = [

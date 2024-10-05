@@ -1,7 +1,7 @@
 from flask import abort, request, send_file
 from jams.models import db, EventLocation, EventTimeslot, Timeslot, Session, EndpointRule, RoleEndpointRule, PageEndpointRule, Page, RolePage
 from collections.abc import Mapping, Iterable
-from sqlalchemy import Date, DateTime, String, Integer, Boolean, or_, nullsfirst, asc, desc
+from sqlalchemy import Date, DateTime, String, Integer, Boolean, or_, nullsfirst, asc, desc, func
 from flask_security import current_user
 from datetime import datetime, timedelta
 
@@ -535,3 +535,9 @@ def try_parse_int(value):
         return int(value)
     except ValueError:
         return None
+    
+def get_table_size(table_name):
+    size_in_bytes = db.session.query(func.pg_total_relation_size(table_name)).scalar()
+    size_in_mb = size_in_bytes / (1024 * 1024)
+
+    return size_in_mb

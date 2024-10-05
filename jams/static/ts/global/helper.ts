@@ -568,3 +568,7 @@ export function isTouchDevice() {
     return (('ontouchstart' in window) ||
        (navigator.maxTouchPoints > 0));
   }
+
+  export function roundNumber(input:number, decimalPoints:number=2) {
+    return (Math.round(input * 100) / 100).toFixed(decimalPoints)
+  }

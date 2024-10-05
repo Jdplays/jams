@@ -132,6 +132,28 @@ export interface PrivateAccessLog {
     date_time:string
 }
 
+export interface WebhookLog {
+    id:number
+    webhook_id:string
+    date_time:string
+    log:string
+    success:boolean
+}
+
+export interface ExternalAPILog {
+    id:number
+    date_time:string
+    url:string
+    status_code:number
+}
+
+export interface TaskSchedulerLog {
+    id:number
+    date_time:string
+    task_id:number
+    log:string
+}
+
 export interface VolunteerAttendance {
     id:number
     event_id:number
@@ -239,16 +261,18 @@ export interface RequestMultiModelJSONData extends EventLocation, EventTimeslot,
 export interface ApiResponse<T> {
     message:string
     data:T
+    metadata?:Metadata
 }
 
 export interface Metadata {
     setup_count?:number
     main_count?:number
     packdown_count?:number
+    table_size?:number
 }
 
 export interface ApiMultiEntryResponse<T> {
     pagination:PaginationResponseData
     data:T
-    metadata:Metadata
+    metadata?:Metadata
 }

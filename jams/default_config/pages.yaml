@@ -85,6 +85,28 @@ pages:
       routes.api_v1.private.admin.edit_event:
       routes.api_v1.private.admin.get_events_field:
         allowed_fields: id, name
+  
+  # Logs
+  private_access_log:
+    endpoint: routes.frontend.private.monitoring.private_access_log
+    api_endpoints:
+      routes.api_v1.private.monitoring.get_private_access_logs:
+      routes.api_v1.private.admin.archive_user:
+  
+  task_scheduler_log:
+    endpoint: routes.frontend.private.monitoring.task_scheduler_log
+    api_endpoints:
+      routes.api_v1.private.monitoring.get_task_scheduler_logs:
+
+  webhooks_log:
+    endpoint: routes.frontend.private.monitoring.webhooks_log
+    api_endpoints:
+      routes.api_v1.private.monitoring.get_webhook_logs:
+
+  external_api_log:
+    endpoint: routes.frontend.private.monitoring.external_api_log
+    api_endpoints:
+      routes.api_v1.private.monitoring.get_external_api_logs:
 
 # Normal Pages
   # Admin
@@ -216,11 +238,19 @@ pages:
       
 
   # Monitoring
-  private_access_log:
-    endpoint: routes.frontend.private.monitoring.private_access_log
+  logs:
+    endpoint: routes.frontend.private.monitoring.logs
+    child_pages:
+      - private_access_log
+      - task_scheduler_log
+      - webhooks_log
+      - external_api_log
     api_endpoints:
-      routes.api_v1.private.monitoring.get_private_access_logs:
-      routes.api_v1.private.admin.archive_user:
+      routes.api_v1.private.monitoring.get_private_access_logs_metadata:
+      routes.api_v1.private.monitoring.get_task_scheduler_logs_metadata:
+      routes.api_v1.private.monitoring.get_webhook_logs_metadata:
+      routes.api_v1.private.monitoring.get_external_api_logs_metadata:
+      
 
 
   # -------------------------------- PUBLIC  -------------------------------- #

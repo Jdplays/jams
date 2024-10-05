@@ -75,3 +75,15 @@ class TaskSchedulerLog(db.Model):
         self.date_time = datetime.now(UTC)
         self.task_id = task_id
         self.log = log
+
+    @staticmethod
+    def size():
+        return helper.get_table_size(TaskSchedulerLog.__tablename__)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'date_time': self.date_time,
+            'task_id': self.task_id,
+            'log': self.log
+        }
