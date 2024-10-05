@@ -133,6 +133,8 @@ async function eventbriteIntegrationSaveOnClick() {
     const ageToggle = document.getElementById('eventbrite-age-toggle') as HTMLInputElement
     const ageFormMapSelect = document.getElementById('eventbrite-age-form-question-select') as HTMLInputElement
 
+    const genderToggle = document.getElementById('eventbrite-gender-toggle') as HTMLInputElement
+
     if (ageToggle.checked && ageFormMapSelect.value === '-1') {
         // Cannot save with the default value selected
         errorToast("Please select a Form Question for 'Age'")
@@ -145,7 +147,8 @@ async function eventbriteIntegrationSaveOnClick() {
         EVENTBRITE_CONFIG_EVENT_ID: eventSelect.value !== '-1' ? eventSelect.value: null,
         EVENTBRITE_REGISTERABLE_TICKET_TYPES: selectedTicketTypesString,
         EVENTBRITE_IMPORT_AGE: ageToggle.checked,
-        EVENTBRITE_IMPORT_AGE_FIELD: ageFormMapSelect.value !== '-1' ? ageFormMapSelect.value : null
+        EVENTBRITE_IMPORT_AGE_FIELD: ageFormMapSelect.value !== '-1' ? ageFormMapSelect.value : null,
+        EVENTBRITE_IMPORT_GENDER: genderToggle.checked
     }
 
     if (tokenInput.value !== tokenPlaceholder) {
@@ -217,6 +220,7 @@ function checkIfConentUpdated() {
     const ticketTypeSelectionGroup = document.getElementById('ticket-type-selection-container') as HTMLDivElement
     const ageToggle = document.getElementById('eventbrite-age-toggle') as HTMLInputElement
     const ageFormMapSelect = document.getElementById('eventbrite-age-form-question-select') as HTMLInputElement
+    const genderToggle = document.getElementById('eventbrite-gender-toggle') as HTMLInputElement
 
     const selectedTicketTypes = getCheckboxInputGroupSelection(ticketTypeSelectionGroup, 'ticket-type')
     const selectedTicketTypesString = selectedTicketTypes.join(',')
@@ -226,8 +230,9 @@ function checkIfConentUpdated() {
             eventSelect.value !== currentConfig.EVENTBRITE_CONFIG_EVENT_ID ||
             selectedTicketTypesString !== currentConfig.EVENTBRITE_REGISTERABLE_TICKET_TYPES ||
             ageToggle.checked !== currentConfig.EVENTBRITE_IMPORT_AGE ||
-            ageFormMapSelect.value !== currentConfig.EVENTBRITE_IMPORT_AGE_FIELD ||
-            tokenUpdated) 
+            (ageFormMapSelect.value !== currentConfig.EVENTBRITE_IMPORT_AGE_FIELD && ageFormMapSelect.value !== '-1') ||
+            tokenUpdated ||
+            genderToggle.checked !== currentConfig.EVENTBRITE_IMPORT_GENDER) 
             {
             saveButton.disabled = false
         } else {
@@ -318,7 +323,6 @@ async function verifyPrivateApiToken() {
 
         if (organisations.length <= 0) {
             console.log('ERROR')
-            // TODO: ADD more stuff later
             return
         }
 
@@ -421,7 +425,7 @@ async function populateTicketTypeSelectGroup() {
     if (!currentConfig.EVENTBRITE_CONFIG_EVENT_ID) {
         return
     }
-    console.log(currentConfig.EVENTBRITE_CONFIG_EVENT_ID)
+
     const response = await getEventbriteTicketTypes()
 
     for(const type of response) {
@@ -442,10 +446,11 @@ async function populateTicketTypeSelectGroup() {
 }
 
 async function populateOptionalImportsSection() {
+    const questions = await getEventbriteCustomQuestions()
+
+    // Age
     const ageToggle = document.getElementById('eventbrite-age-toggle') as HTMLInputElement
     const ageFormMapSelect = document.getElementById('eventbrite-age-form-question-select')
-
-    const questions = await getEventbriteCustomQuestions()
 
     ageToggle.checked = currentConfig.EVENTBRITE_IMPORT_AGE
 
@@ -470,6 +475,11 @@ async function populateOptionalImportsSection() {
     }
 
     ageToggleOnChange()
+
+    // Gender
+    const genderToggle = document.getElementById('eventbrite-gender-toggle') as HTMLInputElement
+    genderToggle.checked = currentConfig.EVENTBRITE_IMPORT_GENDER
+    genderToggleOnChange()
 }
 
 function ageToggleOnChange() {
@@ -482,6 +492,10 @@ function ageToggleOnChange() {
         ageFormMapSelect.value = '-1'
     }
 
+    checkIfConentUpdated()
+}
+
+function genderToggleOnChange() {
     checkIfConentUpdated()
 }
 
@@ -532,5 +546,6 @@ document.addEventListener("DOMContentLoaded", () => {
         (<any>window).eventbriteIntegrationDisableOnClick = eventbriteIntegrationDisableOnClick;
         (<any>window).ageToggleOnChange = ageToggleOnChange;
         (<any>window).ageFieldSelectOnChamge = ageFieldSelectOnChamge;
+        (<any>window).genderToggleOnChange = genderToggleOnChange;
     }
 });

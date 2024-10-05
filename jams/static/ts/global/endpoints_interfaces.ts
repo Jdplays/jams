@@ -193,6 +193,7 @@ export interface EventbriteIntegrationConfig {
     EVENTBRITE_REGISTERABLE_TICKET_TYPES:string
     EVENTBRITE_IMPORT_AGE:boolean
     EVENTBRITE_IMPORT_AGE_FIELD:string
+    EVENTBRITE_IMPORT_GENDER:boolean
 }
 
 export interface EventbriteOrganisation {

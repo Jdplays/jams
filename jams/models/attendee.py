@@ -13,9 +13,10 @@ class Attendee(db.Model):
     checked_in = Column(Boolean, nullable=False, default=False, server_default='false')
     registerable = Column(Boolean, nullable=False, default=True, server_default='true')
     age = Column(Integer)
+    gender = Column(String(50))
     external_order_id = Column(String, nullable=True)
 
-    def __init__(self, event_id, name, external_id=None, email=None, checked_in=False, registerable=True, age=None, external_order_id=None):
+    def __init__(self, event_id, name, external_id=None, email=None, checked_in=False, registerable=True, age=None, gender=None, external_order_id=None):
         self.event_id = event_id
         self.name = name
         self.external_id = external_id
@@ -23,6 +24,7 @@ class Attendee(db.Model):
         self.checked_in = checked_in
         self.registerable = registerable
         self.age = age
+        self.gender = gender
         self.external_order_id = external_order_id
     
     def to_dict(self):
@@ -34,5 +36,7 @@ class Attendee(db.Model):
             'email': self.email,
             'checked_in': self.checked_in,
             'registerable': self.registerable,
+            'age': self.age,
+            'gender': self.gender,
             'external_order_id': self.external_order_id
         }
