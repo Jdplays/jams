@@ -1,5 +1,6 @@
 from . import db
 from sqlalchemy  import Boolean, Column, ForeignKey, String, Integer
+from sqlalchemy.orm import relationship
 
 
 class Attendee(db.Model):
@@ -15,8 +16,11 @@ class Attendee(db.Model):
     age = Column(Integer)
     gender = Column(String(50))
     external_order_id = Column(String, nullable=True)
+    source = Column(String(100), nullable=False, default='LOCAL', server_default='LOCAL')
 
-    def __init__(self, event_id, name, external_id=None, email=None, checked_in=False, registerable=True, age=None, gender=None, external_order_id=None):
+    event = relationship('Event', backref='attendees')
+
+    def __init__(self, event_id, name, external_id=None, email=None, checked_in=False, registerable=True, age=None, gender=None, external_order_id=None, source='LOCAL'):
         self.event_id = event_id
         self.name = name
         self.external_id = external_id
@@ -26,6 +30,7 @@ class Attendee(db.Model):
         self.age = age
         self.gender = gender
         self.external_order_id = external_order_id
+        self.source = source
     
     def to_dict(self):
         return {
@@ -38,5 +43,6 @@ class Attendee(db.Model):
             'registerable': self.registerable,
             'age': self.age,
             'gender': self.gender,
-            'external_order_id': self.external_order_id
+            'external_order_id': self.external_order_id,
+            'source': self.source
         }

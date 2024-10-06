@@ -29,7 +29,8 @@ import {
     Metadata,
     WebhookLog,
     ExternalAPILog,
-    TaskSchedulerLog
+    TaskSchedulerLog,
+    Attendee
 } from "@global/endpoints_interfaces";
 
 // This is a script where all then endpoint calls will live to prevent duplication across scripts
@@ -1581,6 +1582,66 @@ export function removeVolunteerSignup(eventId:number, userId:number, session_id:
 }
 
 // #endregion
+
+// #region Attendees
+
+export function getAttendees(eventId:number, queryString:string|null = null):Promise<ApiMultiEntryResponse<[Attendee]>> {
+    return new Promise((resolve, reject) => {
+        let url = `${baseURL}/events/${eventId}/attendees`
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function addAttendee(eventId:number, data:Partial<Attendee>):Promise<ApiResponse<Attendee>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: `${baseURL}/events/${eventId}/attendees`,
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function editAttendee(eventId:number, attendeeId:number, data:Partial<Attendee>):Promise<ApiResponse<Attendee>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'PATCH',
+            url: `${baseURL}/events/${eventId}/attendees/${attendeeId}`,
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+// Eendregion
 
 // #region Files
 export function getFile(fileUUID:string, queryString:string|null = null):Promise<FileResponse> {

@@ -38,7 +38,7 @@ function initialiseAgGrid() {
             {
                 field: 'task_id',
                 headerName: "Task ID",
-                filter: 'agTextColumnFilter',
+                filter: 'agNumberColumnFilter',
                 floatingFilter: true,
                 suppressFloatingFilterButton: true,
                 suppressHeaderFilterButton: true,

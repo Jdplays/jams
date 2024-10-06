@@ -14,3 +14,4 @@ roles:
       - volunteer_signup
       - workshops
       - locations_timeslots
+      - attendee_list

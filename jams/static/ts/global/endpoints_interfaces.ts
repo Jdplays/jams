@@ -276,3 +276,17 @@ export interface ApiMultiEntryResponse<T> {
     data:T
     metadata?:Metadata
 }
+
+export interface Attendee {
+    id:number
+    event_id:number
+    name:string
+    external_id:string
+    email:string
+    checked_in:boolean
+    registerable:boolean
+    age:number
+    gender:string
+    external_order_id:string
+    source:string
+}

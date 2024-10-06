@@ -98,7 +98,7 @@ function addWorkshopOnClick() {
         window.location.replace(`/private/management/workshops/${workshopId}/edit`)
     }).catch(error => {
         const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
-        errorToast()
+        errorToast(errorMessage)
     })
 }
 

@@ -212,7 +212,7 @@ def update_or_add_attendee_from_data(attendee_JSON):
     attendee = Attendee.query.filter_by(external_id=external_attendee_id).first()
 
     if not attendee:
-        attendee = Attendee(name=name, email=email, checked_in=checked_in, external_order_id=external_order_id, external_id=external_attendee_id, event_id=event.id, registerable=registerable, age=age, gender=gender)
+        attendee = Attendee(name=name, email=email, checked_in=checked_in, external_order_id=external_order_id, external_id=external_attendee_id, event_id=event.id, registerable=registerable, age=age, gender=gender, source='EVENTBRITE')
         db.session.add(attendee)
         db.session.commit()
     else:

@@ -182,4 +182,8 @@ export class EventDetails {
     eventDropdownItemText(event:Partial<Event>) {
         return `${event.name} - ${formatDateToShort(event.date)}`
     }
+
+    eventName() {
+        return this.eventDetailsMap[this.eventId].name
+    }
 }

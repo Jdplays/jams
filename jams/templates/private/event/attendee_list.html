@@ -1,0 +1,109 @@
+{% extends '_layout.html' %}
+
+{% block title %}Attendee List{% endblock %}
+
+{% block content %}
+
+<div class="content-wrapper">
+    <div class="main-content">
+        <h1>Attendee List</h1>
+        <div id="event-details"></div>
+    </div>
+</div>
+
+<button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#add-update-attendee-modal" onclick="prepAddAttendeeForm()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        class="icon icon-tabler icons-tabler-outline icon-tabler-plus">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M12 5l0 14" />
+        <path d="M5 12l14 0" />
+    </svg>
+    <span class="btn-text">Add Attendee</span>
+</button>
+
+<div class="modal" id="add-update-attendee-modal" tabindex="-1">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 id="modal-title" class="modal-title">New Attendee</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3 text-secondary">Note this will be a local user and will have no interaction with third
+                    part extentions like Eventbrite</p>
+                <p class="mb-3"><strong id="event-warning">This will add a user to: Jam 1</strong></p>
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="mb-3">
+                            <label class="form-label">First Name</label>
+                            <input id="first-name" type="text" class="form-control" maxlength="100">
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="mb-3">
+                            <label class="form-label">Last Name</label>
+                            <input id="last-name" type="text" class="form-control" maxlength="100">
+                        </div>
+                    </div>
+                    <div class="col-lg-12">
+                        <div>
+                            <label class="form-label">Email</label>
+                            <input id="email" type="text" class="form-control" maxlength="255">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-lg-4">
+                        <div class="mb-3">
+                            <label class="form-label">Age</label>
+                            <input id="age" type="number" class="form-control">
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="mb-3">
+                            <label class="form-label">Gender</label>
+                            <select id="gender-select" class="form-control form-select">
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div>
+                            <label class="form-label">Registerable</label>
+                            <label class="form-check form-switch">
+                                <input id="toggle-registerable-switch" class="form-check-input" type="checkbox">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
+                    Cancel
+                </a>
+                <a id="add-update-attendee-button" href="#" class="btn btn-primary ms-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-plus" width="24"
+                        height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M12 5l0 14"></path>
+                        <path d="M5 12l14 0"></path>
+                    </svg>
+                    <span class="btn-text">Add Attendee</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="attendees-data-grid-container"></div>
+<div id="attendees-data-grid" class="ag-theme-quartz" style="height: 500px"></div>
+
+<script src="{{ url_for('static', filename='js/event/attendee_list.js') }}" defer></script>
+
+{% endblock %}
