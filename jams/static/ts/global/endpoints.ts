@@ -24,7 +24,13 @@ import {
     AuthConfiguration,
     EditAuthConfigurationResponse,
     ApiResponse,
-    VolunteerSignup
+    VolunteerSignup,
+    EventbriteTicketType,
+    Metadata,
+    WebhookLog,
+    ExternalAPILog,
+    TaskSchedulerLog,
+    Attendee
 } from "@global/endpoints_interfaces";
 
 // This is a script where all then endpoint calls will live to prevent duplication across scripts
@@ -1273,13 +1279,145 @@ export function getPageNames(queryString:string|null=null):Promise<ApiMultiEntry
 }
 // #endregion
 
-// #region Audit
+// #region Logs
+// Private access Log
 export function getPrivateAccessLogs(queryString:string|null=null):Promise<ApiMultiEntryResponse<PrivateAccessLog>> {
     return new Promise((resolve, reject) => {
         let url = `${baseURL}/private_access_logs`
         if (queryString) {
             url += `?${queryString}`
         }
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);   
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error);
+            }
+        });
+    });
+}
+
+export function getPrivateAccessLogsMetadata():Promise<Partial<Metadata>> {
+    return new Promise((resolve, reject) => {
+        let url = `${baseURL}/private_access_logs/metadata`
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);   
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error);
+            }
+        });
+    });
+}
+
+// Task Scheduler Logs
+export function getTaskSchedulerLogs(queryString:string|null=null):Promise<ApiMultiEntryResponse<TaskSchedulerLog>> {
+    return new Promise((resolve, reject) => {
+        let url = `${baseURL}/task_scheduler_logs`
+        if (queryString) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);   
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error);
+            }
+        });
+    });
+}
+
+export function getTaskSchedulerLogsMetadata():Promise<Partial<Metadata>> {
+    return new Promise((resolve, reject) => {
+        let url = `${baseURL}/task_scheduler_logs/metadata`
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);   
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error);
+            }
+        });
+    });
+}
+
+// Webhook Logs
+export function getWebhookLogs(queryString:string|null=null):Promise<ApiMultiEntryResponse<WebhookLog>> {
+    return new Promise((resolve, reject) => {
+        let url = `${baseURL}/webhook_logs`
+        if (queryString) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);   
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error);
+            }
+        });
+    });
+}
+
+export function getWebhookLogsMetadata():Promise<Partial<Metadata>> {
+    return new Promise((resolve, reject) => {
+        let url = `${baseURL}/webhook_logs/metadata`
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);   
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error);
+            }
+        });
+    });
+}
+
+// External API Logs
+export function getExternalApiLogs(queryString:string|null=null):Promise<ApiMultiEntryResponse<ExternalAPILog>> {
+    return new Promise((resolve, reject) => {
+        let url = `${baseURL}/external_api_logs`
+        if (queryString) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);   
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error);
+            }
+        });
+    });
+}
+
+export function getExternalApiLogsMetadata():Promise<Partial<Metadata>> {
+    return new Promise((resolve, reject) => {
+        let url = `${baseURL}/external_api_logs/metadata`
         $.ajax({
             url: url,
             type: 'GET',
@@ -1444,6 +1582,66 @@ export function removeVolunteerSignup(eventId:number, userId:number, session_id:
 }
 
 // #endregion
+
+// #region Attendees
+
+export function getAttendees(eventId:number, queryString:string|null = null):Promise<ApiMultiEntryResponse<[Attendee]>> {
+    return new Promise((resolve, reject) => {
+        let url = `${baseURL}/events/${eventId}/attendees`
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function addAttendee(eventId:number, data:Partial<Attendee>):Promise<ApiResponse<Attendee>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: `${baseURL}/events/${eventId}/attendees`,
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function editAttendee(eventId:number, attendeeId:number, data:Partial<Attendee>):Promise<ApiResponse<Attendee>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'PATCH',
+            url: `${baseURL}/events/${eventId}/attendees/${attendeeId}`,
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+// Eendregion
 
 // #region Files
 export function getFile(fileUUID:string, queryString:string|null = null):Promise<FileResponse> {
@@ -1610,6 +1808,38 @@ export function getEventbriteEvents():Promise<[EventbriteEvent]> {
             type: 'GET',
             success: function (response) {
                 resolve(response.events)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(false)
+            }
+        });
+    });
+}
+
+export function getEventbriteTicketTypes():Promise<[EventbriteTicketType]> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/eventbrite/ticket_types`,
+            type: 'GET',
+            success: function (response) {
+                resolve(response.ticket_types)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(false)
+            }
+        });
+    });
+}
+
+export function getEventbriteCustomQuestions():Promise<[string]> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/eventbrite/custom_questions`,
+            type: 'GET',
+            success: function (response) {
+                resolve(response.questions)
             },
             error: function (error) {
                 console.log('Error fetching data:', error);

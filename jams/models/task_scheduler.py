@@ -24,16 +24,16 @@ class TaskSchedulerModel(db.Model):
     running = Column(Boolean(), nullable=False, default=False, server_default='false')
     queued = Column(Boolean(), nullable=False, default=False, server_default='false')
 
-    def __init__(self, name, action_enum, interval, params, start_datetime=datetime.now(UTC), end_datetime=datetime.now(UTC), run_quantity=None, run_count=0, private=True):
+    def __init__(self, name, action_enum, interval, params=None, start_datetime=datetime.now(UTC), end_datetime=datetime.now(UTC), run_quantity=None, private=True):
         self.name = name
         self.start_datetime = start_datetime
         if not run_quantity:
             self.end_datetime = end_datetime
         else:
-            self.end_datetime = start_datetime + (timedelta(minutes=interval) * run_quantity)
-            self.next_run_datetime = start_datetime + timedelta(minutes=interval)
+            self.end_datetime = start_datetime + (interval * run_quantity)
+        self.next_run_datetime = start_datetime + interval
         self.last_run_datetime = None
-        self.run_count = run_count
+        self.run_count = 0
         self.action_enum = action_enum
         self.interval = interval
         self.last_run_duration = None
@@ -42,7 +42,10 @@ class TaskSchedulerModel(db.Model):
         self.active = True
         self.running = False
         self.queued = False
-    
+
+    def enable_task(self):
+        self.active = True
+        self.log('has been activated')
     def disable_task(self):
         self.active = False
         self.log('has been deactivated')
@@ -72,3 +75,15 @@ class TaskSchedulerLog(db.Model):
         self.date_time = datetime.now(UTC)
         self.task_id = task_id
         self.log = log
+
+    @staticmethod
+    def size():
+        return helper.get_table_size(TaskSchedulerLog.__tablename__)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'date_time': self.date_time,
+            'task_id': self.task_id,
+            'log': self.log
+        }

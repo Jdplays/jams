@@ -1,14 +1,14 @@
 {% extends '_layout.html' %}
 
-{% block title %}Private Access Log{% endblock %}
+{% block title %}Task Scheduler Log{% endblock %}
 
 {% block content %}
 
 
 <div class="card card-md mb-3">
     <div class="card-body mb-3">
-        <h1>Private Access Log</h1>
-        <p>This is the Private Access Log page!</p>
+        <h1>Task Scheduler Log</h1>
+        <p>This is the Task Scheduler Log page!</p>
     </div>
 </div>
 
@@ -25,11 +25,11 @@
     <span class="btn-text">Back</span>
 </a>
 
-<div id="private-access-log-data-grid-container">
-    <div id="private-access-log-data-grid" class="ag-theme-quartz"></div>
+<div id="task-scheduler-log-data-grid-container">
+    <div id="task-scheduler-log-data-grid" class="ag-theme-quartz"></div>
 </div>
 
-<script src="{{ url_for('static', filename='js/monitoring/private_access_log.js') }}" type="module" defer></script>
+<script src="{{ url_for('static', filename='js/monitoring/task_scheduler_log.js') }}" type="module" defer></script>
 
 
 {% endblock %}

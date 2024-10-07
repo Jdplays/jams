@@ -5,6 +5,7 @@ from jams.decorators import role_based_access_control_be, protect_user_updates
 from jams.models import db, User, Role, Event, EventLocation, EventTimeslot, Session, Page, Config, Workshop
 from jams.util import helper
 from jams.rbac import generate_roles_file_from_db, update_pages_assigned_to_role
+from jams.integrations.eventbrite import create_event_update_tasks, deactivate_event_update_tasks
 
 bp = Blueprint('admin', __name__)
 
@@ -281,6 +282,9 @@ def add_event():
     db.session.add(new_event)
     db.session.commit()
 
+    if new_event.external:
+        create_event_update_tasks(new_event)
+
     return jsonify({
         'message': 'New event has been successfully added',
         'role': new_event.to_dict()
@@ -308,9 +312,13 @@ def edit_event(event_id):
                 if not bool(value):
                     event.external_id = None
                     event.external_url = None
+                    deactivate_event_update_tasks(event)
             setattr(event, field, value)
     
     db.session.commit()
+
+    if event.external:
+        create_event_update_tasks(event)
 
     return jsonify({
         'message': 'Event has be updated successfully',

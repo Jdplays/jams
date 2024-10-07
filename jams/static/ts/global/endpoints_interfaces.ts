@@ -132,6 +132,28 @@ export interface PrivateAccessLog {
     date_time:string
 }
 
+export interface WebhookLog {
+    id:number
+    webhook_id:string
+    date_time:string
+    log:string
+    success:boolean
+}
+
+export interface ExternalAPILog {
+    id:number
+    date_time:string
+    url:string
+    status_code:number
+}
+
+export interface TaskSchedulerLog {
+    id:number
+    date_time:string
+    task_id:number
+    log:string
+}
+
 export interface VolunteerAttendance {
     id:number
     event_id:number
@@ -189,6 +211,11 @@ export interface EventbriteIntegrationConfig {
     EVENTBRITE_BEARER_TOKEN:string
     EVENTBRITE_ORGANISATION_ID:string
     EVENTBRITE_ORGANISATION_NAME:string
+    EVENTBRITE_CONFIG_EVENT_ID:string
+    EVENTBRITE_REGISTERABLE_TICKET_TYPES:string
+    EVENTBRITE_IMPORT_AGE:boolean
+    EVENTBRITE_IMPORT_AGE_FIELD:string
+    EVENTBRITE_IMPORT_GENDER:boolean
 }
 
 export interface EventbriteOrganisation {
@@ -206,6 +233,11 @@ export interface EventbriteEvent {
     end_time:string
     capacity:number
     url:string
+}
+
+export interface EventbriteTicketType {
+    name:string
+    description:string
 }
 
 export interface AuthConfiguration {
@@ -229,16 +261,32 @@ export interface RequestMultiModelJSONData extends EventLocation, EventTimeslot,
 export interface ApiResponse<T> {
     message:string
     data:T
+    metadata?:Metadata
 }
 
 export interface Metadata {
     setup_count?:number
     main_count?:number
     packdown_count?:number
+    table_size?:number
 }
 
 export interface ApiMultiEntryResponse<T> {
     pagination:PaginationResponseData
     data:T
-    metadata:Metadata
+    metadata?:Metadata
+}
+
+export interface Attendee {
+    id:number
+    event_id:number
+    name:string
+    external_id:string
+    email:string
+    checked_in:boolean
+    registerable:boolean
+    age:number
+    gender:string
+    external_order_id:string
+    source:string
 }

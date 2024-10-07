@@ -1,14 +1,14 @@
 {% extends '_layout.html' %}
 
-{% block title %}Private Access Log{% endblock %}
+{% block title %}External API Log{% endblock %}
 
 {% block content %}
 
 
 <div class="card card-md mb-3">
     <div class="card-body mb-3">
-        <h1>Private Access Log</h1>
-        <p>This is the Private Access Log page!</p>
+        <h1>External API Log</h1>
+        <p>This is the External API Log page!</p>
     </div>
 </div>
 
@@ -25,11 +25,11 @@
     <span class="btn-text">Back</span>
 </a>
 
-<div id="private-access-log-data-grid-container">
-    <div id="private-access-log-data-grid" class="ag-theme-quartz"></div>
+<div id="external-api-log-data-grid-container">
+    <div id="external-api-log-data-grid" class="ag-theme-quartz"></div>
 </div>
 
-<script src="{{ url_for('static', filename='js/monitoring/private_access_log.js') }}" type="module" defer></script>
+<script src="{{ url_for('static', filename='js/monitoring/external_api_log.js') }}" type="module" defer></script>
 
 
 {% endblock %}

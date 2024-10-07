@@ -72,6 +72,25 @@
 
         <!-- Other Navigation Items -->
         {% if current_user.is_authenticated %}
+        <!--Event-->
+        {% if user_has_access_to_page('attendee_list') %}
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+            role="button" aria-expanded="false">
+            <span class="nav-link-title">
+              Event
+            </span>
+          </a>
+          <div class="dropdown-menu">
+            {% if user_has_access_to_page('attendee_list') %}
+            <a class="dropdown-item" href="{{ url_for('routes.frontend.private.event.attendee_list')}}">
+              Attendee List
+            </a>
+            {% endif %}
+          </div>
+        </li>
+        {% endif %}
+        <!--Volunteer-->
         {% if user_has_access_to_page('volunteer_attendance', 'volunteer_signup') %}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" data-bs-auto-close="outside"
@@ -94,6 +113,7 @@
           </div>
         </li>
         {% endif %}
+        <!--Management-->
         {% if user_has_access_to_page('workshops', 'locations_timeslots') %}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" data-bs-auto-close="outside"
@@ -116,6 +136,7 @@
           </div>
         </li>
         {% endif %}
+        <!--Admin-->
         {% if user_has_access_to_page('settings', 'user_management', 'events', 'schedule_planner') %}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" data-bs-auto-close="outside"
@@ -148,7 +169,8 @@
           </div>
         </li>
         {% endif %}
-        {% if user_has_access_to_page('private_access_log') %}
+        <!--Monitoring-->
+        {% if user_has_access_to_page('logs') %}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" data-bs-auto-close="outside"
             role="button" aria-expanded="false">
@@ -157,9 +179,9 @@
             </span>
           </a>
           <div class="dropdown-menu">
-            {% if user_has_access_to_page('private_access_log') %}
-            <a class="dropdown-item" href="{{ url_for('routes.frontend.private.monitoring.private_access_log')}}">
-              Private Access Log
+            {% if user_has_access_to_page('logs') %}
+            <a class="dropdown-item" href="{{ url_for('routes.frontend.private.monitoring.logs')}}">
+              Logs
             </a>
             {% endif %}
           </div>

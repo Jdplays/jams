@@ -6,7 +6,7 @@ roles:
       - events
       - schedule_planner
       - settings
-      - private_access_log
+      - logs
   Volunteer:
     description: A Helper at the event
     pages:
@@ -14,3 +14,4 @@ roles:
       - volunteer_signup
       - workshops
       - locations_timeslots
+      - attendee_list

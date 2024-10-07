@@ -1,0 +1,114 @@
+{% extends '_layout.html' %}
+
+{% block title %}Volunteer Attendance{% endblock %}
+
+{% block content %}
+
+<div class="content-wrapper">
+    <div class="main-content">
+        <h1>System Logs</h1>
+        <div id="event-details"></div>
+    </div>
+</div>
+
+<div class="row row-cards">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div id="private-access-log-size" class="subheader">500MB</div>
+                <div class="h3 m-0 mb-3">Private Access Logs</div>
+                <a class="btn btn-primary" href="{{ url_for('routes.frontend.private.monitoring.private_access_log')}}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-logs">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M4 12h.01" />
+                        <path d="M4 6h.01" />
+                        <path d="M4 18h.01" />
+                        <path d="M8 18h2" />
+                        <path d="M8 12h2" />
+                        <path d="M8 6h2" />
+                        <path d="M14 6h6" />
+                        <path d="M14 12h6" />
+                        <path d="M14 18h6" />
+                        </svg>
+                    <span class="btn-text">View Private Access Logs</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div id="task-scheduler-log-size" class="subheader">500MB</div>
+                <div class="h3 m-0 mb-3">Task Scheduler Logs</div>
+                <a class="btn btn-primary" href="{{ url_for('routes.frontend.private.monitoring.task_scheduler_log')}}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-logs">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M4 12h.01" />
+                        <path d="M4 6h.01" />
+                        <path d="M4 18h.01" />
+                        <path d="M8 18h2" />
+                        <path d="M8 12h2" />
+                        <path d="M8 6h2" />
+                        <path d="M14 6h6" />
+                        <path d="M14 12h6" />
+                        <path d="M14 18h6" />
+                        </svg>
+                    <span class="btn-text">View Task Scheduler Logs</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div id="webhooks-log-size" class="subheader">500MB</div>
+                <div class="h3 m-0 mb-3">Webhooks Logs</div>
+                <a class="btn btn-primary" href="{{ url_for('routes.frontend.private.monitoring.webhooks_log')}}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-logs">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M4 12h.01" />
+                        <path d="M4 6h.01" />
+                        <path d="M4 18h.01" />
+                        <path d="M8 18h2" />
+                        <path d="M8 12h2" />
+                        <path d="M8 6h2" />
+                        <path d="M14 6h6" />
+                        <path d="M14 12h6" />
+                        <path d="M14 18h6" />
+                        </svg>
+                    <span class="btn-text">View Webhooks Logs</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div id="external-api-log-size" class="subheader">500MB</div>
+                <div class="h3 m-0 mb-3">External API Logs</div>
+                <a class="btn btn-primary" href="{{ url_for('routes.frontend.private.monitoring.external_api_log')}}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-logs">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M4 12h.01" />
+                        <path d="M4 6h.01" />
+                        <path d="M4 18h.01" />
+                        <path d="M8 18h2" />
+                        <path d="M8 12h2" />
+                        <path d="M8 6h2" />
+                        <path d="M14 6h6" />
+                        <path d="M14 12h6" />
+                        <path d="M14 18h6" />
+                        </svg>
+                    <span class="btn-text">View External API Logs</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/monitoring/logs.js') }}" type="module" defer></script>
+
+{% endblock %}
