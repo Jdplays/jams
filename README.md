@@ -63,29 +63,30 @@ MINIO_ENDPOINT=address:port
 I strongly recommend against doing these if you are running them on an external server to jams-web. This is because it is currently configured to use http as it is just over the docker network. I'll update this README if this changes in the future
 
 ## Screenshots
-Schedule Planner:
-![[readme_assets/schedule_planner_dark.png]]
+### Schedule Planner:
+![](readme_assets/schedule_planner_dark.png)
 
-Eventbrite Settings:
-![[readme_assets/eventbrite_settings_page.png]]
+### Eventbrite Settings:
+![](readme_assets/eventbrite_settings_page.png)
 
-Authentication sources Settings:
-![[readme_assets/auth_sources_page.png]]
+### Authentication sources Settings:
+![](readme_assets/auth_sources_page.png)
 
-Add Event page (edit is very similar):
-![[readme_assets/add_event_page.png]]
+### Add Event page (edit is very similar):
+![](readme_assets/add_event_page.png)
 
-Edit Workshops page (add is very similar):
-![[readme_assets/edit_workshop_page.png]]
+### Edit Workshops page (add is very similar):
+![](readme_assets/edit_workshop_page.png)
 
-Volunteer Attendance:
-![[readme_assets/volunteer_attendance.png]]
-Volunteer Signup:
-![[readme_assets/volunteer_signup.png]]
+### Volunteer Attendance:
+![](readme_assets/volunteer_attendance.png)
 
-Events Page:
-![[readme_assets/events_page.png]]
+### Volunteer Signup:
+![](readme_assets/volunteer_signup.png)
+
+### Events Page:
+![](readme_assets/events_page.png)
 I have not shown all the pages that are like events. Ones like Workshops, Attendees, etc... These are all very similar. A table with data and some actions
 
 And for those who for some reason like light more, all pages support both dark and light mode. Here is the Schedule planner as an example:
-![[readme_assets/schedule_planner_light.png]]
+![](readme_assets/schedule_planner_light.png)
