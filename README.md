@@ -43,7 +43,7 @@ If you have any feature requests or bugs, feel free to open a discussion, create
 	- TypeScript (compiled into JavaScript)
 
 ## Running JAMS
-Jams has been developed with docker in mind. You can use the example docker compose and .env files in the docker folder. Once you have filled out the compose file with your settings, it should set everything up for you. The default user that it creates will be `AdminAccount` with the password `admin` You should change this.
+Jams has been developed with docker in mind. You can use the example docker compose and .env files in the docker folder. Once you have filled out the compose file with your settings, it should set everything up for you. The default user that it creates will be `AdminAccount` with the password `admin`. You should change this.
 
 If running in production at scale, it is recommended to run this behind a reverse proxy that can handle SSL for you. Personally I use [Traefik](https://doc.traefik.io/traefik/getting-started/install-traefik/) for this. 
 
