@@ -341,7 +341,7 @@ document.addEventListener("DOMContentLoaded", () => {
     emailInput.oninput = async () => {
         let patterns:InputValidationPattern[] = null
         patterns = [
-            {pattern: new RegExp(`^(?![A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}).*$`, 'i'), errorMessage: 'Please input a valid email'}
+            {pattern: new RegExp(`^[\\w.-]+@([\\w-]+\\.)+[a-zA-Z]{2,4}$`, 'i'), errorMessage: 'Please input a valid email', match: true},
         ]
         emailValid = validateTextInput(emailInput, patterns, true)
     }

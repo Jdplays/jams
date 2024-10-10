@@ -7,7 +7,8 @@
         </h1>
 
         <!-- Navbar Toggler (for mobile view) -->
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-nav" aria-controls="main-nav" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-nav"
+            aria-controls="main-nav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
 
@@ -23,38 +24,86 @@
             </div>
         </div>
 
+        <!-- User Info and Logout for Desktop (far right) -->
+        {% if is_attendee_authenticated() %}
+        <div class="d-none d-md-flex ms-auto order-md-last">
+            <div id="nav_user_info" class="navbar-nav flex-row order-md-last">
+                <div class="nav-item">
+                    <div class="d-flex lh-1 text-end p-0">
+                        <div class="ps-2">
+                            <div id="nav_attendee_email">{{ current_attendee().email }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="nav_logout_button" class="navbar-nav flex-row">
+                <div class="nav-item">
+                    <a class="nav-link" href="{{ url_for('routes.frontend.public.attendee.logout')}}">
+                        <span class="nav-link-title">
+                            Logout
+                        </span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Collapsible Navbar Content -->
         <div id="main-nav" class="collapse navbar-collapse">
             <ul class="navbar-nav flex-column flex-md-row w-100">
+                <!-- Attendee Info and Logout for Mobile (inside collapsible menu) -->
+                {% if is_attendee_authenticated() %}
+                <li id="nav_user_info" class="nav-item d-md-none">
+                <div class="d-flex lh-1 p-0">
+                    <div class="ps-2">
+                    <div id="nav_attendee_email">{{ current_attendee().email }}</div>
+                    </div>
+                </div>
+                </li>
+                <li id="nav_logout_button" class="nav-item d-md-none">
+                <a class="nav-link" href="{{ url_for('routes.frontend.public.attendee.logout')}}">
+                    <span class="nav-link-title">
+                    Logout
+                    </span>
+                </a>
+                </li>
+                {% endif %}
                 <!-- Public Schedule Link -->
                 <li class="nav-item">
-                    <a href="{{ url_for('routes.frontend.public.general.public_schedule')}}" class="nav-link d-flex lh-1 text-end p-0">
+                    <a href="{{ url_for('routes.frontend.public.general.public_schedule')}}"
+                        class="nav-link d-flex lh-1 text-end p-0">
                         <span class="nav-link-title">
                             Public Schedule
                         </span>
                     </a>
                 </li>
 
+                {% if not is_attendee_authenticated() %}
                 <!-- Volunteer Portal Link (Mobile view) -->
                 <li class="nav-item d-md-none">
-                    <a href="{{ url_for('routes.frontend.private.general.dashboard')}}" class="nav-link d-flex lh-1 text-end p-0">
+                    <a href="{{ url_for('routes.frontend.private.general.dashboard')}}"
+                        class="nav-link d-flex lh-1 text-end p-0">
                         <span class="nav-link-title">
                             Volunteer Portal
                         </span>
                     </a>
                 </li>
+                {% endif %}
             </ul>
         </div>
 
+        {% if not is_attendee_authenticated() %}
         <!-- Volunteer Portal Link (Desktop view) -->
         <div id="nav_portal" class="navbar-nav flex-row order-md-last d-none d-md-flex">
             <div class="nav-item">
-                <a href="{{ url_for('routes.frontend.private.general.dashboard')}}" class="nav-link d-flex lh-1 text-end p-0">
+                <a href="{{ url_for('routes.frontend.private.general.dashboard')}}"
+                    class="nav-link d-flex lh-1 text-end p-0">
                     <span class="nav-link-title">
                         Volunteer Portal
                     </span>
                 </a>
             </div>
         </div>
+        {% endif %}
     </div>
 </header>

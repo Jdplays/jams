@@ -358,8 +358,6 @@ export function getSelectValues(select:HTMLSelectElement) {
         return false
     }
 
-    
-
     if (!allowEmpty) {
         if (isNullEmptyOrSpaces(inputElement.value)) {
             // Empty
@@ -377,21 +375,32 @@ export function getSelectValues(select:HTMLSelectElement) {
     }
 
     if (regexPatterns) {
-        for (const {pattern, errorMessage} of regexPatterns) {
-            if (pattern.test(inputElement.value)) {
-                markInputAsInvaid(inputElement, inputContainer, errorMessage)
-                return false
+        let isValid:boolean = false
+        let lastInvalidErrorMessage:string = 'Invalid Input'
+        for (const {pattern, errorMessage, match} of regexPatterns) {
+            const doesMatch = pattern.test(inputElement.value);
+
+            if ((match === true && doesMatch) ||
+            (match === false && !doesMatch) ||
+            (match === undefined && !doesMatch)) {
+            // If the value passes the criteria, it's valid.
+            markInputAsValid(inputElement, inputContainer)
+            return true;
+            } else {
+                // Otherwise, mark it as invalid with the error message.
+                isValid = false
+                lastInvalidErrorMessage = errorMessage
             }
+        }
+
+        if (!isValid) {
+            markInputAsInvaid(inputElement, inputContainer, lastInvalidErrorMessage)
+            return false
         }
     }
 
 
-    inputElement.classList.add('is-valid')
-    inputElement.classList.remove('is-invalid')
-    let errors = inputContainer.querySelectorAll('.invalid-feedback')
-    for (const el of Array.from(errors)) {
-        inputContainer.removeChild(el)
-    }
+    markInputAsValid(inputElement, inputContainer)
     return true
 }
 
@@ -427,12 +436,7 @@ export function validateNumberInput(inputElement:HTMLInputElement, allowNegative
         }
     }
 
-    inputElement.classList.add('is-valid')
-    inputElement.classList.remove('is-invalid')
-    let errors = inputContainer.querySelectorAll('.invalid-feedback')
-    for (const el of Array.from(errors)) {
-        inputContainer.removeChild(el)
-    }
+    markInputAsValid(inputElement, inputContainer)
     return true
 }
 
@@ -441,6 +445,17 @@ export function createRegexFromList(list: string[]): RegExp {
     const escapedList = list.map(str => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
     const regexPattern = `^(${escapedList.join('|')})$`;
     return new RegExp(regexPattern, 'i'); // 'i' makes the regex case-insensitive
+}
+
+export function markInputAsValid(inputElement:HTMLInputElement, inputContainer:HTMLElement|null=null) {
+    // remove old error messages
+    let oldErrors = inputContainer.querySelectorAll('.invalid-feedback')
+    for (const el of Array.from(oldErrors)) {
+        inputContainer.removeChild(el)
+    }
+
+    inputElement.classList.add('is-valid')
+    inputElement.classList.remove('is-invalid')
 }
 
 export function markInputAsInvaid(inputElement:HTMLInputElement, inputContainer:HTMLElement|null=null, errorMessage:string|null=null) {
