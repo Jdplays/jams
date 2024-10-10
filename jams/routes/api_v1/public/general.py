@@ -1,8 +1,6 @@
 # Frontend is just for serving pages
-from datetime import date
 from flask import Blueprint, jsonify, request
-from sqlalchemy import func
-from jams.models import Event
+from jams.util import helper
 
 bp = Blueprint('genral', __name__)
 
@@ -19,11 +17,7 @@ def get_next_event():
         inc_arg = inc_arg.lower() in ['true', 't']
         inclusive = inc_arg
 
-    event = None
-    if inclusive:
-        event = Event.query.filter(Event.date >= date.today()).order_by(Event.date.asc()).first()
-    else:
-        event = Event.query.filter(Event.date > date.today()).order_by(Event.date.asc()).first()
+    event = helper.get_next_event(inclusive)
     
     if not event:
         return jsonify({
