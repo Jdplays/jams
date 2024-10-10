@@ -290,3 +290,9 @@ export interface Attendee {
     external_order_id:string
     source:string
 }
+
+export interface AttendeeLogin {
+    email?:string
+    order_id?:string
+    password?:string
+}

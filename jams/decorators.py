@@ -1,8 +1,8 @@
 from flask_security import current_user
-from flask import abort, request, current_app
+from flask import abort, redirect, request, current_app, session, url_for
 from flask_login.config import EXEMPT_METHODS
 from functools import wraps
-from jams.util import helper
+from jams.util import helper, attendee_auth
 from jams.models import Page
 from jams.configuration import ConfigType, get_config_value
 
@@ -105,3 +105,12 @@ def eventbrite_inetegration_route(func):
             abort(400, description='The requested route is not currently enabled')
         return func(*args, **kwargs)
     return wrapper
+
+def attendee_login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not attendee_auth.is_authenticated():
+            # Redirect to login page if not logged in
+            return redirect(url_for('routes.frontend.public.attendee.login'))
+        return f(*args, **kwargs)
+    return decorated_function

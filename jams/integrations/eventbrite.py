@@ -2,7 +2,7 @@ import requests
 from flask import jsonify
 from datetime import timedelta, datetime, time, UTC
 from jams.configuration import ConfigType, get_config_value
-from jams.models import db, Attendee, Event, TaskSchedulerModel, Webhook, ExternalAPILog
+from jams.models import db, Attendee, AttendeeAccount, Event, TaskSchedulerModel, Webhook, ExternalAPILog
 from jams.util.task_scheduler import TaskActionEnum, create_task
 from jams.util.webhooks import WebhookActionEnum, WebhookOwnerEnum
 from jams.util import helper
@@ -224,6 +224,8 @@ def update_or_add_attendee_from_data(attendee_JSON):
         attendee.gender = gender
 
         db.session.commit()
+
+    attendee.link_to_account()
 
 def get_ticket_types(event_id=None):
     if not event_id:

@@ -262,6 +262,14 @@ pages:
 
 
   # -------------------------------- PUBLIC  -------------------------------- #
+  public_home:
+    endpoint: routes.frontend.public.home
+    public: true
+    api_endpoints:
+      routes.api_v1.private.admin.get_event_field:
+        allowed_fields: id, name, date
+
+        
   public_schedule:
     endpoint: routes.frontend.public.public_schedule
     public: true

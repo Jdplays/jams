@@ -10,15 +10,17 @@ class Attendee(db.Model):
     event_id = Column(Integer(), ForeignKey('event.id'), nullable=False)
     name = Column(String(255), nullable=False)
     external_id = Column(String, nullable=True, unique=True)
-    email = Column(String(255), nullable=True)
+    email = Column(String(255), nullable=False)
     checked_in = Column(Boolean, nullable=False, default=False, server_default='false')
     registerable = Column(Boolean, nullable=False, default=True, server_default='true')
     age = Column(Integer)
     gender = Column(String(50))
     external_order_id = Column(String, nullable=True)
     source = Column(String(100), nullable=False, default='LOCAL', server_default='LOCAL')
+    attendee_account_id = Column(Integer(), ForeignKey('attendee_account.id'), nullable=True)
 
     event = relationship('Event', backref='attendees')
+    attendee_account = relationship('AttendeeAccount', backref='attendees')
 
     def __init__(self, event_id, name, external_id=None, email=None, checked_in=False, registerable=True, age=None, gender=None, external_order_id=None, source='LOCAL'):
         self.event_id = event_id
@@ -31,6 +33,22 @@ class Attendee(db.Model):
         self.gender = gender
         self.external_order_id = external_order_id
         self.source = source
+    
+    def link_to_account(self):
+        # Link attendee to attendee account
+        account = AttendeeAccount.query.filter_by(email=self.email).first()
+        if not account:
+            account = AttendeeAccount(email=self.email)
+            db.session.add(account)
+            db.session.commit()
+        self.attendee_account_id = account.id
+
+        # Link event to attendee account
+        account_event = AttendeeAccountEvent.query.filter_by(attendee_account_id=account.id, event_id=self.event_id).first()
+        if not account_event:
+            account_event = AttendeeAccountEvent(attendee_account_id=account.id, event_id=self.event_id)
+            db.session.add(account_event)
+            db.session.commit()
     
     def to_dict(self):
         return {
@@ -46,3 +64,34 @@ class Attendee(db.Model):
             'external_order_id': self.external_order_id,
             'source': self.source
         }
+    
+class AttendeeAccount(db.Model):
+    __tablename__ = 'attendee_account'
+
+    id = Column(Integer, primary_key=True)
+    email = Column(String(255), nullable=False, unique=True)
+
+    def __init__(self, email):
+        self.email = email
+
+
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'email': self.email
+        }
+
+class AttendeeAccountEvent(db.Model):
+    __tablename__ = 'attendee_account_event'
+
+    id = Column(Integer, primary_key=True)
+    attendee_account_id = Column(Integer(), ForeignKey('attendee_account.id'), nullable=False)
+    event_id = Column(Integer(), ForeignKey('event.id'), nullable=False)
+
+    event = relationship('Event')
+    attendee_account = relationship('AttendeeAccount')
+
+    def __int__(self, attendee_account_id, event_id):
+        self.attendee_account_id = attendee_account_id
+        self.event_id = event_id

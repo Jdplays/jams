@@ -57,10 +57,12 @@ export class EventDetails {
         infoTextDiv.id = 'info-text'
         this.detailsContainer.insertBefore(infoTextDiv, this.detailsContainer.firstChild)
 
-        this.eventDetailsMap = await this.preLoadEventNames()
-        await this.populateEventDetails()
+        if (this.options.showEventSelection) {
+            this.eventDetailsMap = await this.preLoadEventNames()
+            await this.populateEventSelectionDropdown()
+        }
 
-        await this.populateEventSelectionDropdown()
+        await this.populateEventDetails()
     }
 
     async preLoadEventNames() {

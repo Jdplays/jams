@@ -30,7 +30,8 @@ import {
     WebhookLog,
     ExternalAPILog,
     TaskSchedulerLog,
-    Attendee
+    Attendee,
+    AttendeeLogin
 } from "@global/endpoints_interfaces";
 
 // This is a script where all then endpoint calls will live to prevent duplication across scripts
@@ -1583,7 +1584,7 @@ export function removeVolunteerSignup(eventId:number, userId:number, session_id:
 
 // #endregion
 
-// #region Attendees
+// #region Attendees Private
 
 export function getAttendees(eventId:number, queryString:string|null = null):Promise<ApiMultiEntryResponse<[Attendee]>> {
     return new Promise((resolve, reject) => {
@@ -1641,7 +1642,29 @@ export function editAttendee(eventId:number, attendeeId:number, data:Partial<Att
     });
 }
 
-// Eendregion
+// #endregion
+
+// #region Attendee Public
+
+export function loginAttendee(data:Partial<AttendeeLogin>):Promise<ApiResponse<AttendeeLogin>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: `${baseURL}/attendee/login`,
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+// @endregion
 
 // #region Files
 export function getFile(fileUUID:string, queryString:string|null = null):Promise<FileResponse> {

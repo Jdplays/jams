@@ -37,4 +37,5 @@ export type QueryStringKey = keyof QueryStringData;
 export interface InputValidationPattern {
     pattern:RegExp
     errorMessage:string
+    match?:boolean
 }
