@@ -1,9 +1,9 @@
 from flask import abort, request, send_file
-from jams.models import db, EventLocation, EventTimeslot, Timeslot, Session, EndpointRule, RoleEndpointRule, PageEndpointRule, Page, RolePage
+from jams.models import db, EventLocation, EventTimeslot, Timeslot, Session, EndpointRule, RoleEndpointRule, PageEndpointRule, Page, Event
 from collections.abc import Mapping, Iterable
-from sqlalchemy import Date, DateTime, String, Integer, Boolean, or_, nullsfirst, asc, desc, func
+from sqlalchemy import DateTime, String, Integer, Boolean, or_, nullsfirst, asc, desc, func
 from flask_security import current_user
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from jams.util import files
 
@@ -541,3 +541,12 @@ def get_table_size(table_name):
     size_in_mb = size_in_bytes / (1024 * 1024)
 
     return size_in_mb
+
+def get_next_event(inclusive=True):
+    event = None
+    if inclusive:
+        event = Event.query.filter(Event.date >= date.today()).order_by(Event.date.asc()).first()
+    else:
+        event = Event.query.filter(Event.date > date.today()).order_by(Event.date.asc()).first()
+    
+    return event
