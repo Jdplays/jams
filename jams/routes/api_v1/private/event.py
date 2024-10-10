@@ -4,7 +4,6 @@ from jams.decorators import role_based_access_control_be
 from flask_security import login_required
 from jams.models import db, Attendee, Event
 from jams.util import helper
-from jams.util import files
 
 bp = Blueprint('event', __name__)
 
@@ -35,12 +34,14 @@ def add_attendee(event_id):
     event_id = data.get('event_id')
     
 
-    if not name or not email or not age or gender == '-1' or not registerable or event_id == '-1':
+    if not name or not email or not age or gender == '-1' or registerable == None or event_id == '-1':
         abort(400, description="Not enough data provided")
 
     new_attendee = Attendee(name=name, email=email, age=age, gender=gender, registerable=registerable, event_id=event_id)
     db.session.add(new_attendee)
     db.session.commit()
+
+    new_attendee.link_to_account()
 
     return jsonify({
         'message': 'Attendee successfully added',
