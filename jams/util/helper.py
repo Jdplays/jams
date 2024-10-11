@@ -1,12 +1,12 @@
-from flask import abort, request, send_file
-from collections.abc import Mapping, Iterable
-from sqlalchemy import DateTime, String, Integer, Boolean, or_, nullsfirst, asc, desc
-from flask_security import current_user
-from datetime import datetime, timedelta, UTC
 import pytz
-from jams.models import db, EventLocation, EventTimeslot, Timeslot, Session, EndpointRule, RoleEndpointRule, PageEndpointRule, Page
-from jams.configuration import get_config_value
+from datetime import date, datetime, timedelta, UTC
+from flask import abort, request, send_file
 from flask_security import current_user
+from sqlalchemy import DateTime, String, Integer, Boolean, func, or_, nullsfirst, asc, desc
+from collections.abc import Mapping, Iterable
+from jams.models import db, EventLocation, EventTimeslot, Timeslot, Session, EndpointRule, RoleEndpointRule, PageEndpointRule, Page, Event
+from jams.configuration import get_config_value
+
 
 from jams.util import files
 
@@ -240,7 +240,7 @@ def filter_model_by_query_and_properties(model, request_args=None, requested_fie
         return_obj = []
         if not return_objects:
             return_obj = build_multi_object_paginated_return_obj([], pagination_block_size, pagination_start_index, pagination_order_by, pagination_order_direction, 0)
-        return return_obj
+        return (return_obj, 0)
     
     allowed_fields = list(model.query.first_or_404().to_dict().keys())
 
@@ -553,9 +553,18 @@ def get_next_event(inclusive=True):
         event = Event.query.filter(Event.date > date.today()).order_by(Event.date.asc()).first()
     
     return event
+
 def convert_datetime_to_local_timezone(db_datetime):
     # Assume that any datetime stored in the DB is in UTC
-    utc_time = pytz.utc.localize(db_datetime)
+    if isinstance(db_datetime, str):
+        db_datetime = datetime.fromisoformat(db_datetime.replace('Z', '+00:00'))
+   
+    if db_datetime.tzinfo is None:
+        # Localize to UTC only if the datetime is naive
+        utc_time = pytz.utc.localize(db_datetime)
+    else:
+        # If it's already timezone-aware, convert it to UTC
+        utc_time = db_datetime.astimezone(pytz.utc)
 
     local_timezone = get_config_value('TIMEZONE')
 
@@ -566,28 +575,32 @@ def convert_datetime_to_local_timezone(db_datetime):
     except:
         return utc_time
     
-def convert_local_datetime_to_utc(local_datetime):
+def convert_local_datetime_to_utc(local_datetime_str):
 
     local_timezone = get_config_value('TIMEZONE')
     try:
+        local_datetime = datetime.fromisoformat(local_datetime_str)
+
         local_timezone = pytz.timezone(local_timezone)
         local_datetime_aware = local_timezone.localize(local_datetime)
 
         utc_datetime = local_datetime_aware.astimezone(pytz.utc)
         return utc_datetime
     except:
+        local_datetime = datetime.fromisoformat(local_datetime_str)
+
         local_timezone = pytz.timezone('Europe/Dublin')
         local_datetime_aware = local_timezone.localize(local_datetime)
 
         utc_datetime = local_datetime_aware.astimezone(pytz.utc)
         return utc_datetime
     
-from datetime import datetime, time
+from datetime import datetime
 import pytz
 
 def convert_time_to_local_timezone(db_time):
     # Assume db_time is in the format "HH:MM:SS" and is UTC
-    utc_time_naive = datetime.combine(datetime.utcnow().date(), db_time)
+    utc_time_naive = datetime.combine(datetime.now(UTC).date(), db_time)
     
     # Make the time aware of UTC
     utc_time = pytz.utc.localize(utc_time_naive)
@@ -604,8 +617,14 @@ def convert_time_to_local_timezone(db_time):
 
 
 def convert_local_time_to_utc(local_time):
+    if isinstance(local_time, str):
+        if len(local_time) == 5:
+            time_format = "%H:%M"  # Time without seconds
+        else:
+            time_format = "%H:%M:%S"  # Time with seconds
+        local_time = datetime.strptime(local_time, time_format).time()
     # Assume db_time is in the format "HH:MM:SS" and is UTC
-    local_time_naive = datetime.combine(datetime.utcnow().date(), local_time)
+    local_time_naive = datetime.combine(datetime.now(UTC).date(), local_time)
     
     # Get the configured local timezone
     local_timezone = get_config_value('TIMEZONE')
