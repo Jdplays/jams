@@ -39,3 +39,10 @@ export interface InputValidationPattern {
     errorMessage:string
     match?:boolean
 }
+
+export interface dateTimeFormatterOptions {
+    isTime?:boolean
+    includeDate?:boolean
+    includeTime?:boolean
+    includeSeconds?:boolean
+}
