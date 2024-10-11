@@ -1,15 +1,16 @@
 from . import db
-from sqlalchemy  import Column, String, Integer, DATE, TIME, Boolean, ForeignKey
+from sqlalchemy  import Column, String, Integer, DATE, TIME, Boolean, ForeignKey, DateTime
 from sqlalchemy.orm import relationship, backref
+from datetime import datetime
 
 class Event(db.Model):
     __tablename__ = 'event'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True, nullable=False)
     description = Column(String(255), unique=False, nullable=True)
-    date = Column(DATE, nullable=False)
-    start_time = Column(TIME, nullable=False)
-    end_time = Column(TIME, nullable=False)
+    date = Column(DateTime, nullable=False)
+    start_date_time = Column(DateTime, nullable=False)
+    end_date_time = Column(DateTime, nullable=False)
     password = Column(String(50), nullable=False)
     capacity = Column(Integer(), nullable=False)
     active = Column(Boolean(), nullable=False, default=True)
@@ -19,12 +20,12 @@ class Event(db.Model):
     external_id = Column(String(), nullable=True)
     external_url = Column(String(), nullable=True)
 
-    def __init__(self, name, description, date, start_time, end_time, capacity, password, active=True, external=False, external_id=None, external_url = None):
+    def __init__(self, name, description, date, start_date_time, end_date_time, capacity, password, active=True, external=False, external_id=None, external_url = None):
         self.name = name
         self.description = description
-        self.date = date
-        self.start_time = start_time
-        self.end_time = end_time
+        self.date = date,
+        self.start_date_time = start_date_time
+        self.end_date_time = end_date_time
         self.capacity = capacity
         self.password = password
         self.active = active
@@ -39,13 +40,18 @@ class Event(db.Model):
         self.active = False
 
     def to_dict(self):
+        from jams.util import helper
+        date = helper.convert_datetime_to_local_timezone(self.date)
+        start_datetime = helper.convert_datetime_to_local_timezone(self.start_date_time)
+        end_datetime = helper.convert_datetime_to_local_timezone(self.end_date_time)
+
         return {
             'id': self.id,
             'name': self.name,
             'description': self.description,
-            'date': str(self.date),
-            'start_time': str(self.start_time),
-            'end_time': str(self.end_time),
+            'date': str(date),
+            'start_date_time': str(start_datetime),
+            'end_date_time': str(end_datetime),
             'password': self.password,
             'capacity': self.capacity,
             'active': self.active,
@@ -93,8 +99,12 @@ class Timeslot(db.Model):
 
     @property
     def range(self):
-        start_formatted = self.start.strftime('%H:%M') if self.start else 'N/A'
-        end_formatted = self.end.strftime('%H:%M') if self.end else 'N/A'
+        from jams.util import helper
+        start_time = helper.convert_time_to_local_timezone(self.start)
+        end_time = helper.convert_time_to_local_timezone(self.end)
+
+        start_formatted = start_time.strftime('%H:%M') if start_time else 'N/A'
+        end_formatted = end_time.strftime('%H:%M') if end_time else 'N/A'
         return f"{start_formatted} - {end_formatted}"
     
     def __init__(self, name, start, end, is_break=False, active=True):
@@ -111,11 +121,14 @@ class Timeslot(db.Model):
         self.active = False
 
     def to_dict(self):
+        from jams.util import helper
+        start_time = helper.convert_time_to_local_timezone(self.start)
+        end_time = helper.convert_time_to_local_timezone(self.end)
         return {
             'id': self.id,
             'name': self.name,
-            'start': str(self.start),
-            'end': str(self.end),
+            'start': str(start_time),
+            'end': str(end_time),
             'range': self.range,
             'is_break': self.is_break,
             'active': self.active

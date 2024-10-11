@@ -1,9 +1,12 @@
 from flask import abort, request, send_file
-from jams.models import db, EventLocation, EventTimeslot, Timeslot, Session, EndpointRule, RoleEndpointRule, PageEndpointRule, Page, Event
 from collections.abc import Mapping, Iterable
-from sqlalchemy import DateTime, String, Integer, Boolean, or_, nullsfirst, asc, desc, func
+from sqlalchemy import DateTime, String, Integer, Boolean, or_, nullsfirst, asc, desc
 from flask_security import current_user
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta, UTC
+import pytz
+from jams.models import db, EventLocation, EventTimeslot, Timeslot, Session, EndpointRule, RoleEndpointRule, PageEndpointRule, Page
+from jams.configuration import get_config_value
+from flask_security import current_user
 
 from jams.util import files
 
@@ -550,3 +553,75 @@ def get_next_event(inclusive=True):
         event = Event.query.filter(Event.date > date.today()).order_by(Event.date.asc()).first()
     
     return event
+def convert_datetime_to_local_timezone(db_datetime):
+    # Assume that any datetime stored in the DB is in UTC
+    utc_time = pytz.utc.localize(db_datetime)
+
+    local_timezone = get_config_value('TIMEZONE')
+
+    try:
+        local_timezone = pytz.timezone(local_timezone)
+        local_datetime = utc_time.astimezone(local_timezone)
+        return local_datetime
+    except:
+        return utc_time
+    
+def convert_local_datetime_to_utc(local_datetime):
+
+    local_timezone = get_config_value('TIMEZONE')
+    try:
+        local_timezone = pytz.timezone(local_timezone)
+        local_datetime_aware = local_timezone.localize(local_datetime)
+
+        utc_datetime = local_datetime_aware.astimezone(pytz.utc)
+        return utc_datetime
+    except:
+        local_timezone = pytz.timezone('Europe/Dublin')
+        local_datetime_aware = local_timezone.localize(local_datetime)
+
+        utc_datetime = local_datetime_aware.astimezone(pytz.utc)
+        return utc_datetime
+    
+from datetime import datetime, time
+import pytz
+
+def convert_time_to_local_timezone(db_time):
+    # Assume db_time is in the format "HH:MM:SS" and is UTC
+    utc_time_naive = datetime.combine(datetime.utcnow().date(), db_time)
+    
+    # Make the time aware of UTC
+    utc_time = pytz.utc.localize(utc_time_naive)
+    
+    # Get the configured local timezone
+    local_timezone = get_config_value('TIMEZONE')
+    
+    try:
+        local_timezone = pytz.timezone(local_timezone)
+        local_time = utc_time.astimezone(local_timezone).time()
+        return local_time
+    except:
+        return utc_time.time()  # Return the time in UTC if conversion fails
+
+
+def convert_local_time_to_utc(local_time):
+    # Assume db_time is in the format "HH:MM:SS" and is UTC
+    local_time_naive = datetime.combine(datetime.utcnow().date(), local_time)
+    
+    # Get the configured local timezone
+    local_timezone = get_config_value('TIMEZONE')
+    
+    try:
+        local_timezone = pytz.timezone(local_timezone)
+        local_time_aware = local_timezone.localize(local_time_naive)
+        
+        # Convert to UTC
+        utc_time = local_time_aware.astimezone(pytz.utc).time()
+        return utc_time
+    except:
+        # Fallback to Europe/Dublin if the configured timezone is invalid
+        local_timezone = pytz.timezone('Europe/Dublin')
+        local_time_aware = local_timezone.localize(local_time_naive)
+        
+        # Convert to UTC
+        utc_time = local_time_aware.astimezone(pytz.utc).time()
+        return utc_time

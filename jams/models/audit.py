@@ -1,7 +1,6 @@
 from . import db
 from sqlalchemy  import Column, String, Integer, DateTime, ForeignKey, func
 from sqlalchemy.orm import relationship
-from jams.util import helper
 
 class PrivateAccessLog(db.Model):
     __tablename__ = 'private_access_log'
@@ -13,7 +12,7 @@ class PrivateAccessLog(db.Model):
     user_role_names = Column(String(), nullable=False)
     required_role_names = Column(String(), nullable=False)
     status_code = Column(String(), nullable=False)
-    date_time = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    date_time = Column(DateTime, server_default=func.now(), nullable=False)
 
     user = relationship('User')
 
@@ -39,10 +38,13 @@ class PrivateAccessLog(db.Model):
 
     @staticmethod
     def size():
+        from jams.util import helper
         return helper.get_table_size(PrivateAccessLog.__tablename__)
 
     
     def to_dict(self):
+        from jams.util import helper
+        date_time = helper.convert_datetime_to_local_timezone(self.date_time)
         return {
             'id': self.id,
             'url': self.url,
@@ -54,5 +56,5 @@ class PrivateAccessLog(db.Model):
             'user_role_names': self.user_role_names,
             'required_role_names': self.required_role_names,
             'status_code': self.status_code,
-            'date_time': self.date_time
+            'date_time': date_time.isoformat()
         }

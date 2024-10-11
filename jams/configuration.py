@@ -21,6 +21,7 @@ class ConfigType(Enum):
     OAUTH_CLIENT_SECRET = 'OAUTH_CLIENT_SECRET'
     APP_URL = 'APP_URL'
     HTTP_SCHEME = 'HTTP_SCHEME'
+    TIMEZONE = 'TIMEZONE'
 
 
 
