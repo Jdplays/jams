@@ -1,0 +1,49 @@
+.table-responsive th.setting-column {
+    width: 20%;
+}
+
+.table-responsive th.description-column {
+    width: 50%;
+}
+
+.table-responsive th.value-column {
+    width: 30%;
+}
+
+/* Tablet (Medium screens) */
+@media (max-width: 1000px) {
+    .table-responsive th.setting-column {
+        width: 30%;
+    }
+
+    .table-responsive th.description-column {
+        width: 30%;
+    }
+
+    .table-responsive th.value-column {
+        width: 50%;
+    }
+
+    .table-responsive td.description-column {
+        width: 30%;
+    }
+}
+
+/* Mobile (Smaller screens) */
+@media (max-width: 600px) {
+    .table-responsive th.setting-column {
+        width: 30%;
+    }
+
+    .table-responsive th.description-column {
+        display: none;
+    }
+
+    .table-responsive th.value-column {
+        width: 70%;
+    }
+
+    .table-responsive td.description-column {
+        display: none;
+    }
+}

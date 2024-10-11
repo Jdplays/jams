@@ -296,3 +296,7 @@ export interface AttendeeLogin {
     order_id?:string
     password?:string
 }
+
+export interface GeneralConfig {
+    TIMEZONE?:string
+}

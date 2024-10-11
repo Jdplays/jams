@@ -6,9 +6,41 @@
 
 {% block settings_content %}
 
+<div id="eventbrite-settings-content" class="settings-content-container">
+    <p class="mb-3">Here you can configure general settings for JAMS. More advanced options will have their own setting page on the side bar</p>
 
+    <div class="table-responsive">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th class="setting-column">Setting</th>
+                    <th class="description-column">Description</th>
+                    <th class="value-column">Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="setting-column">
+                        <p>Location/Timezone</p>
+                    </td>
+                    <td class="description-column">
+                        <label class="text-secondary">This is the location or timezone that JAMS will use when converting dates and times to display to the user. It is recomened that you set this to the same timezone as your events run in.</label>
+                    </td>
+                    <td class="value-column">
+                        <select id="loc-select" class="form-control form-select" onchange="checkIfConentUpdated()">
+                        </select>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
-<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+    <button id="save-button" class="btn btn-primary" onclick="generalConfigSaveOnClick()"
+                disabled>Save</button>
+</div>
+
+<script src="{{ url_for('static', filename='js/admin/settings/settings_general.js') }}" type="module"
+    defer></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin/settings/settings_general.css') }}">
 
 {% endblock %}
