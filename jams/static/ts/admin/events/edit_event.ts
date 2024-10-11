@@ -1,6 +1,6 @@
 import { addNewEvent, editEvent, getEvent, getEventbriteEvents, getEventsField } from "@global/endpoints"
 import { EventbriteEvent, Event } from "@global/endpoints_interfaces"
-import { addSpinnerToElement, animateElement, buildQueryString, createDropdown, createRegexFromList, errorToast, isDefined, isNullEmptyOrSpaces, removeSpinnerFromElement, validateNumberInput, validateTextInput } from "@global/helper"
+import { addSpinnerToElement, animateElement, buildQueryString, combineDateTime, convertToDateInputFormat, createDropdown, createRegexFromList, errorToast, formatDateToShort, isDefined, isNullEmptyOrSpaces, removeSpinnerFromElement, validateNumberInput, validateTextInput } from "@global/helper"
 import { InputValidationPattern, QueryStringData } from "@global/interfaces"
 
 let EventId:number
@@ -26,9 +26,9 @@ async function prepEditEventForm() {
 
     eventNameInput.value = EventData.name
     eventDescriptionInput.value = EventData.description
-    eventDateInput.value = EventData.date
-    eventStartInput.value = EventData.start_time
-    eventEndInput.value = EventData.end_time
+    eventDateInput.value = convertToDateInputFormat(formatDateToShort(EventData.date, {includeTime:false}))
+    eventStartInput.value = formatDateToShort(EventData.start_date_time, {includeDate:false, includeSeconds:false})
+    eventEndInput.value = formatDateToShort(EventData.end_date_time, {includeDate:false, includeSeconds:false})
     eventCapacityInput.value = String(EventData.capacity)
     eventPasswordInput.value = EventData.password
 }
@@ -123,9 +123,9 @@ function eventbriteEventsDropdownOnChange(events:EventbriteEvent[]) {
 
     eventNameInput.value = event.name
     eventDescriptionInput.value = event.description
-    eventDateInput.value = event.date
-    eventStartInput.value = event.start_time
-    eventEndInput.value = event.end_time
+    eventDateInput.value = formatDateToShort(convertToDateInputFormat(event.date), {includeTime:false})
+    eventStartInput.value = formatDateToShort(event.start_date_time, {includeDate:false, includeSeconds:false})
+    eventEndInput.value = formatDateToShort(event.end_date_time, {includeDate:false, includeSeconds:false})
     eventCapacityInput.value = String(event.capacity)
     eventUrlHiddenInput.value = event.url
     eventIdHiddenInput.value = event.id
@@ -170,14 +170,17 @@ async function editEventOnclick() {
         external = true
     }
 
+    const startDateTime = combineDateTime(eventDateInput.value, eventStartInput.value)
+    const endDateTime = combineDateTime(eventDateInput.value, eventEndInput.value)
+
     let data:Partial<Event> = {}
     if (external) {
         data = {
             name: eventNameInput.value,
             description: eventDescriptionInput.value,
             date: eventDateInput.value,
-            start_time: eventStartInput.value,
-            end_time: eventEndInput.value,
+            start_date_time: startDateTime,
+            end_date_time: endDateTime,
             capacity: Number(eventCapacityInput.value),
             password: eventPasswordInput.value,
             external: external,
@@ -189,8 +192,8 @@ async function editEventOnclick() {
             name: eventNameInput.value,
             description: eventDescriptionInput.value,
             date: eventDateInput.value,
-            start_time: eventStartInput.value,
-            end_time: eventEndInput.value,
+            start_date_time: startDateTime,
+            end_date_time: endDateTime,
             capacity: Number(eventCapacityInput.value),
             password: eventPasswordInput.value,
         }

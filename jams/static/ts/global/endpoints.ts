@@ -33,6 +33,7 @@ import {
     Attendee,
     AttendeeLogin
 } from "@global/endpoints_interfaces";
+import { formatDate } from "./helper";
 
 // This is a script where all then endpoint calls will live to prevent duplication across scripts
 

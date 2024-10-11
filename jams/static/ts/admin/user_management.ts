@@ -7,8 +7,8 @@ import {
     activateUser,
     getRoleNames
 } from '@global/endpoints'
-import { RequestMultiModelJSONData, User } from "@global/endpoints_interfaces";
-import { emptyElement, buildActionButtonsForModel, successToast, errorToast, getSelectValues } from "@global/helper";
+import { User } from "@global/endpoints_interfaces";
+import { emptyElement, buildActionButtonsForModel, successToast, errorToast, getSelectValues, formatDateToShort } from "@global/helper";
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
 import TomSelect from 'tom-select';
 
@@ -97,6 +97,10 @@ function initialiseAgGrid() {
             {
                 field: 'last_login',
                 headerName: "Last Login",
+                cellRenderer: (params:any) => {
+                    const fDateTime = formatDateToShort(params.value)
+                    return fDateTime
+                },
                 flex: 1,
                 valueFormatter: (params) => {
                     if (!params.data.last_login) {
