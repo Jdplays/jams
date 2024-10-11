@@ -98,14 +98,17 @@ def get_events(continuation_token=None):
         id = event['id']
         name = event['name']['text']
         description = event['description']['text']
-        start_date_time = datetime.strptime(event['start']['utc'], "%Y-%m-%dT%H:%M:%SZ")
-        end_date_time = datetime.strptime(event['end']['utc'], "%Y-%m-%dT%H:%M:%SZ")
+        start_date_time = event['start']['utc']
+        end_date_time = event['end']['utc']
         capacity = event['capacity']
         url = event['url']
 
-        date = start_date_time.date()
-        start = start_date_time.time()
-        end = end_date_time.time()
+        print(start_date_time)
+        date = datetime.strptime(start_date_time, "%Y-%m-%dT%H:%M:%SZ").date()
+        start = helper.convert_datetime_to_local_timezone(start_date_time)
+        end = helper.convert_datetime_to_local_timezone(end_date_time)
+
+        print(start)
         event = EventbriteEvent(id, name, description, date, start, end, capacity, url)
         events.append(event)
     
@@ -358,18 +361,18 @@ class EventbriteEvent():
     name = str
     description = str
     date = datetime.date
-    start_time = datetime.time
-    end_time = datetime.time
+    start_date_time = datetime.time
+    end_date_time = datetime.time
     capacity = int
     url = str
 
-    def __init__(self, id, name, description, date, start_time, end_time, capacity, url):
+    def __init__(self, id, name, description, date, start_date_time, end_date_time, capacity, url):
         self.id = id
         self.name = name
         self.description = description
         self.date = date
-        self.start_time = start_time
-        self.end_time = end_time
+        self.start_date_time = start_date_time
+        self.end_date_time = end_date_time
         self.capacity = capacity
         self.url = url
 
@@ -379,8 +382,8 @@ class EventbriteEvent():
             'name': self.name,
             'description': self.description,
             'date': str(self.date),
-            'start_time': str(self.start_time),
-            'end_time': str(self.end_time),
+            'start_date_time': str(self.start_date_time),
+            'end_date_time': str(self.end_date_time),
             'capacity': self.capacity,
             'url': self.url
         }
