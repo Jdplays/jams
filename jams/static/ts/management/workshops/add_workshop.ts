@@ -1,6 +1,6 @@
 import { addWorkshop, getDifficultyLevels, getWorkshopField, getWorkshopsField, getWorkshopTypes, uploadFileToWorkshop } from "@global/endpoints"
 import { Workshop, WorkshopType } from "@global/endpoints_interfaces"
-import { animateElement, buildQueryString, buildRadioInputSelectionGroup, createRegexFromList, emptyElement, errorToast, getRadioInputGroupSelection, isDefined, successToast, validateNumberInput, validateTextInput } from "@global/helper"
+import { animateElement, buildQueryString, buildRadioInputSelectionGroup, createRegexFromList, emptyElement, errorToast, getRadioInputGroupSelection, isDefined, isNullEmptyOrSpaces, successToast, validateNumberInput, validateTextInput } from "@global/helper"
 import { InputValidationPattern, QueryStringData } from "@global/interfaces";
 
 let workshopTypesMap:Record<number, WorkshopType> = {};
@@ -143,8 +143,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     const queryString = buildQueryString(queryData)
 
-    const currentWorkshops = (await getWorkshopsField('name', queryString)).data
-    currentWorkshopNames = currentWorkshops.map(ws => ws.name)
+    getWorkshopsField('name', queryString).then((response) => {
+        const currentWorkshops = response.data
+        if (currentWorkshops !== undefined) {
+            currentWorkshopNames = currentWorkshops.map(ws => ws.name)
+        }
+    })
     
     prepAddWorkshopForm()
 })
@@ -155,7 +159,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const workshopNameInput = document.getElementById('add-workshop-name') as HTMLInputElement
     workshopNameInput.oninput = async () => {
         let patterns:InputValidationPattern[] = null
-        if (currentWorkshopNames) {
+        if (!isNullEmptyOrSpaces(currentWorkshopNames)) {
             patterns = [
             {pattern: createRegexFromList(currentWorkshopNames), errorMessage: 'Already exists'}
         ]
