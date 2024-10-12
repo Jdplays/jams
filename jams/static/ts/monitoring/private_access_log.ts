@@ -112,13 +112,13 @@ function initialiseAgGrid() {
                 cellRenderer: (params:any) => {
                     const fDateTime = formatDateToShort(params.value)
                     return fDateTime
+                    
                 },
                 filter: 'agDateColumnFilter',
                 floatingFilter: true,
                 suppressFloatingFilterButton: true,
                 suppressHeaderFilterButton: true,
                 width: 300,
-                valueFormatter: dateTimeFormatter,
             },
             {
                 field: 'user_id',

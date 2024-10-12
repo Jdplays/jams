@@ -568,7 +568,9 @@ export function formatDateToShort(dateString: string, options:dateTimeFormatterO
         includeSeconds = true
     } = options || {}
 
-    console.log(dateString)
+    if (dateString === undefined) {
+        return 'N/A'
+    }
 
     // Use a regular expression to capture the date and time components
     let dateParts: RegExpMatchArray | null = null;
@@ -606,7 +608,6 @@ export function formatDateToShort(dateString: string, options:dateTimeFormatterO
         formattedDate += includeDate ? ` ${time}` : time
     }
 
-    console.log(formattedDate)
     return formattedDate
 }
 

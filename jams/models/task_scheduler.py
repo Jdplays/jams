@@ -81,9 +81,10 @@ class TaskSchedulerLog(db.Model):
         return helper.get_table_size(TaskSchedulerLog.__tablename__)
     
     def to_dict(self):
+        date_time = helper.convert_datetime_to_local_timezone(self.date_time)
         return {
             'id': self.id,
-            'date_time': self.date_time,
+            'date_time': date_time.isoformat(),
             'task_id': self.task_id,
             'log': self.log
         }
