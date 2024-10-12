@@ -103,12 +103,10 @@ def get_events(continuation_token=None):
         capacity = event['capacity']
         url = event['url']
 
-        print(start_date_time)
         date = datetime.strptime(start_date_time, "%Y-%m-%dT%H:%M:%SZ").date()
         start = helper.convert_datetime_to_local_timezone(start_date_time)
         end = helper.convert_datetime_to_local_timezone(end_date_time)
 
-        print(start)
         event = EventbriteEvent(id, name, description, date, start, end, capacity, url)
         events.append(event)
     

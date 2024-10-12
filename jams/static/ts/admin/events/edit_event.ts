@@ -229,8 +229,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     const queryString = buildQueryString(queryData)
     
-    const currentEvents = (await getEventsField('name', queryString)).data
-    currentEventNames = currentEvents.map(e => e.name).filter(name => name !== EventData.name)
+    getEventsField('name', queryString).then((response) => {
+        const currentEvents = response.data
+        if (currentEvents !== undefined) {
+            currentEventNames = currentEvents.map(e => e.name)
+        }
+    })
     
     prepEditEventForm()
 });

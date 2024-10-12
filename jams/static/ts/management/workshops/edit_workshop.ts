@@ -327,8 +327,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     const queryString = buildQueryString(queryData)
 
-    const currentWorkshops = (await getWorkshopsField('name', queryString)).data
-    currentWorkshopNames = currentWorkshops.map(ws => ws.name).filter(name => name !== WorkshopData.name)
+    getWorkshopsField('name', queryString).then((response) => {
+        const currentWorkshops = response.data
+        if (currentWorkshops !== undefined) {
+            currentWorkshopNames = currentWorkshops.map(ws => ws.name)
+        }
+    })
 
     prepEditWorkshopForm()
 });
