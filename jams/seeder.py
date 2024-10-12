@@ -1,3 +1,5 @@
+import os
+import string
 from jams.models import db, User, Role, Workshop, Event, Location, Timeslot, DifficultyLevel, WorkshopType
 from jams.rbac import generate_full_rbac
 from jams.configuration import ConfigType, set_config_value
@@ -9,18 +11,15 @@ def preform_seed():
     seed_users()
     seed_difficulty_levels()
     seed_workshop_types()
-    seed_workshops()
-    #seed_events()
-    seed_locations()
-    seed_timeslots()
     seed_config()
 
 def seed_users():
     # Check if the Admin user already exists
-    if not User.query.filter_by(email="admin@test.com").first():
+    if not User.query.filter_by(email="admin@jams.jams").first():
         admin_role = Role.query.filter_by(name="Admin").first()
         if admin_role:
-            user = User(email='admin@test.com', username="AdminAccount", password=hash_password('admin'), user_induction=True)
+            password = os.getenv('ADMIN_WEB_PASS', 'admin')
+            user = User(email='admin@jams.jams', username="AdminAccount2", password=hash_password(password), user_induction=True)
             user.set_roles_by_name(['Admin', 'Volunteer'])
             user.activate()
             db.session.add(user)
