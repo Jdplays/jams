@@ -7,11 +7,13 @@ roles:
       - schedule_planner
       - settings
       - logs
-  Volunteer:
-    description: A Helper at the event
-    pages:
       - volunteer_attendance
       - volunteer_signup
       - workshops
       - locations_timeslots
       - attendee_list
+  Volunteer:
+    description: A Helper at the event
+    pages:
+      - volunteer_attendance
+      - volunteer_signup
