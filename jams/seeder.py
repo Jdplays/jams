@@ -19,7 +19,7 @@ def seed_users():
         admin_role = Role.query.filter_by(name="Admin").first()
         if admin_role:
             password = os.getenv('ADMIN_WEB_PASS', 'admin')
-            user = User(email='admin@jams.jams', username="AdminAccount2", password=hash_password(password), user_induction=True)
+            user = User(email='admin@jams.jams', username="AdminAccount", password=hash_password(password), user_induction=True)
             user.set_roles_by_name(['Admin', 'Volunteer'])
             user.activate()
             db.session.add(user)
