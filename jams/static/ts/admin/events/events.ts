@@ -7,7 +7,7 @@ import {
     activateEvent
 } from "@global/endpoints"
 import { RequestMultiModelJSONData, Event } from "@global/endpoints_interfaces";
-import { buildActionButtonsForModel, successToast, errorToast, isDefined, buildArchiveActivateButtonForModel } from "@global/helper";
+import { buildActionButtonsForModel, successToast, errorToast, isDefined, buildArchiveActivateButtonForModel, formatDateToShort } from "@global/helper";
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
 
 
@@ -82,9 +82,29 @@ function initialiseAgGrid() {
         columnDefs: [
             {field: 'name', flex: 1},
             {field: 'description', flex: 1},
-            {field: 'date', flex: 1},
-            {field: 'start_time', headerName: 'Start Time', flex: 1},
-            {field: 'end_time', headerName: 'End Time', flex: 1},
+            {
+                field: 'date',
+                cellRenderer: (params:any) => {
+                    const fDateTime = formatDateToShort(params.value, {includeTime:false})
+                    return fDateTime
+                },
+                flex: 1},
+            {
+                field: 'start_date_time',
+                headerName: 'Start Time',
+                cellRenderer: (params:any) => {
+                    const fDateTime = formatDateToShort(params.value, {includeDate:false, includeSeconds:false})
+                    return fDateTime
+                },
+                flex: 1},
+            {
+                field: 'end_date_time',
+                headerName: 'End Time',
+                cellRenderer: (params:any) => {
+                    const fDateTime = formatDateToShort(params.value, {includeDate:false, includeSeconds:false})
+                    return fDateTime
+                },
+                flex: 1},
             {field: 'capacity', flex: 1},
             {field: 'password', flex: 1},
             {

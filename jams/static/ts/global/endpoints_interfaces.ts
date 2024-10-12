@@ -76,8 +76,8 @@ export interface Event {
     name:string
     description:string
     date:string
-    start_time:string
-    end_time:string
+    start_date_time:string
+    end_date_time:string
     password:string
     capacity:number
     active:boolean
@@ -229,8 +229,8 @@ export interface EventbriteEvent {
     name:string
     description:string
     date:string
-    start_time:string
-    end_time:string
+    start_date_time:string
+    end_date_time:string
     capacity:number
     url:string
 }
@@ -295,4 +295,8 @@ export interface AttendeeLogin {
     email?:string
     order_id?:string
     password?:string
+}
+
+export interface GeneralConfig {
+    TIMEZONE?:string
 }

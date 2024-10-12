@@ -1,7 +1,5 @@
 import {
-    activateWorkshop,
     addAttendee,
-    archiveWorkshop,
     editAttendee,
     getAttendees
 } from "@global/endpoints";

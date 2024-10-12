@@ -262,8 +262,8 @@ def add_event():
     name = data.get('name')
     description = data.get('description')
     date = data.get('date')
-    start_time = data.get('start_time')
-    end_time = data.get('end_time')
+    start_date_time = data.get('start_date_time')
+    end_date_time = data.get('end_date_time')
     capacity = data.get('capacity')
     external = data.get('external')
     external_id = data.get('external_id')
@@ -275,10 +275,13 @@ def add_event():
         if external_event:
             abort(400, description='You cannot import an event that has already been imported')
 
-    if not name or not description or not date or not start_time or not end_time or not capacity or not password :
+    if not name or not description or not date or not start_date_time or not end_date_time or not capacity or not password :
         abort(400, description="No 'name' or'description' or 'date' or 'start_time' or 'end_time' or 'capacity' or 'password' provided")
+    
+    start_date_time = helper.convert_local_datetime_to_utc(start_date_time)
+    end_date_time = helper.convert_local_datetime_to_utc(end_date_time)
 
-    new_event = Event(name=name, description=description, date=date, start_time=start_time, end_time=end_time, capacity=capacity, password=password, external=external, external_id=external_id, external_url=external_url)
+    new_event = Event(name=name, description=description, date=date, start_date_time=start_date_time, end_date_time=end_date_time, capacity=capacity, password=password, external=external, external_id=external_id, external_url=external_url)
     db.session.add(new_event)
     db.session.commit()
 
@@ -303,6 +306,8 @@ def edit_event(event_id):
     allowed_fields = list(event.to_dict().keys())
     for field, value in data.items():
         if field in allowed_fields:
+            if field == 'start_date_time' or field == 'end_date_time':
+                value = helper.convert_local_datetime_to_utc(value)
             if field == 'external_id':
                 external_event = Event.query.filter_by(external_id=value).first()
                 if external_event:

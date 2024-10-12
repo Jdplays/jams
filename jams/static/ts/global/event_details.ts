@@ -1,6 +1,6 @@
 import { getEventField, getEventsField, getnextEvent } from "./endpoints"
 import { ApiResponse, Event } from "./endpoints_interfaces"
-import { buildQueryString, emptyElement, formatDate, formatDateToShort } from "./helper"
+import { buildQueryString, convertToDateInputFormat, emptyElement, formatDate, formatDateToShort } from "./helper"
 import { QueryStringData } from "./interfaces"
 
 export interface EventDetailsOptions {
@@ -94,7 +94,8 @@ export class EventDetails {
         if (this.eventId !== null && this.eventId !== -1) {
             let eventName = await getEventField(this.eventId, 'name')
             let eventDate = await getEventField(this.eventId, 'date')
-            eventInfoText.innerHTML = `<strong>${eventName.name}</strong> - ${formatDate(eventDate.date)}`
+            const date = convertToDateInputFormat(eventDate.date)
+            eventInfoText.innerHTML = `<strong>${eventName.name}</strong> - ${date}`
 
             for (const element of this.options.eventDependentElements) {
                 element.style.display = 'block'
@@ -106,7 +107,12 @@ export class EventDetails {
         }
     
         this.eventId = null
-        eventInfoText.innerHTML = 'No Upcomming Events. Please select one from the dropdown'
+        let infoText = 'No Upcomming Events. '
+        if (this.options.showEventSelection) {
+            infoText += 'Please select one from the dropdown'
+        }
+
+        eventInfoText.innerHTML = infoText
         
         for (const element of this.options.eventDependentElements) {
             element.style.display = 'none'
@@ -182,7 +188,8 @@ export class EventDetails {
     }
 
     eventDropdownItemText(event:Partial<Event>) {
-        return `${event.name} - ${formatDateToShort(event.date)}`
+        const date = convertToDateInputFormat(event.date)
+        return `${event.name} - ${date}`
     }
 
     eventName() {

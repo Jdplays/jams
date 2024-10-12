@@ -170,6 +170,8 @@ class User(UserMixin, db.Model):
     
     
     def to_dict(self):
+        from jams.util import helper
+        last_login_at_date_time = helper.convert_datetime_to_local_timezone(self.last_login_at)
         return {
             'id': self.id,
             'username': self.username,
@@ -178,7 +180,7 @@ class User(UserMixin, db.Model):
             'last_name': self.last_name,
             'full_name': self.full_name,
             'display_name': self.display_name,
-            'last_login': self.last_login_at,
+            'last_login': last_login_at_date_time.isoformat(),
             'role_ids': self.role_ids,
             'dob': self.dob,
             'bio': self.bio,

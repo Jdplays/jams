@@ -5,7 +5,7 @@ import {
     getUsers
 } from '@global/endpoints'
 import { User } from "@global/endpoints_interfaces";
-import { isNullEmptyOrSpaces, buildQueryString, successToast, errorToast, buildUserAvatar } from "@global/helper";
+import { isNullEmptyOrSpaces, buildQueryString, successToast, errorToast, buildUserAvatar, formatDate, formatDateToShort } from "@global/helper";
 import { QueryStringData, QueryStringKey } from '@global/interfaces';
 import { createGrid, GridApi, GridOptions, ITooltipComp, ITooltipParams } from 'ag-grid-community';
 
@@ -109,12 +109,16 @@ function initialiseAgGrid() {
             {
                 field: 'date_time',
                 headerName: "Date Time",
+                cellRenderer: (params:any) => {
+                    const fDateTime = formatDateToShort(params.value)
+                    return fDateTime
+                    
+                },
                 filter: 'agDateColumnFilter',
                 floatingFilter: true,
                 suppressFloatingFilterButton: true,
                 suppressHeaderFilterButton: true,
                 width: 300,
-                valueFormatter: dateTimeFormatter,
             },
             {
                 field: 'user_id',

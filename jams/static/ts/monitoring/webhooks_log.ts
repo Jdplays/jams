@@ -1,6 +1,6 @@
 import { dateTimeFormatter } from '@global/ag_grid_helper';
 import { getWebhookLogs } from '@global/endpoints'
-import { isNullEmptyOrSpaces, buildQueryString } from "@global/helper";
+import { isNullEmptyOrSpaces, buildQueryString, formatDateToShort } from "@global/helper";
 import { QueryStringData, QueryStringKey } from '@global/interfaces';
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
 
@@ -36,6 +36,10 @@ function initialiseAgGrid() {
             {
                 field: 'date_time',
                 headerName: "Date Time",
+                cellRenderer: (params:any) => {
+                    const fDateTime = formatDateToShort(params.value)
+                    return fDateTime
+                },
                 filter: 'agDateColumnFilter',
                 floatingFilter: true,
                 suppressFloatingFilterButton: true,

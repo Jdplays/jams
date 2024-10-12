@@ -1,5 +1,5 @@
 import {Toast} from "@global/sweet_alert"
-import { InputValidationPattern, QueryStringData } from "./interfaces";
+import { dateTimeFormatterOptions, InputValidationPattern, QueryStringData } from "./interfaces";
 import { User } from "./endpoints_interfaces";
 import { getUsersPublicInfo } from "./endpoints";
 
@@ -501,39 +501,118 @@ export function animateElement(element:HTMLElement, animationClass:string) {
     element.addEventListener('animationend', handleAnimationEnd)
 }
 
-// Formats a date from numbers to words (24-09-15 to 15th Spetember 2024)
-export function formatDate(dateString:string) {
-    const date = new Date(dateString);
-    const day = date.getDate();
-    const month = date.toLocaleString('default', { month: 'long' });
-    const year = date.getFullYear();
-    
+// Formats a date from numbers to words (24-09-15 to 15th September 2024 or 15th September 2024 13:30)
+export function formatDate(dateString: string, options: dateTimeFormatterOptions | null = null): string {
+    const {
+        includeDate = true,
+        includeTime = true,
+        includeSeconds = true
+    } = options || {}
+
+    // Use a regular expression to capture the date and time components (handle both 'T' and ' ' separators)
+    const dateParts = dateString.match(/(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})(?::(\d{2}))?(?:([+-]\d{2}:\d{2})|Z)?/)
+
+    if (!dateParts) {
+        throw new Error('Invalid date string format')
+    }
+
+    let formattedDate = ''
+
     // Function to get the ordinal suffix for the day
-    function getOrdinalSuffix(n:any) {
-        if (n > 3 && n < 21) return 'th';
+    function getOrdinalSuffix(n: any) {
+        if (n > 3 && n < 21) return 'th'
         switch (n % 10) {
-            case 1: return 'st';
-            case 2: return 'nd';
-            case 3: return 'rd';
-            default: return 'th';
+            case 1: return 'st'
+            case 2: return 'nd'
+            case 3: return 'rd'
+            default: return 'th'
         }
     }
-    
-    const dayWithSuffix = day + getOrdinalSuffix(day);
-    
-    return `${dayWithSuffix} ${month} ${year}`;
+
+    // If includeDate is true, format the date part
+    if (includeDate) {
+        const day = parseInt(dateParts[3])  // Extract the day part (already 2 digits)
+        const month = new Date(`${dateParts[1]}-${dateParts[2]}-${dateParts[3]}`).toLocaleString('default', { month: 'long' })  // Extract the month name
+        const year = dateParts[1]  // Extract the full year
+        const dayWithSuffix = day + getOrdinalSuffix(day)
+
+        formattedDate += `${dayWithSuffix} ${month} ${year}`
+    }
+
+    // If includeTime is true, format the time part
+    if (includeTime) {
+        const hours = dateParts[4]  // Extract the hours part
+        const minutes = dateParts[5]  // Extract the minutes part
+        let time = `${hours}:${minutes}`
+
+        // If includeSeconds is true, add seconds part if available
+        if (includeSeconds && dateParts[6]) {
+            const seconds = dateParts[6]
+            time += `:${seconds}`
+        }
+
+        formattedDate += ` ${time}`
+    }
+
+    return formattedDate
 }
 
-export function formatDateToShort(dateString: string): string {
-    const date = new Date(dateString);
 
-    // Get the day, month, and year
-    const day = String(date.getUTCDate()).padStart(2, '0');
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0'); // Months are 0-indexed
-    const year = String(date.getUTCFullYear()).slice(-2); // Get last 2 digits of the year
 
-    return `${day}/${month}/${year}`;
+// Formats a date to short format (DD/MM/YY) and optionally adds time (HH:MM or HH:MM:SS)
+export function formatDateToShort(dateString: string, options:dateTimeFormatterOptions|null=null): string {
+    const {
+        isTime = false,
+        includeDate = true,
+        includeTime = true,
+        includeSeconds = true
+    } = options || {}
+
+    if (dateString === undefined) {
+        return 'N/A'
+    }
+
+    // Use a regular expression to capture the date and time components
+    let dateParts: RegExpMatchArray | null = null;
+    if (isTime) {
+        dateParts = dateString.match(/(\d{2}):(\d{2})(?::(\d{2}))?(?:([+-]\d{2}:\d{2})|Z)?/);
+    } else {
+        dateParts = dateString.match(/(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})(?::(\d{2}))?(?:([+-]\d{2}:\d{2})|Z)?/)
+    }
+
+    if (!dateParts) {
+        throw new Error('Invalid date string format');
+    }
+
+    let formattedDate = ''
+
+    if (includeDate && !isTime) {
+        const day = dateParts[3]  // Extract the day part (already 2 digits)
+        const month = dateParts[2]  // Extract the month part (already 2 digits)
+        const year = dateParts[1].slice(-2)  // Last 2 digits of the year
+
+        formattedDate += `${day}/${month}/${year}`
+    }
+
+    // If includeTime is true, add the time part
+    if (includeTime) {
+        const hours = dateParts[isTime ? 1 : 4]  // Extract the hours part
+        const minutes = dateParts[isTime ? 2 : 5]  // Extract the minutes part
+        let time = `${hours}:${minutes}`
+
+        if (includeSeconds && dateParts[isTime ? 3 : 6]) {
+            const seconds = dateParts[isTime ? 3 : 6]
+            time += `:${seconds}`
+        }
+
+        formattedDate += includeDate ? ` ${time}` : time
+    }
+
+    return formattedDate
 }
+
+
+
 
 export function buildUserAvatar(UserAvatarInfo:Partial<User>|null=null, size:number|null=null, customText:string|null=null):HTMLSpanElement {
     let avatar = document.createElement('span')
@@ -581,9 +660,29 @@ export async function preloadUsersInfoMap() {
 
 export function isTouchDevice() {
     return (('ontouchstart' in window) ||
-       (navigator.maxTouchPoints > 0));
-  }
+        (navigator.maxTouchPoints > 0));
+}
 
-  export function roundNumber(input:number, decimalPoints:number=2) {
+export function roundNumber(input:number, decimalPoints:number=2) {
     return (Math.round(input * 100) / 100).toFixed(decimalPoints)
-  }
+}
+
+export function combineDateTime(dateStr:string, timeStr:string) {
+    if (dateStr && timeStr) {
+        const dateTimeStr = `${dateStr}T${timeStr}:00`
+
+        return dateTimeStr
+    }
+}
+
+export function convertToDateInputFormat(dateString: string): string {
+    const date = new Date(dateString);
+
+    // Get the year, month, and day in the required format
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed, so add 1
+    const day = String(date.getDate()).padStart(2, '0');
+
+    // Return in yyyy-MM-dd format
+    return `${year}-${month}-${day}`;
+}

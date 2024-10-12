@@ -31,8 +31,10 @@ import {
     ExternalAPILog,
     TaskSchedulerLog,
     Attendee,
-    AttendeeLogin
+    AttendeeLogin,
+    GeneralConfig
 } from "@global/endpoints_interfaces";
+import { formatDate } from "./helper";
 
 // This is a script where all then endpoint calls will live to prevent duplication across scripts
 
@@ -1920,6 +1922,44 @@ export function deleteOAuthConfiguration():Promise<boolean> {
             error: function (error) {
                 console.log('Error fetching data:', error);
                 resolve(false)
+            }
+        });
+    });
+}
+
+// #endregion
+
+// #region Config
+
+export function getGeneralConfig():Promise<GeneralConfig> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/app/config`,
+            type: 'GET',
+            success: function (response) {
+                resolve(response.config)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(false)
+            }
+        });
+    });
+}
+
+export function editGeneralConfig(data:Partial<GeneralConfig>):Promise<GeneralConfig> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/app/config`,
+            type: 'PATCH',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
             }
         });
     });

@@ -13,7 +13,7 @@ import {
     activateTimeslot
 } from '@global/endpoints'
 import { RequestMultiModelJSONData } from '@global/endpoints_interfaces'
-import { buildActionButtonsForModel, successToast, errorToast, isDefined } from "@global/helper";
+import { buildActionButtonsForModel, successToast, errorToast, isDefined, formatDateToShort } from "@global/helper";
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
 
 let locationsGridApi: GridApi<any>;
@@ -197,8 +197,20 @@ function initialiseTimeslotsAgGrid() {
     const gridOptions:GridOptions = {
         columnDefs: [
             {field: 'name', flex: 1},
-            {field: 'start', flex: 1},
-            {field: 'end', flex: 1},
+            {
+                field: 'start',
+                cellRenderer: (params:any) => {
+                    const fTime = formatDateToShort(params.value, {isTime:true, includeDate:false, includeSeconds:false})
+                    return fTime
+                },
+                flex: 1},
+            {
+                field: 'end',
+                cellRenderer: (params:any) => {
+                    const fTime = formatDateToShort(params.value, {isTime:true, includeDate:false, includeSeconds:false})
+                    return fTime
+                },
+                flex: 1},
             {field: 'is_break', headerName: 'Break', cellRenderer: 'agCheckboxCellRenderer', flex: 1},
             {
                 field: 'options', cellRenderer: (params:any) => {

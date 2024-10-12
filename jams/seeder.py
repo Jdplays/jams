@@ -10,7 +10,7 @@ def preform_seed():
     seed_difficulty_levels()
     seed_workshop_types()
     seed_workshops()
-    seed_events()
+    #seed_events()
     seed_locations()
     seed_timeslots()
     seed_config()
@@ -114,7 +114,7 @@ def seed_events():
         start = datetime.time(hour=13, minute=0, second=0)
         end = datetime.time(hour=17, minute=0, second=0)
         capacity = 50
-        event = Event(name="Jam", description="This is a Test event for Jam", date=date, start_time=start, end_time=end, capacity=capacity, password="jam123")
+        event = Event(name="Jam", description="This is a Test event for Jam", date=date, start_date_time=start, end_date_time=end, capacity=capacity, password="jam123")
         db.session.add(event)
     
     # Check if the coder dojo event already exists
@@ -123,7 +123,7 @@ def seed_events():
         start = datetime.time(hour=18, minute=0, second=0)
         end = datetime.time(hour=20, minute=0, second=0)
         capacity = 50
-        event = Event(name="Coder Dojo", description="Coder dojo test event", date=date, start_time=start, end_time=end, capacity=capacity, password="password123")
+        event = Event(name="Coder Dojo", description="Coder dojo test event", date=date, start_date_time=start, end_date_time=end, capacity=capacity, password="password123")
         db.session.add(event)
     
     db.session.commit()

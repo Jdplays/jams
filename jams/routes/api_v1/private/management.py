@@ -345,6 +345,9 @@ def add_timeslot():
 
     if not name:
         abort(400, description="No 'name' provided")
+    
+    start = helper.convert_local_time_to_utc(start)
+    end = helper.convert_local_time_to_utc(end)
 
     new_timeslot = Timeslot(name=name, start=start, end=end, is_break=is_break)
     db.session.add(new_timeslot)
@@ -367,6 +370,8 @@ def edit_timeslot(timeslot_id):
     allowed_fields = list(timeslot.to_dict().keys())
     for field, value in data.items():
         if field in allowed_fields:
+            if field == 'start' or field == 'end':
+                value = helper.convert_local_time_to_utc(value)
             setattr(timeslot, field, value)
 
     db.session.commit()
