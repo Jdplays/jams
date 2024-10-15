@@ -330,7 +330,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     getWorkshopsField('name', queryString).then((response) => {
         const currentWorkshops = response.data
         if (currentWorkshops !== undefined) {
-            currentWorkshopNames = currentWorkshops.map(ws => ws.name)
+            currentWorkshopNames = currentWorkshops.map(ws => ws.name).filter(name => name !== WorkshopData.name)
         }
     })
 
