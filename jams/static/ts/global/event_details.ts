@@ -116,6 +116,8 @@ export class EventDetails {
         let infoText = 'No Upcomming '
         if (!this.eventDetailsMap) {
             infoText += 'or past events. '
+        } else {
+            infoText += 'events. '
         }
 
         if (this.options.showEventSelection && this.eventDetailsMap) {
