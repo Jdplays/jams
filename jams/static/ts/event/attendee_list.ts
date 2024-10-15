@@ -5,22 +5,17 @@ import {
 } from "@global/endpoints";
 import { Attendee } from "@global/endpoints_interfaces";
 import { EventDetails, EventDetailsOptions } from "@global/event_details";
-import { successToast, errorToast, validateTextInput, validateNumberInput, isDefined, animateElement } from "@global/helper";
+import { successToast, errorToast, validateTextInput, validateNumberInput, isDefined, animateElement, emptyElement } from "@global/helper";
 import { InputValidationPattern } from "@global/interfaces";
 import { createGrid, GridApi, GridOptions, RowDataTransaction } from 'ag-grid-community';
 
 let gridApi: GridApi<any>;
+let eventDetails:EventDetails;
 
 let firstNameValid:boolean = false
 let lastNameValid:boolean = false
 let emailValid:boolean = false
 let ageValid:boolean = false
-
-// Event Details
-const eventDetailsOptions:EventDetailsOptions = {
-    eventDependentElements: [document.getElementById('attendees-data-grid-container')]
-}
-let eventDetails:EventDetails;
 
 function initialiseAgGrid() {
     const gridOptions:GridOptions = {
@@ -103,17 +98,16 @@ function initialiseAgGrid() {
     const gridElement = document.getElementById('attendees-data-grid') as HTMLElement
     gridElement.style.height = `${window.innerHeight * 0.7}px`;
     gridApi = createGrid(gridElement, gridOptions)
-
-    populateAttendeesTable()
-
-    window.setInterval(() => {
-        populateAttendeesTable()
-    }, 1000)
 }
 
 async function populateAttendeesTable() {
+    const gridElement = document.getElementById('attendees-data-grid')
+
     const allAttendeesResponse = await getAttendees(eventDetails.eventId);
     let newRowData = allAttendeesResponse.data
+
+    emptyElement(gridElement)
+    initialiseAgGrid()
 
     const currentRowData:Attendee[] = [];
     gridApi.forEachNode(node => currentRowData.push(node.data));
@@ -154,18 +148,6 @@ async function populateAttendeesTable() {
         gridApi.redrawRows({ rowNodes: rowsToRedraw });
     }
 }
-
-// Event listeners
-document.addEventListener("DOMContentLoaded", async () => {
-    eventDetails = new EventDetails('event-details', eventDetailsOptions)
-    await eventDetails.init()
-
-    if (eventDetails.eventId === -1) {
-        return
-    }
-
-    initialiseAgGrid()
-});
 
 function prepAddAttendeeForm() {
     const modalTitle = document.getElementById('modal-title') as HTMLDivElement
@@ -319,6 +301,32 @@ function checkInOutOnClick(attendeeId:number, value:boolean) {
         errorToast(errorMessage)
     })
 }
+
+// Event listeners
+document.addEventListener("DOMContentLoaded", async () => {
+    const eventDetailsOptions:EventDetailsOptions = {
+        dateInclusive: true,
+        eventDependentElements: [document.getElementById('attendees-data-grid-container'), document.getElementById('add-new-attendee-button')],
+        eventOnChangeFunc: populateAttendeesTable
+    }
+
+    eventDetails = new EventDetails('event-details', eventDetailsOptions)
+    await eventDetails.init()
+
+    console.log(eventDetails.eventId)
+
+    if (eventDetails.eventId === -1) {
+        return
+    }
+
+    initialiseAgGrid()
+
+    populateAttendeesTable()
+
+    window.setInterval(() => {
+        populateAttendeesTable()
+    }, 1000)
+});
 
 document.addEventListener("DOMContentLoaded", () => {
     // Form Validation

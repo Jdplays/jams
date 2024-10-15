@@ -20,10 +20,7 @@ def get_next_event():
     event = helper.get_next_event(inclusive)
     
     if not event:
-        return jsonify({
-            'message': 'No Event found',
-            'data': -1
-        })
+        return jsonify({'message': 'No Event found'}), 404
     
     return jsonify({
             'message': 'Event found that matches parameters',

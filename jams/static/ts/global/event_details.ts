@@ -1,4 +1,4 @@
-import { getEventField, getEventsField, getnextEvent } from "./endpoints"
+import { getEventField, getEventsField, getNextEvent } from "./endpoints"
 import { ApiResponse, Event } from "./endpoints_interfaces"
 import { buildQueryString, convertToDateInputFormat, emptyElement, formatDate, formatDateToShort } from "./helper"
 import { QueryStringData } from "./interfaces"
@@ -46,10 +46,11 @@ export class EventDetails {
         const queryString = buildQueryString(queryData)
         
         if (this.options.eventId === null || this.options.eventId === undefined) {
-           await getnextEvent(queryString).then((response:ApiResponse<number>) => {
+           await getNextEvent(queryString).then((response:ApiResponse<number>) => {
             this.eventId = response.data
            }).catch(() => {
-            this.eventId = 1
+            console.log(':(')
+            this.eventId = -1
            })
         }
 
@@ -94,8 +95,8 @@ export class EventDetails {
         if (this.eventId !== null && this.eventId !== -1) {
             let eventName = await getEventField(this.eventId, 'name')
             let eventDate = await getEventField(this.eventId, 'date')
-            const date = convertToDateInputFormat(eventDate.date)
-            eventInfoText.innerHTML = `<strong>${eventName.name}</strong> - ${date}`
+            const date = (eventDate.date)
+            eventInfoText.innerHTML = `<strong>${eventName.name}</strong> - ${formatDateToShort(date, {includeTime:false})}`
 
             for (const element of this.options.eventDependentElements) {
                 element.style.display = 'block'
@@ -106,7 +107,6 @@ export class EventDetails {
             return
         }
     
-        this.eventId = null
         let infoText = 'No Upcomming Events. '
         if (this.options.showEventSelection) {
             infoText += 'Please select one from the dropdown'
@@ -144,7 +144,7 @@ export class EventDetails {
         dropdownButton.classList.add('btn', 'dropdown-toggle')
         dropdownButton.setAttribute('data-bs-toggle', 'dropdown')
         dropdownButton.innerHTML = 'Select Event'
-        if (this.eventId) {
+        if (this.eventId && this.eventId !== -1) {
             dropdownButton.innerHTML = this.eventDropdownItemText(this.eventDetailsMap[this.eventId])
         }
 
@@ -188,8 +188,8 @@ export class EventDetails {
     }
 
     eventDropdownItemText(event:Partial<Event>) {
-        const date = convertToDateInputFormat(event.date)
-        return `${event.name} - ${date}`
+        const date = (event.date)
+        return `${event.name} - ${formatDateToShort(date, {includeTime:false})}`
     }
 
     eventName() {
