@@ -85,9 +85,16 @@ def edit_workshop(workshop_id):
     allowed_fields = list(workshop.to_dict().keys())
     for field, value in data.items():
         if field in allowed_fields:
+            if field == 'difficulty_id':
+                diff = DifficultyLevel.query.filter_by(id=value).first()
+                if not diff:
+                    diff = DifficultyLevel.query.first()
+                    setattr(workshop, field, diff.id)
+                    continue
             setattr(workshop, field, value)
             if field == 'workshop_type_id':
                 workshop.update_workshop_permissions()
+
 
     db.session.commit()
 

@@ -232,7 +232,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     getEventsField('name', queryString).then((response) => {
         const currentEvents = response.data
         if (currentEvents !== undefined) {
-            currentEventNames = currentEvents.map(e => e.name)
+            currentEventNames = currentEvents.map(e => e.name).filter(name => name !== EventData.name)
         }
     })
     

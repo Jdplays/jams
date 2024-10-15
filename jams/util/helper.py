@@ -2,7 +2,7 @@ import pytz
 from datetime import date, datetime, timedelta, UTC
 from flask import abort, request, send_file
 from flask_security import current_user
-from sqlalchemy import DateTime, String, Integer, Boolean, func, or_, nullsfirst, asc, desc
+from sqlalchemy import Date, DateTime, String, Integer, Boolean, cast, func, or_, nullsfirst, asc, desc
 from collections.abc import Mapping, Iterable
 from jams.models import db, EventLocation, EventTimeslot, Timeslot, Session, EndpointRule, RoleEndpointRule, PageEndpointRule, Page, Event
 from jams.configuration import get_config_value
@@ -354,9 +354,14 @@ def filter_model_by_query_and_properties(model, request_args=None, requested_fie
         if requested_field not in allowed_fields:
             abort(404, description=f"Field '{requested_field}' not found or allowed")
         for obj in objects:
+            value = getattr(obj, requested_field)
+            if 'time' in requested_field:
+                value = convert_time_to_local_timezone(value)
+            elif 'date' in requested_field:
+                value = convert_datetime_to_local_timezone(value)
             data_list.append({
                 'id': obj.id,
-                requested_field: getattr(obj, requested_field)
+                requested_field: str(value)
             })
     else:
         data_list = [obj.to_dict() for obj in objects]
@@ -548,9 +553,9 @@ def get_table_size(table_name):
 def get_next_event(inclusive=True):
     event = None
     if inclusive:
-        event = Event.query.filter(Event.date >= date.today()).order_by(Event.date.asc()).first()
+        event = Event.query.filter(cast(Event.date, Date) >= date.today()).order_by(Event.date.asc()).first()
     else:
-        event = Event.query.filter(Event.date > date.today()).order_by(Event.date.asc()).first()
+        event = Event.query.filter(cast(Event.date, Date) > date.today()).order_by(Event.date.asc()).first()
     
     return event
 

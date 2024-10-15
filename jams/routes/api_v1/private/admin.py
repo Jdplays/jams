@@ -249,7 +249,11 @@ def get_event_field(event_id, field):
     allowed_fields = list(event.to_dict().keys())
     if field not in allowed_fields:
         abort(404, description=f"Field '{field}' not found or allowed")
-    return jsonify({field: getattr(event, field)})
+    value = getattr(event, field)
+    if field == 'date':
+        value = helper.convert_datetime_to_local_timezone(value)
+    
+    return jsonify({field: str(value)})
 
 
 @bp.route('/events', methods=['POST'])

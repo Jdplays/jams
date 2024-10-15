@@ -34,7 +34,7 @@ let eventDetails:EventDetails;
 const scheduleGridOptions:ScheduleGridOptions = {
     eventId: 1,
     edit: true,
-    size: 150,
+    size: 300,
     showPrivate: true,
     autoRefresh: true
 }
@@ -45,8 +45,15 @@ let scheduleGrid:ScheduleGrid
 
 // Handles the onchange event for the Event selction dropdown 
 async function onEventChangeFunc() {
-    await scheduleGrid.changeEvent(eventDetails.eventId)
-    checkForFatalGridError()
+    if (scheduleGrid) {
+        await scheduleGrid.changeEvent(eventDetails.eventId)
+        checkForFatalGridError()
+    } else {
+        scheduleGridOptions.eventId = eventDetails.eventId
+        scheduleGrid = new ScheduleGrid('schedule-container', scheduleGridOptions)
+        await scheduleGrid.init()
+
+    }
 }
 
 // Workshop Selction
@@ -267,6 +274,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     eventDetails = new EventDetails('event-details', eventDetailsOptions)
     await eventDetails.init()
 
+    populateWorkshopList()
+    populateWorkshopSelectionTools()
+
     if (eventDetails.eventId === -1) {
         return
     }
@@ -277,9 +287,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     await scheduleGrid.init()
 
     checkForFatalGridError()    
-
-    populateWorkshopList()
-    populateWorkshopSelectionTools()
 });
 
 document.addEventListener("DOMContentLoaded", function () {

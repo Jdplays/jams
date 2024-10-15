@@ -797,7 +797,7 @@ export function getWorkshopTypes(queryString:string|null = null):Promise<ApiMult
 
 // #region Events
 
-export function getnextEvent(queryString:string|null = null):Promise<ApiResponse<number>> {
+export function getNextEvent(queryString:string|null = null):Promise<ApiResponse<number>> {
     return new Promise((resolve, reject) => {
         let url = `${baseURL}/get_next_event`
         if (queryString != null) {

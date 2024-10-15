@@ -105,8 +105,8 @@ export class WorkshopCard {
         if (this.options.width && this.options.height) {
             const minDimension = Math.min(this.options.width, this.options.height);
 
-            this.titleFontSize = minDimension * 0.13;
-            this.bodyFontSize = minDimension * 0.13;
+            this.titleFontSize = minDimension * 0.1;
+            this.bodyFontSize = minDimension * 0.08;
         }
 
         this.workshopDifficulty = this.options.difficultyLevels.find(level => level.id === this.workshop.difficulty_id)
@@ -142,17 +142,18 @@ export class WorkshopCard {
         workshopTitleContainer.classList.add('workshop-title-container')
 
         const workshopTitleContainerPaddingColumn = document.createElement('div')
-        workshopTitleContainerPaddingColumn.classList.add('workshop-title-column')
+        workshopTitleContainerPaddingColumn.classList.add('workshop-title-action-column')
         workshopTitleContainer.appendChild(workshopTitleContainerPaddingColumn)
 
         const workshopTitle = document.createElement('p')
-        workshopTitle.classList.add('workshop-title', 'workshop-title-column')
+        workshopTitle.classList.add('workshop-title', 'workshop-title-column', 'truncate')
+        workshopTitle.style.webkitLineClamp = '4'
         workshopTitle.innerText = this.workshop.name
         workshopTitle.style.fontSize = `${this.titleFontSize}px`
         workshopTitleContainer.appendChild(workshopTitle)
 
         const workshopTitleContianerRemove = document.createElement('div')
-        workshopTitleContianerRemove.classList.add('workshop-title-column')
+        workshopTitleContianerRemove.classList.add('workshop-title-action-column')
         // If a workshop card needs a remove button, add it
         if (this.options.remove) {
             let removeButton = document.createElement('div')
@@ -217,7 +218,7 @@ export class WorkshopCard {
 
             // Calculate the max number of lines for the body text
             let maxLines = Math.floor(availableHeight / (this.bodyFontSize * 1.2))
-            workshopBody.style.webkitLineClamp = `${maxLines}`
+            workshopBody.style.webkitLineClamp = `${maxLines-1}`
         } else {
             workshopBody = this.options.cardBodyElement
         }
