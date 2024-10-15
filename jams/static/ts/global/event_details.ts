@@ -1,6 +1,6 @@
 import { getEventField, getEventsField, getNextEvent } from "./endpoints"
 import { ApiResponse, Event } from "./endpoints_interfaces"
-import { buildQueryString, convertToDateInputFormat, emptyElement, formatDate, formatDateToShort } from "./helper"
+import { buildQueryString, emptyElement, formatDateToShort } from "./helper"
 import { QueryStringData } from "./interfaces"
 
 export interface EventDetailsOptions {
@@ -49,7 +49,6 @@ export class EventDetails {
            await getNextEvent(queryString).then((response:ApiResponse<number>) => {
             this.eventId = response.data
            }).catch(() => {
-            console.log(':(')
             this.eventId = -1
            })
         }
@@ -60,7 +59,9 @@ export class EventDetails {
 
         if (this.options.showEventSelection) {
             this.eventDetailsMap = await this.preLoadEventNames()
-            await this.populateEventSelectionDropdown()
+            if (this.eventDetailsMap) {
+                await this.populateEventSelectionDropdown()
+            }
         }
 
         await this.populateEventDetails()
@@ -71,6 +72,11 @@ export class EventDetails {
         const datesResponse = await getEventsField('date')
         let eventNames = namesResponse.data
         let eventDates = datesResponse.data
+
+        if (!eventNames || !eventDates) {
+            return null
+        }
+
         let eventDetailsMap:Record<number, Partial<Event>> = eventNames.reduce((acc, en) => {
             const matchedEvent = eventDates.find((ed) => en.id === ed.id)
             if (matchedEvent && en.id !== undefined) {
@@ -92,7 +98,7 @@ export class EventDetails {
 
         const eventInfoText = document.createElement('p')
     
-        if (this.eventId !== null && this.eventId !== -1) {
+        if (this.eventId && this.eventId !== -1) {
             let eventName = await getEventField(this.eventId, 'name')
             let eventDate = await getEventField(this.eventId, 'date')
             const date = (eventDate.date)
@@ -107,9 +113,15 @@ export class EventDetails {
             return
         }
     
-        let infoText = 'No Upcomming Events. '
-        if (this.options.showEventSelection) {
+        let infoText = 'No Upcomming '
+        if (!this.eventDetailsMap) {
+            infoText += 'or past events. '
+        }
+
+        if (this.options.showEventSelection && this.eventDetailsMap) {
             infoText += 'Please select one from the dropdown'
+        } else if (!this.eventDetailsMap) {
+            infoText += 'Please try again later...'
         }
 
         eventInfoText.innerHTML = infoText
