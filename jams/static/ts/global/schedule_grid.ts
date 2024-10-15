@@ -202,11 +202,13 @@ export class ScheduleGrid {
             }
         }
 
-        // Preload users Info Map
-        if (Object.keys(this.options.userInfoMap).length <= 0) {
-            this.usersInfoMap = await preloadUsersInfoMap()
-        } else {
-            this.usersInfoMap = this.options.userInfoMap
+        if (this.options.volunteerSignup || this.options.edit) {
+            // Preload users Info Map
+            if (Object.keys(this.options.userInfoMap).length <= 0) {
+                this.usersInfoMap = await preloadUsersInfoMap()
+            } else {
+                this.usersInfoMap = this.options.userInfoMap
+            }
         }
 
         // Build the workshop card options based on the grid's options
