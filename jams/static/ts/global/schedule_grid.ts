@@ -336,6 +336,9 @@ export class ScheduleGrid {
         let eventLocationIds = new Set(this.eventLocations.map(location => location.location_id))
         let eventTimeslotIds = new Set(this.eventTimeslots.map(timeslot => timeslot.timeslot_id))
 
+        // Create temp object for grid container
+        let tmpGridContainer
+
         // Get all the locations and timeslots
         const locationsResponse = await getLocations()
         const timeslotsResponse = await getTimeslots()
@@ -343,85 +346,110 @@ export class ScheduleGrid {
         let locations = locationsResponse.data
         let timeslots = timeslotsResponse.data
 
-        // Build objects that combine the locations and event locations to avoid extra unnessesary server calls
-        const locationsInEvent:LocationsInEvent[] = this.eventLocations
-        .map(eventLocation => {
-            for (const location of locations) {
-                if (eventLocation.location_id === location.id) {
-                    if (eventLocation.publicly_visible ||(!eventLocation.publicly_visible && this.options.showPrivate)) {
-                        return {
-                            ...location,
-                            'event_location_id': eventLocation.id,
-                            'event_location_order': eventLocation.order
-                        }
-                    }
-                }
-            }
-            return null
-        })
-        .filter(eventLocation => eventLocation !== null)
+        if (!locations || !timeslots) {
+            if (this.options.edit) {
+                tmpGridContainer = document.createElement('div')
+                tmpGridContainer.classList.add('center-container')
+                
+                let warningTitle = document.createElement('h4')
+                warningTitle.classList.add('warning-text')
+                warningTitle.innerHTML = 'You have not added any Locations or Timeslots to the system'
 
-        this.locationsInEvent = locationsInEvent        
-    
-        const timeslotsInEvent:TimeslotsInEvent[] = this.eventTimeslots
-            .map(eventTimeslot => {
-                for (const timeslot of timeslots) {
-                    if (eventTimeslot.timeslot_id === timeslot.id) {
-                        if (eventTimeslot.publicly_visible ||(!eventTimeslot.publicly_visible && this.options.showPrivate) || timeslot.is_break) {
+                let button = document.createElement('a') as HTMLAnchorElement
+                button.classList.add('btn', 'btn-primary')
+                button.innerHTML = 'Edit Locations/Timeslots'
+                button.href = '/private/management/locations_timeslots'
+
+                tmpGridContainer.appendChild(warningTitle)
+                tmpGridContainer.appendChild(button)
+            }
+            this.scheduleValid = false
+        } else {
+            this.scheduleValid = true
+        }
+
+        if (this.scheduleValid) {
+            // Build objects that combine the locations and event locations to avoid extra unnessesary server calls
+            const locationsInEvent:LocationsInEvent[] = this.eventLocations
+            .map(eventLocation => {
+                for (const location of locations) {
+                    if (eventLocation.location_id === location.id) {
+                        if (eventLocation.publicly_visible ||(!eventLocation.publicly_visible && this.options.showPrivate)) {
                             return {
-                                ...timeslot,
-                                'event_timeslot_id': eventTimeslot.id
+                                ...location,
+                                'event_location_id': eventLocation.id,
+                                'event_location_order': eventLocation.order
                             }
                         }
                     }
                 }
                 return null
             })
-            .filter(eventTimeslot => eventTimeslot !== null)
+            .filter(eventLocation => eventLocation !== null)
 
-        this.timeslotsInEvent = timeslotsInEvent
-
-        // Update the grid size variables
-        this.updateGridSize()
+            this.locationsInEvent = locationsInEvent        
         
-        // Work out what locations/timeslots need to be in the add dropdown (if any)
-        const locationsForAddDropdown = locations
-            .filter(location => !eventLocationIds.has(location.id) )
-        
-        const timeslotsForAddDropdown = timeslots
-            .filter(timeslot => !eventTimeslotIds.has(timeslot.id))
-        
-        // Build the grid
-        let tmpGridContainer = await this.buildScheduleGrid(
-            locationsInEvent,
-            timeslotsInEvent,
-            locationsForAddDropdown,
-            timeslotsForAddDropdown,
-        )
+            const timeslotsInEvent:TimeslotsInEvent[] = this.eventTimeslots
+                .map(eventTimeslot => {
+                    for (const timeslot of timeslots) {
+                        if (eventTimeslot.timeslot_id === timeslot.id) {
+                            if (eventTimeslot.publicly_visible ||(!eventTimeslot.publicly_visible && this.options.showPrivate) || timeslot.is_break) {
+                                return {
+                                    ...timeslot,
+                                    'event_timeslot_id': eventTimeslot.id
+                                }
+                            }
+                        }
+                    }
+                    return null
+                })
+                .filter(eventTimeslot => eventTimeslot !== null)
 
-        if (locationsInEvent.length === 0 && timeslotsInEvent.length === 0) {
-            if (!this.options.edit) {
-                tmpGridContainer = document.createElement('div')
-                tmpGridContainer.classList.add('center-container')
-                
-                let warningTitle = document.createElement('h4')
-                warningTitle.classList.add('warning-text')
-                warningTitle.innerHTML = 'This event has no schedule!'
+            this.timeslotsInEvent = timeslotsInEvent
 
-                let searchIconData = await getIconData('search-warning')
-                let iconContainer = document.createElement('div')
-                iconContainer.innerHTML = searchIconData
+            // Update the grid size variables
+            this.updateGridSize()
+            
+            // Work out what locations/timeslots need to be in the add dropdown (if any)
+            const locationsForAddDropdown = locations
+                .filter(location => !eventLocationIds.has(location.id) )
+            
+            const timeslotsForAddDropdown = timeslots
+                .filter(timeslot => !eventTimeslotIds.has(timeslot.id))
+            
+            // Build the grid
 
-                let icon = iconContainer.querySelector('svg')
-                icon.classList.remove('icon-tabler-zoom-exclamation')
-                icon.classList.add('icon-search-grid')
+            tmpGridContainer = await this.buildScheduleGrid(
+                locationsInEvent,
+                timeslotsInEvent,
+                locationsForAddDropdown,
+                timeslotsForAddDropdown,
+            )
 
-                tmpGridContainer.appendChild(iconContainer)
-                tmpGridContainer.appendChild(warningTitle)
+            if (locationsInEvent.length === 0 && timeslotsInEvent.length === 0) {
+                if (!this.options.edit) {
+                    tmpGridContainer = document.createElement('div')
+                    tmpGridContainer.classList.add('center-container')
+                    
+                    let warningTitle = document.createElement('h4')
+                    warningTitle.classList.add('warning-text')
+                    warningTitle.innerHTML = 'This event has no schedule!'
+
+                    let searchIconData = await getIconData('search-warning')
+                    let iconContainer = document.createElement('div')
+                    iconContainer.innerHTML = searchIconData
+
+                    let icon = iconContainer.querySelector('svg')
+                    icon.classList.remove('icon-tabler-zoom-exclamation')
+                    icon.classList.add('icon-search-grid')
+
+                    tmpGridContainer.appendChild(iconContainer)
+                    tmpGridContainer.appendChild(warningTitle)
+                }
+                this.scheduleValid = false
+            } else {
+                this.scheduleValid = true
             }
-            this.scheduleValid = false
-        } else {
-            this.scheduleValid = true
         }
 
         // Set the new grid
