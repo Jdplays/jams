@@ -676,13 +676,16 @@ export function combineDateTime(dateStr:string, timeStr:string) {
 }
 
 export function convertToDateInputFormat(dateString: string): string {
-    const date = new Date(dateString);
+    const [day, month, year] = dateString.split('/').map(Number);
 
-    // Get the year, month, and day in the required format
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed, so add 1
-    const day = String(date.getDate()).padStart(2, '0');
+    // Create a new Date object with the correct values
+    const date = new Date(year + 2000, month - 1, day);
+
+     // Get the year, month, and day in the required format
+     const formattedYear = date.getFullYear();
+     const formattedMonth = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+     const formattedDay = String(date.getDate()).padStart(2, '0');
 
     // Return in yyyy-MM-dd format
-    return `${year}-${month}-${day}`;
+    return `${formattedYear}-${formattedMonth}-${formattedDay}`;
 }
