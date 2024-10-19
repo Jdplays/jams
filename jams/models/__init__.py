@@ -9,7 +9,7 @@ from .audit import PrivateAccessLog
 from .config import Config
 from .task_scheduler import TaskSchedulerModel, TaskSchedulerLog
 from .api import Webhook, WebhookLog, ExternalAPILog
-from .attendee import Attendee, AttendeeAccount, AttendeeAccountEvent
+from .attendee import Attendee, AttendeeAccount, AttendeeAccountEvent, AttendeeSignup
 
 __all__ = [
     name for name in globals().keys() 
