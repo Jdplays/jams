@@ -578,7 +578,8 @@ async function loadWorkshopTypesMap() {
 async function loadAttendeesMap() {
     const queryData:Partial<QueryStringData> = {
         event_id: eventDetails.eventId,
-        checked_in: true
+        checked_in: true,
+        registerable: true
     }
     const queryString = buildQueryString(queryData)
     const attendeesResponse = await getAttendeesForAccount(queryString)

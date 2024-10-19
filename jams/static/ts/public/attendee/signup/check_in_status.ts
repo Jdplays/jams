@@ -11,12 +11,41 @@ const eventDetailsOptions:EventDetailsOptions = {
 }
 
 async function setupPage() {
+    const attendeeSection = document.getElementById('attendee-section') as HTMLElement
+    const table = document.getElementById('attendee-table') as HTMLElement
+    const continueButton = document.getElementById('continue-button') as HTMLAnchorElement
+    const logoutButton = document.getElementById('logout-button') as HTMLAnchorElement
+
+
     const queryData:Partial<QueryStringData> = {
-        event_id: eventDetails.eventId
+        event_id: eventDetails.eventId,
+        registerable: true
     }
     const queryString = buildQueryString(queryData)
     const response = await getAttendeesForAccount(queryString)
-    const attendees = response.data
+    const attendees:Attendee[] = response.data
+
+    let noAttendeesText = attendeeSection.querySelector('.text-warning')
+    if (noAttendeesText) {
+        noAttendeesText.remove()
+    }
+
+    if (attendees.length === 0) {
+        table.style.display = 'none'
+
+        noAttendeesText = document.createElement('p')
+        noAttendeesText.classList.add('text-warning')
+        noAttendeesText.innerHTML = 'No Attendees linked to your account are at this event!'
+        attendeeSection.appendChild(noAttendeesText)
+
+        continueButton.style.display = 'none'
+        logoutButton.style.display = 'block'
+    } else {
+        table.style.display = 'block'
+
+        continueButton.style.display = 'block'
+        logoutButton.style.display = 'none'
+    }
 
     populateAttendeeTable(attendees)
 
@@ -27,7 +56,6 @@ async function setupPage() {
         checkInCountWarning.style.display = 'none'
     }
 
-    const continueButton = document.getElementById('continue-button') as HTMLAnchorElement
     if (attendees.filter(a => a.checked_in === false).length === attendees.length) {
         continueButton.style.display = 'none'
     } else {
@@ -40,6 +68,7 @@ async function setupPage() {
 function populateAttendeeTable(attendees:Attendee[]) {
     const table = document.getElementById('attendee-table') as HTMLElement
     const tBody = table.querySelector('tbody')
+
 
     let tmpTBody = document.createElement('tBody')
 
@@ -96,5 +125,5 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     window.setInterval(() => {
         setupPage()
-    }, 5000)
+    }, 2000)
 });
