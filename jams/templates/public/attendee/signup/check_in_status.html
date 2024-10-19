@@ -1,0 +1,35 @@
+{% extends '_attendee_workshop_layout.html' %}
+
+{% block title %}Workshop Signup{% endblock %}
+
+{% block content %}
+<div class="card-body text-center py-4 p-sm-5">
+    <h1>Check-In Status</h1>
+    <div id="event-details"></div>
+</div>
+
+<div class="hr-text hr-text-center hr-text-spaceless">Your Group</div>
+<div class="card-body">
+    <div id="attendee-table" class="table-responsive">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th>Attendee</th>
+                    <th>Checked In</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="hr-text hr-text-center hr-text-spaceless mb-2">Options</div>
+<div class="card-body text-center">
+    <a id="continue-button" class="btn btn-primary mb-3" href="{{ url_for('routes.frontend.public.attendee.workshop_booking')}}">Continue to Signup</a>
+    <p id="check-in-count-warning" class="text-warning" style="display: none;"><strong>Note: </strong>Not all members of your group are checked in. You will only be able to sign up checked in attendees to workshops!</p>
+</div>
+
+<script src="{{ url_for('static', filename='js/public/attendee/signup/check_in_status.js') }}" defer></script>
+
+{% endblock %}

@@ -715,7 +715,8 @@ export class ScheduleGrid {
     async populateSessions() {
         // Get all the sessions for the given event
         const data = {
-            show_private: this.options.showPrivate
+            show_private: this.options.showPrivate,
+            '$all_rows': true
         }
         const queryString = buildQueryString(data)
         const sessionsResponse = await getSessionsForEvent(this.options.eventId, queryString)

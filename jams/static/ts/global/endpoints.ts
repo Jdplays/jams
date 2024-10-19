@@ -32,7 +32,8 @@ import {
     TaskSchedulerLog,
     Attendee,
     AttendeeLogin,
-    GeneralConfig
+    GeneralConfig,
+    AttendeeSignup
 } from "@global/endpoints_interfaces";
 import { formatDate } from "./helper";
 
@@ -1653,6 +1654,83 @@ export function loginAttendee(data:Partial<AttendeeLogin>):Promise<ApiResponse<A
         $.ajax({
             type: 'POST',
             url: `${baseURL}/attendee/login`,
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function getAttendeesForAccount(queryString:string|null = null):Promise<ApiMultiEntryResponse<[Attendee]>> {
+    return new Promise((resolve, reject) => {
+        let url = `${baseURL}/attendee/accounts/me/attendees`
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function getAttendeesSignupsForAccount(queryString:string|null = null):Promise<ApiMultiEntryResponse<[AttendeeSignup]>> {
+    return new Promise((resolve, reject) => {
+        let url = `${baseURL}/attendee/accounts/me/attendees/signups`
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function addAttendeeSignup(attendee_id:number, data:Partial<AttendeeSignup>):Promise<ApiResponse<AttendeeSignup>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: `${baseURL}/attendee/accounts/me/attendees/${attendee_id}/signups`,
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+
+export function removeAttendeeSignup(attendee_id:number, session_id:number, data:Partial<AttendeeSignup>):Promise<ApiResponse<AttendeeSignup>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'DELETE',
+            url: `${baseURL}/attendee/accounts/me/attendees/${attendee_id}/signups/${session_id}`,
             data: JSON.stringify(data),
             contentType: 'application/json',
             success: function (response) {

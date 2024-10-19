@@ -1,0 +1,26 @@
+<!doctype html>
+
+<head>
+    <title>{% block title %}{% endblock %} - JAMS</title>
+    <script src="{{ url_for('static', filename='js/nav.js') }}" defer></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler-vendors.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/general/sweet_alert.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/general/global.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+</head>
+
+<body class=" border-top-wide border-primary">
+    <div id="nav-container"></div>
+    <div class="page page-center">
+        <div class="container-tight py-4 pt-5">
+            <div class="card card-md">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+</body>
