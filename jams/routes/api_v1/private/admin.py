@@ -382,8 +382,10 @@ def get_event_location(event_id, event_location_id):
 def get_event_timeslots(event_id):
     # Check if the event exists
     Event.query.filter_by(id=event_id).first_or_404()
+
+    public = request.args.get('publicly_visible')
     
-    ordered_event_timeslots = helper.get_ordered_event_timeslots(event_id)
+    ordered_event_timeslots = helper.get_ordered_event_timeslots(event_id, public)
 
     return jsonify([ets.to_dict() for ets in ordered_event_timeslots])
 
@@ -565,7 +567,10 @@ def get_event_sessions(event_id):
     sessions = Session.query.filter_by(event_id=event_id).all()
 
     mutable_args = request.args.to_dict()
-    show_private = mutable_args.pop('show_private', None).lower() == 'true'
+    show_private_text = mutable_args.pop('show_private', None)
+    show_private = False
+    if show_private_text:
+        show_private = show_private_text.lower() == 'true'
     
     data, row_count = helper.filter_model_by_query_and_properties(Session, mutable_args, input_data=sessions, return_objects=True)
     
