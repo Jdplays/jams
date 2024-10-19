@@ -264,13 +264,15 @@ export class ScheduleGrid {
 
         const signups = attendeeSignupResponse.data
 
-        signups.forEach(signup => {
-            if (!this.attendeeSignupCountsMap[signup.session_id]) {
-                this.attendeeSignupCountsMap[signup.session_id] = 0
-            }
+        if (signups) {
+            signups.forEach(signup => {
+                if (!this.attendeeSignupCountsMap[signup.session_id]) {
+                    this.attendeeSignupCountsMap[signup.session_id] = 0
+                }
 
-            this.attendeeSignupCountsMap[signup.session_id]++
-        })
+                this.attendeeSignupCountsMap[signup.session_id]++
+            })
+        }
     }
 
     // Setup the options object for workshop cards within the grid
