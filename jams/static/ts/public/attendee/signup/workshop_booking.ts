@@ -619,6 +619,12 @@ async function loadStepsSection() {
 
     addSpinnerToElement(stepElement)
     await loadTimeslots()
+
+    if (timeslots.length === 0) {
+        stepElement.innerHTML = 'Unable to load information. Please try again later...'
+        return
+    }
+
     currentTimeslotId = timeslots[0].id
 
     populateTimeslostStepElement()
@@ -636,6 +642,11 @@ async function loadWorkshopsSection() {
     await loadDifficultyLevelsMap()
     await loadWorkshopTypesMap()
 
+    if (Object.keys(locationsMap).length === 0 || Object.keys(sessionsMap).length === 0 || Object.keys(workshopsMap).length === 0 || Object.keys(difficultyLevelsMap).length === 0 || Object.keys(workshopTypesMap).length === 0) {
+        workshopCardsContainer.innerHTML = 'Unable to load information. Please try again later...'
+        return
+    }
+
     populateWorkshopCards()
     removeSpinnerFromElement(workshopCardsContainer)
 }
@@ -648,6 +659,11 @@ async function loadAttendeeSection() {
     addSpinnerToElement(attendeeSection)
     await loadAttendeesMap()
 
+    if (Object.keys(attendeesMap).length === 0 || Object.keys(sessionsMap).length === 0 || Object.keys(workshopsMap).length === 0 || timeslots.length === 0) {
+        attendeeSection.innerHTML = 'Unable to load information. Please try again later...'
+        return
+    }
+
     populateAttendeesTable()
     removeSpinnerFromElement(attendeeSection)
     attendeeTable.style.display = 'block'
@@ -655,6 +671,11 @@ async function loadAttendeeSection() {
 
 async function loadAttendeeSignupData() {
     await loadAttendeeSignupMap()
+
+    if (Object.keys(attendeeSignupMap).length === 0) {
+        return
+    }
+
     populateAttendeeSignupData()
 }
 
