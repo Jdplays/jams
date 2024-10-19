@@ -70,10 +70,15 @@ def get_attendees_for_account():
 
 #------------------------------------------ ATTENDEE SIGNUP ------------------------------------------#
 
-@bp.route('/accounts/me/attendees/signups', methods=['GET'])
 @bp.route('/signups')
-@attendee_login_required
 def get_attendee_signups():
+    data = helper.filter_model_by_query_and_properties(AttendeeSignup, request.args)
+
+    return jsonify(data)
+
+@bp.route('/accounts/me/attendees/signups', methods=['GET'])
+@attendee_login_required
+def get_attendee_signups_for_account():
     data = helper.filter_model_by_query_and_properties(AttendeeSignup, request.args)
 
     return jsonify(data)
