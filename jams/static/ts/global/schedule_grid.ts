@@ -872,7 +872,7 @@ export class ScheduleGrid {
         }
         let workshopsQueryString = buildQueryString(workshopsQueryData)
 
-        if (sessionWorkshopsToAdd.length > 0) {
+        if (sessionWorkshopsToAdd.length > 0 || sessionSignupCountsToUpdate.length > 0) {
             const workshopsResponse = await getWorkshops(workshopsQueryString)
             let workshops = workshopsResponse.data
             if (!this.options.workshopCardOptions.difficultyLevels) {
@@ -905,7 +905,7 @@ export class ScheduleGrid {
                 })
                 .filter(sw => sw != null)
 
-                const workshopsToUpdate = sessionSignupCountsToUpdate
+            const workshopsToUpdate = sessionSignupCountsToUpdate
                 .map(sw => {
                     for (const workshop of workshops) {
                         if (sw.workshop_id === workshop.id) {
