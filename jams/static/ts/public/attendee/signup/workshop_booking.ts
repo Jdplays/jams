@@ -213,18 +213,31 @@ function buildWorkshopSelectionGroup(attendeeId:number, wsMap:Record<number, Wor
                 errorToast(errorMessage)
             })
         }
+
+        if (!attendeeSignupMap) {
+            return
+        }
         
         for (const input of uncheckedInputs) {
             const sessionId = input.getAttribute('session-id')
 
-            if (Object.keys(sessionsMap).includes(sessionId)) {
-                removeAttendeeSignup(attendeeId, Number(sessionId), data).then((response) => {
-                    successToast(response.message)
-                    loadAttendeeSignupData()
-                }).catch((error) => {
-                    const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
-                    errorToast(errorMessage)
-                })
+            let wasSignedUp = false
+            for (const signup of Object.values(attendeeSignupMap)) {
+                if (signup.session_id === Number(sessionId) && signup.attendee_id === attendeeId) {
+                    wasSignedUp = true
+                }
+            }
+
+            if (wasSignedUp) {
+                if (Object.keys(sessionsMap).includes(sessionId)) {
+                    removeAttendeeSignup(attendeeId, Number(sessionId), data).then((response) => {
+                        successToast(response.message)
+                        loadAttendeeSignupData()
+                    }).catch((error) => {
+                        const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
+                        errorToast(errorMessage)
+                    })
+                }
             }
         }
     }
@@ -672,7 +685,7 @@ async function loadAttendeeSection() {
 async function loadAttendeeSignupData() {
     await loadAttendeeSignupMap()
 
-    if (Object.keys(attendeeSignupMap).length === 0) {
+    if (!attendeeSignupMap) {
         return
     }
 
