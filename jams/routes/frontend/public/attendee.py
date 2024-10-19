@@ -10,13 +10,18 @@ bp = Blueprint('attendee', __name__, url_prefix='/attendee')
 @bp.route('/login')
 def login():
     if attendee_auth.is_authenticated():
-        return redirect(url_for('routes.frontend.public.attendee.workshops'))
+        return redirect(url_for('routes.frontend.public.attendee.signup'))
     return render_template(f'public/attendee/attendee_login.html')
 
-@bp.route('/workshops')
+@bp.route('/signup')
 @attendee_login_required
-def workshops():
-    return render_template(f'public/attendee/workshop_booking.html')
+def signup():
+    return render_template(f'public/attendee/signup/check_in_status.html')
+
+@bp.route('/signup/workshop_booking')
+@attendee_login_required
+def workshop_booking():
+    return render_template(f'public/attendee/signup/workshop_booking.html')
 
 @bp.route('/logout', methods=['GET'])
 @attendee_login_required
