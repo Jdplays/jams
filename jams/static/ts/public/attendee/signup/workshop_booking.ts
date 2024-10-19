@@ -151,7 +151,6 @@ function populateWorkshopCards() {
             const sessionAttendance = document.createElement('p')
             sessionAttendance.classList.add('ms-auto')
             sessionAttendance.id = `session-attendance-${sessionId}`
-            sessionAttendance.innerHTML = '5/10'
 
             footerSubDiv.appendChild(sessionAttendance)
         }
@@ -185,7 +184,7 @@ function buildWorkshopSelectionGroup(attendeeId:number, wsMap:Record<number, Wor
 
             const span = document.createElement('span')
             span.classList.add('form-selectgroup-label')
-            span.innerHTML = `${workshop.name} (5/10)`
+            span.innerHTML = `${workshop.name}`
             label.appendChild(span)
 
             container.appendChild(label)
@@ -299,7 +298,11 @@ function populateAttendeeSignupData() {
     })
 
     for (const sessionId of workshopSessionsInTimeslot) {
-        const signupCount = Object.values(attendeeSignupMap).filter(signup => signup.session_id === sessionId).length
+        let signupCount = 0
+        if (attendeeSignupMap) {
+            signupCount = Object.values(attendeeSignupMap).filter(signup => signup.session_id === sessionId).length
+        }
+
         const workshop = workshopsMap[sessionsMap[sessionId].workshop_id]
 
         const wsCardAttendance = document.getElementById(`session-attendance-${sessionId}`)
@@ -329,7 +332,11 @@ function populateAttendeeSignupData() {
             const input = sessionSelectionLabel.querySelector('input') as HTMLInputElement
             const text = sessionSelectionLabel.querySelector('span')
 
-            const signupCount = Object.values(attendeeSignupMap).filter(signup => signup.session_id === sessionId).length
+            let signupCount = 0
+            if (attendeeSignupMap) {
+                signupCount = Object.values(attendeeSignupMap).filter(signup => signup.session_id === sessionId).length
+            }
+
             const workshop = workshopsMap[sessionsMap[sessionId].workshop_id]
 
             if (signupCount >= workshop.capacity) {
@@ -340,13 +347,15 @@ function populateAttendeeSignupData() {
                 input.disabled = false
             }
 
-            if (Object.values(attendeeSignupMap).filter(signup => signup.attendee_id === attendee.id && signup.session_id === sessionId).length > 0) {
-                input.checked = true
-                text.classList.remove('text-danger')
-                text.classList.add('text-success')
-            } else {
-                input.checked = false
-                text.classList.remove('text-success')
+            if (attendeeSignupMap) {
+                if (Object.values(attendeeSignupMap).filter(signup => signup.attendee_id === attendee.id && signup.session_id === sessionId).length > 0) {
+                    input.checked = true
+                    text.classList.remove('text-danger')
+                    text.classList.add('text-success')
+                } else {
+                    input.checked = false
+                    text.classList.remove('text-success')
+                }
             }
 
             text.innerHTML = `${workshop.name} (${signupCount}/${workshop.capacity})`
@@ -365,6 +374,7 @@ function populatePrevNextButtons() {
     if (currentIndex + 1 > ids.length - 1) {
         nextText.innerHTML = 'Finish'
         nextButton.onclick = () => {
+            window.location.replace('/attendee/signup/complete')
         }
     } else {
         let timeslot = timeslots.filter(ts => ts.id === (timeslots[ids.indexOf(currentTimeslotId) + 1]).id)[0]
@@ -592,6 +602,10 @@ async function loadAttendeeSignupMap() {
 
     let _attendeeSignupMap:Record<number, AttendeeSignup> = {}
 
+    if (!attendeeSignupResponse.data) {
+        return
+    }
+
     attendeeSignupResponse.data.forEach(signup => {
         _attendeeSignupMap[signup.id] = signup
     })
@@ -671,7 +685,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     await loadAttendeeSection()
 
     // Attendee Signup Data
-    loadAttendeeSignupData
+    loadAttendeeSignupData()
 });
 
 document.addEventListener("DOMContentLoaded", () => {
