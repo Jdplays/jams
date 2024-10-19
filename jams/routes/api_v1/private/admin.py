@@ -567,6 +567,7 @@ def get_event_sessions(event_id):
     sessions = Session.query.filter_by(event_id=event_id).all()
 
     mutable_args = request.args.to_dict()
+    mutable_args['event_id'] = str(event_id)
     show_private_text = mutable_args.pop('show_private', None)
     show_private = False
     if show_private_text:
