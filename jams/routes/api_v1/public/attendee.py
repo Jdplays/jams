@@ -1,8 +1,8 @@
 # API is for serving data to Typscript/Javascript
 from flask import Blueprint, redirect, request, jsonify, abort, session, url_for
-from jams.models import db, AttendeeAccount, AttendeeAccountEvent, Attendee
+from jams.models import db, AttendeeAccount, AttendeeAccountEvent, Attendee, AttendeeSignup, Event, Session
 from jams.util import helper, attendee_auth
-from jams.decorators import attendee_login_required
+from jams.decorators import attendee_login_required, protect_attendee_updates
 
 bp = Blueprint('attendee', __name__, url_prefix='/attendee')
 
@@ -12,7 +12,8 @@ bp = Blueprint('attendee', __name__, url_prefix='/attendee')
 @bp.route('/login', methods=['POST'])
 def login():
     if 'attendee_id' in session:
-        return redirect(url_for('routes.frontend.public.attendee.workshop_booking'))
+        return redirect(url_for('routes.frontend.public.attendee.signup'))
+    
     data = request.get_json()
     if not data:
         abort(400, description="No data provided")
@@ -54,3 +55,80 @@ def login():
         
     return response, status_code
 
+#------------------------------------------ GENRAL ------------------------------------------#
+
+@bp.route('/accounts/me/attendees', methods=['GET'])
+@attendee_login_required
+def get_attendees_for_account():
+    args = request.args.to_dict()
+    args['attendee_account_id'] = str(attendee_auth.current_attendee().id)
+
+    data = helper.filter_model_by_query_and_properties(Attendee, args)
+
+    return jsonify(data)
+
+
+#------------------------------------------ ATTENDEE SIGNUP ------------------------------------------#
+
+@bp.route('/accounts/me/attendees/signups', methods=['GET'])
+@attendee_login_required
+def get_attendee_signups():
+    data = helper.filter_model_by_query_and_properties(AttendeeSignup, request.args)
+
+    return jsonify(data)
+
+@bp.route('/accounts/me/attendees/<int:attendee_id>/signups', methods=['POST'])
+@attendee_login_required
+@protect_attendee_updates
+def add_attendee_signup(attendee_id):
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
+
+    event_id = data.get('event_id')
+    session_id = data.get('session_id')
+
+    if not event_id or not session_id:
+        abort(400, description="No event_id and/or session_id provided")
+    
+    Event.query.filter_by(id=event_id).first_or_404()
+    Session.query.filter_by(id=session_id).first_or_404()
+
+    signup = AttendeeSignup.query.filter_by(event_id=event_id, attendee_id=attendee_id, session_id=session_id).first()
+    if signup:
+        abort(400, description="Booking Entry already exists")
+    
+    signup = AttendeeSignup(event_id=event_id, attendee_id=attendee_id, session_id=session_id)
+
+    db.session.add(signup)
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Attendee Workshop Booking Entry has been successfully added',
+        'data': signup.to_dict()
+    })
+
+@bp.route('/accounts/me/attendees/<int:attendee_id>/signups/<int:session_id>', methods=['DELETE'])
+@attendee_login_required
+@protect_attendee_updates
+def remove_attendee_signup(attendee_id, session_id):
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
+
+    event_id = data.get('event_id')
+
+    if not event_id:
+        abort(400, description="No event_id provided")
+    
+    Event.query.filter_by(id=event_id).first_or_404()
+    Session.query.filter_by(id=session_id).first_or_404()
+
+    signup = AttendeeSignup.query.filter_by(event_id=event_id, attendee_id=attendee_id, session_id=session_id).first_or_404()
+    
+    db.session.delete(signup)
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Volunteer Signup Entry has been successfully removed'
+    })
