@@ -17,11 +17,13 @@ import {
     getWorkshopTypes,
     getVolunteerSignupsForEvent,
     removeVolunteerSignup,
-    addVolunteerSignup
+    addVolunteerSignup,
+    getAttendeesSignups
 } from '@global/endpoints'
-import { EventLocation, EventTimeslot, Location, Timeslot, User, VolunteerSignup } from '@global/endpoints_interfaces'
+import { EventLocation, EventTimeslot, Location, Session, Timeslot, User, VolunteerSignup } from '@global/endpoints_interfaces'
 import {buildQueryString, emptyElement, allowDrop, waitForTransitionEnd, debounce, successToast, errorToast, buildUserAvatar, preloadUsersInfoMap, animateElement, isTouchDevice} from '@global/helper'
 import {WorkshopCard, WorkshopCardOptions} from '@global/workshop_card'
+import { QueryStringData } from './interfaces'
 
 type Icons = {[key: string]: any}
 
@@ -49,6 +51,7 @@ export interface ScheduleGridOptions {
     showPrivate?:boolean
     showVolunteerSignup?:boolean
     volunteerSignup?:boolean
+    showAttendeeSignupCounts?:boolean
     userInfoMap?:Record<number, Partial<User>>
 }
 
@@ -63,6 +66,7 @@ export class ScheduleGrid {
     private timeslotsInEvent:TimeslotsInEvent[]
 
     private volunteerSignupsMap:Record<number, number[]> = {}
+    private attendeeSignupCountsMap:Record<number, number> = {}
     private usersInfoMap:Record<number, Partial<User>> = {}
 
     public currentDragType:string
@@ -87,6 +91,7 @@ export class ScheduleGrid {
             showPrivate = true,
             showVolunteerSignup = false,
             volunteerSignup = false,
+            showAttendeeSignupCounts = false,
             userInfoMap = {}
         } = options || {}
        
@@ -105,6 +110,7 @@ export class ScheduleGrid {
             showPrivate,
             showVolunteerSignup,
             volunteerSignup,
+            showAttendeeSignupCounts,
             userInfoMap
         }
 
@@ -246,6 +252,27 @@ export class ScheduleGrid {
         })
     }
 
+    async preloadAttendeeSignupCounts() {
+        this.attendeeSignupCountsMap = {}
+        
+        const queryData:Partial<QueryStringData> = {
+            '$all_rows': true,
+            event_id: this.options.eventId,
+        }
+        const queryString = buildQueryString(queryData)
+        const attendeeSignupResponse = await getAttendeesSignups(queryString)
+
+        const signups = attendeeSignupResponse.data
+
+        signups.forEach(signup => {
+            if (!this.attendeeSignupCountsMap[signup.session_id]) {
+                this.attendeeSignupCountsMap[signup.session_id] = 0
+            }
+
+            this.attendeeSignupCountsMap[signup.session_id]++
+        })
+    }
+
     // Setup the options object for workshop cards within the grid
     setupWorkshopCardOptions() {
         // Create the options if they dont exist
@@ -281,6 +308,11 @@ export class ScheduleGrid {
             if (this.options.workshopCardOptions.height === undefined) {
                 this.options.workshopCardOptions.height = this.options.height
             }
+
+            // Show the attendance count if the grid is not editable or showing volunteer attendance
+            if (this.options.workshopCardOptions.showAttendeeSignupCounts === undefined) {
+                this.options.workshopCardOptions.showAttendeeSignupCounts = this.options.showAttendeeSignupCounts
+            }
         }
     }
 
@@ -314,6 +346,7 @@ export class ScheduleGrid {
         this.options.eventId = newEventId
         this.volunteerSignupsMap = {}
         await this.preloadVolunteerSignupsMap()
+        await this.preloadAttendeeSignupCounts()
         this.updateSchedule()
 
     }
@@ -729,14 +762,22 @@ export class ScheduleGrid {
             currentSignups = this.volunteerSignupsMap
         }
 
+        const oldAttendeeSignupCounts:Record<number, number> = this.attendeeSignupCountsMap
+        let currentAttendeeSignupCounts:Record<number, number> = {}
+        if (this.options.showAttendeeSignupCounts) {
+            await this.preloadAttendeeSignupCounts()
+            currentAttendeeSignupCounts = this.attendeeSignupCountsMap
+        }
+
         // If the grid session count is not equal to the length of the sessions justed pulled down, reload the grid
         if (this.sessionCount != sessions.length) {
             await this.updateSchedule()
             return
         }
 
-        let sessionWorkshopsToAdd = []
+        let sessionWorkshopsToAdd:Session[] = []
         let sessionWorkshopsToRemove = []
+        let sessionSignupCountsToUpdate:Session[] = []
 
         // Iterate over the sessions
         for (const session of sessions) {
@@ -755,7 +796,13 @@ export class ScheduleGrid {
             // If the session block says it doesnt have a workshop, but the DB says it should, set that session to add a workshop
             let sessionBlockHasWorkshop = sessionBlock.getAttribute('has-workshop') == 'true'
             if (!sessionBlockHasWorkshop && session.has_workshop) {
-                sessionWorkshopsToAdd.push(session)
+                if (!sessionWorkshopsToAdd.includes(session)) {
+                    sessionWorkshopsToAdd.push(session)
+                }
+
+                if (!sessionSignupCountsToUpdate.includes(session)) {
+                    sessionSignupCountsToUpdate.push(session)
+                }
             }
             else if (sessionBlockHasWorkshop && !session.has_workshop) {
                 // If the session block says it has a workshop, but the DB says it shouldn't, set that session to have its workshop removed
@@ -766,7 +813,13 @@ export class ScheduleGrid {
             if (sessionBlockHasWorkshop) {
                 let sessionWorkshopId = sessionBlock.getAttribute('workshop-id')
                 if (sessionWorkshopId !== String(session.workshop_id)) {
-                    sessionWorkshopsToAdd.push(session)
+                    if (!sessionWorkshopsToAdd.includes(session)) {
+                        sessionWorkshopsToAdd.push(session)
+                    }
+
+                    if (!sessionSignupCountsToUpdate.includes(session)) {
+                        sessionSignupCountsToUpdate.push(session)
+                    }
                 }
             }
 
@@ -789,16 +842,31 @@ export class ScheduleGrid {
                     : oldSignups[session.id]?.length === currentSignups[session.id]?.length &&
                     oldSignups[session.id]?.every((value, index) => value === currentSignups[session.id][index])
 
+                    if (!sessionWorkshopsToAdd.includes(session)) {
+                        sessionWorkshopsToAdd.push(session)
+                    }
+            }
+
+            // If attendee signup counts are shown, check for a difference
+            if (this.options.showAttendeeSignupCounts) {
+                const areEqual = 
+                    oldAttendeeSignupCounts[session.id] === undefined && currentAttendeeSignupCounts[session.id] === undefined
+                    ? true
+                    : oldAttendeeSignupCounts[session.id] === currentAttendeeSignupCounts[session.id]
+
                 if (!areEqual) {
-                    sessionWorkshopsToAdd.push(session)
+                    if (!sessionSignupCountsToUpdate.includes(session)) {
+                        sessionSignupCountsToUpdate.push(session)
+                    }
                 }
             }
         }
 
         // Generate the objects for the workshops to add to avoid doing extra unnessessary server calls
         let workshopsToAddIds = sessionWorkshopsToAdd.map(sw => sw.workshop_id)
+        let workshopsToUpdate = sessionSignupCountsToUpdate.map(sw => sw.workshop_id)
         let workshopsQueryData = {
-            id: workshopsToAddIds
+            id: [...new Set([...workshopsToAddIds, ...workshopsToUpdate])]
         }
         let workshopsQueryString = buildQueryString(workshopsQueryData)
 
@@ -818,6 +886,24 @@ export class ScheduleGrid {
             }
 
             const workshopsToAdd = sessionWorkshopsToAdd
+                .map(sw => {
+                    for (const workshop of workshops) {
+                        if (sw.workshop_id === workshop.id) {
+                            if (workshop.publicly_visible ||(!workshop.publicly_visible && this.options.showPrivate)) {
+                                return {
+                                    ...workshop,
+                                    'event_location_id': sw.event_location_id,
+                                    'event_timeslot_id': sw.event_timeslot_id,
+                                    'session_id': sw.id
+                                }
+                            }
+                        }
+                    }
+                    return null
+                })
+                .filter(sw => sw != null)
+
+                const workshopsToUpdate = sessionSignupCountsToUpdate
                 .map(sw => {
                     for (const workshop of workshops) {
                         if (sw.workshop_id === workshop.id) {
@@ -936,11 +1022,33 @@ export class ScheduleGrid {
                         cardOptions.backgroundColour = '#7e827f'
                     }
                 }
+
                 let workshopCard = new WorkshopCard(workshop, cardOptions)
                 let workshopCardElement = await workshopCard.element() as HTMLElement
+
                 this.animateWorkshopDrop(sessionBlock, workshopCardElement)
                 sessionBlock.setAttribute('has-workshop', String(true))
                 sessionBlock.setAttribute('workshop-id', String(workshop.id))
+            }
+            if (this.options.showAttendeeSignupCounts) {
+                for (const workshop of workshopsToUpdate) {
+
+                    const sessionId = workshop.session_id
+                    const signupCountElement = document.getElementById(`session-attendance-${sessionId}`)
+
+                    if (signupCountElement) {
+                        if (workshop.attendee_registration) {
+                            let signupCount = currentAttendeeSignupCounts[sessionId]
+                            if (signupCount === null || signupCount === undefined) {
+                                signupCount = 0
+                            }
+
+                            signupCountElement.innerHTML = `(${signupCount}/${workshop.capacity})`
+                        } else {
+                            signupCountElement.innerHTML = ''
+                        }
+                    }
+                }
             }
         }
 

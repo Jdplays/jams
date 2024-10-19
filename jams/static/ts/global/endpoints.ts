@@ -1687,6 +1687,26 @@ export function getAttendeesForAccount(queryString:string|null = null):Promise<A
     });
 }
 
+export function getAttendeesSignups(queryString:string|null = null):Promise<ApiMultiEntryResponse<[AttendeeSignup]>> {
+    return new Promise((resolve, reject) => {
+        let url = `${baseURL}/attendee/signups`
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
 export function getAttendeesSignupsForAccount(queryString:string|null = null):Promise<ApiMultiEntryResponse<[AttendeeSignup]>> {
     return new Promise((resolve, reject) => {
         let url = `${baseURL}/attendee/accounts/me/attendees/signups`

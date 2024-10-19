@@ -1,11 +1,12 @@
 import { EventDetails, EventDetailsOptions } from '@global/event_details';
-import {ScheduleGrid} from '@global/schedule_grid'
+import {ScheduleGrid, ScheduleGridOptions} from '@global/schedule_grid'
 
-const scheduleGridOptions = {
+const scheduleGridOptions:ScheduleGridOptions = {
     eventId: 1,
     edit: false,
     autoScale: true,
     showPrivate: false,
+    showAttendeeSignupCounts: true
 }
 
 const eventDetailsOptions:EventDetailsOptions = {

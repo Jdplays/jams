@@ -23,6 +23,11 @@ def signup():
 def workshop_booking():
     return render_template(f'public/attendee/signup/workshop_booking.html')
 
+@bp.route('/signup/complete')
+@attendee_login_required
+def signup_complete():
+    return render_template(f'public/attendee/signup/complete.html')
+
 @bp.route('/logout', methods=['GET'])
 @attendee_login_required
 def logout():
