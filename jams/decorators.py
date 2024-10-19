@@ -3,7 +3,7 @@ from flask import abort, redirect, request, current_app, session, url_for
 from flask_login.config import EXEMPT_METHODS
 from functools import wraps
 from jams.util import helper, attendee_auth
-from jams.models import Page
+from jams.models import Page, Attendee
 from jams.configuration import ConfigType, get_config_value
 
 
@@ -114,3 +114,17 @@ def attendee_login_required(f):
             return redirect(url_for('routes.frontend.public.attendee.login'))
         return f(*args, **kwargs)
     return decorated_function
+
+
+def protect_attendee_updates(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        current_attendee_account_id = attendee_auth.current_attendee().id
+        requested_attendee_id = int(kwargs.get('attendee_id'))
+
+        requested_attendee = Attendee.query.filter_by(id=requested_attendee_id).first()
+
+        if not requested_attendee or requested_attendee.attendee_account_id is not current_attendee_account_id:
+            abort(403, description='You do not have access to the requested resource')
+        return func(*args, **kwargs)
+    return wrapper

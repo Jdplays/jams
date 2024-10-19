@@ -10,6 +10,7 @@ export interface WorkshopCardOptions {
     width?:number
     height?:number
     remove?:boolean
+    showAttendeeSignupCounts?:boolean
     cardRemoveIcon?:string|null
     cardRemoveFunc?:((arg1:number, arg2:any) => void)
     cardBodyText?:string|null
@@ -45,6 +46,7 @@ export class WorkshopCard {
             width = 150,
             height = 150,
             remove = false,
+            showAttendeeSignupCounts = false,
             cardRemoveIcon = null,
             cardRemoveFunc,
             cardBodyText = null,
@@ -63,6 +65,7 @@ export class WorkshopCard {
             width,
             height,
             remove,
+            showAttendeeSignupCounts,
             cardRemoveIcon,
             cardRemoveFunc,
             cardBodyText,
@@ -176,6 +179,13 @@ export class WorkshopCard {
             }
 
             workshopTitleContianerRemove.appendChild(removeButton)
+        }
+
+        if (this.options.showAttendeeSignupCounts) {
+            let attendanceCount = document.createElement('h2')
+            attendanceCount.id = `session-attendance-${this.options.sessionId}`
+
+            workshopTitleContianerRemove.appendChild(attendanceCount)
         }
 
         workshopTitleContainer.appendChild(workshopTitleContianerRemove)

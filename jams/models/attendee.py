@@ -1,5 +1,5 @@
 from . import db
-from sqlalchemy  import Boolean, Column, ForeignKey, String, Integer
+from sqlalchemy  import Boolean, Column, ForeignKey, String, Integer, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 
@@ -62,7 +62,8 @@ class Attendee(db.Model):
             'age': self.age,
             'gender': self.gender,
             'external_order_id': self.external_order_id,
-            'source': self.source
+            'source': self.source,
+            'attendee_account_id': self.attendee_account_id
         }
     
 class AttendeeAccount(db.Model):
@@ -95,3 +96,30 @@ class AttendeeAccountEvent(db.Model):
     def __int__(self, attendee_account_id, event_id):
         self.attendee_account_id = attendee_account_id
         self.event_id = event_id
+
+class AttendeeSignup(db.Model):
+    __tablename__ = 'attendee_signup'
+
+    id = Column(Integer, primary_key=True)
+    event_id = Column(Integer(), ForeignKey('event.id'), nullable=False)
+    attendee_id = Column(Integer(), ForeignKey('attendee.id'), nullable=False)
+    session_id = Column(Integer(), ForeignKey('session.id'), nullable=False)
+
+    event = relationship('Event', backref='attendee_signups')
+    attendee = relationship('Attendee', backref='attendee_signups')
+    session = relationship('Session', backref='attendee_signups')
+
+    def __init__(self, event_id, attendee_id, session_id):
+        self.event_id = event_id
+        self.attendee_id = attendee_id
+        self.session_id = session_id
+    
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'event_id': self.event_id,
+            'attendee_id': self.attendee_id,
+            'session_id': self.session_id
+        }
+
