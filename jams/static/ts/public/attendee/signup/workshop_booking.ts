@@ -595,8 +595,7 @@ async function loadAttendeesMap() {
 
 async function loadAttendeeSignupMap() {
     const queryData:Partial<QueryStringData> = {
-        event_id: eventDetails.eventId,
-        attendee_id: Object.keys(attendeesMap).map(id => Number(id))
+        event_id: eventDetails.eventId
     }
     const queryString = buildQueryString(queryData)
     const attendeeSignupResponse = await getAttendeesSignupsForAccount(queryString)
