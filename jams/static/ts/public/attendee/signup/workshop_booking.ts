@@ -244,7 +244,7 @@ function populateAttendeesTable() {
         attendeeTable.style.display = 'none'
 
         const ids = timeslots.map(ts => ts.id)
-        let timeslot = timeslots.filter(ts => ts.id === (timeslots[ids.indexOf(currentTimeslotId) + 1]).id)[0]
+        let timeslot = timeslots.filter(ts => ts.id === (timeslots[ids.indexOf(currentTimeslotId)]).id)[0]
         const registerWarningText = document.createElement('p')
         registerWarningText.classList.add('text-warning')
         registerWarningText.innerHTML = `Note: None of the workshops in ${timeslot.name} are registerable. This means they are open to everyone. You can continue to the next timeslot.`
