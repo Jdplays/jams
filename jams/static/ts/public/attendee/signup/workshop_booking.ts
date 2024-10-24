@@ -130,7 +130,7 @@ function populateWorkshopCards() {
 
         if (!isNullEmptyOrSpaces(workshop.difficulty_id)) {
             const difficultyTag = document.createElement('span')
-            difficultyTag.classList.add('form-selectgroup-label')
+            difficultyTag.classList.add('form-selectgroup-label-no-hover')
             difficultyTag.innerHTML = `${difficultyLevel.name} `
 
             const difficultyTagSubSpan = document.createElement('span')
@@ -141,7 +141,7 @@ function populateWorkshopCards() {
             footerSubDiv.appendChild(difficultyTag)
         } else {
             const workshopTypeTag = document.createElement('span')
-            workshopTypeTag.classList.add('form-selectgroup-label')
+            workshopTypeTag.classList.add('form-selectgroup-label-no-hover')
             workshopTypeTag.innerHTML = workshopTypesMap[workshop.workshop_type_id].name
 
             footerSubDiv.appendChild(workshopTypeTag)
