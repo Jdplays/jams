@@ -1,0 +1,68 @@
+{% extends '_attendee_workshop_layout.html' %}
+
+{% block title %}Workshop Signup{% endblock %}
+
+{% block content %}
+<div class="card-body text-center py-4 p-sm-5">
+    <h1>Workshop Booking</h1>
+    <div id="event-details"></div>
+
+    <ul id="timeslost-steps" class="steps steps-green steps-counter justify-content-center my-4">
+    </ul>
+
+    <h2 id="timeslot-name"></h2>
+</div>
+
+<div class="hr-text hr-text-center hr-text-spaceless">Workshops</div>
+<div class="card-body">
+    <div id="workshop-cards-container" class="row row-deck row-cards d-flex justify-content-center">
+    </div>
+</div>
+
+<div class="hr-text hr-text-center hr-text-spaceless">Attendee Assignments</div>
+<div id="attendee-section" class="card-body">
+    <p class="mb-3">Sign each attendee up to one of the workshops shown above</p>
+    <div id="attendee-table" class="table-responsive">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th>Attendee</th>
+                    <th>Workshop Assignment</th>
+                </tr>
+            </thead>
+            <tbody id="attendee-table-body">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card-footer">
+    <div class="d-flex">
+        <button id="prev-timeslot-button" onclick="prevTimeslotOnClick()" class="btn btn-link link-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-left">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M5 12l14 0" />
+                <path d="M5 12l6 6" />
+                <path d="M5 12l6 -6" />
+            </svg>
+            <span class="btn-text">Back</span>
+        </button>
+
+        <button id="next-timeslot-button" onclick="nextTimeslotOnClick()" class="btn btn-primary ms-auto">
+            <span class="btn-text" style="margin-right: 0.5rem;">Finish</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-right">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M5 12l14 0" />
+                <path d="M13 18l6 -6" />
+                <path d="M13 6l6 6" />
+            </svg>
+        </button>
+    </div>
+</div>
+<script src="{{ url_for('static', filename='js/public/attendee/signup/workshop_booking.js') }}" defer></script>
+
+{% endblock %}
