@@ -1,4 +1,4 @@
-import { addAttendeeSignup, getAttendeesForAccount, getAttendeesSignupsForAccount, getDifficultyLevels, getLocations, getLocationsForEvent, getSessionsForEvent, getTimeslots, getTimeslotsForEvent, getWorkshops, getWorkshopTypes, removeAttendeeSignup } from "@global/endpoints";
+import { addAttendeeSignup, getAttendeesForAccount, getAttendeesSignupsForAccount, getDifficultyLevels, getIconData, getLocations, getLocationsForEvent, getSessionsForEvent, getTimeslots, getTimeslotsForEvent, getWorkshops, getWorkshopTypes, removeAttendeeSignup } from "@global/endpoints";
 import { Attendee, DifficultyLevel, EventLocation, EventTimeslot, Session, Timeslot, Workshop, WorkshopType, Location, AttendeeSignup } from "@global/endpoints_interfaces";
 import { EventDetails, EventDetailsOptions } from "@global/event_details";
 import { addSpinnerToElement, buildQueryString, emptyElement, errorToast, isDefined, isNullEmptyOrSpaces, removeSpinnerFromElement, successToast } from "@global/helper";
@@ -163,7 +163,7 @@ function populateWorkshopCards() {
     }
 }
 
-function buildWorkshopSelectionGroup(attendeeId:number, wsMap:Record<number, Workshop>) {
+async function buildWorkshopSelectionGroup(attendeeId:number, wsMap:Record<number, Workshop>) {
     const container = document.createElement('div')
     container.id = `attendee-${attendeeId}-workshop-selection-container`
     container.classList.add('form-selectgroup')
@@ -191,6 +191,26 @@ function buildWorkshopSelectionGroup(attendeeId:number, wsMap:Record<number, Wor
         }
     }
 
+    if (Object.values(wsMap).length > 0) {
+        const label = document.createElement('label')
+        label.id = `session-clear`
+        label.classList.add('form-selectgroup-item')
+
+        const input = document.createElement('input') as HTMLInputElement
+        input.classList.add('form-selectgroup-input')
+        input.type = 'radio'
+        input.name = `attendee-${attendeeId}-workshop-selection`
+        input.value = '-1'
+        label.appendChild(input)
+
+        const span = document.createElement('span')
+        span.classList.add('form-selectgroup-label')
+        span.innerHTML = `${await getIconData('x')} Clear`
+        label.appendChild(span)
+
+        container.appendChild(label)
+    }
+
     container.onchange = (event) => {
         const selectedInput = event.target as HTMLInputElement
         const sessionId = selectedInput.value
@@ -204,14 +224,16 @@ function buildWorkshopSelectionGroup(attendeeId:number, wsMap:Record<number, Wor
         }
 
         if (selectedInput.checked) {
-            data.session_id = Number(sessionId)
-            addAttendeeSignup(attendeeId, data).then((response) => {
-                successToast(response.message)
-                loadAttendeeSignupData()
-            }).catch((error) => {
-                const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
-                errorToast(errorMessage)
-            })
+            if (Number(sessionId) !== -1) {
+                data.session_id = Number(sessionId)
+                addAttendeeSignup(attendeeId, data).then((response) => {
+                    successToast(response.message)
+                    loadAttendeeSignupData()
+                }).catch((error) => {
+                    const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
+                    errorToast(errorMessage)
+                })
+            }
         }
 
         if (!attendeeSignupMap) {
@@ -220,6 +242,10 @@ function buildWorkshopSelectionGroup(attendeeId:number, wsMap:Record<number, Wor
         
         for (const input of uncheckedInputs) {
             const sessionId = input.getAttribute('session-id')
+
+            if (!sessionId) {
+                continue
+            }
 
             let wasSignedUp = false
             for (const signup of Object.values(attendeeSignupMap)) {
@@ -239,13 +265,17 @@ function buildWorkshopSelectionGroup(attendeeId:number, wsMap:Record<number, Wor
                     })
                 }
             }
+
+            if (!sessionId) {
+                loadAttendeeSignupData()
+            }
         }
     }
 
     return container
 }
 
-function populateAttendeesTable() {
+async function populateAttendeesTable() {
     const attendeeSection = document.getElementById('attendee-section')
     const attendeeTable = document.getElementById('attendee-table')
     const attendeeTableBody = document.getElementById('attendee-table-body')
@@ -284,7 +314,7 @@ function populateAttendeesTable() {
         row.appendChild(nameCell)
 
         const workshopSelectionCell = document.createElement('td')
-        const workshopSelectionGroup = buildWorkshopSelectionGroup(attendee.id, workshopsInTimeslot)
+        const workshopSelectionGroup = await buildWorkshopSelectionGroup(attendee.id, workshopsInTimeslot)
         workshopSelectionCell.appendChild(workshopSelectionGroup)
         row.appendChild(workshopSelectionCell)
 
@@ -369,6 +399,9 @@ function populateAttendeeSignupData() {
                     input.checked = false
                     text.classList.remove('text-success')
                 }
+            } else {
+                input.checked = false
+                text.classList.remove('text-success')
             }
 
             text.innerHTML = `${workshop.name} (${signupCount}/${workshop.capacity})`
@@ -616,6 +649,7 @@ async function loadAttendeeSignupMap() {
     let _attendeeSignupMap:Record<number, AttendeeSignup> = {}
 
     if (!attendeeSignupResponse.data) {
+        attendeeSignupMap = null
         return
     }
 
@@ -684,10 +718,6 @@ async function loadAttendeeSection() {
 
 async function loadAttendeeSignupData() {
     await loadAttendeeSignupMap()
-
-    if (!attendeeSignupMap) {
-        return
-    }
 
     populateAttendeeSignupData()
 }
