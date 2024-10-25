@@ -32,8 +32,10 @@ class DefaultRequestArgs():
 def get_ordered_event_locations(event_id):
     return EventLocation.query.filter_by(event_id=event_id).order_by(EventLocation.order).all()
 
-def get_ordered_event_timeslots(event_id):
-    return EventTimeslot.query.join(Timeslot, EventTimeslot.timeslot_id == Timeslot.id).filter(EventTimeslot.event_id == event_id).order_by(Timeslot.start).all() 
+def get_ordered_event_timeslots(event_id, public=None):
+    if public == None:
+        return EventTimeslot.query.join(Timeslot, EventTimeslot.timeslot_id == Timeslot.id).filter(EventTimeslot.event_id == event_id).order_by(Timeslot.start).all()
+    return EventTimeslot.query.join(Timeslot, EventTimeslot.timeslot_id == Timeslot.id).filter(EventTimeslot.event_id == event_id, EventTimeslot.publicly_visible == public).order_by(Timeslot.start).all() 
 
 def session_exists(location_id, timeslot_id):
     exists = db.session.query(Session.query.filter_by(event_location_id=location_id, event_timeslot_id=timeslot_id).exists()).scalar()

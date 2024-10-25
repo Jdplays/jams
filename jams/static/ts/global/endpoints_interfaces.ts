@@ -52,6 +52,7 @@ export interface Session {
     workshop_id:number
     has_workshop:boolean
     location_column_order:number
+    publicly_visible:boolean
     active:boolean
 }
 
@@ -295,6 +296,13 @@ export interface AttendeeLogin {
     email?:string
     order_id?:string
     password?:string
+}
+
+export interface AttendeeSignup {
+    id:number
+    event_id:number
+    attendee_id:number
+    session_id:number
 }
 
 export interface GeneralConfig {

@@ -35,4 +35,32 @@
     grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
     gap: 10px;
   }
+
+  .no-hover:hover {
+    background-color: inherit !important;
+    color: inherit !important;
+    cursor: default !important;
+    pointer-events: none !important;
+}
   
+.form-selectgroup-label-no-hover {
+  position: relative;
+  display: block;
+  min-width: calc(1.4285714286em + .875rem + calc(var(--tblr-border-width)* 2));
+  margin: 0;
+  padding: .4375rem .75rem;
+  font-size: .875rem;
+  line-height: 1.4285714286;
+  color: var(--tblr-muted);
+  background: var(--tblr-bg-forms);
+  text-align: center;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  border: var(--tblr-border-width) var(--tblr-border-style) var(--tblr-border-color);
+  border-radius: 3px;
+  /* Remove cursor and transition for no hover effect */
+  cursor: default; /* Set cursor to default */
+  transition: none; /* Remove transition */
+}
