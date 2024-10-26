@@ -261,6 +261,15 @@ pages:
       routes.api_v1.private.event.get_attendees:
       routes.api_v1.private.event.add_attendee:
       routes.api_v1.private.event.edit_attendee:
+      routes.api_v1.private.event.check_in_attendee:
+      routes.api_v1.private.event.check_out_attendee:
+  
+  fire_list:
+    endpoint: routes.frontend.private.event.fire_list
+    api_endpoints:
+      routes.api_v1.private.event.get_fire_list:
+      routes.api_v1.private.event.check_in_fire_list_item:
+      routes.api_v1.private.event.check_out_fire_list_item:
       
 
 

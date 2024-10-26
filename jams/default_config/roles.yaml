@@ -12,6 +12,7 @@ roles:
       - workshops
       - locations_timeslots
       - attendee_list
+      - fire_list
   Volunteer:
     description: A Helper at the event
     pages:
