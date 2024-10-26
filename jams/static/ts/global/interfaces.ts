@@ -5,6 +5,12 @@ type TransformToSingularOrArray<T> = {
     [K in keyof T]: SingularOrArray<T[K]>;
 };
 
+export enum FireListEntryType {
+    ATTENDEE = "ATTENDEE",
+    VOLUNTEER = "VOLUNTEER",
+    GUEST = "GUEST"
+}
+
 export interface QueryStringData extends 
     TransformToSingularOrArray<EventLocation>,
     TransformToSingularOrArray<EventTimeslot>,

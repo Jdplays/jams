@@ -2,7 +2,8 @@
 from flask import Blueprint, request, jsonify, abort
 from jams.decorators import role_based_access_control_be
 from flask_security import login_required
-from jams.models import db, Attendee, Event
+from jams.models import db, Attendee, Event, AttendeeSource
+from jams.models.event import FireList
 from jams.util import helper
 
 bp = Blueprint('event', __name__)
@@ -10,11 +11,14 @@ bp = Blueprint('event', __name__)
 # URL PREFIX = /api/v1
 
 #------------------------------------------ ATTENDEES ------------------------------------------#
+
 @bp.route('/events/<int:event_id>/attendees', methods=['GET'])
 @role_based_access_control_be
 def get_attendees(event_id):
-    event = Event.query.filter_by(id=event_id).first()
-    data = helper.filter_model_by_query_and_properties(Attendee, request.args, input_data=event.attendees)
+    Event.query.filter_by(id=event_id).first_or_404()
+    args = request.args.to_dict()
+    args['event_id'] = str(event_id)
+    data = helper.filter_model_by_query_and_properties(Attendee, args)
 
     return jsonify(data)
 
@@ -43,6 +47,8 @@ def add_attendee(event_id):
 
     new_attendee.link_to_account()
 
+    new_attendee.create_fire_list_entry()
+
     return jsonify({
         'message': 'Attendee successfully added',
         'data': new_attendee.to_dict()
@@ -55,6 +61,9 @@ def edit_attendee(event_id, attendee_id):
     Event.query.filter_by(id=event_id).first_or_404()
     attendee = Attendee.query.filter_by(id=attendee_id).first_or_404()
 
+    if attendee.source == AttendeeSource.EVENTBRITE.name:
+        abort(400, description='Unable to edit attendee imported via eventbrite')
+
     data = request.get_json()
     if not data:
         abort(400, description="No data provided")
@@ -62,11 +71,95 @@ def edit_attendee(event_id, attendee_id):
     allowed_fields = list(attendee.to_dict().keys())
     for field, value in data.items():
         if field in allowed_fields:
+            if field == 'checked_in':
+                continue
             setattr(attendee, field, value)
+    attendee.last_update_source = AttendeeSource.LOCAL.name
 
     db.session.commit()
 
     return jsonify({
         'message': 'Attendee has be updated successfully',
         'data': attendee.to_dict()
+    })
+
+@bp.route('/events/<int:event_id>/attendees/<int:attendee_id>/check_in', methods=['POST'])
+@role_based_access_control_be
+def check_in_attendee(event_id, attendee_id):
+    Event.query.filter_by(id=event_id).first_or_404()
+    attendee = Attendee.query.filter_by(id=attendee_id).first_or_404()
+
+    attendee.check_in()
+
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Attendee has be checked in successfully',
+        'data': attendee.to_dict()
+    })
+
+@bp.route('/events/<int:event_id>/attendees/<int:attendee_id>/check_out', methods=['POST'])
+@role_based_access_control_be
+def check_out_attendee(event_id, attendee_id):
+    Event.query.filter_by(id=event_id).first_or_404()
+    attendee = Attendee.query.filter_by(id=attendee_id).first_or_404()
+
+    attendee.check_out()
+
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Attendee has be checked out successfully',
+        'data': attendee.to_dict()
+    })
+
+
+#------------------------------------------ FIRELIST ------------------------------------------#
+
+@bp.route('/events/<int:event_id>/fire_list', methods=['GET'])
+@role_based_access_control_be
+def get_fire_list(event_id):
+    Event.query.filter_by(id=event_id).first_or_404()
+    args = request.args.to_dict()
+    args['event_id'] = str(event_id)
+    data = helper.filter_model_by_query_and_properties(FireList, args)
+
+    return jsonify(data)
+
+@bp.route('/events/<int:event_id>/fire_list/<int:fire_list_entry_id>/check_in', methods=['POST'])
+@role_based_access_control_be
+def check_in_fire_list_item(event_id, fire_list_entry_id):
+    Event.query.filter_by(id=event_id).first_or_404()
+    fire_list_entry = FireList.query.filter_by(id=fire_list_entry_id).first_or_404()
+
+    if fire_list_entry.attendee:
+        attendee = Attendee.query.filter_by(id=fire_list_entry.attendee_id).first_or_404()
+        attendee.check_in()
+    else:
+        fire_list_entry.check_in()
+
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Fire List item has been checked in successfully',
+        'data': fire_list_entry.to_dict()
+    })
+
+@bp.route('/events/<int:event_id>/fire_list/<int:fire_list_entry_id>/check_out', methods=['POST'])
+@role_based_access_control_be
+def check_out_fire_list_item(event_id, fire_list_entry_id):
+    Event.query.filter_by(id=event_id).first_or_404()
+    fire_list_entry = FireList.query.filter_by(id=fire_list_entry_id).first_or_404()
+
+    if fire_list_entry.attendee:
+        attendee = Attendee.query.filter_by(id=fire_list_entry.attendee_id).first_or_404()
+        attendee.check_out()
+    else:
+        fire_list_entry.check_out()
+
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Fire List item has been checked out successfully',
+        'data': fire_list_entry.to_dict()
     })

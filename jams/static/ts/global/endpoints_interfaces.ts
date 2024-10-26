@@ -1,3 +1,5 @@
+import { FireListEntryType } from "./interfaces"
+
 export interface EventLocation {
     id:number
     event_id:number
@@ -307,4 +309,14 @@ export interface AttendeeSignup {
 
 export interface GeneralConfig {
     TIMEZONE?:string
+}
+
+export interface FireListEntry {
+    id:number
+    event_id:number
+    name?:string
+    email?:string
+    guest_owner_id?:number
+    checked_in:boolean
+    type:FireListEntryType
 }

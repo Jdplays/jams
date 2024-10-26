@@ -15,3 +15,9 @@ bp = Blueprint('event', __name__, url_prefix='event')
 @role_based_access_control_fe
 def attendee_list():
     return render_template(f'{url_prefix}/attendee_list.html')
+
+@bp.route('/fire_list')
+@login_required
+@role_based_access_control_fe
+def fire_list():
+    return render_template(f'{url_prefix}/fire_list.html')

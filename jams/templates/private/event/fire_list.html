@@ -1,0 +1,41 @@
+{% extends '_layout.html' %}
+
+{% block title %}Attendee List{% endblock %}
+
+{% block content %}
+
+<div class="content-wrapper">
+    <div class="main-content">
+        <h1>Attendee List</h1>
+        <div id="event-details"></div>
+    </div>
+</div>
+
+{% if get_config_value('EVENTBRITE_ENABLED') %}
+<p class="text-warning">WARNING: Attendees imported from eventbrite can be locally checked in and out. But once this is done, they will no longer update from eventbrite</p>
+{% endif %}
+
+<h4>Filters</h4>
+<div class="row">
+    <div class="col-lg-6">
+        <div class="mb-2">
+            <input id="quick-filter" type="text" class="form-control" maxlength="255" autocomplete="off" placeholder="Search..." oninput="applyQuickFilter()">
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="grid-columns-flex mb-2">
+            <button id="show-all-button" class="btn btn-outline-primary" onclick="filterByType(null)">All</button>
+            <button id="volunteers-button" class="btn btn-outline-secondary"  onclick="filterByType('VOLUNTEER')">Volunteers</button>
+            <button id="attendees-button" class="btn btn-outline-secondary"  onclick="filterByType('ATTENDEE')">Attendees</button>
+            <button id="guests-button" class="btn btn-outline-secondary"  onclick="filterByType('GUEST')">Guests</button>
+        </div>
+    </div>
+</div>
+
+
+<div id="fire-list-data-grid-container"></div>
+<div id="fire-list-data-grid" class="ag-theme-quartz" style="height: 500px"></div>
+
+<script src="{{ url_for('static', filename='js/event/fire_list.js') }}" defer></script>
+
+{% endblock %}

@@ -22,6 +22,15 @@
     <span class="btn-text">Add Attendee</span>
 </button>
 
+{% if get_config_value('EVENTBRITE_ENABLED') %}
+<p class="text-warning">WARNING: Attendees imported from eventbrite can be locally checked in and out. But once this is done, they will no longer update from eventbrite</p>
+{% endif %}
+
+<div class="mb-1">
+    <label class="form-label">Filter</label>
+    <input id="quick-filter" type="text" class="form-control" maxlength="255" autocomplete="off" oninput="applyQuickFilter()">
+</div>
+
 <div class="modal" id="add-update-attendee-modal" tabindex="-1">
     <div class="modal-dialog" role="document">
         <div class="modal-content">

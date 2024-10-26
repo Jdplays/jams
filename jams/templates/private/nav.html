@@ -73,7 +73,7 @@
         <!-- Other Navigation Items -->
         {% if current_user.is_authenticated %}
         <!--Event-->
-        {% if user_has_access_to_page('attendee_list') %}
+        {% if user_has_access_to_page('fire_list', 'attendee_list') %}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" data-bs-auto-close="outside"
             role="button" aria-expanded="false">
@@ -82,6 +82,11 @@
             </span>
           </a>
           <div class="dropdown-menu">
+            {% if user_has_access_to_page('fire_list') %}
+            <a class="dropdown-item" href="{{ url_for('routes.frontend.private.event.fire_list')}}">
+              Fire List
+            </a>
+            {% endif %}
             {% if user_has_access_to_page('attendee_list') %}
             <a class="dropdown-item" href="{{ url_for('routes.frontend.private.event.attendee_list')}}">
               Attendee List

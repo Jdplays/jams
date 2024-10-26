@@ -123,7 +123,7 @@ function eventbriteEventsDropdownOnChange(events:EventbriteEvent[]) {
 
     eventNameInput.value = event.name
     eventDescriptionInput.value = event.description
-    eventDateInput.value = formatDateToShort(convertToDateInputFormat(event.date), {includeTime:false})
+    eventDateInput.value = event.date
     eventStartInput.value = formatDateToShort(event.start_date_time, {includeDate:false, includeSeconds:false})
     eventEndInput.value = formatDateToShort(event.end_date_time, {includeDate:false, includeSeconds:false})
     eventCapacityInput.value = String(event.capacity)
@@ -174,6 +174,7 @@ async function editEventOnclick() {
     const endDateTime = combineDateTime(eventDateInput.value, eventEndInput.value)
 
     let data:Partial<Event> = {}
+    console.log(external)
     if (external) {
         data = {
             name: eventNameInput.value,

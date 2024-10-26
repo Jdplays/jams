@@ -1,5 +1,5 @@
 import {Toast} from "@global/sweet_alert"
-import { dateTimeFormatterOptions, InputValidationPattern, QueryStringData } from "./interfaces";
+import { dateTimeFormatterOptions, FireListEntryType, InputValidationPattern, QueryStringData } from "./interfaces";
 import { User } from "./endpoints_interfaces";
 import { getUsersPublicInfo } from "./endpoints";
 
@@ -577,7 +577,7 @@ export function formatDateToShort(dateString: string, options:dateTimeFormatterO
     if (isTime) {
         dateParts = dateString.match(/(\d{2}):(\d{2})(?::(\d{2}))?(?:([+-]\d{2}:\d{2})|Z)?/);
     } else {
-        dateParts = dateString.match(/(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})(?::(\d{2}))?(?:([+-]\d{2}:\d{2})|Z)?/)
+        dateParts = dateString.match(/(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2})(?::(\d{2}))?(?:([+-]\d{2}:\d{2})|Z)?)?/);
     }
 
     if (!dateParts) {
@@ -688,4 +688,17 @@ export function convertToDateInputFormat(dateString: string): string {
 
     // Return in yyyy-MM-dd format
     return `${formattedYear}-${formattedMonth}-${formattedDay}`;
+}
+
+export function stringToFireListEntryType(type: string | null): FireListEntryType | null {
+    switch (type) {
+        case 'ATTENDEE':
+            return FireListEntryType.ATTENDEE;
+        case 'VOLUNTEER':
+            return FireListEntryType.VOLUNTEER;
+        case 'GUEST':
+            return FireListEntryType.GUEST;
+        default:
+            return null;
+    }
 }
