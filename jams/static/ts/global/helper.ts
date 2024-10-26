@@ -577,7 +577,7 @@ export function formatDateToShort(dateString: string, options:dateTimeFormatterO
     if (isTime) {
         dateParts = dateString.match(/(\d{2}):(\d{2})(?::(\d{2}))?(?:([+-]\d{2}:\d{2})|Z)?/);
     } else {
-        dateParts = dateString.match(/(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})(?::(\d{2}))?(?:([+-]\d{2}:\d{2})|Z)?/)
+        dateParts = dateString.match(/(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2})(?::(\d{2}))?(?:([+-]\d{2}:\d{2})|Z)?)?/);
     }
 
     if (!dateParts) {
