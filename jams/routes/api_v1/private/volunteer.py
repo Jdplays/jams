@@ -3,6 +3,7 @@ from flask import Blueprint, request, jsonify, abort
 from flask_security import login_required
 from jams.decorators import role_based_access_control_be, protect_user_updates
 from jams.models import db, VolunteerAttendance, VolunteerSignup, Event, User
+from jams.models.event import FireList
 from jams.util import helper
 
 bp = Blueprint('volunteer', __name__)
@@ -43,7 +44,7 @@ def get_user_attendance(user_id, event_id):
 @role_based_access_control_be
 def add_user_attendance(user_id, event_id):
     Event.query.filter_by(id=event_id).first_or_404()
-    User.query.filter_by(id=user_id).first_or_404()
+    user = User.query.filter_by(id=user_id).first_or_404()
     att = VolunteerAttendance.query.filter_by(user_id=user_id, event_id=event_id).first()
 
     if att is not None:
@@ -62,6 +63,18 @@ def add_user_attendance(user_id, event_id):
     db.session.add(attendance)
     db.session.commit()
 
+    # Create fire list entry
+    fire_list_entry = FireList.query.filter_by(event_id=event_id, user_id=user_id).first()
+    if attendance.main:
+        if not fire_list_entry:
+            fire_list_entry = FireList(event_id=event_id, user_id=user_id)
+            db.session.add(fire_list_entry)
+            db.session.commit()
+    else:
+        if fire_list_entry:
+            db.session.delete(fire_list_entry)
+            db.session.commit()
+
     return jsonify({
         'message': 'Volunteer Attendance has been successfully added',
         'data': attendance.to_dict()
@@ -73,7 +86,7 @@ def add_user_attendance(user_id, event_id):
 @role_based_access_control_be
 def edit_user_attendance(user_id, event_id):
     Event.query.filter_by(id=event_id).first_or_404()
-    User.query.filter_by(id=user_id).first_or_404()
+    user = User.query.filter_by(id=user_id).first_or_404()
     attendance = VolunteerAttendance.query.filter_by(user_id=user_id, event_id=event_id).first_or_404()
 
     data = request.get_json()
@@ -87,6 +100,18 @@ def edit_user_attendance(user_id, event_id):
             setattr(attendance, field, value)
 
     db.session.commit()
+
+    # Create fire list entry
+    fire_list_entry = FireList.query.filter_by(event_id=event_id, user_id=user_id).first()
+    if attendance.main:
+        if not fire_list_entry:
+            fire_list_entry = FireList(event_id=event_id, user_id=user_id)
+            db.session.add(fire_list_entry)
+            db.session.commit()
+    else:
+        if fire_list_entry:
+            db.session.delete(fire_list_entry)
+            db.session.commit()
 
     return jsonify({
         'message': 'Volunteer Attendance has been successfully edited',
