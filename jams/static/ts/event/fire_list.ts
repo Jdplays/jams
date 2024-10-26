@@ -20,9 +20,13 @@ function applyQuickFilter() {
     gridApi.setGridOption('quickFilterText', filterText);
 }
 
-function filterByType(typeString: string | null) {
+async function filterByType(typeString: string | null) {
     fireListEntryTypeFilter = stringToFireListEntryType(typeString)
     updateFilterButtons()
+
+    gridApi.setGridOption('loading', true)
+    await populateFireListTable()
+    gridApi.setGridOption('loading', false)
 }
 
 function initialiseAgGrid() {
@@ -248,7 +252,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     initialiseAgGrid()
 
-    populateFireListTable(true)
+    gridApi.setGridOption('loading', true)
+    await populateFireListTable(true)
+    gridApi.setGridOption('loading', false)
 
     updateFilterButtons()
 
