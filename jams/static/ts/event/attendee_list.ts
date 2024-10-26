@@ -1,5 +1,7 @@
 import {
     addAttendee,
+    checkInAttendee,
+    checkOutAttendee,
     editAttendee,
     getAttendees
 } from "@global/endpoints";
@@ -61,10 +63,8 @@ function initialiseAgGrid() {
             {
                 field: 'actions',
                 cellRenderer: (params:any) => {
-                    if (params.data.external_id !== null) {
-                        return 'N/A'
-                    } else {
-                        let div = document.createElement('div')
+                    let div = document.createElement('div')
+                    if (params.data.external_id === null) {
                         let editButton = document.createElement('button')
                         editButton.classList.add('btn', 'btn-outline-primary', 'py-1', 'px-2', 'mb-1')
                         editButton.style.marginRight = '10px'
@@ -75,26 +75,26 @@ function initialiseAgGrid() {
                             prepEditAttendeeForm(params.data)
                         }
                         div.appendChild(editButton)
-
-                        if (params.data.checked_in) {
-                            let checkOutButton = document.createElement('button')
-                            checkOutButton.classList.add('btn', 'btn-outline-danger', 'py-1', 'px-2', 'mb-1')
-                            checkOutButton.innerHTML = 'Check Out'
-                            checkOutButton.onclick = () => {
-                                checkInOutOnClick(params.data.id, false)
-                            }
-                            div.appendChild(checkOutButton)
-                        } else {
-                            let checkInButton = document.createElement('button')
-                            checkInButton.classList.add('btn', 'btn-outline-success', 'py-1', 'px-2', 'mb-1')
-                            checkInButton.innerHTML = 'Check In'
-                            checkInButton.onclick = () => {
-                                checkInOutOnClick(params.data.id, true)
-                            }
-                            div.appendChild(checkInButton)
-                        }
-                        return div
                     }
+                        
+                    if (params.data.checked_in) {
+                        let checkOutButton = document.createElement('button')
+                        checkOutButton.classList.add('btn', 'btn-outline-danger', 'py-1', 'px-2', 'mb-1')
+                        checkOutButton.innerHTML = 'Check Out'
+                        checkOutButton.onclick = () => {
+                            checkOutOnClick(params.data.id)
+                        }
+                        div.appendChild(checkOutButton)
+                    } else {
+                        let checkInButton = document.createElement('button')
+                        checkInButton.classList.add('btn', 'btn-outline-success', 'py-1', 'px-2', 'mb-1')
+                        checkInButton.innerHTML = 'Check In'
+                        checkInButton.onclick = () => {
+                            checkInOnClick(params.data.id)
+                        }
+                        div.appendChild(checkInButton)
+                    }
+                    return div
                 },
                 minWidth: 160,
                 flex: 1
@@ -308,12 +308,17 @@ function editAttendeeOnClick(attendeeId:number) {
     })
 }
 
-function checkInOutOnClick(attendeeId:number, value:boolean) {
-    let data:Partial<Attendee> = {
-        checked_in: value
-    }
+function checkInOnClick(attendeeId:number) {
+    checkInAttendee(eventDetails.eventId, attendeeId).then((response) => {
+        successToast(response.message)
+    }).catch(error => {
+        const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
+        errorToast(errorMessage)
+    })
+}
 
-    editAttendee(eventDetails.eventId, attendeeId, data).then((response) => {
+function checkOutOnClick(attendeeId:number) {
+    checkOutAttendee(eventDetails.eventId, attendeeId).then((response) => {
         successToast(response.message)
     }).catch(error => {
         const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';

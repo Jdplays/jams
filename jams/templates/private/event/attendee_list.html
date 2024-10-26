@@ -22,7 +22,11 @@
     <span class="btn-text">Add Attendee</span>
 </button>
 
-<div class="mb-3">
+{% if get_config_value('EVENTBRITE_ENABLED') %}
+<p class="text-warning">WARNING: Attendees imported from eventbrite can be locally checked in and out. But once this is done, they will no longer update from eventbrite</p>
+{% endif %}
+
+<div class="mb-1">
     <label class="form-label">Filter</label>
     <input id="quick-filter" type="text" class="form-control" maxlength="255" autocomplete="off" oninput="applyQuickFilter()">
 </div>

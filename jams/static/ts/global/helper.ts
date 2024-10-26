@@ -1,5 +1,5 @@
 import {Toast} from "@global/sweet_alert"
-import { dateTimeFormatterOptions, InputValidationPattern, QueryStringData } from "./interfaces";
+import { dateTimeFormatterOptions, FireListEntryType, InputValidationPattern, QueryStringData } from "./interfaces";
 import { User } from "./endpoints_interfaces";
 import { getUsersPublicInfo } from "./endpoints";
 
@@ -688,4 +688,17 @@ export function convertToDateInputFormat(dateString: string): string {
 
     // Return in yyyy-MM-dd format
     return `${formattedYear}-${formattedMonth}-${formattedDay}`;
+}
+
+export function stringToFireListEntryType(type: string | null): FireListEntryType | null {
+    switch (type) {
+        case 'ATTENDEE':
+            return FireListEntryType.ATTENDEE;
+        case 'VOLUNTEER':
+            return FireListEntryType.VOLUNTEER;
+        case 'GUEST':
+            return FireListEntryType.GUEST;
+        default:
+            return null;
+    }
 }

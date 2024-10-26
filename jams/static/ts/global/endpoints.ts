@@ -33,7 +33,8 @@ import {
     Attendee,
     AttendeeLogin,
     GeneralConfig,
-    AttendeeSignup
+    AttendeeSignup,
+    FireListEntry
 } from "@global/endpoints_interfaces";
 import { formatDate } from "./helper";
 
@@ -1634,6 +1635,94 @@ export function editAttendee(eventId:number, attendeeId:number, data:Partial<Att
             url: `${baseURL}/events/${eventId}/attendees/${attendeeId}`,
             data: JSON.stringify(data),
             contentType: 'application/json',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function checkInAttendee(eventId:number, attendeeId:number):Promise<ApiResponse<Attendee>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: `${baseURL}/events/${eventId}/attendees/${attendeeId}/check_in`,
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function checkOutAttendee(eventId:number, attendeeId:number):Promise<ApiResponse<Attendee>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: `${baseURL}/events/${eventId}/attendees/${attendeeId}/check_out`,
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+// #endregion
+
+// #region Fire List
+
+export function getFireList(eventId:number, queryString:string|null = null):Promise<ApiMultiEntryResponse<[FireListEntry]>> {
+    return new Promise((resolve, reject) => {
+        let url = `${baseURL}/events/${eventId}/fire_list`
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function checkInFireListEntry(eventId:number, fireListEntryId:number):Promise<ApiResponse<FireListEntry>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: `${baseURL}/events/${eventId}/fire_list/${fireListEntryId}/check_in`,
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function checkOutFireListEntry(eventId:number, fireListEntryId:number):Promise<ApiResponse<FireListEntry>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: `${baseURL}/events/${eventId}/fire_list/${fireListEntryId}/check_out`,
             success: function (response) {
                 resolve(response)
             },
