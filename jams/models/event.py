@@ -1,7 +1,13 @@
+from enum import Enum
 from . import db
-from sqlalchemy  import Column, String, Integer, DATE, TIME, Boolean, ForeignKey, DateTime
+from sqlalchemy  import CheckConstraint, Column, String, Integer, DATE, TIME, Boolean, ForeignKey, DateTime
 from sqlalchemy.orm import relationship, backref
 from datetime import datetime
+
+class FireListPersonType(Enum):
+    ATTENDEE = 'ATTENDEE'
+    VOLUNTEER = 'VOLUNTEER'
+    GUEST = 'GUEST'
 
 class Event(db.Model):
     __tablename__ = 'event'
@@ -252,4 +258,84 @@ class Session(db.Model):
             'location_column_order': self.location_column_order,
             'publicly_visible': self.publicly_visible,
             'active': self.active
+        }
+    
+class FireList(db.Model):
+    __tablename__ = 'fire_list'
+
+    id = Column(Integer(), primary_key=True)
+    event_id = Column(Integer(), ForeignKey('event.id'), nullable=False)
+    user_id = Column(Integer(), ForeignKey('user.id'), nullable=True)
+    attendee_id = Column(Integer(), ForeignKey('attendee.id'), nullable=True)
+    guest_owner_id = Column(Integer(), ForeignKey('user.id'), nullable=True)
+    name = Column(String(255), nullable=True)
+    email = Column(String(255), nullable=True)
+    checked_in = Column(Boolean, nullable=False, default=False, server_default='false')
+    type = Column(String(100), nullable=False, default=FireListPersonType.ATTENDEE.name, server_default=FireListPersonType.ATTENDEE.name)
+
+    event = relationship('Event', backref='fire_list_entries')
+    user = relationship('User', foreign_keys=[user_id], backref='fire_list_entries')
+    attendee = relationship('Attendee', backref='fire_list_entries')
+    guest_owner = relationship('User', foreign_keys=[guest_owner_id], backref='guests')
+
+    __table_args__ = (
+        CheckConstraint(
+            "((user_id IS NOT NULL)::int + (attendee_id IS NOT NULL)::int + (guest_owner_id IS NOT NULL)::int) = 1",
+            name='fire_list_single_role_constraint'
+        ),
+    )
+
+    def get_name(self):
+        if self.user:
+            return self.user.display_name
+        elif self.attendee:
+            return self.attendee.name
+        elif self.guest_owner and not self.name:
+            return self.guest_owner.name
+        
+        return self.name
+    
+    def get_email(self):
+        if self.user:
+            return self.user.email
+        elif self.attendee:
+            return self.attendee.email
+        elif self.guest_owner and not self.email:
+            return self.guest_owner.email
+        
+        return self.email
+
+    def __init__(self, event_id, name=None, email=None, user_id=None, attendee_id=None, guest_owner_id=None, checked_in=False):
+        self.event_id = event_id
+        self.name = name
+        self.email = email
+        self.user_id = user_id
+        self.attendee_id = attendee_id
+        self.guest_owner_id = guest_owner_id
+        self.checked_in = checked_in
+
+        if user_id:
+            self.type = FireListPersonType.VOLUNTEER.name
+        elif attendee_id:
+            self.type = FireListPersonType.ATTENDEE.name
+        else:
+            self.type = FireListPersonType.GUEST.name
+
+    def check_in(self):
+        self.checked_in = True
+
+    def check_out(self):
+        self.checked_in = False
+    
+    def to_dict(self):
+        _name = self.get_name()
+        _email = self.get_email()
+        return {
+            'id': self.id,
+            'event_id': self.event_id,
+            'name': _name,
+            'email': _email,
+            'guest_owner_id': self.guest_owner_id,
+            'checked_in': self.checked_in,
+            'type': self.type
         }
