@@ -2,7 +2,7 @@ import requests
 from flask import jsonify
 from datetime import timedelta, datetime, time, UTC
 from jams.configuration import ConfigType, get_config_value
-from jams.models import db, Attendee, AttendeeAccount, Event, TaskSchedulerModel, Webhook, ExternalAPILog
+from jams.models import db, Attendee, Event, TaskSchedulerModel, Webhook, ExternalAPILog, AttendeeSource, FireList, FireListPersonType
 from jams.util.task_scheduler import TaskActionEnum, create_task
 from jams.util.webhooks import WebhookActionEnum, WebhookOwnerEnum
 from jams.util import helper
@@ -217,16 +217,29 @@ def update_or_add_attendee_from_data(attendee_JSON):
         db.session.add(attendee)
         db.session.commit()
     else:
-        attendee.name = name
-        attendee.email = email
-        attendee.checked_in = checked_in
-        attendee.registerable = registerable
-        attendee.age = age
-        attendee.gender = gender
+        if attendee.last_update_source == AttendeeSource.EVENTBRITE.name:
+            attendee.name = name
+            attendee.email = email
+            attendee.checked_in = checked_in
+            attendee.registerable = registerable
+            attendee.age = age
+            attendee.gender = gender
 
-        db.session.commit()
+            db.session.commit()
 
     attendee.link_to_account()
+
+    # Create fire list entry
+    fire_list_entry = FireList.query.filter_by(event_id=event.id, attendee_id=attendee.id).first()
+
+    if not fire_list_entry:
+        fire_list_entry = FireList(event_id=event.id, attendee_id=attendee.id, checked_in=attendee.checked_in)
+        db.session.add(fire_list_entry)
+        db.session.commit()
+    else:
+        fire_list_entry.checked_in = attendee.checked_in
+        db.session.commit()
+
 
 def get_ticket_types(event_id=None):
     if not event_id:

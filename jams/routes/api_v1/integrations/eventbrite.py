@@ -122,6 +122,9 @@ def get_events():
 def get_ticket_types():
     ticket_types = eventbrite.get_ticket_types()
 
+    if not ticket_types:
+        return jsonify({'ticket_types': []})
+
     return jsonify({'ticket_types': [tt.to_dict() for tt in ticket_types]})
 
 @bp.route('/custom_questions', methods=['GET'])
