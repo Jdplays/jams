@@ -5,8 +5,8 @@ import {
 } from "@global/endpoints";
 import { Attendee } from "@global/endpoints_interfaces";
 import { EventDetails, EventDetailsOptions } from "@global/event_details";
-import { successToast, errorToast, validateTextInput, validateNumberInput, isDefined, animateElement, emptyElement } from "@global/helper";
-import { InputValidationPattern } from "@global/interfaces";
+import { successToast, errorToast, validateTextInput, validateNumberInput, isDefined, animateElement, emptyElement, buildQueryString } from "@global/helper";
+import { InputValidationPattern, QueryStringData } from "@global/interfaces";
 import { createGrid, GridApi, GridOptions, RowDataTransaction } from 'ag-grid-community';
 
 let gridApi: GridApi<any>;
@@ -16,6 +16,11 @@ let firstNameValid:boolean = false
 let lastNameValid:boolean = false
 let emailValid:boolean = false
 let ageValid:boolean = false
+
+function applyQuickFilter() {
+    const filterText = (document.getElementById("quick-filter") as HTMLInputElement).value
+    gridApi.setGridOption('quickFilterText', filterText);
+}
 
 function initialiseAgGrid() {
     const gridOptions:GridOptions = {
@@ -40,6 +45,8 @@ function initialiseAgGrid() {
                 field: 'checked_in',
                 headerName: 'Checked In',
                 cellRenderer: 'agCheckboxCellRenderer',
+                sortable: true,
+                sort: 'desc',
                 minWidth: 110,
                 flex: 1
             },
@@ -98,16 +105,28 @@ function initialiseAgGrid() {
     const gridElement = document.getElementById('attendees-data-grid') as HTMLElement
     gridElement.style.height = `${window.innerHeight * 0.7}px`;
     gridApi = createGrid(gridElement, gridOptions)
+
+
+    gridApi.resetQuickFilter()
 }
 
-async function populateAttendeesTable() {
+async function populateAttendeesTable(init:Boolean = false) {
     const gridElement = document.getElementById('attendees-data-grid')
 
-    const allAttendeesResponse = await getAttendees(eventDetails.eventId);
+    const queryData:Partial<QueryStringData> = {
+        $order_by: 'checked_in',
+        $order_direction: 'DESC',
+        $all_rows: true
+    }
+    const queryString = buildQueryString(queryData)
+
+    const allAttendeesResponse = await getAttendees(eventDetails.eventId, queryString);
     let newRowData = allAttendeesResponse.data
 
-    emptyElement(gridElement)
-    initialiseAgGrid()
+    if (init) {
+        emptyElement(gridElement)
+        initialiseAgGrid()
+    }
 
     const currentRowData:Attendee[] = [];
     gridApi.forEachNode(node => currentRowData.push(node.data));
@@ -307,13 +326,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     const eventDetailsOptions:EventDetailsOptions = {
         dateInclusive: true,
         eventDependentElements: [document.getElementById('attendees-data-grid-container'), document.getElementById('add-new-attendee-button')],
-        eventOnChangeFunc: populateAttendeesTable
+        eventOnChangeFunc: () => {
+            populateAttendeesTable(true)
+        }
     }
 
     eventDetails = new EventDetails('event-details', eventDetailsOptions)
     await eventDetails.init()
-
-    console.log(eventDetails.eventId)
 
     if (eventDetails.eventId === -1) {
         return
@@ -321,7 +340,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     initialiseAgGrid()
 
-    populateAttendeesTable()
+    populateAttendeesTable(true)
 
     window.setInterval(() => {
         populateAttendeesTable()
@@ -362,6 +381,7 @@ document.addEventListener("DOMContentLoaded", () => {
 document.addEventListener("DOMContentLoaded", () => {
     if (isDefined(window)) {
         (<any>window).prepAddAttendeeForm = prepAddAttendeeForm;
+        (<any>window).applyQuickFilter = applyQuickFilter;
     }
 });
   

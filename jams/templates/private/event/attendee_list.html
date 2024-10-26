@@ -22,6 +22,11 @@
     <span class="btn-text">Add Attendee</span>
 </button>
 
+<div class="mb-3">
+    <label class="form-label">Filter</label>
+    <input id="quick-filter" type="text" class="form-control" maxlength="255" autocomplete="off" oninput="applyQuickFilter()">
+</div>
+
 <div class="modal" id="add-update-attendee-modal" tabindex="-1">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
