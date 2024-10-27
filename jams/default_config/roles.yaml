@@ -1,6 +1,6 @@
 roles:
-  Admin:
-    description: The Administrator
+  Super Admin:
+    description: The Super Admin with access to every page
     pages:
       - user_management
       - events
@@ -13,6 +13,11 @@ roles:
       - locations_timeslots
       - attendee_list
       - fire_list
+  Admin:
+    description: An Administrator
+    pages:
+      - user_management
+      - settings
   Volunteer:
     description: A Helper at the event
     pages:
