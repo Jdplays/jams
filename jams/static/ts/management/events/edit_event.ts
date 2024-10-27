@@ -202,7 +202,7 @@ async function editEventOnclick() {
 
     const respose = await editEvent(EventId, data)
     if (respose) {
-        window.location.replace('/private/admin/events')
+        window.location.replace('/private/management/events')
     } else {
         errorToast()
     }

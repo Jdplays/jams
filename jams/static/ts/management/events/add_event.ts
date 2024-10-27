@@ -180,7 +180,7 @@ async function addEventOnclick() {
 
     const respose = await addNewEvent(data)
     if (respose) {
-        window.location.replace('/private/admin/events')
+        window.location.replace('/private/management/events')
     } else {
         errorToast()
     }
