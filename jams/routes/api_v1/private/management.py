@@ -211,14 +211,22 @@ def edit_file_data(workshop_id, file_id):
 @bp.route('/locations', methods=['GET'])
 @role_based_access_control_be
 def get_locations():
-    data = helper.filter_model_by_query_and_properties(Location, request.args)
+    args = request.args.to_dict()
+    if 'active' not in args:
+        args['active'] = str(True)
+
+    data = helper.filter_model_by_query_and_properties(Location, args)
     return jsonify(data)
 
 
 @bp.route('/locations/<field>', methods=['GET'])
 @role_based_access_control_be
 def get_locations_field(field):
-    data = helper.filter_model_by_query_and_properties(Location, request.args, field)
+    args = request.args.to_dict()
+    if 'active' not in args:
+        args['active'] = str(True)
+
+    data = helper.filter_model_by_query_and_properties(Location, args, field)
     return jsonify(data)
 
 
@@ -308,14 +316,22 @@ def activate_location(location_id):
 @bp.route('/timeslots', methods=['GET'])
 @role_based_access_control_be
 def get_timeslots():
-    data = helper.filter_model_by_query_and_properties(Timeslot, request.args)
+    args = request.args.to_dict()
+    if 'active' not in args:
+        args['active'] = str(True)
+
+    data = helper.filter_model_by_query_and_properties(Timeslot, args)
     return jsonify(data)
 
 
 @bp.route('/timeslots/<field>', methods=['GET'])
 @role_based_access_control_be
 def get_timeslots_field(field):
-    data = helper.filter_model_by_query_and_properties(Timeslot, request.args, field)
+    args = request.args.to_dict()
+    if 'active' not in args:
+        args['active'] = str(True)
+
+    data = helper.filter_model_by_query_and_properties(Timeslot, args, field)
     return jsonify(data)
 
 
