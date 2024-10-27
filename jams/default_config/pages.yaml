@@ -67,7 +67,7 @@ pages:
       routes.api_v1.private.admin.delete_role:
       routes.api_v1.private.admin.get_pages:
       routes.api_v1.private.admin.get_pages_field:
-        allowed_fields: id, name, parent_id
+        allowed_fields: id, name, parent_id, public
 
   # Events
   add_event:

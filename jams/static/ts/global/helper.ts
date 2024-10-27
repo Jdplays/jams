@@ -36,9 +36,12 @@ export function buildQueryString(params:QueryStringParams):string|null {
     for (const [key, value] of Object.entries(params)) {
         let processedValue = value
         // Check if value is empty
-        if (isNullEmptyOrSpaces(value)) {
-            continue
+        if (typeof value === 'string') {
+            if (value.trim().length === 0) {
+                continue
+            }
         }
+        
         if (typeof value === 'string' && value.startsWith('$~')) {
             const refKey = value.slice(2) // Extract the reference key after '$~'
             if (params[refKey] !== undefined) {

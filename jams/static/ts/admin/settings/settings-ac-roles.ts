@@ -187,7 +187,12 @@ function initialiseAgGrid() {
 }
 
 async function preloadPageNames() {
-    const response = await getPageNames('parent_id=null');
+    const queryData:Partial<QueryStringData> = {
+        parent_id:'null',
+        public:false
+    }
+    const queryString = buildQueryString(queryData)
+    const response = await getPageNames(queryString);
     let pages = response.data
     let pageNamesMap:Record<number,string> = {};
     pages.forEach(page => {
