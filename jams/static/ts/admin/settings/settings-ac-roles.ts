@@ -188,7 +188,7 @@ function initialiseAgGrid() {
 
 async function preloadPageNames() {
     const queryData:Partial<QueryStringData> = {
-        parent_id:'null',
+        parent_id:null,
         public:false
     }
     const queryString = buildQueryString(queryData)
