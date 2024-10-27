@@ -238,6 +238,10 @@ export class ScheduleGrid {
                 }, this.options.updateInterval * 1000)
             }
         }
+
+        if (this.options.edit) {
+            this.scheduleContainer.style.paddingLeft = '0'
+        }
     }
 
     async preloadVolunteerSignupsMap() {
@@ -1402,7 +1406,7 @@ document.addEventListener("scroll", debounce(function () {
         let header = element as HTMLElement
 
         header.style.position = 'sticky'
-        header.style.top = `${workshopSelectionContainer.clientHeight}px`
+        header.style.top = `${workshopSelectionContainer.clientHeight + 25}px`
         
     })
 

@@ -34,7 +34,7 @@ let eventDetails:EventDetails;
 const scheduleGridOptions:ScheduleGridOptions = {
     eventId: 1,
     edit: true,
-    size: 300,
+    size: 200,
     showPrivate: true,
     autoRefresh: true
 }
