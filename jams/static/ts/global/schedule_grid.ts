@@ -18,7 +18,8 @@ import {
     getVolunteerSignupsForEvent,
     removeVolunteerSignup,
     addVolunteerSignup,
-    getAttendeesSignups
+    getAttendeesSignups,
+    getWorkshopField
 } from '@global/endpoints'
 import { EventLocation, EventTimeslot, Location, Session, Timeslot, User, VolunteerSignup } from '@global/endpoints_interfaces'
 import {buildQueryString, emptyElement, allowDrop, waitForTransitionEnd, debounce, successToast, errorToast, buildUserAvatar, preloadUsersInfoMap, animateElement, isTouchDevice} from '@global/helper'
@@ -832,8 +833,7 @@ export class ScheduleGrid {
 
             // If the grid is editable, add the drag events to the empty sessions
             if (this.options.edit) {
-                const isBreak = sessionBlock.getAttribute('is-break')
-                if (!session.has_workshop && !sessionWorkshopsToAdd.includes(session) && !isBreak) {
+                if (!session.has_workshop && !sessionWorkshopsToAdd.includes(session)) {
                     sessionBlock.removeEventListener('drop', this.handleDropWithContext)
                     sessionBlock.addEventListener('drop', this.handleDropWithContext)
                     sessionBlock.addEventListener('dragover', allowDrop);
@@ -1234,11 +1234,34 @@ export class ScheduleGrid {
             event.preventDefault();
             const workshopID = Number(event.dataTransfer?.getData("workshop-id")) || null;
             const sessionID = Number((event.target as HTMLElement).getAttribute('session-id')) || null;
+            const isBreak = Boolean((event.target as HTMLElement).getAttribute('is-break')) || false
             if (!sessionID || !workshopID) {
                 return
             }
-            if (await addWorkshopToSession(sessionID, workshopID)) {
-                await scheduleGrid.populateSessions()
+
+            if (!isBreak) {
+                if (await addWorkshopToSession(sessionID, workshopID)) {
+                    await scheduleGrid.populateSessions()
+                }
+            } else {
+                let workshop = await getWorkshopField(workshopID, 'name')
+                let confirmDeleteModal = $('#confirm-place-on-break')
+                confirmDeleteModal.modal('show')
+
+                confirmDeleteModal.find('#confirm-place-text').html(`
+                    This session apears to be a break. You should only place volunteer workshops on breaks.<br><br>
+                    Are you sure you want to place "${workshop.name}" on this session? 
+                `);
+
+                confirmDeleteModal.find('#confirm-place-button').off('click');
+
+                confirmDeleteModal.find('#confirm-place-button').click(async () => {
+                    if (await addWorkshopToSession(sessionID, workshopID)) {
+                        await scheduleGrid.populateSessions()
+                    }
+                });
+
+                return true
             }
         }
         this.currentDragType = ''
