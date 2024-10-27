@@ -848,9 +848,11 @@ export class ScheduleGrid {
                     : oldSignups[session.id]?.length === currentSignups[session.id]?.length &&
                     oldSignups[session.id]?.every((value, index) => value === currentSignups[session.id][index])
 
+                if (!areEqual) {
                     if (!sessionWorkshopsToAdd.includes(session)) {
                         sessionWorkshopsToAdd.push(session)
                     }
+                }
             }
 
             // If attendee signup counts are shown, check for a difference
