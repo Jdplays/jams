@@ -15,7 +15,7 @@
     </div>
 </div>
 
-<a type="button" class="btn btn-primary mb-3" href="{{ url_for('routes.frontend.private.admin.add_event') }}" >
+<a type="button" class="btn btn-primary mb-3" href="{{ url_for('routes.frontend.private.management.add_event') }}" >
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
         stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
         class="icon icon-tabler icons-tabler-outline icon-tabler-plus">
@@ -72,6 +72,6 @@
 
 <p id="events-request-response"></p>
 
-<script src="{{ url_for('static', filename='js/admin/events/events.js') }}" type="module" defer></script>
+<script src="{{ url_for('static', filename='js/management/events/events.js') }}" type="module" defer></script>
 
 {% endblock %}

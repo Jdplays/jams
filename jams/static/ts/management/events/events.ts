@@ -171,7 +171,7 @@ function initialiseAgGrid() {
                         editButton.classList.add('btn', 'btn-outline-primary', 'py-1', 'px-2', 'mb-1')
                         editButton.style.marginRight = '10px'
                         editButton.innerHTML = 'Edit'
-                        editButton.href = `/private/admin/events/${params.data.id}/edit`
+                        editButton.href = `/private/management/events/${params.data.id}/edit`
                         div.appendChild(editButton)
 
                         const archiveActivateButton = buildArchiveActivateButtonForModel(params.data.id, params.data.active, archiveEventOnClick, activateEventOnClick)

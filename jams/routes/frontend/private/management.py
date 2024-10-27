@@ -2,7 +2,7 @@
 from flask import Blueprint, abort, render_template
 from flask_security import login_required
 from jams.decorators import role_based_access_control_fe
-from jams.models import Workshop, WorkshopFile
+from jams.models import Workshop, WorkshopFile, Event
 
 url_prefix = '/private/management'
 
@@ -46,3 +46,23 @@ def edit_workshop_file(workshop_id, file_uuid):
 @role_based_access_control_fe
 def locations_timeslots():
     return render_template(f'{url_prefix}/locations_timeslots.html')
+
+# Events
+@bp.route('/events')
+@login_required
+@role_based_access_control_fe
+def events():
+    return render_template(f'{url_prefix}/events/events.html')
+
+@bp.route('/events/add')
+@login_required
+@role_based_access_control_fe
+def add_event():
+    return render_template(f'{url_prefix}/events/add_event.html')
+
+@bp.route('/events/<int:event_id>/edit')
+@login_required
+@role_based_access_control_fe
+def edit_event(event_id):
+    Event.query.filter_by(id=event_id).first_or_404() # Make sure the event exists before rendering the template
+    return render_template(f'{url_prefix}/events/edit_event.html')
