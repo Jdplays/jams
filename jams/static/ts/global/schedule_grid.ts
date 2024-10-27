@@ -873,10 +873,13 @@ export class ScheduleGrid {
         // Generate the objects for the workshops to add to avoid doing extra unnessessary server calls
         let workshopsToAddIds = sessionWorkshopsToAdd.map(sw => sw.workshop_id)
         let workshopsToUpdate = sessionSignupCountsToUpdate.map(sw => sw.workshop_id)
-        let workshopsQueryData = {
-            id: [...new Set([...workshopsToAddIds, ...workshopsToUpdate])]
+        let idsToAdd = [...new Set([...workshopsToAddIds, ...workshopsToUpdate])]
+        let queryData:Partial<QueryStringData> = {}
+
+        if (idsToAdd.length > 0) {
+            queryData.id = idsToAdd
         }
-        let workshopsQueryString = buildQueryString(workshopsQueryData)
+        let workshopsQueryString = buildQueryString(queryData, false)
 
         if (sessionWorkshopsToAdd.length > 0 || sessionSignupCountsToUpdate.length > 0) {
             const workshopsResponse = await getWorkshops(workshopsQueryString)
