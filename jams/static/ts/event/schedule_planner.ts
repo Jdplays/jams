@@ -61,8 +61,11 @@ async function onEventChangeFunc() {
 async function populateWorkshopList() {
     let queryData:Partial<QueryStringData> = {
         name: currentSearchQuery,
-        description: '$~name',
-        difficulty_id: selectDifficultyIds
+        description: '$~name'
+    }
+
+    if (selectDifficultyIds.length > 0) {
+        queryData.difficulty_id = selectDifficultyIds
     }
     let queryString = buildQueryString(queryData)
     const workshopsResponse = await getWorkshops(queryString)
