@@ -105,7 +105,9 @@ export class EventDetails {
             eventInfoText.innerHTML = `<strong>${eventName.name}</strong> - ${formatDateToShort(date, {includeTime:false})}`
 
             for (const element of this.options.eventDependentElements) {
-                element.style.display = 'block'
+                if (element) {
+                    element.style.display = 'block'
+                }
             }
 
             infoTextDiv.appendChild(eventInfoText)
