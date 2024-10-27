@@ -67,11 +67,11 @@ pages:
       routes.api_v1.private.admin.delete_role:
       routes.api_v1.private.admin.get_pages:
       routes.api_v1.private.admin.get_pages_field:
-        allowed_fields: id, name, parent_id
+        allowed_fields: id, name, parent_id, public
 
   # Events
   add_event:
-    endpoint: routes.frontend.private.admin.add_event
+    endpoint: routes.frontend.private.management.add_event
     api_endpoints:
       routes.api_v1.private.admin.add_event:
       routes.api_v1.integrations.eventbrite.get_events:
@@ -79,7 +79,7 @@ pages:
         allowed_fields: id, name
   
   edit_event:
-    endpoint: routes.frontend.private.admin.edit_event
+    endpoint: routes.frontend.private.management.edit_event
     api_endpoints:
       routes.api_v1.private.admin.get_event:
       routes.api_v1.private.admin.edit_event:
@@ -133,7 +133,7 @@ pages:
         allowed_fields: id, name
 
   events:
-    endpoint: routes.frontend.private.admin.events
+    endpoint: routes.frontend.private.management.events
     child_pages:
       - add_event
       - edit_event
@@ -143,7 +143,7 @@ pages:
       routes.api_v1.private.admin.activate_event:
 
   schedule_planner:
-    endpoint: routes.frontend.private.admin.schedule_planner
+    endpoint: routes.frontend.private.event.schedule_planner
     api_endpoints:
       # Events
       routes.api_v1.private.admin.get_events_field:

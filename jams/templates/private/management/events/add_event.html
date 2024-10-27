@@ -7,7 +7,7 @@
 <h1>Add Event</h1>
 <h3> Here you can add an event or import one from eventbrite</h3>
 
-<a type="button" class="btn btn-link link-secondary mb-3" href="{{ url_for('routes.frontend.private.admin.events') }}">
+<a type="button" class="btn btn-link link-secondary mb-3" href="{{ url_for('routes.frontend.private.management.events') }}">
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
         stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
         class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-left">
@@ -101,6 +101,6 @@
     <span class="btn-text">Add Event</span>
 </button>
 
-<script src="{{ url_for('static', filename='js/admin/events/add_event.js') }}" type="module" defer></script>
+<script src="{{ url_for('static', filename='js/management/events/add_event.js') }}" type="module" defer></script>
 
 {% endblock %}

@@ -20,6 +20,13 @@ function checkIfConentUpdated() {
 function populateLocationSelect() {
     const locationSelect = document.getElementById('loc-select') as HTMLSelectElement
 
+    let defaultOption = document.createElement('option')
+    defaultOption.disabled = true
+    defaultOption.value = '-1'
+    defaultOption.text = 'Select a Location'
+    defaultOption.selected = true
+    locationSelect.appendChild(defaultOption)
+
     for (const timezone of allTimezones) {
         const option = document.createElement('option')
         option.value = timezone

@@ -18,7 +18,7 @@ interface ReferencedFields {
     [key: string]: string[];
 }
 
-export function buildQueryString(params:QueryStringParams):string|null {
+export function buildQueryString(params:QueryStringParams, allowNull:boolean=true):string|null {
     // Make sure params have a value
     if (params === null || params === undefined) {
         return null
@@ -34,11 +34,19 @@ export function buildQueryString(params:QueryStringParams):string|null {
 
     // Process each key, value pair in the params object
     for (const [key, value] of Object.entries(params)) {
-        let processedValue = value
-        // Check if value is empty
-        if (isNullEmptyOrSpaces(value)) {
+        // Check if value is null or empty
+        if (!allowNull && !isNullEmptyOrSpaces(value)) {
             continue
         }
+
+        if (typeof value === 'string') {
+            if (value.trim().length === 0) {
+                continue
+            }
+        }
+
+        let processedValue = value
+
         if (typeof value === 'string' && value.startsWith('$~')) {
             const refKey = value.slice(2) // Extract the reference key after '$~'
             if (params[refKey] !== undefined) {
@@ -54,6 +62,9 @@ export function buildQueryString(params:QueryStringParams):string|null {
             // Handle array values by joining them with the OR symbol '|'
             if (Array.isArray(processedValue)) {
                 const filteredValues = processedValue.filter(item => item !== null && item !== undefined && item !== '')
+                if (filteredValues.length === 0) {
+                    continue
+                }
                 processedValue = filteredValues.flat().join(orSeparator)
             }
             // Convert objects into JSON strings
@@ -175,6 +186,7 @@ export function buildEditButtonForModel(modelId:number, editModalId:string, prep
     let button = document.createElement('button')
     button.id = `edit-${modelId}`
     button.classList.add('btn', 'btn-outline-primary', 'py-1', 'px-2', 'mb-1')
+    button.style.marginRight = '10px'
     button.innerHTML = 'Edit'
     button.setAttribute('data-bs-toggle', 'modal')
     button.setAttribute('data-bs-target', `#${editModalId}`)

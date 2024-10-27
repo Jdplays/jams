@@ -105,12 +105,8 @@ class Timeslot(db.Model):
 
     @property
     def range(self):
-        from jams.util import helper
-        start_time = helper.convert_time_to_local_timezone(self.start)
-        end_time = helper.convert_time_to_local_timezone(self.end)
-
-        start_formatted = start_time.strftime('%H:%M') if start_time else 'N/A'
-        end_formatted = end_time.strftime('%H:%M') if end_time else 'N/A'
+        start_formatted = self.start.strftime('%H:%M') if self.start else 'N/A'
+        end_formatted = self.end.strftime('%H:%M') if self.end else 'N/A'
         return f"{start_formatted} - {end_formatted}"
     
     def __init__(self, name, start, end, is_break=False, active=True):
@@ -127,14 +123,11 @@ class Timeslot(db.Model):
         self.active = False
 
     def to_dict(self):
-        from jams.util import helper
-        start_time = helper.convert_time_to_local_timezone(self.start)
-        end_time = helper.convert_time_to_local_timezone(self.end)
         return {
             'id': self.id,
             'name': self.name,
-            'start': str(start_time),
-            'end': str(end_time),
+            'start': str(self.start),
+            'end': str(self.end),
             'range': self.range,
             'is_break': self.is_break,
             'active': self.active

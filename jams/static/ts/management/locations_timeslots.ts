@@ -13,7 +13,8 @@ import {
     activateTimeslot
 } from '@global/endpoints'
 import { RequestMultiModelJSONData } from '@global/endpoints_interfaces'
-import { buildActionButtonsForModel, successToast, errorToast, isDefined, formatDateToShort } from "@global/helper";
+import { buildActionButtonsForModel, successToast, errorToast, isDefined, formatDateToShort, buildQueryString } from "@global/helper";
+import { QueryStringData } from '@global/interfaces';
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
 
 let locationsGridApi: GridApi<any>;
@@ -84,6 +85,7 @@ async function prepEditLocationForm(locationId:number) {
 
 function initialiseLocationsAgGrid() {
     const gridOptions:GridOptions = {
+        domLayout: "autoHeight",
         columnDefs: [
             {field: 'name', flex: 1},
             {
@@ -102,7 +104,14 @@ function initialiseLocationsAgGrid() {
 }
 
 async function populateLocationsTable() {
-    const allLocationsResponse = await getLocations()
+    const queryData:Partial<QueryStringData> = {
+        'active': [true, false],
+        $all_rows: true,
+        $order_by: 'active',
+        $order_direction: 'DESC'
+    }
+    const queryString = buildQueryString(queryData)
+    const allLocationsResponse = await getLocations(queryString)
     let allLocations = allLocationsResponse.data
 
     locationsGridApi.setGridOption('rowData', allLocations)
@@ -195,6 +204,7 @@ async function prepEditTimeslotForm(timeslotId:number) {
 
 function initialiseTimeslotsAgGrid() {
     const gridOptions:GridOptions = {
+        domLayout: "autoHeight",
         columnDefs: [
             {field: 'name', flex: 1},
             {
@@ -228,7 +238,14 @@ function initialiseTimeslotsAgGrid() {
 }
 
 async function populateTimeslotsTable() {
-    const allTimeslotsResponse = await getTimeslots()
+    const queryData:Partial<QueryStringData> = {
+        'active': [true, false],
+        $all_rows: true,
+        $order_by: 'active',
+        $order_direction: 'DESC'
+    }
+    const queryString = buildQueryString(queryData)
+    const allTimeslotsResponse = await getTimeslots(queryString)
     let allTimeslots = allTimeslotsResponse.data
 
     timeslostGridApi.setGridOption('rowData', allTimeslots)

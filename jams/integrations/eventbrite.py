@@ -117,23 +117,30 @@ def get_events(continuation_token=None):
 
 def create_event_update_tasks(event):
     midnight = time(00, 00, 00)
-    event_datetime = datetime.combine(event.date, midnight)
+    event_day_start = datetime.combine(event.date, midnight)
+    event_datetime = datetime.combine(event.date, event.start_date_time.time())
     task_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
     params_dict = {'event_id': event.id}
     # Create task that updates an events attendees every day from the day of creation to the day of the event
     create_task(name=f'update_attendees_for_upcoming_event_{event.id}', start_datetime=task_start, action_enum=TaskActionEnum.UPDATE_EVENTBRITE_EVENT_ATTENDEES, interval=timedelta(days=1), end_datetime=event_datetime, params=params_dict)
-    # Craete task that updates an events attendees every hour during the day of the event
-    create_task(name=f'update_attendees_for_today_event_{event.id}', start_datetime=event_datetime, action_enum=TaskActionEnum.UPDATE_EVENTBRITE_EVENT_ATTENDEES, interval=timedelta(hours=1), end_datetime=(event_datetime+timedelta(days=1)), params=params_dict)
+    # Craete task that updates an events attendees every hour from the start of the event day to 2 hours before the event start time
+    create_task(name=f'update_attendees_for_today_event_{event.id}', start_datetime=event_day_start, action_enum=TaskActionEnum.UPDATE_EVENTBRITE_EVENT_ATTENDEES, interval=timedelta(hours=1), end_datetime=(event_datetime-timedelta(hours=2)), params=params_dict)
+    # Craete task that updates an events attendees every minute from the start of the event 2 hours after the event is scheduled to end
+    create_task(name=f'update_attendees_for_today_during_event_{event.id}', start_datetime=(event_datetime-timedelta(hours=2)), action_enum=TaskActionEnum.UPDATE_EVENTBRITE_EVENT_ATTENDEES, interval=timedelta(minutes=1), end_datetime=(event.end_date_time+timedelta(hours=2)), params=params_dict)
 
 def deactivate_event_update_tasks(event):
     upcoming_task:TaskSchedulerModel = TaskSchedulerModel.query.filter_by(name=f'update_attendees_for_upcoming_event_{event.id}').first()
     today_task:TaskSchedulerModel = TaskSchedulerModel.query.filter_by(name=f'update_attendees_for_today_event_{event.id}').first()
+    during_task:TaskSchedulerModel = TaskSchedulerModel.query.filter_by(name=f'update_attendees_for_today_during_event_{event.id}').first()
 
     if upcoming_task:
         upcoming_task.disable_task()
 
     if today_task:
         today_task.disable_task()
+
+    if during_task:
+        during_task.disable_task()
 
 def sync_all_attendees_at_event(external_event_id, continuation_token=None):
     event = Event.query.filter_by(external_id=external_event_id).first()

@@ -7,11 +7,17 @@ import {
     activateEvent
 } from "@global/endpoints"
 import { RequestMultiModelJSONData, Event } from "@global/endpoints_interfaces";
-import { buildActionButtonsForModel, successToast, errorToast, isDefined, buildArchiveActivateButtonForModel, formatDateToShort } from "@global/helper";
+import { buildActionButtonsForModel, successToast, errorToast, isDefined, buildArchiveActivateButtonForModel, formatDateToShort, isNullEmptyOrSpaces, buildQueryString } from "@global/helper";
+import { QueryStringData } from "@global/interfaces";
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
 
 
 let gridApi: GridApi<any>;
+
+function applyQuickFilter() {
+    gridApi.purgeInfiniteCache()
+    populateEventsTable()
+}
 
 async function archiveEventOnClick(eventId:number) {
     const response = await archiveEvent(eventId)
@@ -79,9 +85,38 @@ async function prepEditEventForm(eventId:number) {
 
 function initialiseAgGrid() {
     const gridOptions:GridOptions = {
+        autoSizeStrategy: {
+            type: 'fitGridWidth'
+        },
+        tooltipShowDelay:100,
+        tooltipInteraction: true,
+        getRowStyle: (params:any) => {
+            if (!params.data) {
+                return {color: 'gray', fontStyle: 'italic', textAlign: 'center'}
+            }
+            return null
+        },
         columnDefs: [
-            {field: 'name', flex: 1},
-            {field: 'description', flex: 1},
+            {
+                field: 'name',
+                cellRenderer: (params:any) => {
+                    if (!params.data) {
+                      return 'Loading...'
+                    }
+
+                    return params.value
+                },
+                // Span this "Loading..." message across all columns when data is missing
+                colSpan: (params) => (!params.data ? 9 : 1),
+                flex: 1
+            },
+            {
+                field: 'description',
+                tooltipValueGetter: (params:any) => {
+                    return params.value
+                },
+                flex: 1
+            },
             {
                 field: 'date',
                 cellRenderer: (params:any) => {
@@ -112,7 +147,7 @@ function initialiseAgGrid() {
                 headerName: 'External Link',
                 cellRenderer: (params:any) => {
                     let linkElement = document.createElement('a') as HTMLAnchorElement
-                    if (params.data.external) {
+                    if (params.value) {
                         linkElement.innerHTML = 'Link'
                         linkElement.href = params.data.external_url
                         linkElement.target = '_blank'
@@ -126,12 +161,17 @@ function initialiseAgGrid() {
             },
             {
                 field: 'options', cellRenderer: (params:any) => {
+                    if (!params.data) {
+                        return 'Loading...';
+                    }
+
                     if (!params.data.external) {
                         let div = document.createElement('div')
                         let editButton = document.createElement('a')
                         editButton.classList.add('btn', 'btn-outline-primary', 'py-1', 'px-2', 'mb-1')
+                        editButton.style.marginRight = '10px'
                         editButton.innerHTML = 'Edit'
-                        editButton.href = `/private/admin/events/${params.data.id}/edit`
+                        editButton.href = `/private/management/events/${params.data.id}/edit`
                         div.appendChild(editButton)
 
                         const archiveActivateButton = buildArchiveActivateButtonForModel(params.data.id, params.data.active, archiveEventOnClick, activateEventOnClick)
@@ -143,21 +183,55 @@ function initialiseAgGrid() {
                 },
                 flex: 1
             }
-        ]
+        ],
+        rowModelType: 'infinite',
+        cacheBlockSize: 50
     }
 
     const gridElement = document.getElementById('events-data-grid') as HTMLElement
+    gridElement.style.height = `${window.innerHeight * 0.7}px`;
     gridApi = createGrid(gridElement, gridOptions)
 
     populateEventsTable()
 }
 
 async function populateEventsTable() {
-    const response = await getEvents()
-    let allEvents = response.data
-    if (gridApi) {
-        gridApi.setGridOption('rowData', allEvents)
+    const eventsDataSource = {
+        rowCount: 0,
+        getRows: async function (params:any) {
+            const quickFilter = document.getElementById('quick-filter') as HTMLInputElement
+
+            const { startRow, endRow } = params
+            const blockSize = endRow - startRow
+
+            let queryData:Partial<QueryStringData> = {
+                $pagination_block_size: blockSize,
+                $pagination_start_index: startRow,
+                $order_by: "date",
+                $order_direction: "DESC"
+            }
+
+            if (!isNullEmptyOrSpaces(quickFilter.value)) {
+                queryData.name = quickFilter.value
+                queryData.description = '$~name'
+            }
+
+            gridApi.setGridOption('loading', true)
+            let queryString = buildQueryString(queryData)
+            let response = await getEvents(queryString)
+
+            let allEvents = response.data
+            let totalRecords = response.pagination.pagination_total_records
+
+            let lastRow = totalRecords <= endRow ? totalRecords : -1
+
+            params.successCallback(allEvents, lastRow)
+            gridApi.setGridOption('loading', false)
+        }
     }
+
+    gridApi.setGridOption("datasource", eventsDataSource);
+
 }
 
 
@@ -167,5 +241,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (isDefined(window)) {
         (<any>window).editExternalEventOnClick = editExternalEventOnClick;
         (<any>window).unlinkExternalEventOnClick = unlinkExternalEventOnClick;
+        (<any>window).applyQuickFilter = applyQuickFilter;
     }
 });

@@ -10,6 +10,12 @@ bp = Blueprint('event', __name__, url_prefix='event')
 
 # URL PREFIX = /private/event
 
+@bp.route('/schedule_planner')
+@login_required
+@role_based_access_control_fe
+def schedule_planner():
+    return render_template(f'{url_prefix}/schedule_planner.html')
+
 @bp.route('/attendee_list')
 @login_required
 @role_based_access_control_fe

@@ -55,12 +55,11 @@
         <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
             <div class="modal-content">
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                <div class="modal-status bg-danger"></div>
+                <div class="modal-status bg-warning"></div>
                 <div class="modal-body text-center py-4">
-                    <!-- Download SVG icon from http://tabler-icons.io/i/alert-triangle -->
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                        class="icon mb-2 text-danger icon-lg">
+                        class="icon mb-2 text-warning icon-lg">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                         <path d="M12 9v4"></path>
                         <path
@@ -74,15 +73,15 @@
                 <div class="modal-footer">
                     <div class="w-100">
                         <div class="row">
-                            <div id="mass-place-workshop-overwrite" class="col"><a href="#" class="btn btn-danger w-100"
+                            <div id="mass-place-workshop-overwrite" class="col"><a href="#" class="btn btn-outline-warning w-100"
                                     data-bs-dismiss="modal">
                                     Overwrite
                                 </a></div>
-                            <div id="mass-place-workshop-around" class="col"><a href="#" class="btn btn-secondary w-100"
+                            <div id="mass-place-workshop-around" class="col"><a href="#" class="btn btn-outline-secondary w-100"
                                     data-bs-dismiss="modal">
                                     Place Around
                                 </a></div>
-                            <div class="col"><a href="#" class="btn w-100" data-bs-dismiss="modal">
+                            <div class="col"><a href="#" class="btn btn-link link-secondary w-100" data-bs-dismiss="modal">
                                     Cancel
                                 </a></div>
                         </div>
@@ -110,9 +109,39 @@
             </div>
         </div>
     </div>
+
+    <div id="confirm-place-on-break" class="modal modal-blur fade" id="modal-small" tabindex="-1" style="display: none;"
+        aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-status bg-warning"></div>
+                <div class="modal-body text-center py-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="icon mb-2 text-warning icon-lg">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M12 9v4"></path>
+                        <path
+                            d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z">
+                        </path>
+                        <path d="M12 16h.01"></path>
+                    </svg>
+                    <div class="modal-title">Are you sure?</div>
+                    <div id="confirm-place-text"></div>
+                </div>
+                <div class="modal-footer">
+                    <button id="confirm-place-button" type="button" class="btn btn-outline-warning" data-bs-dismiss="modal">Yes,
+                        place</button>
+                    <button type="button" class="btn btn-link link-secondary ms-auto"
+                        data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<script src="{{ url_for('static', filename='js/admin/schedule_planner.js') }}" type="module" defer></script>
+<script src="{{ url_for('static', filename='js/event/schedule_planner.js') }}" type="module" defer></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/admin/schedule_planner.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/general/schedule_grid.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/general/workshop_card.css') }}">

@@ -20,7 +20,7 @@ def seed_users():
         if admin_role:
             password = os.getenv('ADMIN_WEB_PASS', 'admin')
             user = User(email='admin@jams.jams', username="AdminAccount", password=hash_password(password), user_induction=True)
-            user.set_roles_by_name(['Admin', 'Volunteer'])
+            user.set_roles_by_name(['Super Admin'])
             user.activate()
             db.session.add(user)
     db.session.commit()

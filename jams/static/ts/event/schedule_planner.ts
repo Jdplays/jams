@@ -34,7 +34,7 @@ let eventDetails:EventDetails;
 const scheduleGridOptions:ScheduleGridOptions = {
     eventId: 1,
     edit: true,
-    size: 300,
+    size: 200,
     showPrivate: true,
     autoRefresh: true
 }
@@ -61,8 +61,11 @@ async function onEventChangeFunc() {
 async function populateWorkshopList() {
     let queryData:Partial<QueryStringData> = {
         name: currentSearchQuery,
-        description: '$~name',
-        difficulty_id: selectDifficultyIds
+        description: '$~name'
+    }
+
+    if (selectDifficultyIds.length > 0) {
+        queryData.difficulty_id = selectDifficultyIds
     }
     let queryString = buildQueryString(queryData)
     const workshopsResponse = await getWorkshops(queryString)
@@ -134,7 +137,7 @@ async function populateWorkshopSelectionTools() {
     difficultyContainer.appendChild(difficultyTitle)
 
     let difficultyOptions = document.createElement('div')
-    difficultyOptions.classList.add('form-selectgroup', 'form-selectgroup-pills')
+    difficultyOptions.classList.add('form-selectgroup')
 
     for (const level of difficultyLevels.data) {
         let option = document.createElement('label')
@@ -171,7 +174,7 @@ async function populateWorkshopSelectionTools() {
 
     let tagsTitle = document.createElement('label')
     tagsTitle.classList.add('form-label', 'workshop-selection-tools-title')
-    tagsTitle.innerText = 'Tags'
+    tagsTitle.innerText = 'Tags (WIP)'
     tagsContainer.appendChild(tagsTitle)
 
     let tagsSelect = document.createElement('select')
@@ -179,12 +182,12 @@ async function populateWorkshopSelectionTools() {
     tagsSelect.name = 'tags[]'
     tagsSelect.multiple = true
 
-    for(let i=0; i < 5; i++) {
-        let option = document.createElement('option')
-        option.value = String(i)
-        option.text = 'tag ' + i
-        tagsSelect.appendChild(option)
-    }
+    // for(let i=0; i < 5; i++) {
+    //     let option = document.createElement('option')
+    //     option.value = String(i)
+    //     option.text = 'tag ' + i
+    //     tagsSelect.appendChild(option)
+    // }
 
     tagsContainer.appendChild(tagsSelect)
 

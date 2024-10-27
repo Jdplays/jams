@@ -5,9 +5,13 @@ import { buildUserAvatar, emptyElement, errorToast, preloadUsersInfoMap, success
 import { ScheduleGrid, ScheduleGridOptions } from "@global/schedule_grid";
 
 const eventDetailsOptions:EventDetailsOptions = {
-    eventDependentElements: [document.getElementById('select-user-container')],
     eventOnChangeFunc: onEventChangeFunc
 }
+
+if (document.getElementById('select-user-container')) {
+    eventDetailsOptions.eventDependentElements = [document.getElementById('select-user-container')]
+}
+
 let eventDetails:EventDetails;
 
 const scheduleGridOptions:ScheduleGridOptions = {
