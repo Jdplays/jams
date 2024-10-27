@@ -155,7 +155,12 @@ async function preLoadUserDisplayNames() {
 }
 
 async function loadAttendanceData() {
-    const eventAttendanceResponse = await getAttendanceForEvent(eventDetails.eventId)
+    const queryData:Partial<QueryStringData> = {
+        $all_rows: true
+    }
+    const queryString = buildQueryString(queryData)
+
+    const eventAttendanceResponse = await getAttendanceForEvent(eventDetails.eventId, queryString)
     userDisplayNamesMap = await preLoadUserDisplayNames()
     eventAttendancesMetaData = eventAttendanceResponse.metadata
 

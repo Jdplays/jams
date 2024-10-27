@@ -175,6 +175,7 @@ export function buildEditButtonForModel(modelId:number, editModalId:string, prep
     let button = document.createElement('button')
     button.id = `edit-${modelId}`
     button.classList.add('btn', 'btn-outline-primary', 'py-1', 'px-2', 'mb-1')
+    button.style.marginRight = '10px'
     button.innerHTML = 'Edit'
     button.setAttribute('data-bs-toggle', 'modal')
     button.setAttribute('data-bs-target', `#${editModalId}`)

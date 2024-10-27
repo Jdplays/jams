@@ -85,6 +85,7 @@ async function prepEditLocationForm(locationId:number) {
 
 function initialiseLocationsAgGrid() {
     const gridOptions:GridOptions = {
+        domLayout: "autoHeight",
         columnDefs: [
             {field: 'name', flex: 1},
             {
@@ -104,7 +105,10 @@ function initialiseLocationsAgGrid() {
 
 async function populateLocationsTable() {
     const queryData:Partial<QueryStringData> = {
-        'active': [true, false]
+        'active': [true, false],
+        $all_rows: true,
+        $order_by: 'active',
+        $order_direction: 'DESC'
     }
     const queryString = buildQueryString(queryData)
     const allLocationsResponse = await getLocations(queryString)
@@ -200,6 +204,7 @@ async function prepEditTimeslotForm(timeslotId:number) {
 
 function initialiseTimeslotsAgGrid() {
     const gridOptions:GridOptions = {
+        domLayout: "autoHeight",
         columnDefs: [
             {field: 'name', flex: 1},
             {
@@ -234,7 +239,10 @@ function initialiseTimeslotsAgGrid() {
 
 async function populateTimeslotsTable() {
     const queryData:Partial<QueryStringData> = {
-        'active': [true, false]
+        'active': [true, false],
+        $all_rows: true,
+        $order_by: 'active',
+        $order_direction: 'DESC'
     }
     const queryString = buildQueryString(queryData)
     const allTimeslotsResponse = await getTimeslots(queryString)

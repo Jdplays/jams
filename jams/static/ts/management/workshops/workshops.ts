@@ -7,13 +7,19 @@ import {
     getWorkshopTypes,
 } from "@global/endpoints";
 import { DifficultyLevel, WorkshopType } from "@global/endpoints_interfaces";
-import { successToast, errorToast, buildArchiveActivateButtonForModel } from "@global/helper";
+import { successToast, errorToast, buildArchiveActivateButtonForModel, isNullEmptyOrSpaces, buildQueryString, isDefined } from "@global/helper";
+import { QueryStringData } from "@global/interfaces";
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
 
 let gridApi: GridApi<any>;
 
 let difficultyLevelsMap:Record<number, DifficultyLevel> = {};
 let workshopTypesMap:Record<number, WorkshopType> = {};
+
+function applyQuickFilter() {
+    gridApi.purgeInfiniteCache()
+    populateWorkshopsTable()
+}
 
 async function archiveWorkshopOnClick(workshopId:number) {
     const response = await archiveWorkshop(workshopId)
@@ -41,22 +47,55 @@ function initialiseAgGrid() {
     const gridOptions:GridOptions = {
         tooltipShowDelay:100,
         tooltipMouseTrack: true,
-        domLayout: "autoHeight",
+        autoSizeStrategy: {
+            type: 'fitGridWidth'
+        },
+        getRowStyle: (params:any) => {
+            if (!params.data) {
+                return {color: 'gray', fontStyle: 'italic', textAlign: 'center'}
+            }
+            return null
+        },
         columnDefs: [
-            {field: 'name', flex: 1},
-            {field: 'description', flex: 1},
             {
-                field: 'workshop_type',
+                field: 'name',
+                cellRenderer: (params:any) => {
+                    if (!params.data) {
+                      return 'Loading...'
+                    }
+
+                    return params.value
+                },
+                // Span this "Loading..." message across all columns when data is missing
+                colSpan: (params) => (!params.data ? 7 : 1),
+                flex: 1
+            },
+            {
+                field: 'description',
+                cellRenderer: (params:any) => {
+                    return params.value
+                },
+                tooltipValueGetter: (params:any) => {
+                    return params.value
+                },
+                flex: 1
+            },
+            {
+                field: 'workshop_type_id',
                 headerName: 'Workshop Type',
                 cellRenderer: (params:any) => {
-                    if (!params.data.workshop_type_id) {
+                    if (!params.value) {
                         return 'None'
                     } else {
-                        return workshopTypesMap[params.data.workshop_type_id].name
+                        return workshopTypesMap[params.value].name
                     }
                 },
                 tooltipValueGetter: (params:any) => {
-                    return workshopTypesMap[params.data.workshop_type_id].description
+                    if (!params.value) {
+                        return ''
+                    } else {
+                        return workshopTypesMap[params.value].description
+                    }
                 },
                 width: 200,
                 flex: 1
@@ -64,29 +103,39 @@ function initialiseAgGrid() {
             {
                 field: 'min_volunteers',
                 cellRenderer: (params:any) => {
+                    if (!params.data) {
+                        return 'Loading...';
+                    }
+
                     if (!params.data.volunteer_signup) {
                         return 'N/A'
                     }
-                    return params.data.min_volunteers
+                    return params.value
                 },
                 flex: 1
             },
             {
                 field: 'capacity',
                 cellRenderer: (params:any) => {
+                    if (!params.data) {
+                        return 'Loading...';
+                    }
+
                     if (!params.data.attendee_registration) {
                         return 'N/A'
                     }
-                    return params.data.capacity
+                    return params.value
                 },
                 flex: 1
             },
             {
-                field: 'difficulty', cellRenderer: (params:any) => {
-                    if (!params.data.difficulty_id) {
+                field: 'difficulty_id',
+                headerName: 'Difficulty',
+                cellRenderer: (params:any) => {
+                    if (!params.value) {
                         return 'N/A'
                     } else {
-                        const difficultyLevel = difficultyLevelsMap[params.data.difficulty_id]
+                        const difficultyLevel = difficultyLevelsMap[params.value]
                         let span1 = document.createElement('span')
                         span1.innerHTML = difficultyLevel.name + ' '
 
@@ -101,7 +150,12 @@ function initialiseAgGrid() {
                 flex: 1
             },
             {
-                field: 'options', cellRenderer: (params:any) => {
+                field: 'options',
+                cellRenderer: (params:any) => {
+                    if (!params.data) {
+                        return 'Loading...';
+                    }
+
                     let div = document.createElement('div')
                     let editButton = document.createElement('a')
                     editButton.classList.add('btn', 'btn-outline-primary', 'py-1', 'px-2', 'mb-1')
@@ -117,7 +171,9 @@ function initialiseAgGrid() {
                 },
                 flex: 1
             }
-        ]
+        ],
+        rowModelType: 'infinite',
+        cacheBlockSize: 50
     }
 
     const gridElement = document.getElementById('workshops-data-grid') as HTMLElement
@@ -148,15 +204,51 @@ async function preLoadWorkshopTypes() {
 }
 
 async function populateWorkshopsTable() {
-    const allWorkshopsResponse = await getWorkshops();
-    let allWorkshops = allWorkshopsResponse.data
+    const workshopsDataSource = {
+        rowCount: 0,
+        getRows: async function (params:any) {
+            const quickFilter = document.getElementById('quick-filter') as HTMLInputElement
 
-    difficultyLevelsMap = await preLoadDifficultyLevels()
-    workshopTypesMap = await preLoadWorkshopTypes()
+            const { startRow, endRow } = params
+            const blockSize = endRow - startRow
 
-    gridApi.setGridOption('rowData', allWorkshops)
+            let queryData:Partial<QueryStringData> = {
+                $pagination_block_size: blockSize,
+                $pagination_start_index: startRow,
+            }
+
+            if (quickFilter && !isNullEmptyOrSpaces(quickFilter.value)) {
+                queryData.name = quickFilter.value
+                queryData.description = '$~name'
+            }
+
+            gridApi.setGridOption('loading', true)
+            let queryString = buildQueryString(queryData)
+            let response = await getWorkshops(queryString)
+
+            let allWorkshops = response.data
+            let totalRecords = response.pagination.pagination_total_records
+
+            let lastRow = totalRecords <= endRow ? totalRecords : -1
+
+            params.successCallback(allWorkshops, lastRow)
+            gridApi.setGridOption('loading', false)
+        }
+    }
+
+    gridApi.setGridOption("datasource", workshopsDataSource);
 }
 
 // Event listeners
-document.addEventListener("DOMContentLoaded", initialiseAgGrid);
+document.addEventListener("DOMContentLoaded", async () => {
+    difficultyLevelsMap = await preLoadDifficultyLevels()
+    workshopTypesMap = await preLoadWorkshopTypes()
+
+    initialiseAgGrid()
+});
+document.addEventListener("DOMContentLoaded", () => {
+    if (isDefined(window)) {
+        (<any>window).applyQuickFilter = applyQuickFilter;
+    }
+});
   

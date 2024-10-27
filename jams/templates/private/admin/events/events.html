@@ -15,7 +15,18 @@
     </div>
 </div>
 
-<a type="button" class="btn btn-primary mb-3" href="{{ url_for('routes.frontend.private.admin.add_event') }}" >Add Event</a>
+<a type="button" class="btn btn-primary mb-3" href="{{ url_for('routes.frontend.private.admin.add_event') }}" >
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        class="icon icon-tabler icons-tabler-outline icon-tabler-plus">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M12 5l0 14" />
+        <path d="M5 12l14 0" />
+    </svg>
+    <span class="btn-text">Add Event</span>
+</a>
+
+<input id="quick-filter" type="text" class="form-control mb-2" maxlength="255" autocomplete="off" placeholder="Search..." oninput="applyQuickFilter()">
 
 <div id="events-data-grid-container">
     <div id="events-data-grid" class="ag-theme-quartz" style="height: 500px"></div>

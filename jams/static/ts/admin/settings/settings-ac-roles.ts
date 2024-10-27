@@ -7,7 +7,8 @@ import {
     getPageNames
 } from "@global/endpoints"
 import { RequestMultiModelJSONData } from "@global/endpoints_interfaces";
-import { successToast, errorToast, getSelectValues, emptyElement, isNullEmptyOrSpaces, buildEditButtonForModel, isDefined } from "@global/helper";
+import { successToast, errorToast, getSelectValues, emptyElement, isNullEmptyOrSpaces, buildEditButtonForModel, isDefined, buildQueryString } from "@global/helper";
+import { QueryStringData } from "@global/interfaces";
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
 import TomSelect from 'tom-select';
 
@@ -196,7 +197,12 @@ async function preloadPageNames() {
 }
 
 async function populateRolesTable() {
-    const response = await getRoles();
+    const queryData:Partial<QueryStringData> = {
+        $all_rows: true
+    }
+    const queryString = buildQueryString(queryData)
+    
+    const response = await getRoles(queryString);
     const allRoles = response.data
     pageNamesMap = await preloadPageNames()
 
