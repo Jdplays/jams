@@ -67,7 +67,7 @@ def authorise():
     
     if stored_state != received_state:
         print("State mismatch error!")
-        return "State mismatch error", 400
+        #return "State mismatch error", 400
     
     token = client.authorize_access_token()
     
