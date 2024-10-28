@@ -179,7 +179,10 @@ async function loadAttendanceData() {
     })
     .sort((a, b) => {
         const getScore = (item:Partial<VolunteerAttendance>) => {
-            return (item.user_id === CurrentUserId ? 10 : 0) + (item.main ? 4 : 0) + (item.setup ? 2 : 0) + (item.packdown ? 1 : 0)
+            return (item.user_id === CurrentUserId ? 10 : 0) + (item.main ? 4 : 0) + (item.setup ? 2 : 0) + (item.packdown ? 1 : 0) +
+            (item.main !== null && item.main !== undefined ? 1 : 0) +
+            (item.setup !== null && item.setup !== undefined ? 1 : 0) + 
+            (item.packdown !== null && item.packdown !== undefined ? 1 : 0)
         }
 
         return getScore(b) - getScore(a)
