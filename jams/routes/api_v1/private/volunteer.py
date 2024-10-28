@@ -16,8 +16,11 @@ bp = Blueprint('volunteer', __name__)
 @role_based_access_control_be
 def get_event_attendance(event_id):
     Event.query.filter_by(id=event_id).first_or_404()
-    attendances = VolunteerAttendance.query.filter_by(event_id=event_id).all()
-    data = helper.filter_model_by_query_and_properties(VolunteerAttendance, request.args, input_data=attendances)
+
+    args = request.args.to_dict()
+    args['event_id'] = str(event_id)
+
+    data = helper.filter_model_by_query_and_properties(VolunteerAttendance, args)
     
     setup_count = VolunteerAttendance.query.filter_by(event_id=event_id, setup=True).count()
     main_count = VolunteerAttendance.query.filter_by(event_id=event_id, main=True).count()
