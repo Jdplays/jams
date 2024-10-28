@@ -26,7 +26,12 @@ def login():
         if next_url:
             session['next'] = next_url
             
-        return client.authorize_redirect(redirect_uri)
+        # Trigger the authorization redirect and capture the state
+        response = client.authorize_redirect(redirect_uri)
+        session['oauth_state'] = request.args.get('state')  # Store the generated state in session
+        print("Initial state:", session['oauth_state'])  # Print the initial state
+        
+        return response
     elif local_auth_enabled:
         form = CustomLoginForm()
         return render_template('/security/login_user.html', login_user_form=form, next=next_url)
@@ -53,6 +58,17 @@ def register():
 @bp.route('/authorise')
 def authorise():
     client = oauth.create_client(get_config_value(ConfigType.OAUTH_PROVIDER_NAME))
+
+    # Retrieve and print both stored and received state
+    stored_state = session.get('oauth_state')
+    received_state = request.args.get('state')
+    print("Stored state:", stored_state)
+    print("Received state:", received_state)
+    
+    if stored_state != received_state:
+        print("State mismatch error!")
+        return "State mismatch error", 400
+    
     token = client.authorize_access_token()
     
     user_info = token['userinfo']
