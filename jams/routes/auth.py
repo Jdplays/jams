@@ -56,19 +56,33 @@ def authorise():
     token = client.authorize_access_token()
     
     user_info = token['userinfo']
-    user_email = user_info['email']
+    user_email = None
+    if 'email' not in user_info:
+        if 'emails' in user_info:
+            user_emails = user_info['emails']
+            user_email = user_emails[0]
+    else:
+        user_email = user_info['email']
     user_sub = user_info['sub']
 
     user = User.query.filter_by(open_id_sub=user_sub).first()
     if not user:
-        random_password = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
-        user = User(
-            email=user_email,
-            username=user_email,
-            password=hash_password(random_password),
-            open_id_sub=user_sub)
-        db.session.add(user)
-        user.activate()
+        user = User.query.filter_by(email=user_email).first()
+        if not user:
+            random_password = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
+            user = User(
+                email=user_email,
+                username=user_email,
+                password=hash_password(random_password),
+                open_id_sub=user_sub)
+            db.session.add(user)
+            user.activate()
+        else:
+            if user.open_id_migration:
+                user.open_id_sub = user_sub
+                user.open_id_migration = False
+            else:
+                abort(403)
         db.session.commit()
     
     login_user(user)

@@ -51,6 +51,7 @@ class User(UserMixin, db.Model):
     roles = relationship('Role', secondary='user_roles', backref='users')
     fs_uniquifier = Column(String(255), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
     open_id_sub = Column(String(255), unique=True, nullable=True)  # OpenID 'sub' claim
+    open_id_migration = Column(Boolean, nullable=False, default=False, server_default='false')
     user_induction = Column(Boolean(), nullable=False, default=False, server_default='false')
     avatar_url = Column(String(255), nullable=True)
     
