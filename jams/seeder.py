@@ -1,7 +1,7 @@
 import os
 import string
 from jams.models import db, User, Role, Workshop, Event, Location, Timeslot, DifficultyLevel, WorkshopType
-from jams.rbac import generate_full_rbac
+from jams.endpoint_loader import generate_full_rbac
 from jams.configuration import ConfigType, set_config_value
 from flask_security.utils import hash_password
 import datetime

@@ -386,8 +386,8 @@ def extract_endpoint():
     endpoint = request.endpoint
     return endpoint
 
-def get_endpoint_rules_for_roles(endpoint, role_ids, public=False):
-    query = db.session.query(EndpointRule).filter(EndpointRule.endpoint == endpoint, EndpointRule.public == public)
+def get_endpoint_rules_for_roles(endpoint_id, role_ids, public=False):
+    query = db.session.query(EndpointRule).filter(EndpointRule.endpoint_id == endpoint_id, EndpointRule.public == public)
     
     if not public:
         query = query.join(RoleEndpointRule, EndpointRule.id == RoleEndpointRule.endpoint_rule_id)
@@ -397,8 +397,8 @@ def get_endpoint_rules_for_roles(endpoint, role_ids, public=False):
 
     return query.all()
 
-def get_endpoint_rule_for_page(endpoint, page_id, public=False):
-    query = db.session.query(EndpointRule).filter(EndpointRule.endpoint == endpoint, EndpointRule.public == public)
+def get_endpoint_rule_for_page(endpoint_id, page_id, public=False):
+    query = db.session.query(EndpointRule).filter(EndpointRule.endpoint_id == endpoint_id, EndpointRule.public == public)
 
     if not public:
         query = query.join(PageEndpointRule, EndpointRule.id == PageEndpointRule.endpoint_rule_id)
@@ -451,8 +451,13 @@ def get_and_prepare_file(bucket_name, file_name, version_id):
 
 
 def get_required_roles_for_endpoint(endpoint):
+    from jams.models import Endpoint
     role_names = []
-    endpoint_rule = EndpointRule.query.filter_by(endpoint=endpoint).first()
+    endpoint_obj = Endpoint.query.filter_by(endpoint=endpoint).first()
+    if not endpoint_obj:
+        return role_names
+    
+    endpoint_rule = EndpointRule.query.filter_by(endpoint_id=endpoint_obj.id).first()
     page = Page.query.filter_by(endpoint=endpoint).first()
     if not endpoint_rule and not page:
         return role_names

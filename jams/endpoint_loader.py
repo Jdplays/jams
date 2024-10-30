@@ -1,16 +1,19 @@
 import os
 import yaml
-from jams.models import db, Page, EndpointRule, Role, RolePage, RoleEndpointRule, PageEndpointRule
+from jams.models import db, EndpointGroup, Endpoint, Page, EndpointRule, Role, RolePage, RoleEndpointRule, PageEndpointRule
 from jams.util import helper
 from jams.extensions import clear_table
 
 def generate_full_rbac():
     clear_rbac()
     generate_endpoints_structure()
+    generate_page_endpoints_structure()
     load_all_roles()
     generate_role_endpoint_rules()
 
 def clear_rbac():
+    clear_table(EndpointGroup)
+    clear_table(Endpoint)
     clear_table(PageEndpointRule)
     clear_table(RoleEndpointRule)
     clear_table(RolePage)
@@ -18,6 +21,58 @@ def clear_rbac():
     clear_table(Page)
 
 def generate_endpoints_structure():
+    script_dir = os.path.dirname(__file__)
+    pages_yaml_path = os.path.join(script_dir, 'default_config', 'endpoints.yaml')
+    data = load_yaml(pages_yaml_path)
+    groups = data.get('groups', {})
+
+    if groups:
+        for group_name, group_data in groups.items():
+            group_description = group_data.get('description', [])
+
+            group = EndpointGroup.query.filter_by(name=group_name).first()
+            if not group:
+                group = EndpointGroup(name=group_name, description=group_description)
+                db.session.add(group)
+            else:
+                group.description = group_description
+            
+            db.session.commit()
+
+            # Get the read endpoints
+            read_endpoints = group_data.get('read', [])
+            if read_endpoints:
+                for endpoint_name, endpoint_data in read_endpoints.items():
+                    endpoint = Endpoint.query.filter_by(name=endpoint_name).first()
+                    if not endpoint:
+                        endpoint = Endpoint(name=endpoint_name, endpoint=endpoint_data, endpoint_group_id=group.id, read=True, write=False)
+                        db.session.add(endpoint)
+                    else:
+                        endpoint.endpoint = endpoint_data
+                        endpoint.endpoint_group_id = group.id
+                        endpoint.read = True
+                        endpoint.write=False
+                    
+                    db.session.commit()
+            
+            # Get the write endpoints
+            write_endpoints = group_data.get('write', [])
+            if write_endpoints:
+                for endpoint_name, endpoint_data in write_endpoints.items():
+                    endpoint = Endpoint.query.filter_by(name=endpoint_name).first()
+                    if not endpoint:
+                        endpoint = Endpoint(name=endpoint_name, endpoint=endpoint_data, endpoint_group_id=group.id, read=False, write=True)
+                        db.session.add(endpoint)
+                    else:
+                        endpoint.endpoint = endpoint_data
+                        endpoint.endpoint_group_id = group.id
+                        endpoint.read = False
+                        endpoint.write=True
+                    
+                    db.session.commit()
+
+
+def generate_page_endpoints_structure():
     script_dir = os.path.dirname(__file__)
     pages_yaml_path = os.path.join(script_dir, 'default_config', 'pages.yaml')
     data = load_yaml(pages_yaml_path)
@@ -55,11 +110,16 @@ def generate_endpoints_structure():
                     allowed_fields = None
                     if endpoint_data:
                         allowed_fields = endpoint_data.get('allowed_fields', [])
-                    endpoint_rule = EndpointRule.query.filter_by(endpoint=endpoint_name, allowed_fields=allowed_fields, public=page_is_public).first()
+                    endpoint = Endpoint.query.filter_by(name=endpoint_name).first()
+                    if not endpoint:
+                        print(f'Endpoint "{endpoint_name}" does not exist. Skipping...')
+                        continue
+
+                    endpoint_rule = EndpointRule.query.filter_by(endpoint_id=endpoint.id, allowed_fields=allowed_fields, public=page_is_public).first()
                     if not endpoint_rule:
-                        endpoint_rule = helper.get_endpoint_rule_for_page(endpoint=endpoint_name, page_id=page.id, public=page_is_public)
+                        endpoint_rule = helper.get_endpoint_rule_for_page(endpoint_id=endpoint.id, page_id=page.id, public=page_is_public)
                         if not endpoint_rule:
-                            endpoint_rule = EndpointRule(endpoint=endpoint_name, allowed_fields=allowed_fields, public=page_is_public)
+                            endpoint_rule = EndpointRule(endpoint_id=endpoint.id, allowed_fields=allowed_fields, public=page_is_public)
                             db.session.add(endpoint_rule)
                         else:
                             endpoint_rule.allowed_fields = allowed_fields

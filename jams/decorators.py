@@ -3,7 +3,7 @@ from flask import abort, redirect, request, current_app, session, url_for
 from flask_login.config import EXEMPT_METHODS
 from functools import wraps
 from jams.util import helper, attendee_auth
-from jams.models import Page, Attendee
+from jams.models import Page, Attendee, Endpoint
 from jams.configuration import ConfigType, get_config_value
 
 
@@ -44,8 +44,9 @@ def role_based_access_control_be(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         endpoint = helper.extract_endpoint()
+        endpoint_obj = Endpoint.query.filter_by(endpoint=endpoint).first()
         user_role_ids = current_user.role_ids if current_user.is_authenticated else None
-        endpoint_rules = helper.get_endpoint_rules_for_roles(endpoint, user_role_ids, not current_user.is_authenticated)
+        endpoint_rules = helper.get_endpoint_rules_for_roles(endpoint_obj.id, user_role_ids, not current_user.is_authenticated)
         if not endpoint_rules:
             if not current_user.is_authenticated:
                 login_response = enforce_login(func, *args, **kwargs)

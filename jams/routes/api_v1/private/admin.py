@@ -4,7 +4,7 @@ from flask_security import login_required, current_user
 from jams.decorators import role_based_access_control_be, protect_user_updates
 from jams.models import db, User, Role, Event, EventLocation, EventTimeslot, Session, Page, Config, Workshop
 from jams.util import helper
-from jams.rbac import generate_roles_file_from_db, update_pages_assigned_to_role
+from jams.endpoint_loader import generate_roles_file_from_db, update_pages_assigned_to_role
 from jams.integrations.eventbrite import create_event_update_tasks, deactivate_event_update_tasks
 
 bp = Blueprint('admin', __name__)
