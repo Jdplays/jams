@@ -1,0 +1,175 @@
+groups:
+  difficulty_levels:
+    description: Manages difficulty levels for workshops
+    read:
+      get_difficulty_levels: routes.api_v1.private.management.get_difficulty_levels
+      get_difficulty_level: routes.api_v1.private.management.get_difficulty_level
+
+  workshops:
+    description: Manages workshop details and files
+    read:
+      get_workshops: routes.api_v1.private.management.get_workshops
+      get_workshops_field: routes.api_v1.private.management.get_workshops_field
+      get_workshop: routes.api_v1.private.management.get_workshop
+      get_workshop_field: routes.api_v1.private.management.get_workshop_field
+      get_workshop_file: routes.resources.get_workshop_file
+      get_workshop_files: routes.api_v1.private.management.get_workshop_files
+    write:
+      add_workshop: routes.api_v1.private.management.add_workshop
+      edit_workshop: routes.api_v1.private.management.edit_workshop
+      archive_workshop: routes.api_v1.private.management.archive_workshop
+      activate_workshop: routes.api_v1.private.management.activate_workshop
+      add_workshop_file: routes.api_v1.private.management.add_workshop_file
+      archive_workshop_file: routes.api_v1.private.management.archive_workshop_file
+      activate_workshop_file: routes.api_v1.private.management.activate_workshop_file
+
+  workshop_types:
+    description: Manages types of workshops
+    read:
+      get_workshop_types: routes.api_v1.private.management.get_workshop_types
+
+  locations:
+    description: Manages static scheduling locations for events
+    read:
+      get_locations: routes.api_v1.private.management.get_locations
+      get_location: routes.api_v1.private.management.get_location
+    write:
+      add_location: routes.api_v1.private.management.add_location
+      edit_location: routes.api_v1.private.management.edit_location
+      archive_location: routes.api_v1.private.management.archive_location
+      activate_location: routes.api_v1.private.management.activate_location
+
+  timeslots:
+    description: Manages static scheduling timeslots for events
+    read:
+      get_timeslots: routes.api_v1.private.management.get_timeslots
+      get_timeslot: routes.api_v1.private.management.get_timeslot
+    write:
+      add_timeslot: routes.api_v1.private.management.add_timeslot
+      edit_timeslot: routes.api_v1.private.management.edit_timeslot
+      archive_timeslot: routes.api_v1.private.management.archive_timeslot
+      activate_timeslot: routes.api_v1.private.management.activate_timeslot
+
+  events:
+    description: Manages event details, and schedules
+    read:
+      get_event: routes.api_v1.private.admin.get_event
+      get_event_field: routes.api_v1.private.admin.get_event_field
+      get_events: routes.api_v1.private.admin.get_events
+      get_events_field: routes.api_v1.private.admin.get_events_field
+      get_event_locations: routes.api_v1.private.admin.get_event_locations
+      get_event_timeslots: routes.api_v1.private.admin.get_event_timeslots
+      get_event_sessions: routes.api_v1.private.admin.get_event_sessions
+      get_event_volunteer_attendance: routes.api_v1.private.volunteer.get_event_attendance
+      get_event_volunteer_signups: routes.api_v1.private.volunteer.get_event_volunteer_signups
+      get_event_attendees: routes.api_v1.private.event.get_attendees
+      get_event_fire_list: routes.api_v1.private.event.get_fire_list
+    write:
+      add_event: routes.api_v1.private.admin.add_event
+      edit_event: routes.api_v1.private.admin.edit_event
+      archive_event: routes.api_v1.private.admin.archive_event
+      activate_event: routes.api_v1.private.admin.activate_event
+      add_event_location: routes.api_v1.private.admin.add_event_location
+      update_event_location_order: routes.api_v1.private.admin.update_event_location_order
+      delete_event_location: routes.api_v1.private.admin.delete_event_location
+      add_event_timeslot: routes.api_v1.private.admin.add_event_timeslot
+      delete_event_timeslot: routes.api_v1.private.admin.delete_event_timeslot
+      add_workshop_to_session: routes.api_v1.private.admin.add_workshop_to_session
+      remove_workshop_from_session: routes.api_v1.private.admin.remove_workshop_from_session
+      check_in_event_fire_list_item: routes.api_v1.private.event.check_in_fire_list_item
+      check_out_event_fire_list_item: routes.api_v1.private.event.check_out_fire_list_item
+
+  users:
+    description: Manages user information
+    read:
+      get_users: routes.api_v1.private.admin.get_users
+      get_users_field: routes.api_v1.private.admin.get_users_field
+      get_user_field: routes.api_v1.private.admin.get_user_field
+      get_users_public_info: routes.api_v1.private.admin.get_users_public_info
+    write:
+      edit_user: routes.api_v1.private.admin.edit_user
+      activate_user: routes.api_v1.private.admin.activate_user
+      archive_user: routes.api_v1.private.admin.archive_user
+  
+  volunteer:
+    description: Manages voluntter information
+    read:
+      get_user_attendance: routes.api_v1.private.volunteer.get_user_attendance
+    write:
+      add_user_attendance: routes.api_v1.private.volunteer.add_user_attendance
+      edit_user_attendance: routes.api_v1.private.volunteer.edit_user_attendance
+      add_volunteer_signup: routes.api_v1.private.volunteer.add_volunteer_signup
+      remove_volunteer_signup: routes.api_v1.private.volunteer.remove_volunteer_signup
+
+  attendee:
+    description: Manages attendee information
+    write:
+      add_attendee: routes.api_v1.private.event.add_attendee
+      edit_attendee: routes.api_v1.private.event.edit_attendee
+      check_in_attendee: routes.api_v1.private.event.check_in_attendee
+      check_out_attendee: routes.api_v1.private.event.check_out_attendee
+
+  roles:
+    description: Manages user roles and permissions
+    read:
+      get_roles: routes.api_v1.private.admin.get_roles
+      get_role: routes.api_v1.private.admin.get_role
+      get_roles_field: routes.api_v1.private.admin.get_roles_field
+    write:
+      add_role: routes.api_v1.private.admin.add_role
+      edit_role: routes.api_v1.private.admin.edit_role
+      delete_role: routes.api_v1.private.admin.delete_role
+
+  monitoring:
+    description: Accesses monitoring logs and metadata
+    read:
+      get_private_access_logs: routes.api_v1.private.monitoring.get_private_access_logs
+      get_task_scheduler_logs: routes.api_v1.private.monitoring.get_task_scheduler_logs
+      get_webhook_logs: routes.api_v1.private.monitoring.get_webhook_logs
+      get_external_api_logs: routes.api_v1.private.monitoring.get_external_api_logs
+      get_private_access_logs_metadata: routes.api_v1.private.monitoring.get_private_access_logs_metadata
+      get_task_scheduler_logs_metadata: routes.api_v1.private.monitoring.get_task_scheduler_logs_metadata
+      get_webhook_logs_metadata: routes.api_v1.private.monitoring.get_webhook_logs_metadata
+      get_external_api_logs_metadata: routes.api_v1.private.monitoring.get_external_api_logs_metadata
+
+  files:
+    description: Manages files that can be uploaded
+    read:
+      get_file_versions: routes.resources.get_file_versions
+      get_file_data: routes.api_v1.private.management.get_file_data
+    write:
+      edit_file_data: routes.api_v1.private.management.edit_file_data
+  
+  pages:
+    description: Holds all the pages config in JAMS
+    read:
+      get_pages: routes.api_v1.private.admin.get_pages
+      get_pages_field: routes.api_v1.private.admin.get_pages_field
+
+  config:
+    description: Handles configuration for JAMS
+    read:
+      get_general_config: routes.api_v1.private.general.get_general_config
+    write:
+      edit_general_config: routes.api_v1.private.general.edit_general_config
+
+  eventbrite:
+    description: Manages Eventbrite integrations
+    read:
+      verify_eventbrite_api_key: routes.api_v1.integrations.eventbrite.verify
+      get_eventbrite_organisations: routes.api_v1.integrations.eventbrite.get_organisations
+      get_eventbrite_integration_config: routes.api_v1.integrations.eventbrite.get_config
+      get_eventbrite_events: routes.api_v1.integrations.eventbrite.get_events
+      get_eventbrite_ticket_types: routes.api_v1.integrations.eventbrite.get_ticket_types
+      get_eventbrite_custom_questions: routes.api_v1.integrations.eventbrite.get_custom_questions
+    write:
+      edit_eventbrite_integration_config: routes.api_v1.integrations.eventbrite.edit_config
+      enable_eventbrite_integration: routes.api_v1.integrations.eventbrite.enable
+      disable_eventbrite_integration: routes.api_v1.integrations.eventbrite.disable
+  auth:
+    description: Manages auth integrations
+    read:
+      get_auth_config: routes.api_v1.integrations.auth.get_config
+    write:
+      edit_auth_config: routes.api_v1.integrations.auth.edit_config
+      delete_auth_config: routes.api_v1.integrations.auth.delete_config
