@@ -235,19 +235,21 @@ class EndpointRule(db.Model):
     __tablename__ = 'endpoint_rule'
 
     id = Column(Integer, primary_key=True)
-    endpoint = Column(String(255), nullable=False)
+    endpoint_id = Column(Integer, ForeignKey('endpoint.id'), nullable=False)
     allowed_fields = Column(String(255), nullable=True) # This is a comma seperated list of allowed fields for the endpoint
     public = Column(Boolean, nullable=False, default=False)
 
-    def __init__(self, endpoint, allowed_fields=None, public=False):
-        self.endpoint = endpoint
+    endpoint = relationship('Endpoint', backref='endpoint_rules')
+
+    def __init__(self, endpoint_id, allowed_fields=None, public=False):
+        self.endpoint_id = endpoint_id
         self.allowed_fields = allowed_fields
         self.public = public
 
     def to_dict(self):
         return {
             'id': self.id,
-            'endpoint': self.endpoint,
+            'endpoint_id': self.endpoint_id,
             'allowed_fields': self.allowed_fields if self.allowed_fields is not None else '',
             'public': self.public
         }

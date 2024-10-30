@@ -6,6 +6,56 @@ from sqlalchemy  import Boolean, Column, DateTime, ForeignKey, String, Integer, 
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from uuid import UUID, uuid4
+from enum import Enum
+
+from . import db
+from jams.util import helper
+
+class EndpointGroup(db.Model):
+    __tablename__ = 'endpoint_group'
+    id = Column(Integer(), primary_key=True)
+    name = Column(String(255), nullable=False)
+    description = Column(String(255), nullable=False)
+
+    def __init__(self, name, description):
+        self.name = name
+        self.description = description
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description
+        }
+
+class Endpoint(db.Model):
+    __tablename__ = 'endpoint'
+
+    id = Column(Integer(), primary_key=True)
+    name = Column(String(255), nullable=False)
+    endpoint = Column(String(255), nullable=False)
+    read = Column(Boolean, nullable=False, default=False, server_default='false')
+    write = Column(Boolean, nullable=False, default=False, server_default='false')
+    endpoint_group_id = Column(Integer, ForeignKey('endpoint_group.id'), nullable=False)
+
+    webhook = relationship('EndpointGroup', backref='endpoints')
+
+    def __init__(self, name, endpoint, endpoint_group_id, read=False, write=False):
+        self.name = name
+        self.endpoint = endpoint
+        self.read = read
+        self.write = write
+        self.endpoint_group_id = endpoint_group_id
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'endpoint': self.endpoint,
+            'read': self.read,
+            'write': self.write,
+            'endpoint_group_id': self.endpoint_group_id
+        }
 
 
 class Webhook(db.Model):
