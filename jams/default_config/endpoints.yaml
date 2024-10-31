@@ -53,6 +53,7 @@ groups:
   events:
     description: Manages event details, and schedules
     read:
+      get_next_event_id: routes.api_v1.public.general.get_next_event
       get_event: routes.api_v1.private.admin.get_event
       get_event_field: routes.api_v1.private.admin.get_event_field
       get_events: routes.api_v1.private.admin.get_events

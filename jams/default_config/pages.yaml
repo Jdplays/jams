@@ -146,6 +146,7 @@ pages:
     endpoint: routes.frontend.private.event.schedule_planner
     api_endpoints:
       # Events
+      get_next_event_id:
       get_events_field:
         allowed_fields: id, name
       get_event:
@@ -205,6 +206,7 @@ pages:
   volunteer_attendance:
     endpoint: routes.frontend.private.volunteer.volunteer_attendance
     api_endpoints:
+      get_next_event_id:
       get_roles_field:
         allowed_fields: id, name
       get_users_field:
@@ -219,6 +221,7 @@ pages:
   volunteer_signup:
     endpoint: routes.frontend.private.volunteer.volunteer_signup
     api_endpoints:
+      get_next_event_id:
       get_event_field:
         allowed_fields: id, name, date
       get_events_field:
@@ -258,6 +261,7 @@ pages:
   attendee_list:
     endpoint: routes.frontend.private.event.attendee_list
     api_endpoints:
+      get_next_event_id:
       get_event_attendees:
       add_attendee:
       edit_attendee:
@@ -267,6 +271,7 @@ pages:
   fire_list:
     endpoint: routes.frontend.private.event.fire_list
     api_endpoints:
+      get_next_event_id:
       get_event_fire_list:
       check_in_event_fire_list_item:
       check_out_event_fire_list_item:
