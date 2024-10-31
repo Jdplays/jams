@@ -1,6 +1,6 @@
 # API is for serving data to Typscript/Javascript
 from flask import Blueprint, request, jsonify, abort
-from jams.decorators import role_based_access_control_be
+from jams.decorators import api_route
 from flask_security import login_required
 from jams.models import db, Attendee, Event, AttendeeSource
 from jams.models.event import FireList
@@ -13,7 +13,7 @@ bp = Blueprint('event', __name__)
 #------------------------------------------ ATTENDEES ------------------------------------------#
 
 @bp.route('/events/<int:event_id>/attendees', methods=['GET'])
-@role_based_access_control_be
+@api_route
 def get_attendees(event_id):
     Event.query.filter_by(id=event_id).first_or_404()
     args = request.args.to_dict()
@@ -23,7 +23,7 @@ def get_attendees(event_id):
     return jsonify(data)
 
 @bp.route('/events/<int:event_id>/attendees', methods=['POST'])
-@role_based_access_control_be
+@api_route
 def add_attendee(event_id):
     Event.query.filter_by(id=event_id).first_or_404()
     data = request.get_json()
@@ -56,7 +56,7 @@ def add_attendee(event_id):
 
 
 @bp.route('/events/<int:event_id>/attendees/<int:attendee_id>', methods=['PATCH'])
-@role_based_access_control_be
+@api_route
 def edit_attendee(event_id, attendee_id):
     Event.query.filter_by(id=event_id).first_or_404()
     attendee = Attendee.query.filter_by(id=attendee_id).first_or_404()
@@ -84,7 +84,7 @@ def edit_attendee(event_id, attendee_id):
     })
 
 @bp.route('/events/<int:event_id>/attendees/<int:attendee_id>/check_in', methods=['POST'])
-@role_based_access_control_be
+@api_route
 def check_in_attendee(event_id, attendee_id):
     Event.query.filter_by(id=event_id).first_or_404()
     attendee = Attendee.query.filter_by(id=attendee_id).first_or_404()
@@ -99,7 +99,7 @@ def check_in_attendee(event_id, attendee_id):
     })
 
 @bp.route('/events/<int:event_id>/attendees/<int:attendee_id>/check_out', methods=['POST'])
-@role_based_access_control_be
+@api_route
 def check_out_attendee(event_id, attendee_id):
     Event.query.filter_by(id=event_id).first_or_404()
     attendee = Attendee.query.filter_by(id=attendee_id).first_or_404()
@@ -117,7 +117,7 @@ def check_out_attendee(event_id, attendee_id):
 #------------------------------------------ FIRELIST ------------------------------------------#
 
 @bp.route('/events/<int:event_id>/fire_list', methods=['GET'])
-@role_based_access_control_be
+@api_route
 def get_fire_list(event_id):
     Event.query.filter_by(id=event_id).first_or_404()
     args = request.args.to_dict()
@@ -127,7 +127,7 @@ def get_fire_list(event_id):
     return jsonify(data)
 
 @bp.route('/events/<int:event_id>/fire_list/<int:fire_list_entry_id>/check_in', methods=['POST'])
-@role_based_access_control_be
+@api_route
 def check_in_fire_list_item(event_id, fire_list_entry_id):
     Event.query.filter_by(id=event_id).first_or_404()
     fire_list_entry = FireList.query.filter_by(id=fire_list_entry_id).first_or_404()
@@ -146,7 +146,7 @@ def check_in_fire_list_item(event_id, fire_list_entry_id):
     })
 
 @bp.route('/events/<int:event_id>/fire_list/<int:fire_list_entry_id>/check_out', methods=['POST'])
-@role_based_access_control_be
+@api_route
 def check_out_fire_list_item(event_id, fire_list_entry_id):
     Event.query.filter_by(id=event_id).first_or_404()
     fire_list_entry = FireList.query.filter_by(id=fire_list_entry_id).first_or_404()

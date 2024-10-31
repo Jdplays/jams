@@ -1,9 +1,9 @@
 from flask_security import current_user
-from flask import abort, redirect, request, current_app, session, url_for
+from flask import abort, redirect, request, current_app, session, url_for, jsonify
 from flask_login.config import EXEMPT_METHODS
 from functools import wraps
 from jams.util import helper, attendee_auth
-from jams.models import Page, Attendee
+from jams.models import db, Page, Attendee, Endpoint, APIKeyEndpoint
 from jams.configuration import ConfigType, get_config_value
 
 
@@ -40,47 +40,67 @@ def enforce_login(func, *args, **kwargs):
      # Default to calling the original function
     return func(*args, **kwargs)
 
-def role_based_access_control_be(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        endpoint = helper.extract_endpoint()
-        user_role_ids = current_user.role_ids if current_user.is_authenticated else None
-        endpoint_rules = helper.get_endpoint_rules_for_roles(endpoint, user_role_ids, not current_user.is_authenticated)
-        if not endpoint_rules:
-            if not current_user.is_authenticated:
-                login_response = enforce_login(func, *args, **kwargs)
-                if login_response is not None:
-                    return login_response
-            abort(403, description='You do not have access to the requested resource with your current role')
-
-        requested_field = kwargs.get('field')
-        
-        for rule in endpoint_rules:
-            if rule.allowed_fields is None:
-                return func(*args, **kwargs)
-            allowed_fields = [x.strip() for x in str(rule.allowed_fields).split(',')]
-            
-
-            if requested_field in allowed_fields:
-                if request.args is not None:
-                    query_fields = request.args.keys()
-                    if len(query_fields) == 0:
-                        return func(*args, **kwargs)
-                    for field in query_fields:
-                        default_args_list = helper.DefaultRequestArgs.list()
-                        if field not in allowed_fields and field not in default_args_list:
-                            if not current_user.is_authenticated:
-                                login_response = enforce_login(func, *args, **kwargs)
-                                if login_response is not None:
-                                    return login_response
-                        elif field in allowed_fields or field in default_args_list:
-                            return func(*args, **kwargs)
-                        
+def rbac_api(func, *args, **kwargs):
+    endpoint = helper.extract_endpoint()
+    endpoint_obj = Endpoint.query.filter_by(endpoint=endpoint).first()
+    user_role_ids = current_user.role_ids if current_user.is_authenticated else None
+    endpoint_rules = helper.get_endpoint_rules_for_roles(endpoint_obj.id, user_role_ids, not current_user.is_authenticated)
+    if not endpoint_rules:
         if not current_user.is_authenticated:
             login_response = enforce_login(func, *args, **kwargs)
             if login_response is not None:
                 return login_response
-        abort(403, description='You do not have access to the requested resource with your current role')
+        return jsonify({'error': 'You do not have access to the requested resource with your current role'}), 403
+
+    requested_field = kwargs.get('field')
+    
+    for rule in endpoint_rules:
+        if rule.allowed_fields is None:
+            return func(*args, **kwargs)
+        allowed_fields = [x.strip() for x in str(rule.allowed_fields).split(',')]
+        
+
+        if requested_field in allowed_fields:
+            if request.args is not None:
+                query_fields = request.args.keys()
+                if len(query_fields) == 0:
+                    return func(*args, **kwargs)
+                for field in query_fields:
+                    default_args_list = helper.DefaultRequestArgs.list()
+                    if field not in allowed_fields and field not in default_args_list:
+                        if not current_user.is_authenticated:
+                            login_response = enforce_login(func, *args, **kwargs)
+                            if login_response is not None:
+                                return login_response
+                    elif field in allowed_fields or field in default_args_list:
+                        return func(*args, **kwargs)
+                    
+    if not current_user.is_authenticated:
+        login_response = enforce_login(func, *args, **kwargs)
+        if login_response is not None:
+            return login_response
+    return jsonify({'error': 'You do not have access to the requested resource with your current role'}), 403
+
+def api_route(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        endpoint = helper.extract_endpoint()
+        endpoint_obj = Endpoint.query.filter_by(endpoint=endpoint).first()
+        api_key = request.headers.get('Authorization')
+        if api_key:
+            api_key_obj = helper.get_api_key_obj(api_key)
+            if not api_key_obj:
+                return jsonify({'error': 'Invalid API key'}), 403
+            
+            api_key_valid = db.session.query(APIKeyEndpoint.query.filter_by(api_key_id=api_key_obj.id, endpoint_id=endpoint_obj.id).exists()).scalar()
+
+            if not api_key_valid:
+                return jsonify({'error': 'API key does not have access to the requested resource'}), 403
+            else:
+                return func(*args, **kwargs)
+        else:
+            return rbac_api(func, *args, **kwargs)
+        
     return wrapper
 
 
@@ -92,7 +112,7 @@ def protect_user_updates(func):
 
         user_management_request = helper.user_has_access_to_page('user_management')
         if current_user_id is not user_id and not user_management_request:
-            abort(403, description='You do not have access to the requested resource')
+            return jsonify({'error': 'You do not have access to the requested resource with your current role'}), 403
         return func(*args, **kwargs)
     return wrapper
 
@@ -102,7 +122,7 @@ def eventbrite_inetegration_route(func):
         enabled = get_config_value(ConfigType.EVENTBRITE_ENABLED)
 
         if not enabled:
-            abort(400, description='The requested route is not currently enabled')
+            return jsonify({'error': 'The requested route is not currently enabled'}), 400
         return func(*args, **kwargs)
     return wrapper
 
@@ -125,6 +145,6 @@ def protect_attendee_updates(func):
         requested_attendee = Attendee.query.filter_by(id=requested_attendee_id).first()
 
         if not requested_attendee or requested_attendee.attendee_account_id is not current_attendee_account_id:
-            abort(403, description='You do not have access to the requested resource')
+            return jsonify({'error': 'You do not have access to the requested resource'}), 403
         return func(*args, **kwargs)
     return wrapper

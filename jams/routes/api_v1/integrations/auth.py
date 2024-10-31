@@ -1,13 +1,13 @@
 # API is for serving data to Typscript/Javascript
 from flask import Blueprint, request, jsonify, abort
-from jams.decorators import role_based_access_control_be, eventbrite_inetegration_route
+from jams.decorators import api_route, eventbrite_inetegration_route
 from jams.integrations import oauth
 from jams.configuration import ConfigType, get_config_value, set_config_value, create_config_entry, remove_config_entry
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 @bp.route('/config', methods=['GET'])
-@role_based_access_control_be
+@api_route
 def get_config():
     auth_config = {}
 
@@ -20,7 +20,7 @@ def get_config():
     return jsonify({'auth_config': auth_config})
 
 @bp.route('/config', methods=['PATCH'])
-@role_based_access_control_be
+@api_route
 def edit_config():
     data = request.get_json()
     if not data:
@@ -42,7 +42,7 @@ def edit_config():
     return jsonify({'message': 'OAuth configuration has been successfully updated'})
 
 @bp.route('/config', methods=['DELETE'])
-@role_based_access_control_be
+@api_route
 @eventbrite_inetegration_route
 def delete_config():
     remove_config_entry(ConfigType.OAUTH_ENABLED)

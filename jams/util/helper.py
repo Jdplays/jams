@@ -8,6 +8,7 @@ from jams.models import db, EventLocation, EventTimeslot, Timeslot, Session, End
 from jams.configuration import get_config_value
 
 
+from jams.models.api import APIKey
 from jams.util import files
 
 class DefaultRequestArgs():
@@ -386,8 +387,8 @@ def extract_endpoint():
     endpoint = request.endpoint
     return endpoint
 
-def get_endpoint_rules_for_roles(endpoint, role_ids, public=False):
-    query = db.session.query(EndpointRule).filter(EndpointRule.endpoint == endpoint, EndpointRule.public == public)
+def get_endpoint_rules_for_roles(endpoint_id, role_ids, public=False):
+    query = db.session.query(EndpointRule).filter(EndpointRule.endpoint_id == endpoint_id, EndpointRule.public == public)
     
     if not public:
         query = query.join(RoleEndpointRule, EndpointRule.id == RoleEndpointRule.endpoint_rule_id)
@@ -397,8 +398,8 @@ def get_endpoint_rules_for_roles(endpoint, role_ids, public=False):
 
     return query.all()
 
-def get_endpoint_rule_for_page(endpoint, page_id, public=False):
-    query = db.session.query(EndpointRule).filter(EndpointRule.endpoint == endpoint, EndpointRule.public == public)
+def get_endpoint_rule_for_page(endpoint_id, page_id, public=False):
+    query = db.session.query(EndpointRule).filter(EndpointRule.endpoint_id == endpoint_id, EndpointRule.public == public)
 
     if not public:
         query = query.join(PageEndpointRule, EndpointRule.id == PageEndpointRule.endpoint_rule_id)
@@ -451,8 +452,13 @@ def get_and_prepare_file(bucket_name, file_name, version_id):
 
 
 def get_required_roles_for_endpoint(endpoint):
+    from jams.models import Endpoint
     role_names = []
-    endpoint_rule = EndpointRule.query.filter_by(endpoint=endpoint).first()
+    endpoint_obj = Endpoint.query.filter_by(endpoint=endpoint).first()
+    if not endpoint_obj:
+        return role_names
+    
+    endpoint_rule = EndpointRule.query.filter_by(endpoint_id=endpoint_obj.id).first()
     page = Page.query.filter_by(endpoint=endpoint).first()
     if not endpoint_rule and not page:
         return role_names
@@ -651,3 +657,52 @@ def convert_local_time_to_utc(local_time):
         # Convert to UTC
         utc_time = local_time_aware.astimezone(pytz.utc).time()
         return utc_time
+
+def validate_api_key(full_api_token, require_websocket=False):
+    # Ensure the token has the expected format
+    try:
+        api_key_id, hmac_key = full_api_token.split(':')
+    except ValueError:
+        return False
+    
+     # Fetch the API key record by id
+    api_key_record = APIKey.query.filter_by(id=api_key_id).first()
+    if not api_key_record:
+        return False
+    
+    # Check for websocket requirement
+    if require_websocket and not api_key_record.websocket:
+        return False
+    
+     # Check if the API key is active and has not expired
+    if not api_key_record.active:
+        return False
+    elif api_key_record.expiration is not None:
+        now = datetime.now(UTC).replace(tzinfo=None)
+        if now >= api_key_record.expiration:
+            api_key_record.active = False
+            db.session.commit()
+            return False
+    
+    # Verify the HMAC
+    if not api_key_record.verify_hmac(hmac_key):
+        return False
+    
+    return True
+
+def get_api_key_obj(full_api_token):
+    if not validate_api_key(full_api_token):
+        return None
+
+    # Ensure the token has the expected format
+    try:
+        api_key_id, hmac_key = full_api_token.split(':')
+    except ValueError:
+        return None
+    
+    api_key = APIKey.query.filter_by(id=api_key_id).first()
+
+    if not api_key:
+        return None
+    
+    return api_key

@@ -1,7 +1,7 @@
 # API is for serving data to Typscript/Javascript
 from flask import Blueprint, abort, jsonify, request
 from flask_security import login_required, current_user
-from jams.decorators import role_based_access_control_be
+from jams.decorators import api_route
 from jams.configuration import get_config_value, set_config_value, ConfigType
 
 bp = Blueprint('general', __name__)
@@ -22,7 +22,7 @@ def get_current_user_data():
     
 
 @bp.route('/app/config', methods=['GET'])
-@role_based_access_control_be
+@api_route
 def get_general_config():
     data = {
         ConfigType.TIMEZONE.name: get_config_value(ConfigType.TIMEZONE)
@@ -31,7 +31,7 @@ def get_general_config():
     return jsonify({'config': data})
 
 @bp.route('/app/config', methods=['PATCH'])
-@role_based_access_control_be
+@api_route
 def edit_general_config():
     data = request.get_json()
     if not data:
