@@ -178,7 +178,6 @@ class APIKey(db.Model):
 
     def generate_hmac(self, key):
         from jams import hmac_secret
-        print(f'HMAC_SECRET: {hmac_secret}')
         return hmac.new(hmac_secret, key.encode(), hashlib.sha256).hexdigest()
     
     def verify_hmac(self, provided_key):
