@@ -1,24 +1,26 @@
 import os
 import threading
+import base64
 from dotenv import load_dotenv
 from flask import Flask
 from flask_security import Security, SQLAlchemyUserDatastore
+from uuid import UUID, uuid4
 
 
 from jams.extensions import db, migrate, login_manager, oauth
-from jams.models import User, Role
+from jams.models import User, Role, APIKey, APIKeyType
 from jams.routes import routes_bp
 from jams.seeder import preform_seed
 from jams.forms.flask_security import CustomLoginForm, CustomRegisterForm
 from jams.util import helper
-from jams.configuration import get_config_value
 from jams.integrations.oauth import setup_oauth
 from jams.routes.error import not_found, server_error, forbidden
-from jams.configuration import ConfigType, set_config_value
+from jams.configuration import config_entry_exists, get_config_value, ConfigType, set_config_value
 from jams.util.task_scheduler import TaskScheduler
 from jams.util import attendee_auth
 
 scheduler = None
+hmac_secret = None
 
 def create_app():
     app = Flask(__name__)
@@ -67,6 +69,17 @@ def seed_database(app):
         preform_seed()
 
 def prep_app(app):
+    # Generate HMAC secret key if it doesnt already exist:
+    if not config_entry_exists(ConfigType.HMAC_SECRET_KEY):
+        key = os.urandom(64)
+        secret = base64.urlsafe_b64encode(key).decode('utf-8')
+        set_config_value(ConfigType.HMAC_SECRET_KEY, secret)
+
+    global hmac_secret
+    secret = get_config_value(ConfigType.HMAC_SECRET_KEY)
+    if secret:
+        hmac_secret = secret.encode('utf-8')
+
     setup_oauth()
 
     app_url =  os.getenv('APP_URL', 'http://127.0.0.1:5000')

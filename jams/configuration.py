@@ -1,8 +1,11 @@
 from enum import Enum
 from typing import Union
+
+from sqlalchemy import exists
 from jams.models import db, Config
 
 class ConfigType(Enum):
+    HMAC_SECRET_KEY = 'HMAC_SECRET_KEY'
     EVENTBRITE_ENABLED = 'EVENTBRITE_ENABLED'
     EVENTBRITE_BEARER_TOKEN = 'EVENTBRITE_BEARER_TOKEN'
     EVENTBRITE_ORGANISATION_ID = 'EVENTBRITE_ORGANISATION_ID'
@@ -21,15 +24,25 @@ class ConfigType(Enum):
     OAUTH_CLIENT_SECRET = 'OAUTH_CLIENT_SECRET'
     APP_URL = 'APP_URL'
     HTTP_SCHEME = 'HTTP_SCHEME'
-    TIMEZONE = 'TIMEZONE'
+    TIMEZONE = 'TIMEZONE',
+    JOLT_ENABLED = 'JOLT_ENABLED',
+    JOLT_API_KEY_ID = 'JOLT_API_KEY_ID'
 
 
+def config_entry_exists(key:Union[str, ConfigType]):
+    try:
+        config_type = ConfigType[key] if isinstance(key, str) else key
+    except KeyError:
+        raise ValueError(f"Invalid config type: {key}")
+    
+    return bool(db.session.query(exists().where(Config.key == config_type.value)).scalar())
 
 def get_config_value(key:Union[str, ConfigType]):
-    if  isinstance(key, str):
-        config_type = ConfigType[key]
-    else:
-        config_type = key
+    try:
+        config_type = ConfigType[key] if isinstance(key, str) else key
+    except KeyError:
+        raise ValueError(f"Invalid config type: {key}")
+    
     config = Config.query.filter_by(key=config_type.value).first()
 
     if not config:

@@ -8,6 +8,7 @@ from jams.models import db, EventLocation, EventTimeslot, Timeslot, Session, End
 from jams.configuration import get_config_value
 
 
+from jams.models.api import APIKey
 from jams.util import files
 
 class DefaultRequestArgs():
@@ -656,3 +657,52 @@ def convert_local_time_to_utc(local_time):
         # Convert to UTC
         utc_time = local_time_aware.astimezone(pytz.utc).time()
         return utc_time
+
+def validate_api_key(full_api_token, require_websocket=False):
+    # Ensure the token has the expected format
+    try:
+        api_key_id, hmac_key = full_api_token.split(':')
+    except ValueError:
+        return False
+    
+     # Fetch the API key record by id
+    api_key_record = APIKey.query.filter_by(id=api_key_id).first()
+    if not api_key_record:
+        return False
+    
+    # Check for websocket requirement
+    if require_websocket and not api_key_record.websocket:
+        return False
+    
+     # Check if the API key is active and has not expired
+    if not api_key_record.active:
+        return False
+    elif api_key_record.expiration is not None:
+        now = datetime.now(UTC).replace(tzinfo=None)
+        if now >= api_key_record.expiration:
+            api_key_record.active = False
+            db.session.commit()
+            return False
+    
+    # Verify the HMAC
+    if not api_key_record.verify_hmac(hmac_key):
+        return False
+    
+    return True
+
+def get_api_key_obj(full_api_token):
+    if not validate_api_key(full_api_token):
+        return None
+
+    # Ensure the token has the expected format
+    try:
+        api_key_id, hmac_key = full_api_token.split(':')
+    except ValueError:
+        return None
+    
+    api_key = APIKey.query.filter_by(id=api_key_id).first()
+
+    if not api_key:
+        return None
+    
+    return api_key
