@@ -1,6 +1,6 @@
 # API is for serving data to Typscript/Javascript
 from flask import Blueprint, request, jsonify, abort
-from jams.decorators import role_based_access_control_be, eventbrite_inetegration_route
+from jams.decorators import api_route, eventbrite_inetegration_route
 from jams.integrations import eventbrite
 from jams.configuration import ConfigType, get_config_value, set_config_value, create_config_entry, remove_config_entry
 
@@ -8,7 +8,7 @@ bp = Blueprint('eventbrite', __name__, url_prefix='/eventbrite')
 
 # URL PREFIX = /api/v1
 @bp.route('/verify', methods=['POST'])
-@role_based_access_control_be
+@api_route
 def verify():
     data = request.get_json()
     if not data:
@@ -23,7 +23,7 @@ def verify():
     return jsonify({'verified': verified})
 
 @bp.route('/organisations', methods=['POST'])
-@role_based_access_control_be
+@api_route
 def get_organisations():
     data = request.get_json()
     custom_token = data.get(ConfigType.EVENTBRITE_BEARER_TOKEN.name)
@@ -35,7 +35,7 @@ def get_organisations():
     return jsonify({'organisations': [org.to_dict() for org in organisations]})
 
 @bp.route('/config', methods=['GET'])
-@role_based_access_control_be
+@api_route
 def get_config():
     eventbrite_config = {}
 
@@ -48,7 +48,7 @@ def get_config():
     return jsonify({'eventbrite_config': eventbrite_config})
 
 @bp.route('/config', methods=['PATCH'])
-@role_based_access_control_be
+@api_route
 def edit_config():
     data = request.get_json()
     if not data:
@@ -81,7 +81,7 @@ def edit_config():
     return jsonify({'eventbrite_config': eventbrite_config})
 
 @bp.route('/enable', methods=['POST'])
-@role_based_access_control_be
+@api_route
 def enable():
     data = request.get_json()
     if not data:
@@ -99,7 +99,7 @@ def enable():
     return jsonify({'message': 'Eventbrite Integration has been successfully enabled'})
 
 @bp.route('/disable', methods=['DELETE'])
-@role_based_access_control_be
+@api_route
 @eventbrite_inetegration_route
 def disable():
     for config in eventbrite.configItems:
@@ -109,7 +109,7 @@ def disable():
 
 
 @bp.route('/events', methods=['GET'])
-@role_based_access_control_be
+@api_route
 @eventbrite_inetegration_route
 def get_events():
     events = eventbrite.get_events()
@@ -118,7 +118,7 @@ def get_events():
 
 
 @bp.route('/ticket_types', methods=['GET'])
-@role_based_access_control_be
+@api_route
 def get_ticket_types():
     ticket_types = eventbrite.get_ticket_types()
 
@@ -128,7 +128,7 @@ def get_ticket_types():
     return jsonify({'ticket_types': [tt.to_dict() for tt in ticket_types]})
 
 @bp.route('/custom_questions', methods=['GET'])
-@role_based_access_control_be
+@api_route
 def get_custom_questions():
     questions = eventbrite.get_custom_questions()
 

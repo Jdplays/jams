@@ -1,7 +1,7 @@
 # API is for serving data to Typscript/Javascript
 from flask import Blueprint, request, jsonify, abort
 from flask_security import login_required
-from jams.decorators import role_based_access_control_be, protect_user_updates
+from jams.decorators import api_route, protect_user_updates
 from jams.models import db, VolunteerAttendance, VolunteerSignup, Event, User
 from jams.models.event import FireList
 from jams.util import helper
@@ -13,7 +13,7 @@ bp = Blueprint('volunteer', __name__)
 #------------------------------------------ Volunteer Attendance ------------------------------------------#
 
 @bp.route('/events/<int:event_id>/volunteer_attendences', methods=['GET'])
-@role_based_access_control_be
+@api_route
 def get_event_attendance(event_id):
     Event.query.filter_by(id=event_id).first_or_404()
 
@@ -35,7 +35,7 @@ def get_event_attendance(event_id):
     return jsonify(data)
 
 @bp.route('/users/<int:user_id>/volunteer_attendences/<int:event_id>', methods=['GET'])
-@role_based_access_control_be
+@api_route
 def get_user_attendance(user_id, event_id):
     Event.query.filter_by(id=event_id).first_or_404()
     attendance = VolunteerAttendance.query.filter_by(user_id=user_id, event_id=event_id).first_or_404()
@@ -44,7 +44,7 @@ def get_user_attendance(user_id, event_id):
 
 @bp.route('/users/<int:user_id>/volunteer_attendences/<int:event_id>', methods=['POST'])
 @protect_user_updates
-@role_based_access_control_be
+@api_route
 def add_user_attendance(user_id, event_id):
     Event.query.filter_by(id=event_id).first_or_404()
     user = User.query.filter_by(id=user_id).first_or_404()
@@ -86,7 +86,7 @@ def add_user_attendance(user_id, event_id):
 
 @bp.route('/users/<int:user_id>/volunteer_attendences/<int:event_id>', methods=['PATCH'])
 @protect_user_updates
-@role_based_access_control_be
+@api_route
 def edit_user_attendance(user_id, event_id):
     Event.query.filter_by(id=event_id).first_or_404()
     user = User.query.filter_by(id=user_id).first_or_404()
@@ -124,7 +124,7 @@ def edit_user_attendance(user_id, event_id):
 #------------------------------------------ Volunteer Signup ------------------------------------------#
 
 @bp.route('/events/<int:event_id>/volunteer_signups', methods=['GET'])
-@role_based_access_control_be
+@api_route
 def get_event_volunteer_signups(event_id):
     Event.query.filter_by(id=event_id).first_or_404()
     signups = VolunteerSignup.query.filter_by(event_id=event_id).all()
@@ -133,7 +133,7 @@ def get_event_volunteer_signups(event_id):
     return jsonify(data)
 
 @bp.route('/events/<int:event_id>/volunteer_signups/<int:user_id>', methods=['GET'])
-@role_based_access_control_be
+@api_route
 def get_user_signups(event_id, user_id):
     Event.query.filter_by(id=event_id).first_or_404()
     User.query.filter_by(id=user_id).first_or_404()
@@ -144,7 +144,7 @@ def get_user_signups(event_id, user_id):
 
 @bp.route('/events/<int:event_id>/volunteer_signups/<int:user_id>', methods=['POST'])
 @protect_user_updates
-@role_based_access_control_be
+@api_route
 def add_volunteer_signup(event_id, user_id):
     Event.query.filter_by(id=event_id).first_or_404()
     User.query.filter_by(id=user_id).first_or_404()
@@ -171,7 +171,7 @@ def add_volunteer_signup(event_id, user_id):
 
 @bp.route('/events/<int:event_id>/volunteer_signups/<int:user_id>/sessions/<int:session_id>', methods=['DELETE'])
 @protect_user_updates
-@role_based_access_control_be
+@api_route
 def remove_volunteer_signup(event_id, user_id, session_id):
     Event.query.filter_by(id=event_id).first_or_404()
     User.query.filter_by(id=user_id).first_or_404()
