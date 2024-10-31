@@ -1,7 +1,6 @@
+import hmac
+import hashlib
 from datetime import UTC, datetime
-
-from jams.util import helper
-from . import db
 from sqlalchemy  import Boolean, Column, DateTime, ForeignKey, String, Integer, text
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -153,3 +152,51 @@ class ExternalAPILog(db.Model):
             'url': self.url,
             'status_code': self.status_code
         }
+    
+class APIKeyType(Enum):
+    NORMAL = 'NORMAL',
+    JOLT = 'JOLT'
+
+class APIKey(db.Model):
+    __tablname__ = 'api_key'
+
+    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, server_default=text('gen_random_uuid()'))
+    hmac_key = Column(String(128), nullable=False)
+    type = Column(String(100), nullable=False, default=APIKeyType.NORMAL.name, server_default=APIKeyType.NORMAL.name)
+    websocket = Column(Boolean, nullable=False, default=False, server_default='false')
+    expiration = Column(DateTime, nullable=True)
+    active = Column(Boolean, nullable=False, default=True, server_default='true')
+
+    def __init__(self, key=None, type=APIKeyType.NORMAL.name, websocket=False, expiration=None):
+        if key is None:
+            key = uuid4().hex
+
+        self.hmac_key = self.generate_hmac(key)
+        self.type = type
+        self.websocket = websocket
+        self.expiration = expiration
+
+    def generate_hmac(self, key):
+        from jams import hmac_secret
+        print(f'HMAC_SECRET: {hmac_secret}')
+        return hmac.new(hmac_secret, key.encode(), hashlib.sha256).hexdigest()
+    
+    def verify_hmac(self, provided_key):
+        from jams import hmac_secret
+        
+        calculated_hmac = hmac.new(hmac_secret, provided_key.encode(), hashlib.sha256).hexdigest()
+        return hmac.compare_digest(calculated_hmac, self.hmac_key)
+
+class APIKeyEndpoint(db.Model):
+    __tablename__ = 'api_key_endpoint'
+
+    id = Column(Integer(), primary_key=True)
+    api_key_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('api_key.id'), nullable=False)
+    endpoint_id = Column(Integer, ForeignKey('endpoint.id'), nullable=False)
+
+    api_key = relationship('APIKey', backref='endpoints')
+    endpoint = relationship('Endpoint', backref='api_keys')
+
+    def __init__(self, api_key_id, endpoint_id):
+        self.api_key_id = api_key_id
+        self.endpoint_id = endpoint_id

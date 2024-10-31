@@ -8,7 +8,7 @@ from.files import File, FileVersion, WorkshopFile
 from .audit import PrivateAccessLog
 from .config import Config
 from .task_scheduler import TaskSchedulerModel, TaskSchedulerLog
-from .api import EndpointGroup, Endpoint, Webhook, WebhookLog, ExternalAPILog, APIKey, APIKeyType
+from .api import EndpointGroup, Endpoint, Webhook, WebhookLog, ExternalAPILog, APIKey, APIKeyType, APIKeyEndpoint
 from .attendee import Attendee, AttendeeAccount, AttendeeAccountEvent, AttendeeSignup, AttendeeSource
 
 __all__ = [
