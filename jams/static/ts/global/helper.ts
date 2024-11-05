@@ -35,7 +35,7 @@ export function buildQueryString(params:QueryStringParams, allowNull:boolean=tru
     // Process each key, value pair in the params object
     for (const [key, value] of Object.entries(params)) {
         // Check if value is null or empty
-        if (!allowNull && !isNullEmptyOrSpaces(value)) {
+        if (!allowNull && (!isNullEmptyOrSpaces(value) && !Array.isArray(value))) {
             continue
         }
 
