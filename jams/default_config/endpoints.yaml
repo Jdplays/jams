@@ -77,6 +77,8 @@ groups:
       delete_event_timeslot: routes.api_v1.private.admin.delete_event_timeslot
       add_workshop_to_session: routes.api_v1.private.admin.add_workshop_to_session
       remove_workshop_from_session: routes.api_v1.private.admin.remove_workshop_from_session
+      update_session_settings: routes.api_v1.private.admin.update_session_settings
+      recalculate_session_capacity: routes.api_v1.private.admin.recalculate_session_capacity
       check_in_event_fire_list_item: routes.api_v1.private.event.check_in_fire_list_item
       check_out_event_fire_list_item: routes.api_v1.private.event.check_out_fire_list_item
 
