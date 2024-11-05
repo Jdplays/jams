@@ -169,6 +169,8 @@ pages:
       get_event_sessions:
       add_workshop_to_session:
       remove_workshop_from_session:
+      update_session_settings:
+      recalculate_session_capacity:
 
   # Management
   workshops:
@@ -291,7 +293,7 @@ pages:
     endpoint: routes.frontend.public.public_schedule
     public: true
     api_endpoints:
-    get_workshops:
+      get_workshops:
       get_difficulty_levels:
       get_workshop_types:
       get_event_locations:

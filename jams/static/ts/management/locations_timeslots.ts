@@ -45,6 +45,7 @@ async function activateLocationOnClick(locationId:number) {
 async function addLocationOnClick() {
     const data = {
         'name': (document.getElementById('add-location-name') as HTMLInputElement).value,
+        'capacity': Number((document.getElementById('edit-location-capacity') as HTMLInputElement).value),
     }
 
     const response = await addLocation(data)
@@ -61,6 +62,7 @@ async function editLocationOnClick() {
     const locationId = Number((document.getElementById('edit-location-id') as HTMLInputElement).value)
     const data:Partial<RequestMultiModelJSONData> = {
         'name': (document.getElementById('edit-location-name') as HTMLInputElement).value,
+        'capacity': Number((document.getElementById('edit-location-capacity') as HTMLInputElement).value),
     }
 
     const response = await editLocation(locationId, data)
@@ -78,9 +80,11 @@ async function prepEditLocationForm(locationId:number) {
 
     const hiddenIdInput = document.getElementById('edit-location-id') as HTMLInputElement
     const nameInput = document.getElementById('edit-location-name') as HTMLInputElement
+    const capacityInput = document.getElementById('edit-location-capacity') as HTMLInputElement
 
     hiddenIdInput.value = String(location.id)
     nameInput.value = location.name
+    capacityInput.value = String(location.capacity)
 }
 
 function initialiseLocationsAgGrid() {
@@ -88,6 +92,7 @@ function initialiseLocationsAgGrid() {
         domLayout: "autoHeight",
         columnDefs: [
             {field: 'name', flex: 1},
+            {field: 'capacity', flex: 1},
             {
                 field: 'options', cellRenderer: (params:any) => {
                     return buildActionButtonsForModel(params.data.id, params.data.active, archiveLocationOnClick, activateLocationOnClick, 'edit-location-modal', prepEditLocationForm)

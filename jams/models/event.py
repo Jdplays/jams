@@ -67,10 +67,12 @@ class Location(db.Model):
 
     id = Column(Integer(), primary_key=True)
     name = Column(String(100), nullable=False)
+    capacity = Column(Integer, nullable=False, default=10, server_default='10')
     active = Column(Boolean(), nullable=False, default=True)
 
-    def __init__(self, name, active=True):
+    def __init__(self, name, capacity=10, active=True):
         self.name = name
+        self.capacity = capacity
         self.active = active
 
     def activate(self):
@@ -83,6 +85,7 @@ class Location(db.Model):
         return {
             'id': self.id,
             'name': self.name,
+            'capacity': self.capacity,
             'active': self.active
         }
 
@@ -202,6 +205,7 @@ class Session(db.Model):
     event_location_id = Column(Integer(), ForeignKey('event_location.id'), nullable=False)
     event_timeslot_id = Column(Integer(), ForeignKey('event_timeslot.id'), nullable=False)
     workshop_id = Column(Integer(), ForeignKey('workshop.id'))
+    capacity = Column(Integer, nullable=False, default=10, server_default='10')
     publicly_visible = Column(Boolean(), nullable=False, default=False, server_default='false')
     active = Column(Boolean(), nullable=False, default=True)
 
@@ -220,11 +224,12 @@ class Session(db.Model):
     def location_column_order(self):
         return self.event_location.order
 
-    def __init__(self, event_id, event_location_id, event_timeslot_id, workshop_id=None, publicly_visible=False, active=True):
+    def __init__(self, event_id, event_location_id, event_timeslot_id, workshop_id=None, capacity=10, publicly_visible=False, active=True):
         self.event_id = event_id
         self.event_location_id = event_location_id
         self.event_timeslot_id = event_timeslot_id
         self.workshop_id = workshop_id
+        self.capacity = capacity
         self.publicly_visible = publicly_visible
         self.active = active
 
@@ -243,6 +248,7 @@ class Session(db.Model):
             'workshop_id': self.workshop_id,
             'has_workshop': self.has_workshop,
             'location_column_order': self.location_column_order,
+            'capacity': self.capacity,
             'publicly_visible': self.publicly_visible,
             'active': self.active
         }
