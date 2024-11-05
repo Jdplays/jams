@@ -3,7 +3,8 @@
 import {
     getWorkshops,
     getIconData,
-    getDifficultyLevels
+    getDifficultyLevels,
+    getWorkshopTypes
 } from '@global/endpoints'
 
 import {
@@ -11,7 +12,7 @@ import {
     emptyElement
 } from '@global/helper'
 
-import { WorkshopCard } from '@global/workshop_card'
+import { WorkshopCard, WorkshopCardOptions } from '@global/workshop_card'
 import {ScheduleGrid, ScheduleGridOptions} from '@global/schedule_grid'
 import TomSelect from 'tom-select';
 import { QueryStringData } from '@global/interfaces';
@@ -61,7 +62,8 @@ async function onEventChangeFunc() {
 async function populateWorkshopList() {
     let queryData:Partial<QueryStringData> = {
         name: currentSearchQuery,
-        description: '$~name'
+        description: '$~name',
+        $all_rows: true
     }
 
     if (selectDifficultyIds.length > 0) {
@@ -70,6 +72,7 @@ async function populateWorkshopList() {
     let queryString = buildQueryString(queryData)
     const workshopsResponse = await getWorkshops(queryString)
     const difficultyLevels = await getDifficultyLevels()
+    const workshopTypes = await getWorkshopTypes()
 
     let workshops = workshopsResponse.data
 
@@ -77,14 +80,17 @@ async function populateWorkshopList() {
 
     let elementList = []
 
+    let cardOptions:WorkshopCardOptions = {
+        width: 150,
+        height: 150,
+        difficultyLevels: difficultyLevels.data,
+        workshopTypes: workshopTypes.data
+    }
+
     // Populate the list
     for (const workshop of workshops) {
         const workshopListBlock = document.createElement('div')
         workshopListBlock.classList.add('workshop-list-block')
-        let cardOptions = {
-            size: 150,
-            difficultyLevels: difficultyLevels.data
-        }
         let workshopCard = new WorkshopCard(workshop, cardOptions)
         let workshopCardElement = await workshopCard.element()
         workshopCardElement.id = "drag-drop-workshop-" + workshop.id

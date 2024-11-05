@@ -35,7 +35,7 @@ export function buildQueryString(params:QueryStringParams, allowNull:boolean=tru
     // Process each key, value pair in the params object
     for (const [key, value] of Object.entries(params)) {
         // Check if value is null or empty
-        if (!allowNull && !isNullEmptyOrSpaces(value)) {
+        if (!allowNull && (!isNullEmptyOrSpaces(value) && !Array.isArray(value))) {
             continue
         }
 
@@ -654,11 +654,15 @@ export function buildUserAvatar(UserAvatarInfo:Partial<User>|null=null, size:num
     return avatar
 }
 
-export async function preloadUsersInfoMap() {
+export async function preloadUsersInfoMap(role_ids:number[]|null=null) {
     let usersInfoMap:Record<number, Partial<User>> = {}
 
     const queryData:Partial<QueryStringData> = {
         $all_rows: true
+    }
+
+    if (role_ids !== null) {
+        queryData.role_ids = role_ids
     }
     const queryString = buildQueryString(queryData)
     const usersInfoResponse = await getUsersPublicInfo(queryString)

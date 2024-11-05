@@ -1,4 +1,4 @@
-import { addAttendance, getAttendanceForEvent, getCurrentUserId } from "@global/endpoints";
+import { addAttendance, getAttendanceForEvent, getCurrentUserId, getRoleNames } from "@global/endpoints";
 import { User, VolunteerAttendance } from "@global/endpoints_interfaces";
 import { EventDetails, EventDetailsOptions } from "@global/event_details";
 import { buildUserAvatar, emptyElement, errorToast, preloadUsersInfoMap, successToast } from "@global/helper";
@@ -181,7 +181,13 @@ async function loadSignupData(reloadGrid:boolean=false) {
 document.addEventListener("DOMContentLoaded", async () => {
     eventDetails = new EventDetails('event-details', eventDetailsOptions)
     await eventDetails.init()
-    usersInfoMap = await preloadUsersInfoMap()
+
+    let volunteerRoleIds = []
+    const roleIdResponse = await getRoleNames('name=volunteer')
+    let roleId = roleIdResponse.data[0].id
+    volunteerRoleIds.push(roleId)
+
+    usersInfoMap = await preloadUsersInfoMap(volunteerRoleIds)
 
     CurrentUserId = await getCurrentUserId()
     selectedUserId = CurrentUserId
