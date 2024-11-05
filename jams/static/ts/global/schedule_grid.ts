@@ -45,6 +45,7 @@ export interface ScheduleGridOptions {
     width?:number
     height?:number
     size?:number
+    minSize?:number
     edit?:boolean
     updateInterval?:number
     workshopCardOptions?:WorkshopCardOptions
@@ -86,6 +87,7 @@ export class ScheduleGrid {
             width = 150,
             height = 150,
             size = 150,
+            minSize = 150,
             edit = false,
             updateInterval = 1,
             workshopCardOptions = {},
@@ -105,6 +107,7 @@ export class ScheduleGrid {
             width,
             height,
             size,
+            minSize,
             edit,
             updateInterval,
             workshopCardOptions,
@@ -137,6 +140,12 @@ export class ScheduleGrid {
         if (this.options.size !== null && this.options.size !== undefined) {
             this.options.width = this.options.size
             this.options.height = this.options.size
+        }
+
+        if (window.innerWidth < 500) {
+            this.options.autoResize = false
+            this.options.autoScale = false
+            this.scheduleContainer.style.marginLeft = `300px`
         }
     }
 
@@ -1066,7 +1075,6 @@ export class ScheduleGrid {
                     }
                 }
 
-                console.log(cardOptions)
                 let workshopCard = new WorkshopCard(workshop, cardOptions)
                 let workshopCardElement = await workshopCard.element() as HTMLElement
 
