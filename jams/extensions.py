@@ -9,6 +9,7 @@ from minio import Minio
 from minio.error import S3Error
 from minio.versioningconfig import VersioningConfig, ENABLED
 from authlib.integrations.flask_client import OAuth
+from jams.util.websocket_server import WebsocketServer
 
 load_dotenv()
 
@@ -16,6 +17,7 @@ db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
 oauth = OAuth()
+WSS = WebsocketServer()
 
 # Initialise client MinIO for object storage
 minio_client = Minio(

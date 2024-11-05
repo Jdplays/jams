@@ -1,11 +1,7 @@
 from . import db
-from enum import Enum
 from sqlalchemy  import Boolean, Column, ForeignKey, String, Integer, UniqueConstraint
 from sqlalchemy.orm import relationship
-
-class AttendeeSource(Enum):
-    LOCAL = 'LOCAL'
-    EVENTBRITE = 'EVENTBRITE'
+from jams.util.enums import AttendeeSource
 
 class Attendee(db.Model):
     __tablename__ = 'attendee'

@@ -2,10 +2,11 @@ import requests
 from flask import jsonify
 from datetime import timedelta, datetime, time, UTC
 from jams.configuration import ConfigType, get_config_value
-from jams.models import db, Attendee, Event, TaskSchedulerModel, Webhook, ExternalAPILog, AttendeeSource, FireList, FireListPersonType
+from jams.models import db, Attendee, Event, TaskSchedulerModel, Webhook, ExternalAPILog, FireList
 from jams.util.task_scheduler import TaskActionEnum, create_task
 from jams.util.webhooks import WebhookActionEnum, WebhookOwnerEnum
 from jams.util import helper
+from jams.util.enums import AttendeeSource
 
 base_url = 'https://www.eventbriteapi.com/v3'
 #base_url = 'https://private-anon-60974f3b0d-eventbriteapiv3public.apiary-mock.com/v3' # This is just the mock server and should be updated later.

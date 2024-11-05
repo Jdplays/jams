@@ -1,10 +1,14 @@
 # API is for serving data to Typscript/Javascript
+import json
 from flask import Blueprint, request, jsonify, abort
 from jams.decorators import api_route
 from flask_security import login_required
-from jams.models import db, Attendee, Event, AttendeeSource
+from jams.integrations import jolt
+from jams.models import db, Attendee, Event
 from jams.models.event import FireList
 from jams.util import helper
+from jams.configuration import ConfigType, get_config_value
+from jams.util.enums import AttendeeSource
 
 bp = Blueprint('event', __name__)
 
@@ -92,6 +96,9 @@ def check_in_attendee(event_id, attendee_id):
     attendee.check_in()
 
     db.session.commit()
+
+    if (get_config_value(ConfigType.JOLT_ENABLED)):
+        jolt.add_attendee_to_print_queue(attendee)
 
     return jsonify({
         'message': 'Attendee has be checked in successfully',

@@ -1,4 +1,5 @@
 import os
+import sys
 import threading
 import base64
 from dotenv import load_dotenv
@@ -7,17 +8,19 @@ from flask_security import Security, SQLAlchemyUserDatastore
 from uuid import UUID, uuid4
 
 
-from jams.extensions import db, migrate, login_manager, oauth
-from jams.models import User, Role, APIKey, APIKeyType
+from jams.extensions import db, migrate, login_manager, oauth, WSS
+from jams.models import User, Role, APIKey
 from jams.routes import routes_bp
 from jams.seeder import preform_seed
 from jams.forms.flask_security import CustomLoginForm, CustomRegisterForm
 from jams.util import helper
 from jams.integrations.oauth import setup_oauth
+from jams.util.websocket_server import WebsocketServer
 from jams.routes.error import not_found, server_error, forbidden
 from jams.configuration import config_entry_exists, get_config_value, ConfigType, set_config_value
 from jams.util.task_scheduler import TaskScheduler
 from jams.util import attendee_auth
+from jams.util.enums import APIKeyType
 
 scheduler = None
 hmac_secret = None
@@ -59,7 +62,10 @@ def create_app():
     with app.app_context():
         # Create database tables
         db.create_all()
-        prep_app(app)
+
+        # Only run prep app when the app is actually starting. Dont runn it when db migrate or shell is running
+        if not ('db' in sys.argv or 'shell' in sys.argv):
+            prep_app(app)
         
 
     return app
@@ -98,3 +104,9 @@ def prep_app(app):
     scheduler_thread = threading.Thread(target=scheduler.run)
     scheduler_thread.daemon = True
     scheduler_thread.start()
+
+    # Setup the websocket listener
+    WSS.init_app(app)
+    websocket_server_thread = threading.Thread(target=WSS.run)
+    websocket_server_thread.daemon = True
+    websocket_server_thread.start()

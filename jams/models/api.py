@@ -5,7 +5,7 @@ from sqlalchemy  import Boolean, Column, DateTime, ForeignKey, String, Integer, 
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from uuid import UUID, uuid4
-from enum import Enum
+from jams.util.enums import APIKeyType
 
 from . import db
 from jams.util import helper
@@ -152,10 +152,6 @@ class ExternalAPILog(db.Model):
             'url': self.url,
             'status_code': self.status_code
         }
-    
-class APIKeyType(Enum):
-    NORMAL = 'NORMAL',
-    JOLT = 'JOLT'
 
 class APIKey(db.Model):
     __tablname__ = 'api_key'
