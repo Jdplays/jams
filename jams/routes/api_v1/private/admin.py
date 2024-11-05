@@ -633,8 +633,10 @@ def add_workshop_to_session(session_id):
         abort(400, description="Session already has a workshop")
 
     session.workshop_id = workshop_id
-    session.capacity = helper.calculate_session_capacity(session)
     session.publicly_visible = workshop.publicly_visible
+    db.session.commit()
+
+    session.capacity = helper.calculate_session_capacity(session)
     db.session.commit()
 
     helper.update_session_event_location_visibility(session)
