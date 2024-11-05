@@ -18,6 +18,7 @@ export interface EventTimeslot {
 export interface Location {
     id:number
     name:string
+    capacity:number
     active:boolean
 }
 
@@ -54,8 +55,13 @@ export interface Session {
     workshop_id:number
     has_workshop:boolean
     location_column_order:number
+    capacity:number
     publicly_visible:boolean
     active:boolean
+}
+
+export interface sessionSettings {
+    capacity:number
 }
 
 export interface DifficultyLevel {

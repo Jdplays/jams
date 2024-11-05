@@ -706,3 +706,12 @@ def get_api_key_obj(full_api_token):
         return None
     
     return api_key
+
+def calculate_session_capacity(session):
+    event_location = session.event_location
+    location = event_location.location
+    workshop = session.workshop
+
+    capacity = location.capacity if location.capacity < workshop.capacity else workshop.capacity
+    
+    return capacity

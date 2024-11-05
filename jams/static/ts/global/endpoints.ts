@@ -34,7 +34,8 @@ import {
     AttendeeLogin,
     GeneralConfig,
     AttendeeSignup,
-    FireListEntry
+    FireListEntry,
+    sessionSettings
 } from "@global/endpoints_interfaces";
 import { formatDate } from "./helper";
 
@@ -731,6 +732,40 @@ export function removeWorkshopFromSession(sessionId:number):Promise<boolean> {
             error: function (error) {
                 console.log('Error fetching data:', error);
                 resolve(false)
+            }
+        });
+    });
+}
+
+export function updateSessionSettings(sessionId:number, data:sessionSettings):Promise<boolean> {
+    return new Promise((resolve) => {
+        $.ajax({
+            url: `${baseURL}/sessions/${sessionId}/settings`,
+            type: 'POST',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(true)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(false)
+            }
+        });
+    });
+}
+
+export function recalculateSessionCapacity(sessionId:number):Promise<ApiResponse<number>> {
+    return new Promise((resolve) => {
+        $.ajax({
+            url: `${baseURL}/sessions/${sessionId}/recalculate_capacity`,
+            type: 'POST',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(error)
             }
         });
     });

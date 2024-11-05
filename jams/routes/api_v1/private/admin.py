@@ -631,10 +631,12 @@ def add_workshop_to_session(session_id):
     
     if session.has_workshop and not force:
         abort(400, description="Session already has a workshop")
-    
-    
+
     session.workshop_id = workshop_id
     session.publicly_visible = workshop.publicly_visible
+    db.session.commit()
+
+    session.capacity = helper.calculate_session_capacity(session)
     db.session.commit()
 
     helper.update_session_event_location_visibility(session)
@@ -663,6 +665,39 @@ def remove_workshop_from_session(session_id):
     helper.update_session_event_location_visibility(session)
 
     return jsonify({'message': 'Workshop successfully removed from session'})
+
+@bp.route('/sessions/<int:session_id>/recalculate_capacity', methods=['POST'])
+@api_route
+def recalculate_session_capacity(session_id):
+    session = Session.query.filter_by(id=session_id).first_or_404()
+    session.capacity = helper.calculate_session_capacity(session)
+    
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Session capacity updated',
+        'data': session.capacity
+        })
+
+@bp.route('/sessions/<int:session_id>/settings', methods=['POST'])
+@api_route
+def update_session_settings(session_id):
+    session = Session.query.filter_by(id=session_id).first_or_404()
+
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
+
+    capacity = data.get('capacity')
+
+    if not int(capacity):
+        abort(400, description='Invalid capacity')
+    
+    session.capacity = capacity
+    
+    db.session.commit()
+
+    return jsonify({'message': 'Session settings updated'})
 
 
 #------------------------------------------ PAGE ------------------------------------------#
