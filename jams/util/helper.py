@@ -712,6 +712,9 @@ def calculate_session_capacity(session):
     location = event_location.location
     workshop = session.workshop
 
-    capacity = location.capacity if location.capacity < workshop.capacity else workshop.capacity
+    capacity = 0
+
+    if workshop.capacity is not None:
+        capacity = location.capacity if location.capacity < workshop.capacity else workshop.capacity
     
     return capacity
