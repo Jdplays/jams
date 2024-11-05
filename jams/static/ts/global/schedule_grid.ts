@@ -1066,6 +1066,7 @@ export class ScheduleGrid {
                     }
                 }
 
+                console.log(cardOptions)
                 let workshopCard = new WorkshopCard(workshop, cardOptions)
                 let workshopCardElement = await workshopCard.element() as HTMLElement
 

@@ -107,16 +107,20 @@ export class WorkshopCard {
             this.options.workshopTypes = response.data
         }
 
-        // Get the remove icon if it wasnt passed in
-        if (!this.options.cardRemoveIcon) {
-            let iconData = await getIconData('remove')
-            this.options.cardRemoveIcon = iconData
+        if (this.options.remove) {
+            // Get the remove icon if it wasnt passed in
+            if (!this.options.cardRemoveIcon) {
+                let iconData = await getIconData('remove')
+                this.options.cardRemoveIcon = iconData
+            }
         }
 
-        // Get the settings icon if it wasnt passed in
-        if (!this.options.cardSettingsIcon) {
-            let iconData = await getIconData('settings')
-            this.options.cardSettingsIcon = iconData
+        if (this.options.settings) {
+            // Get the settings icon if it wasnt passed in
+            if (!this.options.cardSettingsIcon) {
+                let iconData = await getIconData('settings')
+                this.options.cardSettingsIcon = iconData
+            }
         }
 
         // Set the text font sizes
