@@ -141,6 +141,49 @@
     </div>
 </div>
 
+<div class="modal" id="session-settings-modal" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Session Settings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Capacity</label>
+                    <div class="d-flex align-items-center">
+                        <input type="number" class="form-control" name="name" id="session-settings-capacity" placeholder="10" />
+                        <button class="btn btn-link ms-2" id="recalculate-session-capacity">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-refresh-alert">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4" />
+                                <path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" />
+                                <path d="M12 9l0 3" />
+                                <path d="M12 15l.01 0" />
+                                </svg>
+                        </button>
+                    </div>
+                </div>
+                
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
+                    Cancel
+                </a>
+                <button class="btn btn-primary ms-auto" data-bs-dismiss="modal" id="save-session-settings">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-device-floppy">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
+                        <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                        <path d="M14 4l0 4l-6 0l0 -4" />
+                      </svg>
+                    Save
+                    </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="{{ url_for('static', filename='js/event/schedule_planner.js') }}" type="module" defer></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/admin/schedule_planner.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/general/schedule_grid.css') }}">

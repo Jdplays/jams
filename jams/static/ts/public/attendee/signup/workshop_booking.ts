@@ -350,8 +350,8 @@ function populateAttendeeSignupData() {
 
         const wsCardAttendance = document.getElementById(`session-attendance-${sessionId}`)
         if (wsCardAttendance) {
-            wsCardAttendance.innerHTML = `${signupCount}/${workshop.capacity}`
-            if (signupCount >= workshop.capacity) {
+            wsCardAttendance.innerHTML = `${signupCount}/${sessionsMap[sessionId].capacity}`
+            if (signupCount >= sessionsMap[sessionId].capacity) {
                 wsCardAttendance.classList.add('text-danger')
             } else {
                 wsCardAttendance.classList.remove('text-danger')
@@ -382,7 +382,7 @@ function populateAttendeeSignupData() {
 
             const workshop = workshopsMap[sessionsMap[sessionId].workshop_id]
 
-            if (signupCount >= workshop.capacity) {
+            if (signupCount >= sessionsMap[sessionId].capacity) {
                 text.classList.add('text-danger')
                 input.disabled = true
             } else {
@@ -404,7 +404,7 @@ function populateAttendeeSignupData() {
                 text.classList.remove('text-success')
             }
 
-            text.innerHTML = `${workshop.name} (${signupCount}/${workshop.capacity})`
+            text.innerHTML = `${workshop.name} (${signupCount}/${sessionsMap[sessionId].capacity})`
 
         }
 
@@ -717,6 +717,7 @@ async function loadAttendeeSection() {
 }
 
 async function loadAttendeeSignupData() {
+    await loadSessionsMap()
     await loadAttendeeSignupMap()
 
     populateAttendeeSignupData()

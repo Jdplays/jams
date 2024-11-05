@@ -10,9 +10,12 @@ export interface WorkshopCardOptions {
     width?:number
     height?:number
     remove?:boolean
+    settings?:boolean
     showAttendeeSignupCounts?:boolean
     cardRemoveIcon?:string|null
+    cardSettingsIcon?:string|null
     cardRemoveFunc?:((arg1:number, arg2:any) => void)
+    cardSettingsFunc?:((arg1:number, arg2:any) => void)
     cardBodyText?:string|null
     cardBodyElement?:HTMLElement|null
     cardBodyActionText?:string|null
@@ -46,9 +49,12 @@ export class WorkshopCard {
             width = 150,
             height = 150,
             remove = false,
+            settings = false,
             showAttendeeSignupCounts = false,
             cardRemoveIcon = null,
+            cardSettingsIcon = null,
             cardRemoveFunc,
+            cardSettingsFunc,
             cardBodyText = null,
             cardBodyElement = null,
             cardBodyActionText = null,
@@ -65,9 +71,12 @@ export class WorkshopCard {
             width,
             height,
             remove,
+            settings,
             showAttendeeSignupCounts,
             cardRemoveIcon,
+            cardSettingsIcon,
             cardRemoveFunc,
+            cardSettingsFunc,
             cardBodyText,
             cardBodyElement,
             cardBodyActionText,
@@ -102,6 +111,12 @@ export class WorkshopCard {
         if (!this.options.cardRemoveIcon) {
             let iconData = await getIconData('remove')
             this.options.cardRemoveIcon = iconData
+        }
+
+        // Get the settings icon if it wasnt passed in
+        if (!this.options.cardSettingsIcon) {
+            let iconData = await getIconData('settings')
+            this.options.cardSettingsIcon = iconData
         }
 
         // Set the text font sizes
@@ -146,6 +161,28 @@ export class WorkshopCard {
 
         const workshopTitleContainerPaddingColumn = document.createElement('div')
         workshopTitleContainerPaddingColumn.classList.add('workshop-title-action-column')
+        // If the workshop card needs a settings button, add it
+        if (this.options.settings) {
+            let settingsButton = document.createElement('div')
+            if (this.options.cardRemoveIcon) {
+                settingsButton.innerHTML = this.options.cardSettingsIcon
+                let icon = settingsButton.querySelector('svg')
+                if (icon) {
+                    icon.classList.remove('icon-tabler-settings')
+                    icon.classList.add('icon-session-action')
+                }
+            }
+            if (this.options.sessionId != null) {
+                settingsButton.onclick = () => {
+                    if (this.options.cardSettingsFunc && this.options.sessionId && this.options.scheduleGrid) {
+                        this.options.cardSettingsFunc(this.options.sessionId, this.options.scheduleGrid)
+                        return true
+                    }
+                }
+            }
+
+            workshopTitleContainerPaddingColumn.appendChild(settingsButton)
+        }
         workshopTitleContainer.appendChild(workshopTitleContainerPaddingColumn)
 
         const workshopTitle = document.createElement('p')
@@ -165,7 +202,7 @@ export class WorkshopCard {
                 let icon = removeButton.querySelector('svg')
                 if (icon) {
                     icon.classList.remove('icon-tabler-trash')
-                    icon.classList.add('icon-bin-session')
+                    icon.classList.add('icon-session-action')
                 }
             }
             if (this.options.sessionId != null) {

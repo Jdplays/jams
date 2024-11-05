@@ -19,9 +19,11 @@ import {
     removeVolunteerSignup,
     addVolunteerSignup,
     getAttendeesSignups,
-    getWorkshopField
+    getWorkshopField,
+    recalculateSessionCapacity,
+    updateSessionSettings
 } from '@global/endpoints'
-import { EventLocation, EventTimeslot, Location, Session, Timeslot, User, VolunteerSignup } from '@global/endpoints_interfaces'
+import { EventLocation, EventTimeslot, Location, Session, sessionSettings, Timeslot, User, VolunteerSignup } from '@global/endpoints_interfaces'
 import {buildQueryString, emptyElement, allowDrop, waitForTransitionEnd, debounce, successToast, errorToast, buildUserAvatar, preloadUsersInfoMap, animateElement, isTouchDevice} from '@global/helper'
 import {WorkshopCard, WorkshopCardOptions} from '@global/workshop_card'
 import { QueryStringData } from './interfaces'
@@ -69,6 +71,7 @@ export class ScheduleGrid {
     private volunteerSignupsMap:Record<number, number[]> = {}
     private attendeeSignupCountsMap:Record<number, number> = {}
     private usersInfoMap:Record<number, Partial<User>> = {}
+    private sessionsMap:Record<number, Session> = {}
 
     public currentDragType:string
     public scheduleValid:boolean
@@ -202,6 +205,7 @@ export class ScheduleGrid {
             // Pre load in all of the icons to reduce server calls
             this.icons = {
                 remove: await getIconData('remove'),
+                settings: await getIconData('settings'),
                 addToGrid: await getIconData('table-add'),
                 grabPoint: await getIconData('grab-point'),
                 userAdd: await getIconData('user-add'),
@@ -293,14 +297,29 @@ export class ScheduleGrid {
                 this.options.workshopCardOptions.remove = this.options.edit
             }
 
+            // Set if the settings button should be included (this is only true if the grid is editable)
+            if (this.options.workshopCardOptions.settings === undefined) {
+                this.options.workshopCardOptions.settings = this.options.edit
+            }
+
             // Set the remove icon so it doesnt have to be loaded in every time
             if (this.options.workshopCardOptions.cardRemoveIcon === undefined) {
                 this.options.workshopCardOptions.cardRemoveIcon = this.icons.remove
             }
 
+            // Set the settings icon so it doesnt have to be loaded in every time
+            if (this.options.workshopCardOptions.cardSettingsIcon === undefined) {
+                this.options.workshopCardOptions.cardSettingsIcon = this.icons.settings
+            }
+
             // Set the remove function
             if (this.options.workshopCardOptions.cardRemoveFunc === undefined) {
                 this.options.workshopCardOptions.cardRemoveFunc = this.workshopRemoveFunc
+            }
+
+            // Set the settings function
+            if (this.options.workshopCardOptions.cardSettingsFunc === undefined) {
+                this.options.workshopCardOptions.cardSettingsFunc = this.sessionSettingsFunc
             }
 
             // Set the current schedule grid object as an option so it can be used with some events
@@ -762,6 +781,13 @@ export class ScheduleGrid {
         const sessionsResponse = await getSessionsForEvent(this.options.eventId, queryString)
         let sessions = sessionsResponse.data
 
+        const oldSessionsMap:Record<number, Session> = this.sessionsMap
+        let sessionsMap:Record<number, Session> = {}
+        for (const session of sessions) {
+            sessionsMap[session.id] = session
+        }
+        this.sessionsMap = sessionsMap
+
         const oldSignups:Record<number, number[]> = this.volunteerSignupsMap
         let currentSignups:Record<number, number[]> = {}
         if (this.options.showVolunteerSignup) {
@@ -858,9 +884,15 @@ export class ScheduleGrid {
             // If attendee signup counts are shown, check for a difference
             if (this.options.showAttendeeSignupCounts) {
                 const areEqual = 
-                    oldAttendeeSignupCounts[session.id] === undefined && currentAttendeeSignupCounts[session.id] === undefined
-                    ? true
-                    : oldAttendeeSignupCounts[session.id] === currentAttendeeSignupCounts[session.id]
+                    ((
+                        oldAttendeeSignupCounts[session.id] === undefined && currentAttendeeSignupCounts[session.id] === undefined
+                        ? true
+                        : oldAttendeeSignupCounts[session.id] === currentAttendeeSignupCounts[session.id]) &&
+                    (
+                        oldSessionsMap[session.id] === undefined || sessionsMap[session.id] === undefined
+                        ? true
+                        : oldSessionsMap[session.id].capacity === sessionsMap[session.id].capacity
+                    ))
 
                 if (!areEqual) {
                     if (!sessionSignupCountsToUpdate.includes(session)) {
@@ -1054,7 +1086,7 @@ export class ScheduleGrid {
                                 signupCount = 0
                             }
 
-                            signupCountElement.innerHTML = `(${signupCount}/${workshop.capacity})`
+                            signupCountElement.innerHTML = `(${signupCount}/${this.sessionsMap[sessionId].capacity})`
                         } else {
                             signupCountElement.innerHTML = ''
                         }
@@ -1277,6 +1309,41 @@ export class ScheduleGrid {
         if (await removeWorkshopFromSession(sessionId)) {
             await scheduleGrid.populateSessions()
         }
+    }
+
+      // Handle workshop settings event
+      async sessionSettingsFunc(sessionId:number, scheduleGrid:ScheduleGrid) {
+        let session = scheduleGrid.sessionsMap[sessionId]
+        let setitngsModal = $('#session-settings-modal')
+        setitngsModal.modal('show')
+        setitngsModal.find('#session-settings-capacity').val(session.capacity);
+
+        setitngsModal.find('#recalculate-session-capacity').off('click');
+
+        setitngsModal.find('#recalculate-session-capacity').click(() => {
+            recalculateSessionCapacity(sessionId).then((response) => {
+                successToast('Session capacity successfully updated')
+                setitngsModal.find('#session-settings-capacity').val(response.data);
+            }).catch(() => {
+                errorToast('A Error occured when recalculating session capacity')
+            })
+        });
+
+
+        setitngsModal.find('#save-session-settings').off('click');
+
+        setitngsModal.find('#save-session-settings').click(() => {
+            const data:sessionSettings = {
+                capacity: Number((document.getElementById('session-settings-capacity') as HTMLInputElement).value)
+            }
+            updateSessionSettings(sessionId, data).then(() => {
+                successToast('Session settings successfully updated')
+                setitngsModal.modal('hide')
+            }).catch(() => {
+                errorToast('A Error occured when updating session settings')
+            })
+        });
+
     }
 
     // Handle locations being added to the event
