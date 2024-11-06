@@ -1,0 +1,30 @@
+<div id="jolt-status-widget" class="col-12 col-md-4 col-lg-3 ms-auto align-self-start">
+    <div class="card">
+        <div class="card-header d-flex flex-column align-items-start">
+            <div class="d-flex align-items-center w-100">
+                <!-- Status Indicator -->
+                <span id="indicator" class="status-indicator status-red status-indicator-animated me-2">
+                    <span class="status-indicator-circle"></span>
+                    <span class="status-indicator-circle"></span>
+                    <span class="status-indicator-circle"></span>
+                </span>
+        
+                <!-- Title "JOLT" -->
+                <h4 class="mb-0">JOLT</h4>
+                <p id="connected-text" class="ms-auto mb-0 text-secondary">Loading...</p>
+            </div>
+        
+            <!-- Error Text - initially hidden -->
+            <p id="error-text" class="text-danger mb-0 mt-1">Loading...</p>
+        </div>
+        
+
+        <div id="card-body" class="card-body">
+            <div id="last-checked-sub-header" class="subheader mb-3">Loading...</div>
+            <a href="#" onclick="testPrintOnClick()" class="btn btn-primary">Print Test</a>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/widgets/jolt_status.js') }}" defer></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/widgets/jolt_status.css') }}">

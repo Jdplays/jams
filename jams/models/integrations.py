@@ -36,6 +36,7 @@ class JOLTHealthCheck(db.Model):
     cpu_usage = Column(Float, nullable=True)
     ram_usage = Column(Float, nullable=True)
     local_ip = Column(String(45), nullable=True)
+    error = Column(String(255), nullable=True)
     storage_usage = Column(Float, nullable=True)
 
     def __init__(self):
@@ -49,5 +50,6 @@ class JOLTHealthCheck(db.Model):
             'cpu_usage': self.cpu_usage,
             'ram_usage': self.ram_usage,
             'local_id': self.local_ip,
-            'storage_usage': self.storage_usage
+            'storage_usage': self.storage_usage,
+            'error': self.error
         }

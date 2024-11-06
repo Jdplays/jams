@@ -3,6 +3,7 @@ from enum import Enum
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta, UTC
 
+from jams.models.integrations import JOLTHealthCheck
 from jams.util import helper
 from jams.util.enums import JOLTPrintQueueStatus, JOLTPrintJobType, JOLTRequestType, JOLTHealthCheckStatus, APIKeyType
 from jams import WSS
@@ -96,12 +97,14 @@ def process_healthcheck_response(message):
         ram = data['RAM']
         ip = data['IP']
         storage = data['STORAGE']
+        error = data['ERROR']
 
         healthcheck.cpu_usage = float(cpu)
         healthcheck.ram_usage = float(ram)
         healthcheck.local_ip = ip
         healthcheck.storage_usage = float(storage)
         healthcheck.status = JOLTHealthCheckStatus.SUCCESS.name
+        healthcheck.error = error
         db.session.commit()
 
 # A method that processes a JOLT print job status change
@@ -116,8 +119,9 @@ def process_job_status_update(message, status):
 
 # A method that checks if the JOLT print queue is open and can be added to
 def print_queue_open():
-    # TODO: Check Healthchecks first
-
+    healthcheck, online = last_healthcheck()
+    if online:
+        return True
 
     next_event = helper.get_next_event()
     now = datetime.now(UTC)
@@ -134,6 +138,9 @@ def print_queue_open():
 
 # Adds an attendee to the JOLT print queue
 def add_attendee_to_print_queue(attendee):
+    if not print_queue_open():
+        return (False, 'Print Queue is not currently open')
+    
     from jams.models import db, JOLTPrintQueue
     existing_jobs = JOLTPrintQueue.query.filter(
         and_(
@@ -144,7 +151,7 @@ def add_attendee_to_print_queue(attendee):
     ).all()
 
     if existing_jobs:
-        return
+        return (False, 'Another print for this attendee is in the queue')
 
     body = {
         'attendee_id': attendee.id,
@@ -155,6 +162,32 @@ def add_attendee_to_print_queue(attendee):
     print_job = JOLTPrintQueue(body, JOLTPrintJobType.ATTENDEE_LABEL.name)
     db.session.add(print_job)
     db.session.commit()
+
+    return (True, 'Attendee label successfully added to queue')
+
+# Adds an attendee to the JOLT print queue
+def add_test_to_print_queue():
+    if not print_queue_open():
+        return (False, 'Print Queue is not currently open')
+    
+    from jams.models import db, JOLTPrintQueue
+    existing_jobs = JOLTPrintQueue.query.filter(
+        and_(
+            JOLTPrintQueue.type == JOLTPrintJobType.TEST_ATTENDEE_LABEL.name,
+            JOLTPrintQueue.status == JOLTPrintQueueStatus.QUEUED.name
+        )
+    ).all()
+
+    if existing_jobs:
+        return (False, 'Another "Print Test" is in the queue')
+
+    body = {}
+
+    print_job = JOLTPrintQueue(body, JOLTPrintJobType.TEST_ATTENDEE_LABEL.name)
+    db.session.add(print_job)
+    db.session.commit()
+
+    return (True, '"Print Test" Successfully queued')
 
 # A method that builds a print request message for JOLT
 def build_print_request_message(print_job):
@@ -177,3 +210,18 @@ def build_healthcheck_request_message(healthcheck):
     }
 
     return json.dumps(message)
+
+
+def last_healthcheck():
+    now = datetime.now(UTC).replace(tzinfo=None)
+    target_datetime = now - timedelta(seconds=35)
+    last_healthcheck = JOLTHealthCheck.query.filter(JOLTHealthCheck.date_time >= target_datetime).first()
+
+    online = False
+    if last_healthcheck and last_healthcheck.status == JOLTHealthCheckStatus.SUCCESS.name:
+        online = True
+    
+    if len(WSS.connected_clients[APIKeyType.JOLT.name]) == 0:
+        online = False
+
+    return (last_healthcheck, online)

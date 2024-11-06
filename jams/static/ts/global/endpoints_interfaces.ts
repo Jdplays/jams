@@ -326,3 +326,9 @@ export interface FireListEntry {
     checked_in:boolean
     type:FireListEntryType
 }
+
+export interface JOLTStatus {
+    online:boolean
+    date_time:string
+    error:string
+}

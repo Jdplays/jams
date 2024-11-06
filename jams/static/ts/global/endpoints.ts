@@ -35,7 +35,8 @@ import {
     GeneralConfig,
     AttendeeSignup,
     FireListEntry,
-    sessionSettings
+    sessionSettings,
+    JOLTStatus
 } from "@global/endpoints_interfaces";
 import { formatDate } from "./helper";
 
@@ -2144,6 +2145,42 @@ export function deleteOAuthConfiguration():Promise<boolean> {
             error: function (error) {
                 console.log('Error fetching data:', error);
                 resolve(false)
+            }
+        });
+    });
+}
+
+// #endregion
+
+// #region JOLT Integration
+
+export function getJoltStatus():Promise<JOLTStatus> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/jolt/status`,
+            type: 'GET',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(false)
+            }
+        });
+    });
+}
+
+export function sendJoltTestPrintRequest():Promise<string> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/jolt/test_print`,
+            type: 'POST',
+            success: function (response) {
+                resolve(response.message)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
             }
         });
     });
