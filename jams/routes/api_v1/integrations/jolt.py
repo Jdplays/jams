@@ -1,15 +1,19 @@
 # API is for serving data to Typscript/Javascript
+from datetime import UTC, datetime, timedelta
 from flask import Blueprint, abort, jsonify
+from sqlalchemy import and_, or_
 from jams.decorators import api_route
 from jams.integrations import jolt
 from jams.util import helper
 from jams.configuration import ConfigType, set_config_value, remove_config_entry
+from jams.util.enums import JOLTPrintQueueStatus
 
 bp = Blueprint('jolt', __name__, url_prefix='/jolt')
 
 @bp.route('/status', methods=['GET'])
 @api_route
 def get_status():
+    from jams.models import JOLTPrintQueue
     last_healthcheck, online = jolt.last_healthcheck()
 
     return_dict = {
@@ -18,8 +22,24 @@ def get_status():
 
     if last_healthcheck:
         return_dict['date_time'] = helper.convert_datetime_to_local_timezone(last_healthcheck.date_time)
-        if last_healthcheck.error:
-            return_dict['error'] = last_healthcheck.error
+        return_dict['local_ip'] = last_healthcheck.local_ip
+    
+    now = datetime.now(UTC).replace(tzinfo=None)
+    target_datetime = now - timedelta(minutes=15)
+    
+    last_complte_job = JOLTPrintQueue.query.filter(
+        and_(
+            JOLTPrintQueue.date_time >= target_datetime,
+            or_(
+                JOLTPrintQueue.status == JOLTPrintQueueStatus.FAILED.name,
+                JOLTPrintQueue.status == JOLTPrintQueueStatus.PRINTED.name
+            )
+        )
+    ).order_by(JOLTPrintQueue.date_time.desc()).first()
+
+    if last_complte_job:
+        if last_complte_job.status == JOLTPrintQueueStatus.FAILED.name and last_complte_job.error:
+            return_dict['error'] = last_complte_job.error
     
     return jsonify(return_dict)
 

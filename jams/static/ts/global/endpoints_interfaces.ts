@@ -337,4 +337,5 @@ export interface JOLTStatus {
     online:boolean
     date_time:string
     error:string
+    local_ip:string
 }

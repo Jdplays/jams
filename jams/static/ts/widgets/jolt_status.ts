@@ -8,6 +8,7 @@ let widget:HTMLDivElement = null
 async function populateJoltStatus() {
     const indicator = widget.querySelector('#indicator')
     const connectedText = widget.querySelector('#connected-text')
+    const joltLink = widget.querySelector('#jolt-link') as HTMLAnchorElement
     const errorText = widget.querySelector('#error-text') as HTMLElement
     const cardBody = widget.querySelector('#card-body') as HTMLDivElement
 
@@ -17,6 +18,7 @@ async function populateJoltStatus() {
     // Reset indicator classes first
     indicator.classList.remove('status-red', 'status-green', 'status-orange', 'status-indicator-animated');
     errorText.style.display = 'none';
+    joltLink.style.display = 'none'
 
     if (currentStatus.online) {
         if (currentStatus.error) {
@@ -29,6 +31,10 @@ async function populateJoltStatus() {
 
         connectedText.innerHTML = 'Connected';
         cardBody.classList.add('expanded');
+
+        joltLink.style.display = 'block'
+        joltLink.href = `http://${currentStatus.local_ip}:5000`
+
         cardBody.style.height = `${cardBody.scrollHeight}px`;
 
         setTimeout(() => {
@@ -37,6 +43,9 @@ async function populateJoltStatus() {
     } else {
         indicator.classList.add('status-red');
         connectedText.innerHTML = 'Offline';
+
+        joltLink.href = ''
+
         cardBody.classList.remove('expanded');
         cardBody.style.height = '0';
     }
