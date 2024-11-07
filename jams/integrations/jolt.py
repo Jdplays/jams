@@ -4,7 +4,7 @@ from uuid import uuid4
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta, UTC
 
-from jams.models import db, JOLTHealthCheck, APIKey, APIKeyEndpoint, Endpoint
+from jams.models import db, JOLTPrintQueue, JOLTHealthCheck, APIKey, APIKeyEndpoint, Endpoint
 from jams.util import helper
 from jams.util.enums import JOLTPrintQueueStatus, JOLTPrintJobType, JOLTRequestType, JOLTHealthCheckStatus, APIKeyType
 from jams.configuration import ConfigType, get_config_value
@@ -56,7 +56,6 @@ def healthcheck_loop():
 
 # The loop that processes the print queue
 def process_print_queue():
-    from jams.models import db, JOLTPrintQueue
     try:
         now = datetime.now(UTC).replace(tzinfo=None)
         target_datetime = now - timedelta(seconds=30)
@@ -111,24 +110,26 @@ def process_healthcheck_response(message):
         ram = data['RAM']
         ip = data['IP']
         storage = data['STORAGE']
-        error = data['ERROR']
 
         healthcheck.cpu_usage = float(cpu)
         healthcheck.ram_usage = float(ram)
         healthcheck.local_ip = ip
         healthcheck.storage_usage = float(storage)
         healthcheck.status = JOLTHealthCheckStatus.SUCCESS.name
-        healthcheck.error = error
         db.session.commit()
 
 # A method that processes a JOLT print job status change
 def process_job_status_update(message, status):
-    from jams.models import db, JOLTPrintQueue
     body = message['BODY']
     id = body['ID']
+
+    error = None
+    if 'ERROR' in body:
+        error = body['ERROR']
     print_job = JOLTPrintQueue.query.filter_by(id=id).first()
     if print_job:
         print_job.status = status.name
+        print_job.error = error
         db.session.commit()
 
 # A method that checks if the JOLT print queue is open and can be added to
@@ -155,7 +156,6 @@ def add_attendee_to_print_queue(attendee):
     if not print_queue_open():
         return (False, 'Print Queue is not currently open')
     
-    from jams.models import db, JOLTPrintQueue
     existing_jobs = JOLTPrintQueue.query.filter(
         and_(
             JOLTPrintQueue.type == JOLTPrintJobType.ATTENDEE_LABEL.name,
@@ -184,7 +184,6 @@ def add_test_to_print_queue():
     if not print_queue_open():
         return (False, 'Print Queue is not currently open')
     
-    from jams.models import db, JOLTPrintQueue
     existing_jobs = JOLTPrintQueue.query.filter(
         and_(
             JOLTPrintQueue.type == JOLTPrintJobType.TEST_ATTENDEE_LABEL.name,
@@ -228,7 +227,7 @@ def build_healthcheck_request_message(healthcheck):
 
 def last_healthcheck():
     now = datetime.now(UTC).replace(tzinfo=None)
-    target_datetime = now - timedelta(seconds=35)
+    target_datetime = now - timedelta(seconds=40)
     last_healthcheck = JOLTHealthCheck.query.filter(JOLTHealthCheck.date_time >= target_datetime).first()
 
     online = False

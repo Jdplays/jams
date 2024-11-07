@@ -20,6 +20,7 @@ class JOLTPrintQueue(db.Model):
     last_attempt_date_time = Column(DateTime, nullable=True)
     status = Column(String(100), nullable=False, default=JOLTPrintQueueStatus.QUEUED.name, server_default=JOLTPrintQueueStatus.QUEUED.name)
     type = Column(String(100), nullable=False, default=JOLTPrintJobType.ATTENDEE_LABEL.name, server_default=JOLTPrintJobType.ATTENDEE_LABEL.name)
+    error = Column(String(255), nullable=True)
 
     def __init__(self, data, type=JOLTPrintJobType.ATTENDEE_LABEL.name, status=JOLTPrintQueueStatus.QUEUED.name):
         self.date_time=datetime.now(UTC)
@@ -36,7 +37,6 @@ class JOLTHealthCheck(db.Model):
     cpu_usage = Column(Float, nullable=True)
     ram_usage = Column(Float, nullable=True)
     local_ip = Column(String(45), nullable=True)
-    error = Column(String(255), nullable=True)
     storage_usage = Column(Float, nullable=True)
 
     def __init__(self):
@@ -51,5 +51,4 @@ class JOLTHealthCheck(db.Model):
             'ram_usage': self.ram_usage,
             'local_id': self.local_ip,
             'storage_usage': self.storage_usage,
-            'error': self.error
         }
