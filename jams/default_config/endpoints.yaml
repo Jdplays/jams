@@ -176,3 +176,14 @@ groups:
     write:
       edit_auth_config: routes.api_v1.integrations.auth.edit_config
       delete_auth_config: routes.api_v1.integrations.auth.delete_config
+  jolt:
+    description: Manages interactions for JOLT
+    read:
+      get_jolt_status: routes.api_v1.integrations.jolt.get_status
+      get_jolt_config: routes.api_v1.integrations.jolt.get_config
+    write:
+      enable_jolt_integration: routes.api_v1.integrations.jolt.enable
+      disable_jolt_integration: routes.api_v1.integrations.jolt.disable
+      refresh_jolt_integration_api_token: routes.api_v1.integrations.jolt.refresh_api_token
+      send_jolt_test_print: routes.api_v1.integrations.jolt.test_print
+
