@@ -23,7 +23,7 @@ class Attendee(db.Model):
     event = relationship('Event', backref='attendees')
     attendee_account = relationship('AttendeeAccount', backref='attendees')
 
-    def __init__(self, event_id, name, external_id=None, email=None, checked_in=False, registerable=True, age=None, gender=None, external_order_id=None, source=AttendeeSource.LOCAL.name, last_update_source=AttendeeSource.LOCAL.name):
+    def __init__(self, event_id, name, external_id=None, email=None, checked_in=False, registerable=True, age=None, gender=None, external_order_id=None, source=AttendeeSource.LOCAL.name):
         self.event_id = event_id
         self.name = name
         self.external_id = external_id
@@ -34,7 +34,7 @@ class Attendee(db.Model):
         self.gender = gender
         self.external_order_id = external_order_id
         self.source = source
-        self.last_update_source = last_update_source
+        self.last_update_source = self.source
     
     def link_to_account(self):
         # Link attendee to attendee account
@@ -65,8 +65,13 @@ class Attendee(db.Model):
             db.session.commit()
 
     def check_in(self):
+        from jams.configuration import ConfigType, get_config_value
+        from jams.integrations import jolt
         self.checked_in = True
         self.create_fire_list_entry()
+
+        if (get_config_value(ConfigType.JOLT_ENABLED)):
+            jolt.add_attendee_to_print_queue(self)
 
     def check_out(self):
         self.checked_in = False

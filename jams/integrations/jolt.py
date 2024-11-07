@@ -1,12 +1,26 @@
 import json
 from enum import Enum
+from uuid import uuid4
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta, UTC
 
-from jams.models.integrations import JOLTHealthCheck
+from jams.models import db, JOLTHealthCheck, APIKey, APIKeyEndpoint, Endpoint
 from jams.util import helper
 from jams.util.enums import JOLTPrintQueueStatus, JOLTPrintJobType, JOLTRequestType, JOLTHealthCheckStatus, APIKeyType
+from jams.configuration import ConfigType, get_config_value
 from jams import WSS
+
+config_items = [
+    ConfigType.JOLT_ENABLED,
+    ConfigType.JOLT_API_KEY_ID
+]
+
+def config_dict():
+    dict = {}
+    for item in  config_items:
+        dict[item.name] = get_config_value(item)
+    
+    return dict
 
 # The main JOLT loop that will run when JOLT websocket clients are connected
 def websocket_loop():
@@ -225,3 +239,41 @@ def last_healthcheck():
         online = False
 
     return (last_healthcheck, online)
+
+def generate_api_token():
+    next_event_endpoint = Endpoint.query.filter_by(name='get_next_event_id').first()
+    event_field_endpoint = Endpoint.query.filter_by(name='get_event_field').first()
+    event_attendees_endpoint = Endpoint.query.filter_by(name='get_event_attendees').first()
+
+    # If any of the endpoint checks fail, abort
+    if not next_event_endpoint or not event_field_endpoint or not event_attendees_endpoint:
+        return (None, None)
+    
+    endpoint_ids = [next_event_endpoint.id, event_field_endpoint.id, event_attendees_endpoint.id]
+
+    # Clean up old api tokens for JOLT
+    disable_old_api_tokens()
+
+    # Create new API Key
+    key = uuid4().hex
+    new_api_token_obj = APIKey(key=key, type=APIKeyType.JOLT.name, websocket=True)
+    db.session.add(new_api_token_obj)
+
+    db.session.commit()
+
+    # Assign endpoints to new API key
+    for id in endpoint_ids:
+        endpoint_link = APIKeyEndpoint(api_key_id=new_api_token_obj.id, endpoint_id=id)
+        db.session.add(endpoint_link)
+    
+    db.session.commit()
+
+    return (new_api_token_obj.id, key)
+
+def disable_old_api_tokens():
+    old_api_tokens = APIKey.query.filter_by(type=APIKeyType.JOLT.name, active=True).all()
+
+    for token in old_api_tokens:
+        token.active = False
+
+    db.session.commit()

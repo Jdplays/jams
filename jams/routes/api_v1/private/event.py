@@ -97,9 +97,6 @@ def check_in_attendee(event_id, attendee_id):
 
     db.session.commit()
 
-    if (get_config_value(ConfigType.JOLT_ENABLED)):
-        jolt.add_attendee_to_print_queue(attendee)
-
     return jsonify({
         'message': 'Attendee has be checked in successfully',
         'data': attendee.to_dict()
