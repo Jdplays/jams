@@ -327,6 +327,12 @@ export interface FireListEntry {
     type:FireListEntryType
 }
 
+export interface JOLTConfig {
+    JOLT_ENABLED:boolean
+    JOLT_API_KEY_ID:string
+    TOKEN?:string
+}
+
 export interface JOLTStatus {
     online:boolean
     date_time:string

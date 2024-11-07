@@ -36,7 +36,8 @@ import {
     AttendeeSignup,
     FireListEntry,
     sessionSettings,
-    JOLTStatus
+    JOLTStatus,
+    JOLTConfig
 } from "@global/endpoints_interfaces";
 import { formatDate } from "./helper";
 
@@ -2153,6 +2154,70 @@ export function deleteOAuthConfiguration():Promise<boolean> {
 // #endregion
 
 // #region JOLT Integration
+
+export function getJoltConfiguration():Promise<JOLTConfig> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/jolt/config`,
+            type: 'GET',
+            success: function (response) {
+                resolve(response.jolt_config)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(false)
+            }
+        });
+    });
+}
+
+export function enableJoltIntegration():Promise<JOLTConfig> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/jolt/enable`,
+            type: 'POST',
+            success: function (response) {
+                resolve(response.jolt_config)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(false)
+            }
+        });
+    });
+}
+
+export function disableJoltIntegration():Promise<JOLTConfig> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/jolt/disable`,
+            type: 'POST',
+            success: function (response) {
+                resolve(response.jolt_config)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(false)
+            }
+        });
+    });
+}
+
+export function refreshJoltIntegrationAPIToken():Promise<JOLTConfig> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/jolt/refresh_api_token`,
+            type: 'POST',
+            success: function (response) {
+                resolve(response.jolt_config)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(false)
+            }
+        });
+    });
+}
 
 export function getJoltStatus():Promise<JOLTStatus> {
     return new Promise((resolve, reject) => {

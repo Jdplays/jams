@@ -1,0 +1,128 @@
+{% extends './private/admin/settings/settings-layout.html' %}
+
+{% block settings_title %}JOLT{% endblock %}
+
+{% block settings_name %}JOLT{% endblock %}
+
+{% block settings_content %}
+
+<div id="jolt-settings-content" class="settings-content-container">
+    <p>JOLT (JAMS Onsite Labeling Tool) is a first party integration for JAMS. It allows for the automatic printing of attendee badges (labels with name, event details and QR code to sign up to workshops) when an attendee is checked in.<br>
+        You will need a server (Raspberry Pi) running the JOLT software connected to a label printer to use this feature.<br>
+        More details on JOLT can be found <a href="https://github.com/Jdplays/jolt" target="_blank">here</a>.</p>
+
+    <div id="form-container">
+        <div id="jolt-config-form">
+            <div class="mb-3">
+                <label class="form-check form-switch">
+                    <input id="toggle-jolt-switch" class="form-check-input" type="checkbox"
+                        oninput="toggleJoltIntegrationOnChange()">
+                    <span class="form-check-label">Enable JOLT Integration</span>
+                </label>
+            </div>
+
+            <div id="jolt-api-key-block" class="mb-3">
+                <h3>API Key</h3>
+                <p id="copy-key-warning" class="mb-3 text-warning">WARNING: Copy this key now! Once you leave this page, you won't be able to retrieve it again</p>
+                <div style="display: flex; align-items: center; width: 100%;">
+                    <div class="input-group input-group-flat" style="margin-right: 20px;">
+                        <input id="api-key-input" type="text" class="form-control" disabled>
+                        <span class="input-group-text">
+                            <a id="token-copy-button" href="#" class="link-secondary" data-bs-toggle="tooltip"
+                                aria-label="Copy Token" data-bs-original-title="Copy Token"
+                                onclick="copyAPIToken()">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-copy">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M7 7m0 2.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667z" />
+                                    <path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1" />
+                                  </svg>
+                            </a>
+                        </span>
+                    </div>
+                    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirm-api-key-refresh" style="display: flex; align-items: center; padding: 8px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-refresh-alert">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4" />
+                            <path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" />
+                            <path d="M12 9l0 3" />
+                            <path d="M12 15l.01 0" />
+                        </svg>
+                        <span class="btn-text settings-card-item-text">Refresh API Key</span>
+                    </button>
+                </div>
+                
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="confirm-api-key-refresh" class="modal modal-blur fade" id="modal-small" tabindex="-1" style="display: none;"
+        aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-status bg-danger"></div>
+                <div class="modal-body text-center py-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="icon mb-2 text-danger icon-lg">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M12 9v4"></path>
+                        <path
+                            d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z">
+                        </path>
+                        <path d="M12 16h.01"></path>
+                    </svg>
+                    <div class="modal-title">Are you sure?</div>
+                    <p>Refreshing this API token will disable any current instances of JOLT using it.<br><br>
+                        Be sure to update those instances with the new API key</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="confirm-refresh-button" type="button" class="btn btn-outline-danger" onclick="refreshAPIToken()" data-bs-dismiss="modal">Yes,
+                        Refresh</button>
+                    <button type="button" class="btn btn-link link-secondary ms-auto"
+                        data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="confirm-disable-jolt" class="modal modal-blur fade" id="modal-small" tabindex="-1" style="display: none;"
+        aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-status bg-danger"></div>
+                <div class="modal-body text-center py-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="icon mb-2 text-danger icon-lg">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M12 9v4"></path>
+                        <path
+                            d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z">
+                        </path>
+                        <path d="M12 16h.01"></path>
+                    </svg>
+                    <div class="modal-title">Are you sure?</div>
+                    <p>Disabling JOLT will invalidate its API token, which will disrupt any current instance running JOLT.<br><br>
+                        Be sure to update those instances with the new API key if you re-enable it.</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="confirm-disable-button" type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">Yes,
+                        Disable</button>
+                    <button type="button" class="btn btn-link link-secondary ms-auto"
+                        data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/admin/settings/settings-int-jolt.js') }}" type="module"
+    defer></script>
+
+
+{% endblock %}

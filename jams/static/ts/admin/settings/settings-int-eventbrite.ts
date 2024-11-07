@@ -536,6 +536,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     xIcon = await getIconData('x')
 
 });
+
 document.addEventListener("DOMContentLoaded", () => {
     if (isDefined(window)) {
         (<any>window).orgSelectOnChange = orgSelectOnChange;
