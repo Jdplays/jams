@@ -145,7 +145,6 @@ export class ScheduleGrid {
         if (window.innerWidth < 500) {
             this.options.autoResize = false
             this.options.autoScale = false
-            this.scheduleContainer.style.marginLeft = `300px`
         }
     }
 
@@ -536,6 +535,10 @@ export class ScheduleGrid {
         // Set the session count back to 0
         this.sessionCount = 0
 
+        if (window.innerWidth < 500) {
+            this.scheduleContainer.style.marginLeft = `${locations.length*75}px`
+        }
+
         // Create a grid container which will be the basis of the grid
         const gridContainer = document.createElement('div')
         gridContainer.id = 'grid-container'
@@ -544,6 +547,9 @@ export class ScheduleGrid {
         // Work out the base column and row counts for grid sizing
         const columnCount = locations.length
         const rowCount = timeslots.length
+
+        // Calculate the top header height based on if the grid is editable or not
+        const headerHeight = this.options.edit ? 100 : 50
 
         // Set the number of columns in the grid. There is only one row
         if (columnCount > 0) {
@@ -560,7 +566,7 @@ export class ScheduleGrid {
         let emptyCornerCell = document.createElement('div')
         emptyCornerCell.classList.add('header')
         emptyCornerCell.style.width = '100px'
-        emptyCornerCell.style.height = '100px'
+        emptyCornerCell.style.height = `${headerHeight}px`
         timeslotsColumn.appendChild(emptyCornerCell)
 
         // Iterate over all of the timeslots in the event
@@ -652,13 +658,14 @@ export class ScheduleGrid {
             // Craete the main columns in the grid which will have each location and all its session blocks
             const mainColumn = document.createElement('div')
             mainColumn.style.gridTemplateColumns = `${this.options.width}px`
-            mainColumn.style.gridTemplateRows = `100px repeat(${rowCount}, ${this.options.height}px)`
+            mainColumn.style.gridTemplateRows = `${headerHeight}px repeat(${rowCount}, ${this.options.height}px)`
 
             // Create the header and add the drag over events
             let header = document.createElement('div');
             header.setAttribute('event-location-id', String(location.event_location_id))
             header.setAttribute('data-index', String(location.event_location_order))
             header.classList.add('header', 'header-top');
+            header.style.height = `${headerHeight}px`
             header.style.width = `${this.options.width}px`
             if (this.options.edit) {
                 header.addEventListener('dragover', allowDrop);
