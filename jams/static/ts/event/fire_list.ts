@@ -34,6 +34,7 @@ function initialiseAgGrid() {
         tooltipShowDelay:100,
         tooltipMouseTrack: true,
         domLayout: "autoHeight",
+        enableCellTextSelection: true,
         getRowId: (params: any) => String(params.data.id),
         animateRows: true,
         columnDefs: [

@@ -108,14 +108,19 @@ function initialiseAgGrid() {
                 },
                 // Span this "Loading..." message across all columns when data is missing
                 colSpan: (params) => (!params.data ? 9 : 1),
-                flex: 1
+                flex: 1,
+                wrapText: true,
+                autoHeight: true,
+                cellStyle: {lineHeight: 1.6},
+                pinned: true,
+                minWidth: 150,
             },
             {
                 field: 'description',
                 tooltipValueGetter: (params:any) => {
                     return params.value
                 },
-                flex: 1
+                flex: 1, minWidth: 200
             },
             {
                 field: 'date',
@@ -123,7 +128,7 @@ function initialiseAgGrid() {
                     const fDateTime = formatDateToShort(params.value, {includeTime:false})
                     return fDateTime
                 },
-                flex: 1},
+                flex: 1, minWidth:100},
             {
                 field: 'start_date_time',
                 headerName: 'Start Time',
@@ -131,7 +136,7 @@ function initialiseAgGrid() {
                     const fDateTime = formatDateToShort(params.value, {includeDate:false, includeSeconds:false})
                     return fDateTime
                 },
-                flex: 1},
+                flex: 1, minWidth:100},
             {
                 field: 'end_date_time',
                 headerName: 'End Time',
@@ -139,9 +144,16 @@ function initialiseAgGrid() {
                     const fDateTime = formatDateToShort(params.value, {includeDate:false, includeSeconds:false})
                     return fDateTime
                 },
-                flex: 1},
-            {field: 'capacity', flex: 1},
-            {field: 'password', flex: 1},
+                flex: 1, minWidth:100},
+            {field: 'capacity', flex: 1, minWidth:100},
+            {
+                field: 'password',
+                tooltipValueGetter: (params:any) => {
+                    return params.value
+                },
+                flex: 1,
+                minWidth:100
+            },
             {
                 field: 'external_url',
                 headerName: 'External Link',
@@ -157,7 +169,7 @@ function initialiseAgGrid() {
                         return linkElement
                     }
                 },
-                flex: 1
+                flex: 1, minWidth:100
             },
             {
                 field: 'options', cellRenderer: (params:any) => {
@@ -181,7 +193,7 @@ function initialiseAgGrid() {
                     }
                     return buildActionButtonsForModel(params.data.id, params.data.active, archiveEventOnClick, activateEventOnClick, 'edit-external-event-modal', prepEditEventForm)
                 },
-                flex: 1
+                flex: 1, minWidth:150
             }
         ],
         rowModelType: 'infinite',
