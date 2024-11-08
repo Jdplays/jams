@@ -13,7 +13,9 @@
                     <div id="event-details"></div>
                 </div>
             </div>
+            {% if get_config_value('JOLT_ENABLED') %}
             {% include 'widgets/jolt_status.html' %}
+            {% endif %}
         </div>
     </div>
 </div>
