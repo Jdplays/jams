@@ -1,13 +1,22 @@
 {% extends '_layout.html' %}
 
-{% block title %}Attendee List{% endblock %}
+{% block title %}Fire List{% endblock %}
 
 {% block content %}
 
 <div class="content-wrapper">
     <div class="main-content">
-        <h1>Attendee List</h1>
-        <div id="event-details"></div>
+        <div class="row row-deck row-cards mb-3">
+            <div class="col-12 col-md-4">
+                <div>
+                    <h1>Fire List</h1>
+                    <div id="event-details"></div>
+                </div>
+            </div>
+            {% if get_config_value('JOLT_ENABLED') %}
+            {% include 'widgets/jolt_status.html' %}
+            {% endif %}
+        </div>
     </div>
 </div>
 

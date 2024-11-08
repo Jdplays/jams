@@ -326,3 +326,16 @@ export interface FireListEntry {
     checked_in:boolean
     type:FireListEntryType
 }
+
+export interface JOLTConfig {
+    JOLT_ENABLED:boolean
+    JOLT_API_KEY_ID:string
+    TOKEN?:string
+}
+
+export interface JOLTStatus {
+    online:boolean
+    date_time:string
+    error:string
+    local_ip:string
+}

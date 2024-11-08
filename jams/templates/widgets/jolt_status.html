@@ -1,0 +1,40 @@
+<div id="jolt-status-widget" class="col-12 col-md-4 col-lg-3 ms-auto align-self-start">
+    <div class="card">
+        <div class="card-header d-flex flex-column align-items-start">
+            <div class="d-flex align-items-center w-100">
+                <!-- Status Indicator -->
+                <span id="indicator" class="status-indicator status-red status-indicator-animated me-2">
+                    <span class="status-indicator-circle"></span>
+                    <span class="status-indicator-circle"></span>
+                    <span class="status-indicator-circle"></span>
+                </span>
+        
+                <!-- Title "JOLT" -->
+                <h4 class="mb-0">JOLT</h4>
+                <div class="ms-auto mb-0 d-flex align-items-center">
+                    <p id="connected-text" class="text-secondary mb-0">Loading...</p>
+                    <a id="jolt-link" class="btn btn-link mb-0" target="_blank">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-external-link">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M12 6h-6a2 2 0 0 0 -2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-6" />
+                            <path d="M11 13l9 -9" />
+                            <path d="M15 4h5v5" />
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        
+            <!-- Error Text - initially hidden -->
+            <p id="error-text" class="text-danger mb-0 mt-1">Loading...</p>
+        </div>
+        
+
+        <div id="card-body" class="card-body">
+            <div id="last-checked-sub-header" class="subheader mb-3">Loading...</div>
+            <a href="#" onclick="testPrintOnClick()" class="btn btn-primary">Print Test</a>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/widgets/jolt_status.js') }}" defer></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/widgets/jolt_status.css') }}">

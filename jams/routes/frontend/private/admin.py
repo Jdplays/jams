@@ -23,6 +23,12 @@ def settings():
 def settings_eventbrite():
     return render_template(f'{url_prefix}/settings/settings-eventbrite.html')
 
+@bp.route('/settings/jolt')
+@login_required
+#@role_based_access_control_fe
+def settings_jolt():
+    return render_template(f'{url_prefix}/settings/settings-jolt.html')
+
 @bp.route('/settings/roles')
 @login_required
 @role_based_access_control_fe

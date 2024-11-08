@@ -1,13 +1,7 @@
-from enum import Enum
 from . import db
 from sqlalchemy  import CheckConstraint, Column, String, Integer, DATE, TIME, Boolean, ForeignKey, DateTime
 from sqlalchemy.orm import relationship, backref
-from datetime import datetime
-
-class FireListPersonType(Enum):
-    ATTENDEE = 'ATTENDEE'
-    VOLUNTEER = 'VOLUNTEER'
-    GUEST = 'GUEST'
+from jams.util.enums import FireListPersonType
 
 class Event(db.Model):
     __tablename__ = 'event'

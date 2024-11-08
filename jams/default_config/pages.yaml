@@ -57,6 +57,16 @@ pages:
       edit_auth_config:
       delete_auth_config:
 
+  settings_jolt:
+    endpoint: routes.frontend.private.admin.settings_jolt
+    api_endpoints:
+      get_jolt_config:
+      enable_jolt_integration:
+      disable_jolt_integration:
+      refresh_jolt_integration_api_token:
+
+
+
   settings_roles:
     endpoint: routes.frontend.private.admin.settings_roles
     api_endpoints:
@@ -116,6 +126,7 @@ pages:
       - settings_roles
       - settings_eventbrite
       - settings_auth_sources
+      - settings_jolt
     api_endpoints:
       get_general_config:
       edit_general_config:
@@ -264,6 +275,8 @@ pages:
     endpoint: routes.frontend.private.event.attendee_list
     api_endpoints:
       get_next_event_id:
+      get_jolt_status:
+      send_jolt_test_print:
       get_event_attendees:
       add_attendee:
       edit_attendee:
@@ -274,6 +287,8 @@ pages:
     endpoint: routes.frontend.private.event.fire_list
     api_endpoints:
       get_next_event_id:
+      get_jolt_status:
+      send_jolt_test_print:
       get_event_fire_list:
       check_in_event_fire_list_item:
       check_out_event_fire_list_item:

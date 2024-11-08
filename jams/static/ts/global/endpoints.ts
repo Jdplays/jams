@@ -35,7 +35,9 @@ import {
     GeneralConfig,
     AttendeeSignup,
     FireListEntry,
-    sessionSettings
+    sessionSettings,
+    JOLTStatus,
+    JOLTConfig
 } from "@global/endpoints_interfaces";
 import { formatDate } from "./helper";
 
@@ -2144,6 +2146,106 @@ export function deleteOAuthConfiguration():Promise<boolean> {
             error: function (error) {
                 console.log('Error fetching data:', error);
                 resolve(false)
+            }
+        });
+    });
+}
+
+// #endregion
+
+// #region JOLT Integration
+
+export function getJoltConfiguration():Promise<JOLTConfig> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/jolt/config`,
+            type: 'GET',
+            success: function (response) {
+                resolve(response.jolt_config)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(false)
+            }
+        });
+    });
+}
+
+export function enableJoltIntegration():Promise<JOLTConfig> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/jolt/enable`,
+            type: 'POST',
+            success: function (response) {
+                resolve(response.jolt_config)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(false)
+            }
+        });
+    });
+}
+
+export function disableJoltIntegration():Promise<JOLTConfig> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/jolt/disable`,
+            type: 'POST',
+            success: function (response) {
+                resolve(response.jolt_config)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(false)
+            }
+        });
+    });
+}
+
+export function refreshJoltIntegrationAPIToken():Promise<JOLTConfig> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/jolt/refresh_api_token`,
+            type: 'POST',
+            success: function (response) {
+                resolve(response.jolt_config)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(false)
+            }
+        });
+    });
+}
+
+export function getJoltStatus():Promise<JOLTStatus> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/jolt/status`,
+            type: 'GET',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(false)
+            }
+        });
+    });
+}
+
+export function sendJoltTestPrintRequest():Promise<string> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/jolt/test_print`,
+            type: 'POST',
+            success: function (response) {
+                resolve(response.message)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
             }
         });
     });
