@@ -47,7 +47,6 @@ function initialiseAgGrid() {
                 pinned: true,
                 flex: 1
             },
-            {field: 'email', minWidth:250, tooltipValueGetter: (params:any) => params.value, flex: 1},
             {field: 'type', minWidth:150, flex: 1},
             {
                 field: 'checked_in',
