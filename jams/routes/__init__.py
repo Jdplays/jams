@@ -1,7 +1,7 @@
 from flask import Blueprint, redirect, render_template, request, send_from_directory, url_for
 from flask_security import current_user
 from jams.util import helper
-from jams.models import db, PrivateAccessLog
+from jams.models import db, PrivateAccessLog, APILog
 
 from jams.routes.api_v1 import api_v1_bp
 from jams.routes.frontend import frontend_bp
@@ -16,14 +16,23 @@ routes_bp.register_blueprint(resources_bp)
 routes_bp.register_blueprint(auth_bp)
 
 @routes_bp.after_request
-def before_all_requests(response):
+def after_all_requests(response):
     request_path = request.path
     if ('public' in request_path):
         return response
-    if current_user.is_authenticated:
-        status_code = response.status_code
-        endpoint = helper.extract_endpoint()
+    
+    endpoint = helper.extract_endpoint()
+    status_code = response.status_code
 
+    api_key = request.headers.get('Authorization')
+    if api_key:
+        api_key_obj = helper.get_api_key_obj(api_key)
+        if api_key_obj:
+            log = APILog(url=request.full_path, internal_endpoint = endpoint, api_key_id=api_key_obj.id, status_code=status_code)
+            db.session.add(log)
+            db.session.commit()
+
+    if current_user.is_authenticated:
         if endpoint == 'routes.serve_icon' or endpoint == 'routes.frontend.private.general.nav':
             return response
         

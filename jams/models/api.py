@@ -1,7 +1,7 @@
 import hmac
 import hashlib
 from datetime import UTC, datetime
-from sqlalchemy  import Boolean, Column, DateTime, ForeignKey, String, Integer, text
+from sqlalchemy  import Boolean, Column, DateTime, ForeignKey, String, Integer, func, text
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from uuid import UUID, uuid4
@@ -195,3 +195,37 @@ class APIKeyEndpoint(db.Model):
     def __init__(self, api_key_id, endpoint_id):
         self.api_key_id = api_key_id
         self.endpoint_id = endpoint_id
+
+class APILog(db.Model):
+    __tablename__ = 'api_log'
+
+    id = Column(Integer, primary_key=True)
+    url = Column(String(), nullable=False)
+    internal_endpoint = Column(String(), nullable=False)
+    api_key_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('api_key.id'), nullable=False)
+    status_code = Column(String(), nullable=False)
+    date_time = Column(DateTime, server_default=func.now(), nullable=False)
+
+    api_key = relationship('APIKey')
+
+    def __int__(self, url, internal_endpoint, api_key_id, status_code):
+        self.url = url
+        self.internal_endpoint = internal_endpoint
+        self.api_key_id = api_key_id
+        self.status_code = status_code
+
+    @staticmethod
+    def size():
+        return helper.get_table_size(APILog.__tablename__)
+
+    
+    def to_dict(self):
+        date_time = helper.convert_datetime_to_local_timezone(self.date_time)
+        return {
+            'id': self.id,
+            'url': self.url,
+            'internal_endpoint': self.internal_endpoint,
+            'api_key_id': self.user_id,
+            'status_code': self.status_code,
+            'date_time': date_time.isoformat()
+        }

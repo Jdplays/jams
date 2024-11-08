@@ -49,6 +49,14 @@ class WebsocketServer:
                 while True:
                     message = await websocket.recv()
                     self.process_incoming_message(api_key_obj.type, message)
+
+                    from jams.models import db,  WebsocketLog
+                    client_ip, client_port = websocket.remote_address
+
+                    log = WebsocketLog(source_ip=client_ip, type=api_key_obj.type, api_key_id=api_key_obj.id, message=message)
+                    db.session.add(log)
+                    db.session.commit()
+
             except Exception as e:
                 print(f"Error in websocket handler: {e}")
                 await websocket.close(code=1008)
@@ -61,13 +69,17 @@ class WebsocketServer:
     async def send_message_to_group(self, message, group):
         if self.connected_clients:
             await asyncio.gather(*[client.send(message) for client in self.connected_clients[group]])
-            print(f'"{message}" sent to all {group} clients')
         else:
             print("No clients are connected to receive the message.")
 
     # Public method to send message to a specified group
     def notify_clients(self, message, group):
         asyncio.create_task(self.send_message_to_group(message, group))
+
+        from jams.models import db, WebsocketLog
+        log = WebsocketLog(type=group, message=message)
+        db.session.add(log)
+        db.session.commit()
 
     # A loop on the websocket thread for any other service to use
     async def websocket_loop(self):

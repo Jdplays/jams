@@ -5,10 +5,10 @@ from .management import Workshop, DifficultyLevel, WorkshopType
 from .event import Event, Location, Timeslot, EventLocation, EventTimeslot, Session, FireList
 from .volunteer import VolunteerAttendance, VolunteerSignup
 from .files import File, FileVersion, WorkshopFile
-from .audit import PrivateAccessLog
+from .audit import PrivateAccessLog, WebsocketLog
 from .config import Config
 from .task_scheduler import TaskSchedulerModel, TaskSchedulerLog
-from .api import EndpointGroup, Endpoint, Webhook, WebhookLog, ExternalAPILog, APIKey, APIKeyEndpoint
+from .api import EndpointGroup, Endpoint, Webhook, WebhookLog, ExternalAPILog, APIKey, APIKeyEndpoint, APILog
 from .attendee import Attendee, AttendeeAccount, AttendeeAccountEvent, AttendeeSignup
 from .integrations import JOLTPrintQueue, JOLTHealthCheck
 
