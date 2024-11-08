@@ -64,8 +64,8 @@ def create_app():
         db.create_all()
 
         # Only run prep app when the app is actually starting. Dont runn it when db migrate or shell is running
-        if not ('db' in sys.argv or 'shell' in sys.argv):
-            prep_app(app)
+        #if not ('db' in sys.argv or 'shell' in sys.argv):
+        prep_app(app)
         
 
     return app
