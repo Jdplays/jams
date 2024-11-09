@@ -50,7 +50,6 @@
 }
 
 .header-top {
-    height: 100px;
     z-index: 99;
 }
 
@@ -63,6 +62,7 @@
 }
 
 .header-side {
+    align-items: center;
     width: 100px;
 }
 
@@ -84,16 +84,17 @@
     display: flex;
     flex-direction: column;
     flex-wrap: wrap;
-    padding-top: 20px;
     align-items: center;
     height: 100%;
     width: 100%;
+    padding: 15px 5px 5px 5px;
 }
 
 .header-row {
     display: flex;
     flex-direction: row;
     flex: 1 1 0;
+    text-align: center;
 }
 
 .timeslot-range {

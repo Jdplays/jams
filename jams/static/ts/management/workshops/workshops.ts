@@ -68,7 +68,12 @@ function initialiseAgGrid() {
                 },
                 // Span this "Loading..." message across all columns when data is missing
                 colSpan: (params) => (!params.data ? 7 : 1),
-                flex: 1
+                flex: 1,
+                wrapText: true,
+                autoHeight: true,
+                cellStyle: {lineHeight: 1.6},
+                pinned: true,
+                minWidth: 200,
             },
             {
                 field: 'description',
@@ -78,7 +83,7 @@ function initialiseAgGrid() {
                 tooltipValueGetter: (params:any) => {
                     return params.value
                 },
-                flex: 1
+                flex: 1, minWidth: 200
             },
             {
                 field: 'workshop_type_id',
@@ -97,8 +102,7 @@ function initialiseAgGrid() {
                         return workshopTypesMap[params.value].description
                     }
                 },
-                width: 200,
-                flex: 1
+                flex: 1, minWidth: 200
             },
             {
                 field: 'min_volunteers',
@@ -112,7 +116,7 @@ function initialiseAgGrid() {
                     }
                     return params.value
                 },
-                flex: 1
+                flex: 1, minWidth: 100
             },
             {
                 field: 'capacity',
@@ -126,7 +130,7 @@ function initialiseAgGrid() {
                     }
                     return params.value
                 },
-                flex: 1
+                flex: 1, minWidth: 100
             },
             {
                 field: 'difficulty_id',
@@ -147,7 +151,7 @@ function initialiseAgGrid() {
                         return span1
                     }
                 },
-                flex: 1
+                flex: 1, minWidth: 150
             },
             {
                 field: 'options',
@@ -169,7 +173,7 @@ function initialiseAgGrid() {
 
                     return div
                 },
-                flex: 1
+                flex: 1, minWidth: 150
             }
         ],
         rowModelType: 'infinite',

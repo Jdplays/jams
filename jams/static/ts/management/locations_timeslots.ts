@@ -91,13 +91,21 @@ function initialiseLocationsAgGrid() {
     const gridOptions:GridOptions = {
         domLayout: "autoHeight",
         columnDefs: [
-            {field: 'name', flex: 1},
-            {field: 'capacity', flex: 1},
+            {
+                field: 'name',
+                flex: 1,
+                wrapText: true,
+                autoHeight: true,
+                cellStyle: {lineHeight: 1.6},
+                pinned: true,
+                minWidth: 150,
+            },
+            {field: 'capacity', flex: 1, minWidth: 50},
             {
                 field: 'options', cellRenderer: (params:any) => {
                     return buildActionButtonsForModel(params.data.id, params.data.active, archiveLocationOnClick, activateLocationOnClick, 'edit-location-modal', prepEditLocationForm)
                 },
-                flex: 1
+                flex: 1, minWidth: 150
             }
         ]
     }
@@ -211,27 +219,35 @@ function initialiseTimeslotsAgGrid() {
     const gridOptions:GridOptions = {
         domLayout: "autoHeight",
         columnDefs: [
-            {field: 'name', flex: 1},
+            {
+                field: 'name',
+                flex: 1,
+                wrapText: true,
+                autoHeight: true,
+                cellStyle: {lineHeight: 1.6},
+                pinned: true,
+                minWidth: 150,
+            },
             {
                 field: 'start',
                 cellRenderer: (params:any) => {
                     const fTime = formatDateToShort(params.value, {isTime:true, includeDate:false, includeSeconds:false})
                     return fTime
                 },
-                flex: 1},
+                flex: 1, minWidth: 100},
             {
                 field: 'end',
                 cellRenderer: (params:any) => {
                     const fTime = formatDateToShort(params.value, {isTime:true, includeDate:false, includeSeconds:false})
                     return fTime
                 },
-                flex: 1},
-            {field: 'is_break', headerName: 'Break', cellRenderer: 'agCheckboxCellRenderer', flex: 1},
+                flex: 1, minWidth: 100},
+            {field: 'is_break', headerName: 'Break', cellRenderer: 'agCheckboxCellRenderer', flex: 1, minWidth: 50},
             {
                 field: 'options', cellRenderer: (params:any) => {
                     return buildActionButtonsForModel(params.data.id, params.data.active, archiveTimeslotOnClick, activateTimeslotOnClick, 'edit-timeslot-modal', prepEditTimeslotForm)
                 },
-                flex: 1
+                flex: 1, minWidth: 150
             }
         ]
     }

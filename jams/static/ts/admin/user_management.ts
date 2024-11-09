@@ -8,7 +8,8 @@ import {
     getRoleNames
 } from '@global/endpoints'
 import { User } from "@global/endpoints_interfaces";
-import { emptyElement, buildActionButtonsForModel, successToast, errorToast, getSelectValues, formatDateToShort } from "@global/helper";
+import { emptyElement, buildActionButtonsForModel, successToast, errorToast, getSelectValues, formatDateToShort, buildQueryString } from "@global/helper";
+import { QueryStringData } from '@global/interfaces';
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
 import TomSelect from 'tom-select';
 
@@ -90,10 +91,33 @@ async function prepEditUserForm(userId:number) {
 
 function initialiseAgGrid() {
     const gridOptions:GridOptions = {
+        enableCellTextSelection: true,
+        domLayout: 'autoHeight',
+        defaultColDef: {
+            wrapHeaderText: true,
+            autoHeaderHeight: true,
+            resizable:false
+        },
         columnDefs: [
-            {field: 'username', flex: 1},
-            {field: 'email', flex: 1},
-            {field: 'display_name', headerName: "Display Name", flex: 1},
+            {
+                field: 'display_name',
+                headerName: "Display Name",
+                flex: 1,
+                wrapText: true,
+                autoHeight: true,
+                cellStyle: {lineHeight: 1.6},
+                pinned: true,
+                maxWidth: 200,
+                initialWidth: 150
+            },
+            {
+                field: 'email',
+                flex: 1,
+                wrapText: true,
+                autoHeight: true,
+                cellStyle: {lineHeight: 1.6},
+                minWidth: 200
+            },
             {
                 field: 'last_login',
                 headerName: "Last Login",
@@ -106,7 +130,8 @@ function initialiseAgGrid() {
                     if (!params.data.last_login) {
                         return 'Never logged in'
                     }
-                }
+                },
+                minWidth: 150
             },
             {
                 field: 'roles', cellRenderer: (params:any) => {
@@ -119,7 +144,12 @@ function initialiseAgGrid() {
                     }
 
                     return userRoleNames
-                }, flex: 1
+                },
+                flex: 1,
+                wrapText: true,
+                autoHeight: true,
+                cellStyle: {lineHeight: 1.6},
+                minWidth: 150
             },
             {
                 field: 'options', cellRenderer: (params:any) => {
@@ -141,7 +171,7 @@ function initialiseAgGrid() {
 
                     return actionsDiv
                 },
-                flex: 1
+                flex: 1, minWidth: 150
             }
         ]
     }
@@ -161,7 +191,11 @@ async function preloadRoleNames() {
 }
 
 async function populateUserManagementTable() {
-    const response = await getUsers()
+    const queryData:Partial<QueryStringData> = {
+        $all_rows: true
+    }
+    const queryString = buildQueryString(queryData)
+    const response = await getUsers(queryString)
     let allUsers = response.data
     roleNamesMap = await preloadRoleNames()
 

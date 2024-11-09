@@ -327,7 +327,7 @@ async function loadAttendance() {
 
 document.addEventListener("DOMContentLoaded", async () => {
     const eventDetailsOptions:EventDetailsOptions = {
-        dateInclusive: false,
+        dateInclusive: true,
         eventDependentElements: [document.getElementById('update-attendance-button'), document.getElementById('update-attendance-card')],
         eventOnChangeFunc: loadAttendance
     }

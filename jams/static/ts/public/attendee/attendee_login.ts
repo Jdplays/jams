@@ -9,15 +9,6 @@ let passwordValid:boolean = false
 const emailRegex:RegExp = new RegExp(`^[\\w.-]+@([\\w-]+\\.)+[a-zA-Z]{2,4}$`, 'i')
 const orderIdRegex:RegExp = new RegExp(`^[0-9]{4,30}$`, 'i')
 
-function togglePasswordVisibility() {
-    let passwordInput = document.getElementById('password-input') as HTMLInputElement
-    if (passwordInput.type === 'password') {
-        passwordInput.type = 'text'
-    } else {
-        passwordInput.type = 'password'
-    }
-}
-
 function attendeeLoginOnClcik() {
     const signInButton = document.getElementById('sign-in-button') as HTMLButtonElement
 
@@ -117,7 +108,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 document.addEventListener("DOMContentLoaded", () => {
     if (isDefined(window)) {
-        (<any>window).togglePasswordVisibility = togglePasswordVisibility;
         (<any>window).attendeeLoginOnClcik = attendeeLoginOnClcik;
     }
 });

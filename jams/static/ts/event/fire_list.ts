@@ -34,6 +34,7 @@ function initialiseAgGrid() {
         tooltipShowDelay:100,
         tooltipMouseTrack: true,
         domLayout: "autoHeight",
+        enableCellTextSelection: true,
         getRowId: (params: any) => String(params.data.id),
         animateRows: true,
         columnDefs: [
@@ -46,7 +47,19 @@ function initialiseAgGrid() {
                 pinned: true,
                 flex: 1
             },
-            {field: 'email', minWidth:250, tooltipValueGetter: (params:any) => params.value, flex: 1},
+            {
+                field: 'email',
+                minWidth:250,
+                cellRenderer: (params:any) => {
+                    if (params.data.type === 'VOLUNTEER') {
+                        return 'N/A'
+                    } else {
+                        return params.data.email
+                    }
+                },
+                tooltipValueGetter: (params:any) => params.value,
+                flex: 1
+            },
             {field: 'type', minWidth:150, flex: 1},
             {
                 field: 'checked_in',
