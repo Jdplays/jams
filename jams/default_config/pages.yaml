@@ -275,6 +275,10 @@ pages:
     endpoint: routes.frontend.private.event.attendee_list
     api_endpoints:
       get_next_event_id:
+      get_events_field:
+        allowed_fields: id, name, date
+      get_event_field:
+        allowed_fields: id, name, date
       get_jolt_status:
       send_jolt_test_print:
       get_event_attendees:
@@ -287,6 +291,10 @@ pages:
     endpoint: routes.frontend.private.event.fire_list
     api_endpoints:
       get_next_event_id:
+      get_events_field:
+        allowed_fields: id, name, date
+      get_event_field:
+        allowed_fields: id, name, date
       get_jolt_status:
       send_jolt_test_print:
       get_event_fire_list:
