@@ -127,7 +127,7 @@ export class WorkshopCard {
         if (this.options.width && this.options.height) {
             const minDimension = Math.min(this.options.width, this.options.height);
 
-            this.titleFontSize = minDimension * 0.12;
+            this.titleFontSize = minDimension * 0.1;
             this.bodyFontSize = minDimension * 0.08;
         }
 
