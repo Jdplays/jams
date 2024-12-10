@@ -235,9 +235,9 @@ def update_or_add_attendee_from_data(attendee_JSON):
             db.session.commit()
     
     if not attendee.checked_in and checked_in:
-        attendee.check_in()
+        attendee.check_in(source=AttendeeSource.EVENTBRITE)
     elif attendee.checked_in and not checked_in:
-        attendee.check_out()
+        attendee.check_out(source=AttendeeSource.EVENTBRITE)
 
     attendee.link_to_account()
 
