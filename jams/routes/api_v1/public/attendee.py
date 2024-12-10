@@ -103,6 +103,9 @@ def add_attendee_signup(attendee_id):
     signup = AttendeeSignup.query.filter_by(event_id=event_id, attendee_id=attendee_id, session_id=session_id).first()
     if signup:
         abort(400, description="Booking Entry already exists")
+    signup_count = AttendeeSignup.query.filter_by(event_id=event_id, session_id=session_id).count()
+    if (signup_count >= session.capacity):
+        return jsonify({'message': 'Session Full'}), 400
     
     signup = AttendeeSignup(event_id=event_id, attendee_id=attendee_id, session_id=session_id)
 
