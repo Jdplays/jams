@@ -6,7 +6,8 @@ const scheduleGridOptions:ScheduleGridOptions = {
     edit: false,
     autoScale: true,
     showPrivate: false,
-    showAttendeeSignupCounts: true
+    showAttendeeSignupCounts: true,
+    buildKey: true
 }
 
 const eventDetailsOptions:EventDetailsOptions = {
