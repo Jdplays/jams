@@ -1,4 +1,4 @@
-import { addAttendeeSignup, getAttendeesForAccount, getAttendeesSignupsForAccount, getDifficultyLevels, getIconData, getLocations, getLocationsForEvent, getSessionsForEvent, getTimeslots, getTimeslotsForEvent, getWorkshops, getWorkshopTypes, removeAttendeeSignup } from "@global/endpoints";
+import { addAttendeeSignup, getAttendeesForAccount, getAttendeesSignups, getDifficultyLevels, getLocations, getLocationsForEvent, getSessionsForEvent, getTimeslots, getTimeslotsForEvent, getWorkshops, getWorkshopTypes, removeAttendeeSignup } from "@global/endpoints";
 import { Attendee, DifficultyLevel, EventLocation, EventTimeslot, Session, Timeslot, Workshop, WorkshopType, Location, AttendeeSignup } from "@global/endpoints_interfaces";
 import { EventDetails, EventDetailsOptions } from "@global/event_details";
 import { addSpinnerToElement, buildQueryString, emptyElement, errorToast, isDefined, isNullEmptyOrSpaces, removeSpinnerFromElement, successToast } from "@global/helper";
@@ -657,7 +657,7 @@ async function loadAttendeeSignupMap() {
         $all_rows: true
     }
     const queryString = buildQueryString(queryData)
-    const attendeeSignupResponse = await getAttendeesSignupsForAccount(queryString)
+    const attendeeSignupResponse = await getAttendeesSignups(queryString)
 
     let _attendeeSignupMap:Record<number, AttendeeSignup> = {}
 

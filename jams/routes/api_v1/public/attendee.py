@@ -79,7 +79,21 @@ def get_attendee_signups():
 @bp.route('/accounts/me/attendees/signups', methods=['GET'])
 @attendee_login_required
 def get_attendee_signups_for_account():
-    data = helper.filter_model_by_query_and_properties(AttendeeSignup, request.args)
+    args = request.args.to_dict()
+    args['attendee_account_id'] = str(attendee_auth.current_attendee().id)
+    (account_attendees, total_count) = helper.filter_model_by_query_and_properties(Attendee, args, return_objects=True)
+
+    args = request.args.to_dict()
+    if 'registerable' in args.keys():
+        args.pop('registerable')
+    query_param = ''
+    for attendee in account_attendees:
+        query_param += str(attendee.id)
+        if account_attendees.index(attendee) != len(account_attendees) - 1:
+            query_param += '|'
+    
+    args['attendee_id'] = query_param
+    data = helper.filter_model_by_query_and_properties(AttendeeSignup, args)
 
     return jsonify(data)
 
