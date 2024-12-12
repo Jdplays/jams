@@ -28,8 +28,9 @@ async function loadData() {
 
     // Load attendees info for account
     const attendeesQueryData:Partial<QueryStringData> = {
+        event_id: eventId,
         registerable: true,
-        $all_rows: true
+        checked_in: true
     }
     const attendeesQueryString = buildQueryString(attendeesQueryData)
     const attendeesResponse = await getAttendeesForAccount(attendeesQueryString)
@@ -103,6 +104,10 @@ async function loadData() {
         }
 
         const attendee = attendeesMap[signup.attendee_id]
+        if (!attendee) {
+            continue
+        }
+        
         if (!attendeeSessionsMap[attendee.id]) {
             attendeeSessionsMap[attendee.id] = []
         }
