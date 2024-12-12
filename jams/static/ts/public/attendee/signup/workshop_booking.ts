@@ -163,7 +163,7 @@ function populateWorkshopCards() {
     }
 }
 
-async function buildWorkshopSelectionGroup(attendeeId:number, wsMap:Record<number, Workshop>) {
+function buildWorkshopSelectionGroup(attendeeId:number, wsMap:Record<number, Workshop>) {
     const container = document.createElement('div')
     container.id = `attendee-${attendeeId}-workshop-selection-container`
     container.classList.add('form-selectgroup')
@@ -184,7 +184,13 @@ async function buildWorkshopSelectionGroup(attendeeId:number, wsMap:Record<numbe
 
             const span = document.createElement('span')
             span.classList.add('form-selectgroup-label')
-            span.innerHTML = `${workshop.name}`
+            let icon = document.createElement('i')
+            icon.classList.add('ti', 'ti-x')
+            span.appendChild(icon)
+            let text = document.createElement('span')
+            text.classList.add('ms-2')
+            text.innerHTML = 'Clear'
+            span.appendChild(text)
             label.appendChild(span)
 
             container.appendChild(label)
@@ -205,7 +211,13 @@ async function buildWorkshopSelectionGroup(attendeeId:number, wsMap:Record<numbe
 
         const span = document.createElement('span')
         span.classList.add('form-selectgroup-label')
-        span.innerHTML = `${await getIconData('x')} Clear`
+        let icon = document.createElement('i')
+        icon.classList.add('ti', 'ti-x')
+        span.appendChild(icon)
+        let text = document.createElement('span')
+        text.classList.add('ms-2')
+        text.innerHTML = 'Clear'
+        span.appendChild(text)
         label.appendChild(span)
 
         container.appendChild(label)
@@ -275,7 +287,7 @@ async function buildWorkshopSelectionGroup(attendeeId:number, wsMap:Record<numbe
     return container
 }
 
-async function populateAttendeesTable() {
+function populateAttendeesTable() {
     const attendeeSection = document.getElementById('attendee-section')
     const attendeeTable = document.getElementById('attendee-table')
     const attendeeTableBody = document.getElementById('attendee-table-body')
@@ -314,7 +326,7 @@ async function populateAttendeesTable() {
         row.appendChild(nameCell)
 
         const workshopSelectionCell = document.createElement('td')
-        const workshopSelectionGroup = await buildWorkshopSelectionGroup(attendee.id, workshopsInTimeslot)
+        const workshopSelectionGroup = buildWorkshopSelectionGroup(attendee.id, workshopsInTimeslot)
         workshopSelectionCell.appendChild(workshopSelectionGroup)
         row.appendChild(workshopSelectionCell)
 
