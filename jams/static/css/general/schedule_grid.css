@@ -244,3 +244,8 @@
   .warning-error-shake {
     animation: warning-error-shake 0.25s;
   }
+
+  .key-description {
+    font-weight: normal;
+    font-size: 12;
+}

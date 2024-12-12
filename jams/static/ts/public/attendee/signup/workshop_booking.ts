@@ -1,4 +1,4 @@
-import { addAttendeeSignup, getAttendeesForAccount, getAttendeesSignupsForAccount, getDifficultyLevels, getIconData, getLocations, getLocationsForEvent, getSessionsForEvent, getTimeslots, getTimeslotsForEvent, getWorkshops, getWorkshopTypes, removeAttendeeSignup } from "@global/endpoints";
+import { addAttendeeSignup, getAttendeesForAccount, getAttendeesSignups, getDifficultyLevels, getLocations, getLocationsForEvent, getSessionsForEvent, getTimeslots, getTimeslotsForEvent, getWorkshops, getWorkshopTypes, removeAttendeeSignup } from "@global/endpoints";
 import { Attendee, DifficultyLevel, EventLocation, EventTimeslot, Session, Timeslot, Workshop, WorkshopType, Location, AttendeeSignup } from "@global/endpoints_interfaces";
 import { EventDetails, EventDetailsOptions } from "@global/event_details";
 import { addSpinnerToElement, buildQueryString, emptyElement, errorToast, isDefined, isNullEmptyOrSpaces, removeSpinnerFromElement, successToast } from "@global/helper";
@@ -163,7 +163,7 @@ function populateWorkshopCards() {
     }
 }
 
-async function buildWorkshopSelectionGroup(attendeeId:number, wsMap:Record<number, Workshop>) {
+function buildWorkshopSelectionGroup(attendeeId:number, wsMap:Record<number, Workshop>) {
     const container = document.createElement('div')
     container.id = `attendee-${attendeeId}-workshop-selection-container`
     container.classList.add('form-selectgroup')
@@ -184,7 +184,13 @@ async function buildWorkshopSelectionGroup(attendeeId:number, wsMap:Record<numbe
 
             const span = document.createElement('span')
             span.classList.add('form-selectgroup-label')
-            span.innerHTML = `${workshop.name}`
+            let icon = document.createElement('i')
+            icon.classList.add('ti', 'ti-x')
+            span.appendChild(icon)
+            let text = document.createElement('span')
+            text.classList.add('ms-2')
+            text.innerHTML = 'Clear'
+            span.appendChild(text)
             label.appendChild(span)
 
             container.appendChild(label)
@@ -205,7 +211,13 @@ async function buildWorkshopSelectionGroup(attendeeId:number, wsMap:Record<numbe
 
         const span = document.createElement('span')
         span.classList.add('form-selectgroup-label')
-        span.innerHTML = `${await getIconData('x')} Clear`
+        let icon = document.createElement('i')
+        icon.classList.add('ti', 'ti-x')
+        span.appendChild(icon)
+        let text = document.createElement('span')
+        text.classList.add('ms-2')
+        text.innerHTML = 'Clear'
+        span.appendChild(text)
         label.appendChild(span)
 
         container.appendChild(label)
@@ -275,7 +287,7 @@ async function buildWorkshopSelectionGroup(attendeeId:number, wsMap:Record<numbe
     return container
 }
 
-async function populateAttendeesTable() {
+function populateAttendeesTable() {
     const attendeeSection = document.getElementById('attendee-section')
     const attendeeTable = document.getElementById('attendee-table')
     const attendeeTableBody = document.getElementById('attendee-table-body')
@@ -314,7 +326,7 @@ async function populateAttendeesTable() {
         row.appendChild(nameCell)
 
         const workshopSelectionCell = document.createElement('td')
-        const workshopSelectionGroup = await buildWorkshopSelectionGroup(attendee.id, workshopsInTimeslot)
+        const workshopSelectionGroup = buildWorkshopSelectionGroup(attendee.id, workshopsInTimeslot)
         workshopSelectionCell.appendChild(workshopSelectionGroup)
         row.appendChild(workshopSelectionCell)
 
@@ -641,10 +653,11 @@ async function loadAttendeesMap() {
 
 async function loadAttendeeSignupMap() {
     const queryData:Partial<QueryStringData> = {
-        event_id: eventDetails.eventId
+        event_id: eventDetails.eventId,
+        $all_rows: true
     }
     const queryString = buildQueryString(queryData)
-    const attendeeSignupResponse = await getAttendeesSignupsForAccount(queryString)
+    const attendeeSignupResponse = await getAttendeesSignups(queryString)
 
     let _attendeeSignupMap:Record<number, AttendeeSignup> = {}
 

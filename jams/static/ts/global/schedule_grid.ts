@@ -23,8 +23,8 @@ import {
     recalculateSessionCapacity,
     updateSessionSettings
 } from '@global/endpoints'
-import { EventLocation, EventTimeslot, Location, Session, sessionSettings, Timeslot, User, VolunteerSignup } from '@global/endpoints_interfaces'
-import {buildQueryString, emptyElement, allowDrop, waitForTransitionEnd, debounce, successToast, errorToast, buildUserAvatar, preloadUsersInfoMap, animateElement, isTouchDevice} from '@global/helper'
+import { DifficultyLevel, EventLocation, EventTimeslot, Location, Session, sessionSettings, Timeslot, User, VolunteerSignup, WorkshopType } from '@global/endpoints_interfaces'
+import {buildQueryString, emptyElement, allowDrop, waitForTransitionEnd, debounce, successToast, errorToast, buildUserAvatar, preloadUsersInfoMap, animateElement, isTouchDevice, hexToRgba, isNullEmptyOrSpaces} from '@global/helper'
 import {WorkshopCard, WorkshopCardOptions} from '@global/workshop_card'
 import { QueryStringData } from './interfaces'
 
@@ -57,6 +57,7 @@ export interface ScheduleGridOptions {
     volunteerSignup?:boolean
     showAttendeeSignupCounts?:boolean
     userInfoMap?:Record<number, Partial<User>>
+    buildKey?:boolean
 }
 
 export class ScheduleGrid {
@@ -73,6 +74,9 @@ export class ScheduleGrid {
     private attendeeSignupCountsMap:Record<number, number> = {}
     private usersInfoMap:Record<number, Partial<User>> = {}
     private sessionsMap:Record<number, Session> = {}
+
+    private difficultyLevels:DifficultyLevel[]
+    private workshopTypes:WorkshopType[]
 
     public currentDragType:string
     public scheduleValid:boolean
@@ -98,7 +102,8 @@ export class ScheduleGrid {
             showVolunteerSignup = false,
             volunteerSignup = false,
             showAttendeeSignupCounts = false,
-            userInfoMap = {}
+            userInfoMap = {},
+            buildKey = false
         } = options || {}
        
         this.options = {
@@ -118,7 +123,8 @@ export class ScheduleGrid {
             showVolunteerSignup,
             volunteerSignup,
             showAttendeeSignupCounts,
-            userInfoMap
+            userInfoMap,
+            buildKey
         }
 
         // Set the schedule container element from html
@@ -229,6 +235,13 @@ export class ScheduleGrid {
                 this.usersInfoMap = this.options.userInfoMap
             }
         }
+
+        // Preload difficulty levels and workshop types
+        const dLResponse = await getDifficultyLevels()
+        this.difficultyLevels = dLResponse.data
+
+        const wTResponse = await getWorkshopTypes()
+        this.workshopTypes = wTResponse.data
 
         // Build the workshop card options based on the grid's options
         this.setupWorkshopCardOptions()
@@ -786,6 +799,102 @@ export class ScheduleGrid {
         return gridContainer
     }
 
+    // Builds a key to show what the colours mean on a schedule (Only really used on public schedule)
+    async buildKey() {
+        const keyContainer = document.getElementById('key-container') as HTMLDivElement
+        if (!keyContainer) {
+            return
+        }
+
+        const workshopIds = Object.values(this.sessionsMap).map((session:Session) => {
+            return session.workshop_id
+        })
+
+        const data:Partial<QueryStringData> = {
+            id: workshopIds,
+            $all_rows: true
+        }
+
+        const queryString = buildQueryString(data)
+        const workshopsResponse = await getWorkshops(queryString)
+        const workshops = workshopsResponse.data
+
+        let keyDifficultyLevels:DifficultyLevel[] = []
+        let keyWorkshopTypes:WorkshopType[] = []
+        
+        for (const workshop of workshops) {
+            const difficultyLevel = this.difficultyLevels.find((dl) => dl.id === workshop.difficulty_id)
+            const workshopType = this.workshopTypes.find((wt) => wt.id === workshop.workshop_type_id)
+
+            if (difficultyLevel && !keyDifficultyLevels.includes(difficultyLevel)) {
+                keyDifficultyLevels.push(difficultyLevel)
+            }
+
+            if (workshopType && !keyWorkshopTypes.includes(workshopType)) {
+                if (((!workshopType.publicly_visible && this.options.showPrivate) || (workshopType.publicly_visible)) && (!isNullEmptyOrSpaces(workshopType.display_colour))) {
+                    keyWorkshopTypes.push(workshopType)
+                }
+            }
+        }
+        
+        keyContainer.style.gridTemplateColumns = `100px repeat(${keyDifficultyLevels.length + keyWorkshopTypes.length}, ${this.options.width}px)`
+
+        emptyElement(keyContainer)
+
+        let header = document.createElement('div')
+        header.classList.add('header', 'header-top')
+        
+        let headerContainer = document.createElement('div')
+        headerContainer.classList.add('header-container')
+
+        let keyName = document.createElement('div')
+        keyName.classList.add('header-row')
+        keyName.innerHTML = 'Key'
+
+        headerContainer.appendChild(keyName)
+        header.appendChild(headerContainer)
+
+        keyContainer.appendChild(header)
+
+        for (const kdl of keyDifficultyLevels) {
+            let header = document.createElement('div')
+            header.classList.add('header', 'header-top')
+            
+            let headerContainer = document.createElement('div')
+            headerContainer.classList.add('header-container')
+            headerContainer.style.backgroundColor = hexToRgba(kdl.display_colour, 0.5)
+
+            let keyName = document.createElement('p')
+            keyName.classList.add('header-row')
+            keyName.innerHTML = kdl.name
+
+            headerContainer.appendChild(keyName)
+            header.appendChild(headerContainer)
+
+            keyContainer.appendChild(header)
+        }
+
+        for (const kwt of keyWorkshopTypes) {
+            let header = document.createElement('div')
+            header.classList.add('header', 'header-top')
+            
+            let headerContainer = document.createElement('div')
+            headerContainer.classList.add('header-container')
+            headerContainer.style.backgroundColor = hexToRgba(kwt.display_colour, 0.5)
+
+            let keyName = document.createElement('p')
+            keyName.classList.add('header-row')
+            keyName.innerHTML = kwt.name
+
+            headerContainer.appendChild(keyName)
+            header.appendChild(headerContainer)
+
+            keyContainer.appendChild(header)
+        }
+
+
+    }
+
     // Populate the session blocks with workshops that are assigned to them
     async populateSessions() {
         // Get all the sessions for the given event
@@ -933,15 +1042,12 @@ export class ScheduleGrid {
             const workshopsResponse = await getWorkshops(workshopsQueryString)
             let workshops = workshopsResponse.data
             if (!this.options.workshopCardOptions.difficultyLevels) {
-                const response = await getDifficultyLevels()
-                let difficultyLevels = response.data
-                this.options.workshopCardOptions.difficultyLevels = difficultyLevels
+                
+                this.options.workshopCardOptions.difficultyLevels = this.difficultyLevels
             }
 
             if (!this.options.workshopCardOptions.workshopTypes) {
-                const response = await getWorkshopTypes()
-                let workshopTypes = response.data
-                this.options.workshopCardOptions.workshopTypes = workshopTypes
+                this.options.workshopCardOptions.workshopTypes = this.workshopTypes
             }
 
             const workshopsToAdd = sessionWorkshopsToAdd
@@ -1108,6 +1214,12 @@ export class ScheduleGrid {
                         }
                     }
                 }
+            }
+        }
+
+        if (sessionWorkshopsToAdd.length > 0) {
+            if (this.options.buildKey) {
+                this.buildKey()
             }
         }
 

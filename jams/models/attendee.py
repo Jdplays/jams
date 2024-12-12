@@ -64,16 +64,22 @@ class Attendee(db.Model):
             fire_list_entry.checked_in = self.checked_in
             db.session.commit()
 
-    def check_in(self):
+    def check_in(self, source=AttendeeSource.LOCAL):
         from jams.configuration import ConfigType, get_config_value
         from jams.integrations import jolt
+
+        if self.last_update_source == AttendeeSource.LOCAL.name and source.name is not AttendeeSource.LOCAL.name:
+            return
+        
         self.checked_in = True
         self.create_fire_list_entry()
 
         if (get_config_value(ConfigType.JOLT_ENABLED)):
             jolt.add_attendee_to_print_queue(self)
 
-    def check_out(self):
+    def check_out(self, source=AttendeeSource.LOCAL):
+        if self.last_update_source == AttendeeSource.LOCAL.name and source.name is not AttendeeSource.LOCAL.name:
+            return
         self.checked_in = False
         self.create_fire_list_entry()
 
