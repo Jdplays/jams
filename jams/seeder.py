@@ -1,6 +1,7 @@
 import os
 import string
 from jams.models import db, User, Role, Workshop, Event, Location, Timeslot, DifficultyLevel, WorkshopType
+from jams.util.database import create_event
 from jams.endpoint_loader import generate_full_rbac
 from jams.configuration import ConfigType, set_config_value
 from flask_security.utils import hash_password
@@ -113,7 +114,7 @@ def seed_events():
         start = datetime.time(hour=13, minute=0, second=0)
         end = datetime.time(hour=17, minute=0, second=0)
         capacity = 50
-        event = Event(name="Jam", description="This is a Test event for Jam", date=date, start_date_time=start, end_date_time=end, capacity=capacity, password="jam123")
+        event = create_event(name="Jam", description="This is a Test event for Jam", date=date, start_date_time=start, end_date_time=end, capacity=capacity, password="jam123")
         db.session.add(event)
     
     # Check if the coder dojo event already exists
@@ -122,7 +123,7 @@ def seed_events():
         start = datetime.time(hour=18, minute=0, second=0)
         end = datetime.time(hour=20, minute=0, second=0)
         capacity = 50
-        event = Event(name="Coder Dojo", description="Coder dojo test event", date=date, start_date_time=start, end_date_time=end, capacity=capacity, password="password123")
+        event = create_event(name="Coder Dojo", description="Coder dojo test event", date=date, start_date_time=start, end_date_time=end, capacity=capacity, password="password123")
         db.session.add(event)
     
     db.session.commit()

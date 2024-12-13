@@ -6,6 +6,7 @@ from jams.models import db, User, Role, Event, EventLocation, EventTimeslot, Ses
 from jams.util import helper
 from jams.endpoint_loader import generate_roles_file_from_db, update_pages_assigned_to_role
 from jams.integrations.eventbrite import create_event_update_tasks, deactivate_event_update_tasks
+from jams.util.database import create_event
 
 bp = Blueprint('admin', __name__)
 
@@ -285,7 +286,7 @@ def add_event():
     start_date_time = helper.convert_local_datetime_to_utc(start_date_time)
     end_date_time = helper.convert_local_datetime_to_utc(end_date_time)
 
-    new_event = Event(name=name, description=description, date=date, start_date_time=start_date_time, end_date_time=end_date_time, capacity=capacity, password=password, external=external, external_id=external_id, external_url=external_url)
+    new_event = create_event(name=name, description=description, date=date, start_date_time=start_date_time, end_date_time=end_date_time, capacity=capacity, password=password, external=external, external_id=external_id, external_url=external_url)
     db.session.add(new_event)
     db.session.commit()
 
@@ -322,6 +323,10 @@ def edit_event(event_id):
                     event.external_id = None
                     event.external_url = None
                     deactivate_event_update_tasks(event)
+            
+            if field == 'date':
+                helper.update_scheduled_streak_update_task_date(event, value)
+                
             setattr(event, field, value)
     
     db.session.commit()

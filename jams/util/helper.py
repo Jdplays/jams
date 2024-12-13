@@ -1,11 +1,11 @@
 import pytz
-from datetime import date, datetime, timedelta, UTC
+from datetime import date, datetime, timedelta, UTC, time
 from flask import abort, request, send_file
 from flask_security import current_user
 from sqlalchemy import Date, DateTime, String, Integer, Boolean, cast, func, or_, nullsfirst, asc, desc
 from collections.abc import Mapping, Iterable
 from jams.models import db, EventLocation, EventTimeslot, Timeslot, Session, EndpointRule, RoleEndpointRule, PageEndpointRule, Page, Event, User, Role, AttendanceStreak, UserRoles, VolunteerAttendance, FireList, VolunteerSignup
-from jams.configuration import get_config_value
+from jams.configuration import ConfigType, get_config_value
 
 
 from jams.models.api import APIKey
@@ -791,7 +791,7 @@ def calculate_streaks(event_id):
 
         add_to_streak(user.id)
 
-        db.session.commit()
+    db.session.commit()
 
 
 def recalculate_streaks():
@@ -807,3 +807,31 @@ def recalculate_streaks():
             calculate_streaks(event.id)
     except Exception as e:
         db.session.rollback()
+
+def schedule_streaks_update_task(event):
+    from jams.util import task_scheduler
+    if not get_config_value(ConfigType.STREAKS_ENABLED):
+        return
+    
+    midnight = time(00, 00, 00)
+    event_day_end = datetime.combine(event.date, midnight)
+    end_date = event_day_end + timedelta(days=1, hours=1)
+    params_dict = {'event_id': event.id}
+    
+    task_scheduler.create_task(
+        name=f'calculate_streaks_for_event_{event.id}',
+        start_datetime=event_day_end,
+        end_datetime=end_date,
+        action_enum=task_scheduler.TaskActionEnum.CALCULATE_STREAKS_FOR_EVENT,
+        interval=timedelta(days=1),
+        params=params_dict
+    )
+
+def update_scheduled_streak_update_task_date(event, date):
+    from jams.util import task_scheduler
+    if not get_config_value(ConfigType.STREAKS_ENABLED):
+        return
+    
+    task_name = f'calculate_streaks_for_event_{event.id}'
+    params_dict = {'start_datetime': date}
+    task_scheduler.modify_task(task_name=task_name, param_dict=params_dict)
