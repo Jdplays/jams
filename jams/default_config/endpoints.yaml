@@ -98,6 +98,7 @@ groups:
     description: Manages voluntter information
     read:
       get_user_attendance: routes.api_v1.private.volunteer.get_user_attendance
+      get_user_streak: routes.api_v1.private.volunteer.get_streak
     write:
       add_user_attendance: routes.api_v1.private.volunteer.add_user_attendance
       edit_user_attendance: routes.api_v1.private.volunteer.edit_user_attendance
@@ -155,6 +156,7 @@ groups:
       get_general_config: routes.api_v1.private.general.get_general_config
     write:
       edit_general_config: routes.api_v1.private.general.edit_general_config
+      recalculate_streaks: routes.api_v1.private.general.recalculate_streaks
 
   eventbrite:
     description: Manages Eventbrite integrations

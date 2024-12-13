@@ -55,6 +55,7 @@ def edit_general_config():
     return jsonify({'data': config})
 
 @bp.route('/app/recalculate_streaks', methods=['POST'])
+@api_route
 def recalculate_streaks():
     if not get_config_value(ConfigType.STREAKS_ENABLED):
         return jsonify({'message': 'Streaks are not currently enabled'})

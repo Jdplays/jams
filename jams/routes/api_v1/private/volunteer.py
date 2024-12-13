@@ -187,5 +187,8 @@ def remove_volunteer_signup(event_id, user_id, session_id):
 
 @bp.route('/volunteers/me/streak', methods=['GET'])
 def get_streak():
+    if not current_user.is_authenticated:
+        return jsonify({'message': 'Please Login to access this'}), 403
+    
     streak = AttendanceStreak.query.filter_by(user_id=current_user.id).first_or_404()
     return jsonify({'data': streak.to_dict()})
