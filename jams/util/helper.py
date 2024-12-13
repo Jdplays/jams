@@ -4,7 +4,7 @@ from flask import abort, request, send_file
 from flask_security import current_user
 from sqlalchemy import Date, DateTime, String, Integer, Boolean, cast, func, or_, nullsfirst, asc, desc
 from collections.abc import Mapping, Iterable
-from jams.models import db, EventLocation, EventTimeslot, Timeslot, Session, EndpointRule, RoleEndpointRule, PageEndpointRule, Page, Event
+from jams.models import db, EventLocation, EventTimeslot, Timeslot, Session, EndpointRule, RoleEndpointRule, PageEndpointRule, Page, Event, User, Role, AttendanceStreak, UserRoles, VolunteerAttendance, FireList, VolunteerSignup
 from jams.configuration import get_config_value
 
 
@@ -718,3 +718,92 @@ def calculate_session_capacity(session):
         capacity = location.capacity if location.capacity < workshop.capacity else workshop.capacity
     
     return capacity
+
+def add_to_streak(user_id, add_freeze=True):
+    user = User.query.filter_by(id=user_id).first()
+    if not user:
+        return
+
+    attendance_streak = AttendanceStreak.query.filter_by(user_id=user_id).first()
+    if not attendance_streak:
+        attendance_streak = AttendanceStreak(user_id)
+        db.session.add(attendance_streak)
+    
+    attendance_streak.streak += 1
+    attendance_streak.total_attended += 1
+    if add_freeze:
+        attendance_streak.freezes += 1
+
+        if attendance_streak.freezes > 2:
+            attendance_streak.freezes = 2
+    
+
+def freeze_or_break_streak(user_id):
+    user = User.query.filter_by(id=user_id).first()
+    if not user:
+        return
+
+    attendance_streak = AttendanceStreak.query.filter_by(user_id=user_id).first()
+    if not attendance_streak:
+        attendance_streak = AttendanceStreak(user_id)
+        db.session.add(attendance_streak)
+    else:
+        if attendance_streak.freezes > 0:
+            attendance_streak.freezes -= 1
+        else:
+            attendance_streak.streak = 0
+    
+
+def calculate_streaks(event_id):
+    event = Event.query.filter_by(id=event_id).first()
+    if not event:
+        return
+    
+    # Check if volunteers can get a streak
+    volunteer_role = Role.query.filter_by(name='Volunteer').first()
+    if not volunteer_role:
+        return
+    
+    users = (
+        User.query.join(UserRoles, User.id == UserRoles.user_id)
+                  .filter(UserRoles.role_id == volunteer_role.id)
+                  .all()
+    )
+
+    for user in users:
+        # Check if they updated their attendance
+        attendance = VolunteerAttendance.query.filter_by(event_id=event_id, user_id=user.id).first()
+        if not attendance or not attendance.main:
+            freeze_or_break_streak(user.id)
+            continue
+        
+        # Check if they were checked in
+        fire_list_entry = FireList.query.filter_by(event_id=event_id, user_id=user.id).first()
+        if not fire_list_entry or not fire_list_entry.checked_in:
+            freeze_or_break_streak(user.id)
+            continue
+        
+        # Check if they signed up to a workshop
+        signups = VolunteerSignup.query.filter_by(event_id=event_id, user_id=user.id).all()
+        if not signups:
+            freeze_or_break_streak(user.id)
+            continue
+
+        add_to_streak(user.id)
+
+        db.session.commit()
+
+
+def recalculate_streaks():
+    try:
+        streaks = AttendanceStreak.query.all()
+        for streak in streaks:
+            streak.streak = 0
+            streak.freezes = 2
+            streak.total_attended = 0
+
+        events = Event.query.all()
+        for event in events:
+            calculate_streaks(event.id)
+    except Exception as e:
+        db.session.rollback()
