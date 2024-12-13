@@ -736,6 +736,10 @@ def add_to_streak(user_id, add_freeze=True):
 
         if attendance_streak.freezes > 2:
             attendance_streak.freezes = 2
+
+    # Check if this is the longest streak
+    if attendance_streak.streak > attendance_streak.longest_streak:
+        attendance_streak.longest_streak = attendance_streak.streak
     
 
 def freeze_or_break_streak(user_id):

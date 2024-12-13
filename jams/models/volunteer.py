@@ -74,6 +74,7 @@ class AttendanceStreak(db.Model):
     id = Column(Integer(), primary_key=True)
     user_id = Column(Integer(), ForeignKey('user.id'), nullable=False)
     streak = Column(Integer(), nullable=False, default=0)
+    longest_streak = Column(Integer(), nullable=False, default=0)
     freezes = Column(Integer(), nullable=False, default=2)
     total_attended = Column(Integer(), nullable=False, default=0)
 
@@ -82,6 +83,7 @@ class AttendanceStreak(db.Model):
     def __init__(self, user_id):
         self.user_id = user_id
         self.streak = 0
+        self.longest_streak = 0
         self.freezes = 2
         self.total_attended = 0
     
@@ -90,6 +92,7 @@ class AttendanceStreak(db.Model):
             'id': self.id,
             'user_id': self.user_id,
             'streak': self.streak,
+            'longest_streak': self.longest_streak,
             'freezes': self.freezes,
             'total_attended': self.total_attended
         }

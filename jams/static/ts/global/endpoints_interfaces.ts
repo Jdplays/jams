@@ -345,6 +345,7 @@ export interface StreadData {
     id:number
     user_id:number
     streak:number
+    longest_streak:number
     freezes:number
     total_attended:number
 }
