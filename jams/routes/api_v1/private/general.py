@@ -3,6 +3,7 @@ from flask import Blueprint, abort, jsonify, request
 from flask_security import login_required, current_user
 from jams.decorators import api_route
 from jams.configuration import get_config_value, set_config_value, ConfigType
+from jams.util import helper
 
 bp = Blueprint('general', __name__)
 
@@ -25,10 +26,11 @@ def get_current_user_data():
 @api_route
 def get_general_config():
     data = {
-        ConfigType.TIMEZONE.name: get_config_value(ConfigType.TIMEZONE)
+        ConfigType.TIMEZONE.name: get_config_value(ConfigType.TIMEZONE),
+        ConfigType.STREAKS_ENABLED.name: get_config_value(ConfigType.STREAKS_ENABLED)
     }
 
-    return jsonify({'config': data})
+    return jsonify({'data': data})
 
 @bp.route('/app/config', methods=['PATCH'])
 @api_route
@@ -38,12 +40,25 @@ def edit_general_config():
         abort(400, description="No data provided")
     
     timezone = data.get(ConfigType.TIMEZONE.name)
-
     if timezone:
         set_config_value(ConfigType.TIMEZONE, timezone)
     
+    streaks_enabled = data.get(ConfigType.STREAKS_ENABLED.name)
+    if streaks_enabled is not None:
+        set_config_value(ConfigType.STREAKS_ENABLED, streaks_enabled)
+    
     config = {
-        ConfigType.TIMEZONE.name: get_config_value(ConfigType.TIMEZONE)
+        ConfigType.TIMEZONE.name: get_config_value(ConfigType.TIMEZONE),
+        ConfigType.STREAKS_ENABLED.name: get_config_value(ConfigType.STREAKS_ENABLED)
     } 
 
-    return jsonify({'config': config})
+    return jsonify({'data': config})
+
+@bp.route('/app/recalculate_streaks', methods=['POST'])
+def recalculate_streaks():
+    if not get_config_value(ConfigType.STREAKS_ENABLED):
+        return jsonify({'message': 'Streaks are not currently enabled'})
+    
+    helper.recalculate_streaks()
+
+    return jsonify({'message': 'Streaks have been successfully recalculated'})

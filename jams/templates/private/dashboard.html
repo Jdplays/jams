@@ -9,7 +9,9 @@
   </h2>
 
 <div class="row row-deck row-cards">
+    {% if get_config_value('STREAKS_ENABLED') %}
     {% include 'widgets/streak.html' %}
+    {% endif %}
 </div>
 
 

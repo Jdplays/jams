@@ -315,6 +315,7 @@ export interface AttendeeSignup {
 
 export interface GeneralConfig {
     TIMEZONE?:string
+    STREAKS_ENABLED?:boolean
 }
 
 export interface FireListEntry {

@@ -748,7 +748,7 @@ def freeze_or_break_streak(user_id):
         attendance_streak = AttendanceStreak(user_id)
         db.session.add(attendance_streak)
     else:
-        if attendance_streak.freezes > 0:
+        if attendance_streak.freezes > 0 and attendance_streak.streak > 0:
             attendance_streak.freezes -= 1
         else:
             attendance_streak.streak = 0
@@ -802,7 +802,7 @@ def recalculate_streaks():
             streak.freezes = 2
             streak.total_attended = 0
 
-        events = Event.query.all()
+        events = Event.query.filter(Event.date <= date.today()).order_by(Event.date.asc()).all()
         for event in events:
             calculate_streaks(event.id)
     except Exception as e:

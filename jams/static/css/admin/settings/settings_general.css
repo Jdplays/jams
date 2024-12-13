@@ -1,38 +1,46 @@
 .table-responsive th.setting-column {
-    width: 20%;
+    width: 15%;
 }
 
 .table-responsive th.description-column {
-    width: 50%;
+    width: 45%;
 }
 
 .table-responsive th.value-column {
-    width: 30%;
+    width: 20%;
+}
+
+.table-responsive th.value-column {
+    width: 20%;
 }
 
 /* Tablet (Medium screens) */
 @media (max-width: 1000px) {
     .table-responsive th.setting-column {
-        width: 30%;
+        width: 25%;
     }
 
     .table-responsive th.description-column {
-        width: 30%;
+        width: 20%;
     }
 
     .table-responsive th.value-column {
-        width: 50%;
+        width: 45%;
     }
 
     .table-responsive td.description-column {
-        width: 30%;
+        width: 20%;
+    }
+
+    .table-responsive th.value-column {
+        width: 20%;
     }
 }
 
 /* Mobile (Smaller screens) */
 @media (max-width: 600px) {
     .table-responsive th.setting-column {
-        width: 30%;
+        width: 20%;
     }
 
     .table-responsive th.description-column {
@@ -40,10 +48,18 @@
     }
 
     .table-responsive th.value-column {
-        width: 70%;
+        width: 40%;
+    }
+
+    .table-responsive th.value-column {
+        width: 40%;
     }
 
     .table-responsive td.description-column {
+        display: none;
+    }
+
+    .action-text {
         display: none;
     }
 }

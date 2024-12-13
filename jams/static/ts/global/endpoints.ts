@@ -2262,7 +2262,7 @@ export function getGeneralConfig():Promise<GeneralConfig> {
             url: `${baseURL}/app/config`,
             type: 'GET',
             success: function (response) {
-                resolve(response.config)
+                resolve(response.data)
             },
             error: function (error) {
                 console.log('Error fetching data:', error);
@@ -2280,7 +2280,7 @@ export function editGeneralConfig(data:Partial<GeneralConfig>):Promise<GeneralCo
             data: JSON.stringify(data),
             contentType: 'application/json',
             success: function (response) {
-                resolve(response)
+                resolve(response.data)
             },
             error: function (error) {
                 console.log('Error fetching data:', error);
@@ -2329,5 +2329,21 @@ export function getIconData(filename:string):Promise<string> {
             }
         })
     })
+}
+
+export function recalculateStreaks():Promise<ApiResponse<any>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/app/recalculate_streaks`,
+            type: 'POST',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
 }
 // #endregion
