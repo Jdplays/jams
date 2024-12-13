@@ -9,6 +9,7 @@ from jams.util import task_scheduler_funcs
 
 class TaskActionEnum(Enum):
     UPDATE_EVENTBRITE_EVENT_ATTENDEES = 'update_eventbrite_event_attendees'
+    CALCULATE_STREAKS_FOR_EVENT = 'CALCULATE_STREAKS_FOR_EVENT'
 
 class TaskScheduler:
     def __init__(self, app, interval=60, max_workers=4) -> None:
@@ -112,8 +113,14 @@ class TaskScheduler:
 
                 task.log_started()
 
-                if task.action_enum == TaskActionEnum.UPDATE_EVENTBRITE_EVENT_ATTENDEES.name:
-                    task_scheduler_funcs.update_event_attendees_task(**task.params)
+                match task.action_enum:
+                    case TaskActionEnum.UPDATE_EVENTBRITE_EVENT_ATTENDEES.name:
+                        task_scheduler_funcs.update_event_attendees_task(**task.params)
+                        return
+                    case TaskActionEnum.CALCULATE_STREAKS_FOR_EVENT.name:
+                        task_scheduler_funcs.calculate_streaks_for_event_task(**task.params)
+                        return
+                    
             except Exception as e:
                 db.session.rollback()
                 raise e
@@ -141,3 +148,11 @@ def create_task(name, action_enum:TaskActionEnum, interval, params=None, start_d
     db.session.commit()
 
     new_task.log('created')
+
+def modify_task(task_name, param_dict):
+    task = TaskSchedulerModel.query.filter_by(name=task_name).first()
+    if not task:
+        return
+    
+    for field, value in param_dict.items():
+        setattr(task, field, value)

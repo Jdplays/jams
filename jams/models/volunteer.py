@@ -1,6 +1,7 @@
 from . import db
-from sqlalchemy  import Column, String, Integer, Boolean, ForeignKey, UniqueConstraint
+from sqlalchemy  import Column, DateTime, String, Integer, Boolean, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
+from datetime import datetime, UTC
 
 class VolunteerAttendance (db.Model):
     __tablename__ = 'volunteer_attendance'
@@ -12,6 +13,7 @@ class VolunteerAttendance (db.Model):
     main = Column(Boolean(), nullable=True)
     packdown = Column(Boolean(), nullable=True)
     note = Column(String(255), nullable=True)
+    timestamp = Column(DateTime, nullable=True)
 
     event = relationship('Event', backref='volunteer_attendances')
     user = relationship('User', backref='volunteer_attendances')
@@ -23,6 +25,7 @@ class VolunteerAttendance (db.Model):
         self.main = main
         self.packdown = packdown
         self.note = note
+        self.timestamp = datetime.now(UTC)
 
     def to_dict(self):
         return {
@@ -32,7 +35,8 @@ class VolunteerAttendance (db.Model):
             'setup': self.setup,
             'main': self.main,
             'packdown': self.packdown,
-            'note': self.note
+            'note': self.note,
+            'timestamp': self.timestamp
         }
 
 class VolunteerSignup (db.Model):
@@ -62,4 +66,33 @@ class VolunteerSignup (db.Model):
             'event_id': self.event_id,
             'user_id': self.user_id,
             'session_id': self.session_id
+        }
+
+class AttendanceStreak(db.Model):
+    __tablename__ = 'attendance_streak'
+
+    id = Column(Integer(), primary_key=True)
+    user_id = Column(Integer(), ForeignKey('user.id'), nullable=False)
+    streak = Column(Integer(), nullable=False, default=0)
+    longest_streak = Column(Integer(), nullable=False, default=0)
+    freezes = Column(Integer(), nullable=False, default=2)
+    total_attended = Column(Integer(), nullable=False, default=0)
+
+    user = relationship('User', backref='attendance_streak')
+
+    def __init__(self, user_id):
+        self.user_id = user_id
+        self.streak = 0
+        self.longest_streak = 0
+        self.freezes = 2
+        self.total_attended = 0
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'streak': self.streak,
+            'longest_streak': self.longest_streak,
+            'freezes': self.freezes,
+            'total_attended': self.total_attended
         }

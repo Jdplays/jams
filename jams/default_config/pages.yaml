@@ -130,6 +130,7 @@ pages:
     api_endpoints:
       get_general_config:
       edit_general_config:
+      recalculate_streaks:
 
   user_management:
     endpoint: routes.frontend.private.admin.user_management

@@ -1,9 +1,9 @@
 from jams.extensions import db
 
-from .auth import User, Role, Page, EndpointRule, RoleEndpointRule, PageEndpointRule, RolePage
+from .auth import User, Role, Page, EndpointRule, RoleEndpointRule, PageEndpointRule, RolePage, UserRoles
 from .management import Workshop, DifficultyLevel, WorkshopType
 from .event import Event, Location, Timeslot, EventLocation, EventTimeslot, Session, FireList
-from .volunteer import VolunteerAttendance, VolunteerSignup
+from .volunteer import VolunteerAttendance, VolunteerSignup, AttendanceStreak
 from .files import File, FileVersion, WorkshopFile
 from .audit import PrivateAccessLog, WebsocketLog
 from .config import Config

@@ -315,6 +315,7 @@ export interface AttendeeSignup {
 
 export interface GeneralConfig {
     TIMEZONE?:string
+    STREAKS_ENABLED?:boolean
 }
 
 export interface FireListEntry {
@@ -338,4 +339,13 @@ export interface JOLTStatus {
     date_time:string
     error:string
     local_ip:string
+}
+
+export interface StreadData {
+    id:number
+    user_id:number
+    streak:number
+    longest_streak:number
+    freezes:number
+    total_attended:number
 }

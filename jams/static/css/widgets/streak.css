@@ -1,0 +1,70 @@
+.streak-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.flame-overlay {
+    position: relative;
+    display: inline-block;
+    width: 100px;
+    height: 100px;
+}
+
+.streak-flame-icon {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.outer-flame {
+    font-size: 100px;
+    color: #FF4500;
+    z-index: 1;
+}
+
+.no-flame {
+    font-size: 100px;
+    color: #333;
+    z-index: 1;
+}
+
+.inner-flame {
+    font-size: 78px;
+    color: #FFD700;
+    z-index: 2;
+    top: 23%;
+    left: 10%;
+    transform: translate(-10%, -10%);
+}
+
+.streak-number-good {
+    font-size: 72px;
+    font-weight: bold;
+    background: linear-gradient(180deg, #FFD700, #FF4500);
+    -webkit-background-clip: text; /* Use the gradient as the text color */
+    -webkit-text-fill-color: transparent; /* Make the actual text color transparent */
+}
+
+.streak-number-bad {
+    font-size: 72px;
+    font-weight: bold;
+    color: #333;
+}
+
+
+.freeze-info {
+    font-size: 18px;
+    color: #555;
+}
+
+.freeze-icon {
+    color: #1E90FF;
+    margin-right: 8px;
+    font-size: 20px;
+}

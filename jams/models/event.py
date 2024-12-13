@@ -1,6 +1,6 @@
 from . import db
-from sqlalchemy  import CheckConstraint, Column, String, Integer, DATE, TIME, Boolean, ForeignKey, DateTime
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy  import CheckConstraint, Column, String, Integer, TIME, Boolean, ForeignKey, DateTime, event
+from sqlalchemy.orm import relationship
 from jams.util.enums import FireListPersonType
 
 class Event(db.Model):
@@ -23,7 +23,7 @@ class Event(db.Model):
     def __init__(self, name, description, date, start_date_time, end_date_time, capacity, password, active=True, external=False, external_id=None, external_url = None):
         self.name = name
         self.description = description
-        self.date = date,
+        self.date = date
         self.start_date_time = start_date_time
         self.end_date_time = end_date_time
         self.capacity = capacity

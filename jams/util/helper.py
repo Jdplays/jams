@@ -1,11 +1,11 @@
 import pytz
-from datetime import date, datetime, timedelta, UTC
+from datetime import date, datetime, timedelta, UTC, time
 from flask import abort, request, send_file
 from flask_security import current_user
 from sqlalchemy import Date, DateTime, String, Integer, Boolean, cast, func, or_, nullsfirst, asc, desc
 from collections.abc import Mapping, Iterable
-from jams.models import db, EventLocation, EventTimeslot, Timeslot, Session, EndpointRule, RoleEndpointRule, PageEndpointRule, Page, Event
-from jams.configuration import get_config_value
+from jams.models import db, EventLocation, EventTimeslot, Timeslot, Session, EndpointRule, RoleEndpointRule, PageEndpointRule, Page, Event, User, Role, AttendanceStreak, UserRoles, VolunteerAttendance, FireList, VolunteerSignup
+from jams.configuration import ConfigType, get_config_value
 
 
 from jams.models.api import APIKey
@@ -718,3 +718,124 @@ def calculate_session_capacity(session):
         capacity = location.capacity if location.capacity < workshop.capacity else workshop.capacity
     
     return capacity
+
+def add_to_streak(user_id, add_freeze=True):
+    user = User.query.filter_by(id=user_id).first()
+    if not user:
+        return
+
+    attendance_streak = AttendanceStreak.query.filter_by(user_id=user_id).first()
+    if not attendance_streak:
+        attendance_streak = AttendanceStreak(user_id)
+        db.session.add(attendance_streak)
+    
+    attendance_streak.streak += 1
+    attendance_streak.total_attended += 1
+    if add_freeze:
+        attendance_streak.freezes += 1
+
+        if attendance_streak.freezes > 2:
+            attendance_streak.freezes = 2
+
+    # Check if this is the longest streak
+    if attendance_streak.streak > attendance_streak.longest_streak:
+        attendance_streak.longest_streak = attendance_streak.streak
+    
+
+def freeze_or_break_streak(user_id):
+    user = User.query.filter_by(id=user_id).first()
+    if not user:
+        return
+
+    attendance_streak = AttendanceStreak.query.filter_by(user_id=user_id).first()
+    if not attendance_streak:
+        attendance_streak = AttendanceStreak(user_id)
+        db.session.add(attendance_streak)
+    else:
+        if attendance_streak.freezes > 0 and attendance_streak.streak > 0:
+            attendance_streak.freezes -= 1
+        else:
+            attendance_streak.streak = 0
+    
+
+def calculate_streaks(event_id):
+    event = Event.query.filter_by(id=event_id).first()
+    if not event:
+        return
+    
+    # Check if volunteers can get a streak
+    volunteer_role = Role.query.filter_by(name='Volunteer').first()
+    if not volunteer_role:
+        return
+    
+    users = (
+        User.query.join(UserRoles, User.id == UserRoles.user_id)
+                  .filter(UserRoles.role_id == volunteer_role.id)
+                  .all()
+    )
+
+    for user in users:
+        # Check if they updated their attendance
+        attendance = VolunteerAttendance.query.filter_by(event_id=event_id, user_id=user.id).first()
+        if not attendance or not attendance.main:
+            freeze_or_break_streak(user.id)
+            continue
+        
+        # Check if they were checked in
+        fire_list_entry = FireList.query.filter_by(event_id=event_id, user_id=user.id).first()
+        if not fire_list_entry or not fire_list_entry.checked_in:
+            freeze_or_break_streak(user.id)
+            continue
+        
+        # Check if they signed up to a workshop
+        signups = VolunteerSignup.query.filter_by(event_id=event_id, user_id=user.id).all()
+        if not signups:
+            freeze_or_break_streak(user.id)
+            continue
+
+        add_to_streak(user.id)
+
+    db.session.commit()
+
+
+def recalculate_streaks():
+    try:
+        streaks = AttendanceStreak.query.all()
+        for streak in streaks:
+            streak.streak = 0
+            streak.freezes = 2
+            streak.total_attended = 0
+
+        events = Event.query.filter(Event.date <= date.today()).order_by(Event.date.asc()).all()
+        for event in events:
+            calculate_streaks(event.id)
+    except Exception as e:
+        db.session.rollback()
+
+def schedule_streaks_update_task(event):
+    from jams.util import task_scheduler
+    if not get_config_value(ConfigType.STREAKS_ENABLED):
+        return
+    
+    midnight = time(00, 00, 00)
+    event_day_end = datetime.combine(event.date, midnight)
+    end_date = event_day_end + timedelta(days=1, hours=1)
+    params_dict = {'event_id': event.id}
+    
+    task_scheduler.create_task(
+        name=f'calculate_streaks_for_event_{event.id}',
+        start_datetime=event_day_end,
+        end_datetime=end_date,
+        action_enum=task_scheduler.TaskActionEnum.CALCULATE_STREAKS_FOR_EVENT,
+        interval=timedelta(days=1),
+        params=params_dict
+    )
+
+def update_scheduled_streak_update_task_date(event, date):
+    from jams.util import task_scheduler
+    if not get_config_value(ConfigType.STREAKS_ENABLED):
+        return
+    
+    task_name = f'calculate_streaks_for_event_{event.id}'
+    params_dict = {'start_datetime': date}
+    task_scheduler.modify_task(task_name=task_name, param_dict=params_dict)

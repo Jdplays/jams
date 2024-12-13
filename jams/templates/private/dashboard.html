@@ -4,30 +4,14 @@
 
 {% block content %}
 
+<h2 class="page-title mb-3">
+    Dashboard
+  </h2>
+
 <div class="row row-deck row-cards">
-    <div class="col-4">
-        <div class="card">
-            <div class="card-body" style="height: 10rem">
-                <h1>Dashboard</h1>
-                <p>This is the dashboard page!</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-4">
-        <div class="card">
-            <div class="card-body" style="height: 10rem"></div>
-        </div>
-    </div>
-    <div class="col-4">
-        <div class="card">
-            <div class="card-body" style="height: 10rem"></div>
-        </div>
-    </div>
-    <div class="col-12">
-        <div class="card">
-            <div class="card-body" style="height: 10rem"></div>
-        </div>
-    </div>
+    {% if get_config_value('STREAKS_ENABLED') %}
+    {% include 'widgets/streak.html' %}
+    {% endif %}
 </div>
 
 

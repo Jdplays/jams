@@ -1,0 +1,32 @@
+<div id="streak-widget" class="col-12 col-md-3">
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h2>Streak</h2>
+                <p id="time-until" class="text-secondary ms-auto mt-1">Updates in 1 hour 30 minutes</p>
+            </div>
+        </div>
+
+        <div class="card-body text-center">
+            <div class="streak-content">
+                <div class="flame-overlay">
+                    <div id="streak-good-icon" style="display: none;">
+                        <i class="ti ti-flame streak-flame-icon outer-flame"></i>
+                        <i class="ti ti-flame streak-flame-icon inner-flame"></i>
+                    </div>
+                    <div id="streak-bad-icon">
+                        <i class="ti ti-flame streak-flame-icon no-flame"></i>
+                    </div>
+                </div>
+                <span id="streak-count" class="streak-number-bad">0</span>
+            </div>
+            <p class="freeze-info">
+                <i class="ti ti-snowflake freeze-icon"></i>
+                You have <strong id="freeze-count">2</strong> <span id="freeze-word">freezes</span> left.
+            </p>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/widgets/streak.js') }}" defer></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/widgets/streak.css') }}">

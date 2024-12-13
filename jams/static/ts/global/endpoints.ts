@@ -37,7 +37,8 @@ import {
     FireListEntry,
     sessionSettings,
     JOLTStatus,
-    JOLTConfig
+    JOLTConfig,
+    StreadData
 } from "@global/endpoints_interfaces";
 import { formatDate } from "./helper";
 
@@ -2261,7 +2262,7 @@ export function getGeneralConfig():Promise<GeneralConfig> {
             url: `${baseURL}/app/config`,
             type: 'GET',
             success: function (response) {
-                resolve(response.config)
+                resolve(response.data)
             },
             error: function (error) {
                 console.log('Error fetching data:', error);
@@ -2278,6 +2279,26 @@ export function editGeneralConfig(data:Partial<GeneralConfig>):Promise<GeneralCo
             type: 'PATCH',
             data: JSON.stringify(data),
             contentType: 'application/json',
+            success: function (response) {
+                resolve(response.data)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+// #endregion
+
+// #region Streaks
+
+export function getVolunteerStreak():Promise<ApiResponse<StreadData>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/volunteers/me/streak`,
+            type: 'GET',
             success: function (response) {
                 resolve(response)
             },
@@ -2308,5 +2329,21 @@ export function getIconData(filename:string):Promise<string> {
             }
         })
     })
+}
+
+export function recalculateStreaks():Promise<ApiResponse<any>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/app/recalculate_streaks`,
+            type: 'POST',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
 }
 // #endregion

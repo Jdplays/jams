@@ -16,6 +16,7 @@
                     <th class="setting-column">Setting</th>
                     <th class="description-column">Description</th>
                     <th class="value-column">Value</th>
+                    <th class="action-column">Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -30,6 +31,27 @@
                         <select id="loc-select" class="form-control form-select" onchange="checkIfConentUpdated()">
                         </select>
                     </td>
+                    <td>N/A</td>
+                </tr>
+                <tr>
+                    <td class="setting-column">
+                        <p>Volunteer Streaks</p>
+                    </td>
+                    <td class="description-column">
+                        <label class="text-secondary">Motivate volunteers to attend events consistently by enabling streaks. Volunteers build a streak by attending consecutive events where they are signed up to a workshop, checked in, and have their attendance marked. Streaks update at midnight after each event, and volunteers are allowed two streak freezes to retain their progress.</label>
+                    </td>
+                    <td class="value-column">
+                        <label class="form-check form-switch">
+                            <input id="toggle-streaks-switch" class="form-check-input" type="checkbox"
+                            oninput="checkIfConentUpdated()">
+                        </label>
+                    </td>
+                    <td>
+                        <button id="streak-refresh-button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#confirm-recalculate-streaks">
+                            <i class="ti ti-refresh-alert"></i>
+                            <span class="ms-2 action-text">Recalculate Streaks</span>
+                        </button>
+                    </td>
                 </tr>
             </tbody>
         </table>
@@ -38,6 +60,36 @@
     <button id="save-button" class="btn btn-primary" onclick="generalConfigSaveOnClick()"
                 disabled>Save</button>
 </div>
+
+<div id="confirm-recalculate-streaks" class="modal modal-blur fade" id="modal-small" tabindex="-1" style="display: none;"
+        aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-status bg-danger"></div>
+                <div class="modal-body text-center py-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="icon mb-2 text-danger icon-lg">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M12 9v4"></path>
+                        <path
+                            d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z">
+                        </path>
+                        <path d="M12 16h.01"></path>
+                    </svg>
+                    <div class="modal-title">Are you sure?</div>
+                    <div>Recalculating streaks will reset all volunteer streaks and recalculate them based on attendance at past events, processed in chronological order. This is useful when enabling streaks after hosting events without streaks enabled</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal" onclick="recalculateStreaksOnClick()">Yes,
+                        Recalculate</button>
+                    <button type="button" class="btn btn-link link-secondary ms-auto"
+                        data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 <script src="{{ url_for('static', filename='js/admin/settings/settings_general.js') }}" type="module"
     defer></script>

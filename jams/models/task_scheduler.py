@@ -2,7 +2,7 @@ from . import db
 from sqlalchemy  import Column, ForeignKey, String, Integer, DateTime, Boolean, JSON
 from sqlalchemy.dialects.postgresql import INTERVAL
 from sqlalchemy.orm import relationship
-from datetime import datetime, UTC, timedelta
+from datetime import datetime, UTC
 from jams.util import helper
 
 class TaskSchedulerModel(db.Model):
