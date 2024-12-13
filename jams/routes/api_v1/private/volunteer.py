@@ -1,8 +1,8 @@
 # API is for serving data to Typscript/Javascript
 from flask import Blueprint, request, jsonify, abort
-from flask_security import login_required
+from flask_security import current_user
 from jams.decorators import api_route, protect_user_updates
-from jams.models import db, VolunteerAttendance, VolunteerSignup, Event, User
+from jams.models import db, VolunteerAttendance, VolunteerSignup, Event, User, AttendanceStreak
 from jams.models.event import FireList
 from jams.util import helper
 
@@ -184,3 +184,8 @@ def remove_volunteer_signup(event_id, user_id, session_id):
     return jsonify({
         'message': 'Volunteer Signup Entry has been successfully removed'
     })
+
+@bp.route('/volunteers/me/streak', methods=['GET'])
+def get_streak():
+    streak = AttendanceStreak.query.filter_by(user_id=current_user.id).first_or_404()
+    return jsonify({'data': streak.to_dict()})
