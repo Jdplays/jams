@@ -13,4 +13,4 @@ setuptools
 requests
 Authlib
 pytz
-websockets
+websockets==13.0
