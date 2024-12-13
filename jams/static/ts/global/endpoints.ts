@@ -37,7 +37,8 @@ import {
     FireListEntry,
     sessionSettings,
     JOLTStatus,
-    JOLTConfig
+    JOLTConfig,
+    StreadData
 } from "@global/endpoints_interfaces";
 import { formatDate } from "./helper";
 
@@ -2278,6 +2279,26 @@ export function editGeneralConfig(data:Partial<GeneralConfig>):Promise<GeneralCo
             type: 'PATCH',
             data: JSON.stringify(data),
             contentType: 'application/json',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+// #endregion
+
+// #region Streaks
+
+export function getVolunteerStreak():Promise<ApiResponse<StreadData>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/volunteers/me/streak`,
+            type: 'GET',
             success: function (response) {
                 resolve(response)
             },

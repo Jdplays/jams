@@ -339,3 +339,11 @@ export interface JOLTStatus {
     error:string
     local_ip:string
 }
+
+export interface StreadData {
+    id:number
+    user_id:number
+    streak:number
+    freezes:number
+    total_attended:number
+}
