@@ -70,7 +70,6 @@ pages:
     api_endpoints:
       get_roles_field:
       get_pages_field:
-        allowed_fields: id, name, parent_id, public
       add_role:
 
   settings_edit_role:
@@ -79,7 +78,6 @@ pages:
       get_role:
       get_roles_field:
       get_pages_field:
-        allowed_fields: id, name, parent_id, public
       edit_role:
 
   settings_roles:
@@ -91,7 +89,6 @@ pages:
       get_roles:
       delete_role:
       get_pages_field:
-        allowed_fields: id, name
 
   # Events
   add_event:
