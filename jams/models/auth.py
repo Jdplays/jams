@@ -90,7 +90,8 @@ class User(UserMixin, db.Model):
     
     @property
     def main_role(self):
-        return self.roles[0].name if self.roles else 'No Role'
+        role = Role.query.filter(Role.id.in_(self.role_ids)).order_by(Role.priority.asc()).first()
+        return role.name if role else 'No Role'
 
     # Requires email, username, password to be passed
     def __init__(self, email, username, password, active=False, first_name=None, last_name=None, dob=None, bio=None, roles=None, role_ids:list[int]=None, fs_uniquifier=None, last_login_at=None, current_login_at=None, last_login_ip=None, current_login_ip=None, login_count=0, open_id_sub=None, user_induction=False, avatar_url=None):
