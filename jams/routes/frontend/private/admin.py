@@ -25,7 +25,7 @@ def settings_eventbrite():
 
 @bp.route('/settings/jolt')
 @login_required
-#@role_based_access_control_fe
+@role_based_access_control_fe
 def settings_jolt():
     return render_template(f'{url_prefix}/settings/settings-jolt.html')
 
@@ -34,6 +34,18 @@ def settings_jolt():
 @role_based_access_control_fe
 def settings_roles():
     return render_template(f'{url_prefix}/settings/settings-roles.html')
+
+@bp.route('/settings/roles/add')
+@login_required
+@role_based_access_control_fe
+def settings_add_role():
+    return render_template(f'{url_prefix}/settings/settings-add-role.html')
+
+@bp.route('/settings/roles/<int:role_id>/edit')
+@login_required
+@role_based_access_control_fe
+def settings_edit_role(role_id):
+    return render_template(f'{url_prefix}/settings/settings-edit-role.html', role_id=role_id)
 
 @bp.route('/settings/auth_sources')
 @login_required

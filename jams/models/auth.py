@@ -16,6 +16,9 @@ class Role(db.Model, RoleMixin):
     id = Column(Integer, primary_key=True)
     name = Column(String(80), nullable=False)
     description = Column(String(255), nullable=True)
+    display_colour = Column(String(7), nullable=False, default='#828181', server_default='#828181')
+    priority = Column(Integer, nullable=False, default=10, server_default='10')
+    hidden = Column(Boolean, nullable=False, default=False, server_default='false')
     default = Column(Boolean, nullable=False)
 
     @property
@@ -23,9 +26,12 @@ class Role(db.Model, RoleMixin):
         return [role_page.page_id for role_page in self.role_pages]
 
     # Requires name to be passed
-    def __init__(self, name, description=None, default=False):
+    def __init__(self, name, description=None, display_colour='#828181', priority=10, hidden=False, default=False):
         self.name = name
         self.description = description
+        self.display_colour = display_colour
+        self.priority = priority
+        self.hidden = hidden
         self.default = default
 
     def to_dict(self):
@@ -34,6 +40,9 @@ class Role(db.Model, RoleMixin):
             'name': self.name,
             'description': self.description,
             'page_ids': self.page_ids,
+            'display_colour': self.display_colour,
+            'priority': self.priority,
+            'hidden': self.hidden,
             'default': self.default
         }
 
@@ -171,7 +180,7 @@ class User(UserMixin, db.Model):
     
     def to_dict(self):
         from jams.util import helper
-        last_login_at_date_time = helper.convert_datetime_to_local_timezone(self.last_login_at)
+        last_login_at_date_time = helper.convert_datetime_to_local_timezone(self.current_login_at)
         return {
             'id': self.id,
             'username': self.username,
