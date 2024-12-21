@@ -1,7 +1,13 @@
 function structureNav() {
     const pagePath = window.location.pathname
     const pathParts = pagePath.split('/')
-    const pageName = pathParts[pathParts.length - 1]
+
+    let pageName = pathParts[pathParts.length - 1]
+    if (pageName === 'add') {
+        pageName = pathParts[pathParts.length - 2]
+    } else if (pageName === 'edit') {
+        pageName = pathParts[pathParts.length - 3]
+    }
 
     if (pageName === 'settings') {
         return

@@ -116,6 +116,9 @@ export interface Role {
     name:string
     description:string
     page_ids:number[]
+    display_colour:string
+    priority:number
+    hidden:boolean
     default:boolean
 }
 
