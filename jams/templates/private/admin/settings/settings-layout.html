@@ -53,8 +53,16 @@
         </div>
         <div class="col-12 col-md-9 d-flex flex-column">
             <div class="settings-content-container">
-                <h2>{% block settings_name %}{% endblock %}</h2>
-                {% block settings_content %}{% endblock %}
+                <div class="card-header">
+                    <div class="card-title">{% block settings_name %}{% endblock %}</div>
+                </div>
+                <div class="card-body">
+                    {% block settings_content %}{% endblock %}
+                </div>
+
+                <div class="card-footer">
+                    {% block settings_content_footer %}{% endblock %}
+                </div>
             </div>
         </div>
     </div>

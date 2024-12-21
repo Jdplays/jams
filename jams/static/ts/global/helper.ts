@@ -1,6 +1,6 @@
 import {Toast} from "@global/sweet_alert"
 import { dateTimeFormatterOptions, FireListEntryType, InputValidationPattern, QueryStringData } from "./interfaces";
-import { User } from "./endpoints_interfaces";
+import { Page, Role, User } from "./endpoints_interfaces";
 import { getUsersPublicInfo } from "./endpoints";
 
 type QueryStringParams = {[key: string]: any}
@@ -133,7 +133,7 @@ export function emptyElement(element:HTMLElement):void {
 }
 
 // Function to convert hex to rgba
-export function hexToRgba(hex:string, alpha:number):string {
+export function hexToRgba(hex:string, alpha:number=1):string {
     if (hex === null || hex === undefined) {
         return 'rgba(0, 0, 0, 0)';
     }
@@ -721,4 +721,22 @@ export function stringToFireListEntryType(type: string | null): FireListEntryTyp
         default:
             return null;
     }
+}
+
+export function buildRoleBadge(role:Role) {
+    const container = document.createElement('span')
+    container.classList.add('tag-with-indicator')
+    container.style.width = 'fit-content'
+
+    const text = document.createElement('span')
+    text.innerHTML = role.name
+
+    const badge = document.createElement('span')
+    badge.classList.add('badge', 'ms-2')
+    badge.style.backgroundColor = hexToRgba(role.display_colour)
+
+    container.appendChild(text)
+    container.appendChild(badge)
+
+    return container
 }

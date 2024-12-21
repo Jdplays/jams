@@ -43,7 +43,7 @@
     pointer-events: none !important;
 }
   
-.form-selectgroup-label-no-hover {
+.tag-with-indicator {
   position: relative;
   display: block;
   min-width: calc(1.4285714286em + .875rem + calc(var(--tblr-border-width)* 2));
@@ -63,6 +63,7 @@
   /* Remove cursor and transition for no hover effect */
   cursor: default; /* Set cursor to default */
   transition: none; /* Remove transition */
+  white-space: nowrap;
 }
 
 .container-half-tight {
@@ -75,3 +76,11 @@
     margin-left: auto;
     max-width: 50rem;
 }
+
+/* Mobile (Smaller screens) */
+@media (max-width: 600px) {
+  .action-text {
+      display: none;
+  }
+}
+

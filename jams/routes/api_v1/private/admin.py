@@ -155,11 +155,14 @@ def add_role():
     name = data.get('name')
     description = data.get('description')
     page_ids = data.get('page_ids')
+    display_colour = data.get('display_colour')
+    priority = data.get('priority')
+    hidden = data.get('hidden')
 
     if not name:
         abort(400, description="No 'name' provided")
 
-    new_role = Role(name=name, description=description)
+    new_role = Role(name=name, description=description, display_colour=display_colour, priority=priority, hidden=hidden)
     db.session.add(new_role)
     db.session.commit()
 

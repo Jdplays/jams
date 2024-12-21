@@ -1,0 +1,80 @@
+{% extends './private/admin/settings/settings-layout.html' %}
+
+{% block settings_title %}Roles{% endblock %}
+
+{% block settings_name %}Edit Role{% endblock %}
+
+{% block settings_content %}
+<div id="role-data" data-role-id="{{ role_id }}"></div>
+
+<div>
+    <a type="button" class="btn btn-link link-secondary mb-3" href="{{ url_for('routes.frontend.private.admin.settings_roles') }}" style="padding: 0;">
+        <i class="ti ti-arrow-left"></i>
+        <span class="btn-text ms-2">Back</span>
+    </a>
+</div>
+
+<div id="loading" class="spinner-border"></div>
+<div id="edit-role-block" style="display: none;">
+    <div class="mb-3">
+        <label class="form-label">Role Name</label>
+        <input type="text" class="form-control" name="name" id="edit-role-name"
+            placeholder="Example role name" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Role Description</label>
+        <textarea class="form-control" rows="5" id="edit-role-description" name="description" placeholder="Example role description"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <div style="display: flex; justify-content: flex-start; gap: 20px; flex-wrap: wrap;">
+            <div style="margin: 5px; width: auto;">
+                <div class="mb-3">
+                    <label class="form-label">Role Colour</label>
+                    <input type="color" class="form-control form-control-color" value="#828181" title="Choose your color" colorpick-eyedropper-active="true" id="edit-role-colour">
+                </div>
+            </div>
+            <div style="margin: 5px; width: auto;">
+                <div class="mb-3">
+                    <label class="form-label">Role Priority<span class="ms-2 text-secondary">(Lower value = higher priority)</span></label>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-outline-secondary" type="button" onclick="decreasePriorityValueOnClick()">
+                            <i class="ti ti-minus"></i>
+                        </button>
+                        <input id="edit-role-priority" class="form-control text-center" type="number" value="10" disabled>
+                        <button class="btn btn-outline-secondary" type="button" onclick="increasePriorityValueOnClick()">
+                            <i class="ti ti-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="role-assignments" class="mb-3">
+        <label class="form-label">Page Assignments</label>
+        <p id="page-count-error" class="text-danger" style="display: none;">Please select al least <strong>1</strong> page for this role</p>
+        <div id="pages-container"></div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Hide Role</label>
+        <p class="text-secondary">Should this role display on a users profile page? Enable this for hidden service roles</p>
+        <label class="form-check form-switch">
+            <input id="edit-role-hidden" class="form-check-input" type="checkbox"
+                oninput="">
+            <span class="form-check-label">Hidden Role</span>
+        </label>
+    </div>
+</div>
+{% endblock %}
+
+{% block settings_content_footer %}
+<button id="edit-role-button" class="btn btn-primary" onclick="editRoleOnClick()" disabled>
+    <i class="ti ti-device-floppy"></i>
+    <span class="btn-text ms-2">Save</span>
+</button>
+
+<script src="{{ url_for('static', filename='js/admin/settings/settings-ac-edit-role.js') }}" defer></script>
+
+{% endblock %}

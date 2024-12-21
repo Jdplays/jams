@@ -1,16 +1,7 @@
-import {
-    getRoles,
-    getRole,
-    addNewRole,
-    editRole,
-    deleteRole,
-    getPageNames
-} from "@global/endpoints"
-import { RequestMultiModelJSONData } from "@global/endpoints_interfaces";
-import { successToast, errorToast, getSelectValues, emptyElement, isNullEmptyOrSpaces, buildEditButtonForModel, isDefined, buildQueryString } from "@global/helper";
+import { getRoles, deleteRole, getPageNames } from "@global/endpoints"
+import { successToast, errorToast, isNullEmptyOrSpaces, buildQueryString, buildRoleBadge } from "@global/helper";
 import { QueryStringData } from "@global/interfaces";
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
-import TomSelect from 'tom-select';
 
 let gridApi: GridApi<any>;
 
@@ -25,105 +16,6 @@ async function deleteRoleOnClick(roleId:number) {
     else {
         errorToast()
     }
-}
-
-async function addRoleOnClick() {
-    const data:Partial<RequestMultiModelJSONData> = {
-        'name': (document.getElementById('add-role-name') as HTMLInputElement).value,
-        'description': (document.getElementById('add-role-description') as HTMLInputElement).value,
-        'page_ids': getSelectValues((document.getElementById('add-role-select-pages') as HTMLSelectElement)),
-    }
-
-    const response = await addNewRole(data)
-    if (response) {
-        successToast('Event Successfully Added')
-        populateRolesTable()
-    }
-    else {
-        errorToast()
-    }
-}
-
-async function editRoleOnClick() {
-    const roleId:number = Number((document.getElementById('edit-role-id') as HTMLInputElement).value)
-    const data = {
-        'name': (document.getElementById('edit-role-name') as HTMLInputElement).value,
-        'description': (document.getElementById('edit-role-description') as HTMLInputElement).value,
-        'page_ids': getSelectValues((document.getElementById('edit-role-select-pages') as HTMLSelectElement)),
-    }
-
-    const response = await editRole(roleId, data)
-    if (response) {
-        successToast('Event Successfully Edited')
-        populateRolesTable()
-    }
-    else {
-        errorToast()
-    }
-}
-
-async function prepAddRoleForm() {
-    let addRolePagesContainer = document.getElementById('add-role-pages-container')
-    emptyElement(addRolePagesContainer)
-
-    let select = document.createElement('select')
-    select.id = 'add-role-select-pages'
-    select.name = 'page_ids[]'
-    select.multiple = true
-
-    // Add all pages
-    for (const [id, name] of Object.entries(pageNamesMap)) {
-        let option = document.createElement('option')
-        option.value = id
-        option.text = name
-        select.appendChild(option)
-    }
-
-    addRolePagesContainer.appendChild(select)
-    
-    // Create a new Tom Select instance
-    new TomSelect("#add-role-select-pages", {
-        plugins: ['remove_button'],
-        create: false,
-        maxItems: null,
-    });
-}
-
-async function prepEditRoleForm(roleId:number) {
-    let role = await getRole(roleId)
-
-    let editRolePagesContainer = document.getElementById('edit-role-pages-container')
-    emptyElement(editRolePagesContainer)
-
-    const hiddenIdInput = document.getElementById('edit-role-id') as HTMLInputElement
-    const nameInput = document.getElementById('edit-role-name') as HTMLInputElement
-    const descriptionInput = document.getElementById('edit-role-description') as HTMLInputElement
-
-    hiddenIdInput.value = String(roleId)
-    nameInput.value = role.name
-    descriptionInput.value = role.description
-
-    let select = document.createElement('select')
-    select.id = 'edit-role-select-pages'
-    select.name = 'page_ids[]'
-    select.multiple = true
-
-    for (const [id, name] of Object.entries(pageNamesMap)) {
-        let option = document.createElement('option')
-        option.value = id
-        option.text = name
-        option.selected = (role.page_ids.includes(parseInt(id)))
-        select.appendChild(option)
-    }
-
-    editRolePagesContainer.appendChild(select)
-    
-    // Create a new Tom Select instance
-    new TomSelect("#edit-role-select-pages", {
-        plugins: ['remove_button'],
-        create: false,
-        maxItems: null,
-    });
 }
 
 function renderPageNames(rolePageIds:number[]) {
@@ -142,16 +34,30 @@ function initialiseAgGrid() {
         autoSizeStrategy: {
             type: 'fitGridWidth'
         },
+        domLayout: 'autoHeight',
         tooltipShowDelay:100,
         tooltipMouseTrack: true,
         columnDefs: [
-            {field: 'name', flex: 1},
-            {field: 'description', flex: 1},
+            {
+                field: 'name',
+                pinned: true,
+                minWidth: 150,
+                cellRenderer: (params:any) => {
+                    const flexContainer = document.createElement('div')
+                    flexContainer.classList.add('d-flex')
+                    flexContainer.appendChild(buildRoleBadge(params.data))
+                    
+                    return flexContainer
+                },
+                flex: 1
+            },
+            {field: 'description', minWidth: 300, flex: 1},
             {
                 field: 'pages', cellRenderer: (params:any) => {
                     const rolePageIds:number[] = params.data.page_ids
                     return renderPageNames(rolePageIds)
                 },
+                minWidth: 300,
                 flex: 1,
                 tooltipValueGetter: (params:any) => {
                     const rolePageIds:number[] = params.data.page_ids
@@ -161,7 +67,14 @@ function initialiseAgGrid() {
             {
                 field: 'options', cellRenderer: (params:any) => {
                     let actionsDiv = document.createElement('div')
-                    let editButton = buildEditButtonForModel(params.data.id, 'edit-role-modal', prepEditRoleForm)
+
+                    let editButton = document.createElement('a')
+                    editButton.classList.add('btn', 'btn-outline-primary', 'py-1', 'px-2', 'mb-1')
+                    editButton.style.marginRight = '10px'
+                    editButton.innerHTML = 'Edit'
+                    editButton.href = `/private/admin/settings/roles/${params.data.id}/edit`
+                    actionsDiv.appendChild(editButton)
+
                     let deleteButton = document.createElement('button')
                     deleteButton.classList.add('btn', 'btn-danger', 'py-1', 'px-2', 'mb-1')
                     deleteButton.innerHTML = 'Delete'
@@ -175,7 +88,7 @@ function initialiseAgGrid() {
                     
                     return actionsDiv
                 },
-                flex: 1
+                flex: 1, minWidth: 150
             }
         ]
     }
@@ -203,7 +116,9 @@ async function preloadPageNames() {
 
 async function populateRolesTable() {
     const queryData:Partial<QueryStringData> = {
-        $all_rows: true
+        $all_rows: true,
+        $order_by: 'priority',
+        $order_direction: 'ASC'
     }
     const queryString = buildQueryString(queryData)
     
@@ -216,10 +131,3 @@ async function populateRolesTable() {
 
 // Event listeners
 document.addEventListener("DOMContentLoaded", initialiseAgGrid);
-document.addEventListener("DOMContentLoaded", () => {
-    if (isDefined(window)) {
-        (<any>window).prepAddRoleForm = prepAddRoleForm;
-        (<any>window).addRoleOnClick = addRoleOnClick;
-        (<any>window).editRoleOnClick = editRoleOnClick;
-    }
-});
