@@ -8,13 +8,13 @@ bp = Blueprint('volunteer', __name__, url_prefix='volunteer')
 
 # URL PREFIX = /private/volunteer
 
-@bp.route('/volunteer_attendance')
+@bp.route('/attendance')
 @login_required
 @role_based_access_control_fe
 def volunteer_attendance():
     return render_template(f'{url_prefix}/volunteer_attendance.html')
 
-@bp.route('/volunteer_signup')
+@bp.route('/signup')
 @login_required
 @role_based_access_control_fe
 def volunteer_signup():
