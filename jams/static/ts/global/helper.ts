@@ -354,6 +354,13 @@ export function getSelectValues(select:HTMLSelectElement) {
     return selectedValue
   }
 
+  export function setRadioInputGroupSelection(groupContainer: HTMLElement, inputName: string, value: string): void {
+    const radioButtons = groupContainer.querySelectorAll(`input[name="${inputName}"]`) as NodeListOf<HTMLInputElement>;
+    radioButtons.forEach(radio => {
+        radio.checked = radio.value === value;
+    });
+}
+
   
   export function getCheckboxInputGroupSelection(groupContainer:HTMLElement, inputName:string) {
     const selectedBoxes = groupContainer.querySelectorAll(`input[name="${inputName}"]:checked`) as NodeListOf<HTMLInputElement>|null
@@ -630,7 +637,7 @@ export function formatDateToShort(dateString: string, options:dateTimeFormatterO
 
 
 
-export function buildUserAvatar(UserAvatarInfo:Partial<User>|null=null, size:number|null=null, customText:string|null=null):HTMLSpanElement {
+export function buildUserAvatar(UserAvatarInfo:Partial<User>|null=null, size:number|null=40, customText:string|null=null):HTMLSpanElement {
     let avatar = document.createElement('span')
     avatar.classList.add('avatar')
     if (!customText && UserAvatarInfo) {
@@ -644,6 +651,7 @@ export function buildUserAvatar(UserAvatarInfo:Partial<User>|null=null, size:num
                 userInitials = UserAvatarInfo.display_name.toUpperCase()[0]
             }
             
+            avatar.style.fontSize = `${size * 0.6}px`
             avatar.innerHTML = userInitials
         }
     } else {
@@ -723,20 +731,31 @@ export function stringToFireListEntryType(type: string | null): FireListEntryTyp
     }
 }
 
-export function buildRoleBadge(role:Role) {
+export function buildRoleBadge(role:Role, roleText:string=null) {
     const container = document.createElement('span')
+
+    if (!role && !roleText) {
+        return container
+    }
+    
     container.classList.add('tag-with-indicator')
     container.style.width = 'fit-content'
+    container.style.borderRadius = '90px'
 
     const text = document.createElement('span')
-    text.innerHTML = role.name
+    if (!role) {
+        text.innerHTML = roleText
+        container.appendChild(text)
+    } else {
+        text.innerHTML = role.name
 
-    const badge = document.createElement('span')
-    badge.classList.add('badge', 'ms-2')
-    badge.style.backgroundColor = hexToRgba(role.display_colour)
+        const badge = document.createElement('span')
+        badge.classList.add('badge', 'ms-2')
+        badge.style.backgroundColor = hexToRgba(role.display_colour)
 
-    container.appendChild(text)
-    container.appendChild(badge)
+        container.appendChild(text)
+        container.appendChild(badge)
+    }
 
     return container
 }

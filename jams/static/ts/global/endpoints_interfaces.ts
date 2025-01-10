@@ -109,6 +109,8 @@ export interface User {
     active:boolean
     user_induction:boolean
     avatar_url:string
+    badge_text:string
+    badge_icon:string
 }
 
 export interface Role {

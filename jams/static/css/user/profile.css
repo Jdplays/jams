@@ -1,0 +1,18 @@
+.bio-desktop {
+    display: block;
+}
+
+.bio-mobile {
+    display: none;
+}
+
+/* Mobile (Smaller screens) */
+@media (max-width: 600px) {
+    .bio-desktop {
+        display: none;
+    }
+    
+    .bio-mobile {
+        display: block;
+    }
+}

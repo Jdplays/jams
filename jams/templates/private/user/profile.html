@@ -1,0 +1,138 @@
+{% extends '_layout.html' %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div id="user-id" data-user-id="{{ user_id }}" style="display: none;"></div>
+
+<div class="card">
+    {% if is_current_user %}
+    <div class="card-header">
+        <h3 class="card-title">Profile</h3>
+        <div id="edit-actions" class="card-actions" style="display: block;">
+            <button class="btn btn-outline-primary" onclick="editOnClick()">
+                <i class="ti ti-edit"></i>
+                <span class="ms-2 action-text">Edit</span>
+            </button>
+        </div>
+      </div>
+    {% endif %}
+    <div class="row g-0">
+        <div class="col-12 border-end">
+            <div class="card-body">
+                <div class="row">
+                    <div id="view-profile" class="col-12 col-md-9" style="display: block;">
+                        <div class="mb-4">
+                            <div class="d-flex align-items-top">
+                                <div id="user-avatar-container" class="m-3"></div>
+                                <div>
+                                    <h2 id="user-display-name" class="mb-2 mt-2"></h2>
+                                    <div id="user-roles-container" class="d-flex flex-wrap mb-2"></div>
+                                    <p id="user-bio" class="text-muted mb-0 bio-desktop"></p>
+                                </div>
+                            </div>
+                            <p id="user-bio" class="text-muted mb-0 bio-mobile"></p>
+                        </div>
+                    </div>
+                                      
+                    {% if is_current_user %}
+                    <div id="edit-profile" class="col-12 col-md-9" style="display: none;">
+                        <div class="d-flex align-items-top mb-4">
+                            <div class="me-3 position-relative" style="width: 150px; height: 150px;">
+                                <label for="upload-photo" class="position-relative" style="cursor: pointer;">
+                                    <!-- Profile Image -->
+                                    <img src="https://media.licdn.com/dms/image/v2/C5603AQH_Iy6mWS-uXw/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1642460608186?e=1740009600&v=beta&t=pHv4RsNeOn892RrMj_TgMsdD6PU7O9bEXWAchqy3Mcg" 
+                                         alt="Avatar" class="rounded" style="width: 100%; height: 100%; object-fit: cover;">
+                            
+                                    <!-- Always Visible Overlay with Plus Icon -->
+                                    <div class="position-absolute top-0 start-0 w-100 h-100 rounded d-flex justify-content-center align-items-center" 
+                                         style="background-color: rgba(0, 0, 0, 0.5);">
+                                        <i class="ti ti-plus" style="color: rgba(255, 255, 255, 150); font-size: 2rem;"></i>
+                                    </div>
+                            
+                                    <!-- Hidden File Input -->
+                                    <input type="file" id="upload-photo" class="d-none" accept="image/*">
+                                </label>
+                            </div>
+                    
+                            <div class="flex-grow-1">
+                                <div class="d-flex gap-3 mb-3">
+                                    <div class="flex-grow-1">
+                                        <label for="first-name" class="form-label">First Name</label>
+                                        <input type="text" id="first-name" class="form-control" value="James">
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <label for="last-name" class="form-label">Last Name</label>
+                                        <input type="text" id="last-name" class="form-control" value="Dougan">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="bio" class="form-label">Bio</label>
+                                    <textarea id="bio" class="form-control" rows="3">A short bio about John Doe, describing hobbies, interests, or occupation.</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    
+                    {% endif %}
+                    {% if get_config_value('STREAKS_ENABLED') %}
+                    {% set hide_elements = true %}
+                    {% set user_id = user_id %}
+                    {% include 'widgets/streak.html'%}
+                    {% endif %}
+                </div>
+
+                <div id="activity-block" style="display: block;">
+                    <h3>Activity</h3>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Workshops</h5>
+                                    <p class="card-text">Overview of workshops ran by this user.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Stats</h5>
+                                    <p class="card-text">Key profile statistics</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Something else</h5>
+                                    <p class="card-text">More info about the user</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    {% if is_current_user %}
+    <div id="save-actions" class="card-footer" style="display: none;">
+        <div class="card-actions d-flex justify-content-end gap-2">
+            <button class="btn btn-outline-danger" onclick="cancelEditOnClick()">
+                <i class="ti ti-x"></i>
+                <span class="ms-2">Cancel</span>
+            </button>
+            <button class="btn btn-outline-primary">
+                <i class="ti ti-device-floppy"></i>
+                <span class="ms-2">Save</span>
+            </button> 
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script src="{{ url_for('static', filename='js/user/profile.js') }}" defer></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/user/profile.css') }}">
+
+{% endblock %}

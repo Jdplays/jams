@@ -2,7 +2,7 @@
 from flask import Blueprint, request, jsonify, abort
 from flask_security import login_required, current_user
 from jams.decorators import api_route, protect_user_updates
-from jams.models import db, User, Role, Event, EventLocation, EventTimeslot, Session, Page, Config, Workshop
+from jams.models import db, User, Role, Event, EventLocation, EventTimeslot, Session, Page, Config, Workshop, AttendanceStreak
 from jams.util import helper
 from jams.endpoint_loader import generate_roles_file_from_db, update_pages_assigned_to_role
 from jams.integrations.eventbrite import create_event_update_tasks, deactivate_event_update_tasks
@@ -32,7 +32,11 @@ def get_users_field(field):
 @api_route
 def get_user(user_id):
     user = User.query.filter_by(id=user_id).first_or_404()
-    return jsonify(user.to_dict())
+
+    if current_user.id == user_id or helper.user_has_access_to_page('user_management'):
+        return jsonify(user.to_dict())
+    else:
+        return jsonify(user.public_info_dict())
 
 @bp.route('/users/<int:user_id>/public_info', methods=['GET'])
 @api_route
@@ -724,8 +728,6 @@ def get_pages_field(field):
     return jsonify(pages)
 
 
-#------------------------------------------ CONFIG ------------------------------------------#
-
 @bp.route('/config/<string:key>', methods=['GET'])
 @api_route
 def get_config_value(key):
@@ -733,3 +735,14 @@ def get_config_value(key):
         abort(403, description='You do not have access to the requested resource with your current role')
     config = Config.query.filter_by(key=key).first_or_404()
     return jsonify(config.to_dict())
+
+#------------------------------------------ USER STREAKS ------------------------------------------#
+
+@bp.route('/users/me/streak', methods=['GET'])
+@bp.route('/users/<int:user_id>/streak', methods=['GET'])
+@api_route
+def get_user_streak(user_id=None):
+    if user_id is None:
+        user_id = current_user.id
+    streak = AttendanceStreak.query.filter_by(user_id=user_id).first_or_404()
+    return jsonify({'data': streak.to_dict()})
