@@ -56,9 +56,6 @@
             </tbody>
         </table>
     </div>
-
-    <button id="save-button" class="btn btn-primary" onclick="generalConfigSaveOnClick()"
-                disabled>Save</button>
 </div>
 
 <div id="confirm-recalculate-streaks" class="modal modal-blur fade" id="modal-small" tabindex="-1" style="display: none;"
@@ -90,9 +87,17 @@
             </div>
         </div>
     </div>
+{% endblock %}
+
+{% block settings_content_footer %}
+<button id="save-button" class="btn btn-primary" onclick="generalConfigSaveOnClick()" disabled>
+    <i class="ti ti-device-floppy"></i>
+    <span class="btn-text ms-2">Save</span>
+</button>
 
 <script src="{{ url_for('static', filename='js/admin/settings/settings_general.js') }}" type="module"
     defer></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/admin/settings/settings_general.css') }}">
 
 {% endblock %}
+
