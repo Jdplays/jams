@@ -99,8 +99,16 @@ function populateWorkshopCards() {
         cardHeader.classList.add('card-header')
 
         const headerSubDiv = document.createElement('div')
+
         const workshopName = document.createElement('h3')
-        workshopName.innerHTML = workshop.name
+        const infoIcon = document.createElement('i')
+        infoIcon.classList.add('ti', 'ti-info-circle')
+        workshopName.appendChild(infoIcon)
+        const workshopNameText = document.createElement('span')
+        workshopNameText.classList.add('ms-2')
+        workshopNameText.innerHTML = workshop.name
+        workshopName.appendChild(workshopNameText)
+
         const workshopLocation = document.createElement('p')
         workshopLocation.classList.add('text-secondary')
         const location = locationsMap[sessionsMap[Number(sessionId)].event_location_id]
