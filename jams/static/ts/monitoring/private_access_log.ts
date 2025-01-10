@@ -1,17 +1,18 @@
-import { dateTimeFormatter, StatusCodeFilter } from '@global/ag_grid_helper';
+import { dateTimeFormatter, StatusCodeFilter } from '@global/ag_grid_helper'
 import {
     archiveUser,
     getPrivateAccessLogs,
+    getRoles,
     getUsers
 } from '@global/endpoints'
-import { User } from "@global/endpoints_interfaces";
-import { isNullEmptyOrSpaces, buildQueryString, successToast, errorToast, buildUserAvatar, formatDate, formatDateToShort } from "@global/helper";
-import { QueryStringData, QueryStringKey } from '@global/interfaces';
-import { createGrid, GridApi, GridOptions, ITooltipComp, ITooltipParams } from 'ag-grid-community';
+import { Role, User } from "@global/endpoints_interfaces"
+import { isNullEmptyOrSpaces, buildQueryString, successToast, errorToast, buildUserAvatar, formatDate, formatDateToShort, buildRoleBadge } from "@global/helper"
+import { QueryStringData, QueryStringKey } from '@global/interfaces'
+import { createGrid, GridApi, GridOptions, ITooltipComp, ITooltipParams } from 'ag-grid-community'
 
-class CustomToolTip implements ITooltipComp {
-    eGui!: HTMLElement;
-    params!: ITooltipParams & { user: User|null };
+class UserToolTip implements ITooltipComp {
+    eGui!: HTMLElement
+    params!: ITooltipParams & { user: User|null }
 
     init(params: ITooltipParams & { user: User|null }) {
         const user = usersMap[params.data.user_id]
@@ -37,8 +38,8 @@ class CustomToolTip implements ITooltipComp {
             button.disabled = true
         }
 
-        const eGui = (this.eGui = document.createElement('div'));
-        eGui.classList.add('custom-tooltip');
+        const eGui = (this.eGui = document.createElement('div'))
+        eGui.classList.add('custom-tooltip')
         eGui.innerHTML = `
             <div class="card card-sm">
                 <div class="card-body">
@@ -73,19 +74,51 @@ class CustomToolTip implements ITooltipComp {
             successToast(response.message)
             populatePrivateAccessLogsTable()
         }).catch((error) => {
-            const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
+            const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred'
             errorToast(errorMessage)
         })
     }
 
     getGui() {
-        return this.eGui;
+        return this.eGui
     }
 }
 
-let gridApi:GridApi<any>;
+class RolesTooltip {
+    private tooltipElement: HTMLDivElement
 
-let usersMap:Record<number, User> = {};
+    init(params: any) {
+        this.tooltipElement = document.createElement('div')
+        this.tooltipElement.classList.add('custom-tooltip-container')
+
+        const roleNames = params.value  
+            .replace(/[{}]/g, '')
+            .split(',')
+            .map((item: string) => item.replace(/"/g, '').trim())
+
+        for (const [index, name] of roleNames.entries()) {
+            if (index === 0) {
+                continue
+            }
+
+            let badge = buildRoleBadge(null, name)
+            if (rolesMap[name]) {
+                badge = buildRoleBadge(rolesMap[name])
+            }
+
+            this.tooltipElement.appendChild(badge)
+        }
+    }
+
+    getGui() {
+        return this.tooltipElement
+    }
+}
+
+let gridApi:GridApi<any>
+
+let usersMap:Record<number, User> = {}
+let rolesMap:Record<string,Role> = {}
 
   function getFilterModel() {
     return gridApi.getFilterModel()
@@ -93,6 +126,54 @@ let usersMap:Record<number, User> = {};
 
   function onFilterChanged() {
     gridApi.purgeInfiniteCache()
+}
+
+const renderRolesWithTooltip = (roleNamesText: string | undefined): HTMLDivElement | string => {
+    if (!roleNamesText) {
+        return 'N/A'
+    }
+    const roleNames = roleNamesText
+        .replace(/[{}]/g, '')
+        .split(',')
+        .map(item => item.replace(/"/g, '').trim())
+
+    const flexContainer = document.createElement('div')
+    flexContainer.classList.add('d-flex', 'flex-wrap', 'align-items-center')
+
+    if (roleNamesText === '{}') {
+        const naBadge = document.createElement('span')
+        naBadge.classList.add('tag-with-indicator')
+        naBadge.style.width = 'fit-content'
+        naBadge.style.borderRadius = '90px'
+        naBadge.innerText = 'N/A'
+        flexContainer.appendChild(naBadge)
+        return flexContainer
+    }
+
+    // Add the first role
+    if (roleNames[0]) {
+        if (rolesMap[roleNames[0]]) {
+            flexContainer.appendChild(buildRoleBadge(rolesMap[roleNames[0]]))
+        } else {
+            flexContainer.appendChild(buildRoleBadge(null, roleNames[0]))
+        }
+    }
+
+    // Add "+X" badge if there are more roles
+    if (roleNames.length > 1) {
+        const moreBadge = document.createElement('span')
+        moreBadge.classList.add('tag-with-indicator')
+        moreBadge.style.width = 'fit-content'
+        moreBadge.style.borderRadius = '90px'
+        moreBadge.innerText = `+${roleNames.length - 1}`
+        flexContainer.appendChild(moreBadge)
+    }
+
+    // Add the tooltip with all roles
+    flexContainer.setAttribute('data-tooltip', roleNames.join(', ')) // For tooltip
+    flexContainer.classList.add('custom-tooltip') // Tooltip styling
+
+    return flexContainer
 }
 
 function initialiseAgGrid() {
@@ -108,6 +189,7 @@ function initialiseAgGrid() {
         columnDefs: [
             {
                 field: 'date_time',
+                pinned: true,
                 headerName: "Date Time",
                 cellRenderer: (params:any) => {
                     const fDateTime = formatDateToShort(params.value)
@@ -118,7 +200,7 @@ function initialiseAgGrid() {
                 floatingFilter: true,
                 suppressFloatingFilterButton: true,
                 suppressHeaderFilterButton: true,
-                width: 300,
+                minWidth: 150,
             },
             {
                 field: 'user_id',
@@ -140,7 +222,7 @@ function initialiseAgGrid() {
                 floatingFilter: true,
                 suppressFloatingFilterButton: true,
                 suppressHeaderFilterButton: true,
-                tooltipComponent: CustomToolTip,
+                tooltipComponent: UserToolTip,
                 tooltipField: 'user_id'
             },
             {
@@ -170,38 +252,24 @@ function initialiseAgGrid() {
                 floatingFilter: true,
                 suppressFloatingFilterButton: true,
                 suppressHeaderFilterButton: true,
-                cellRenderer: (params:any) => {
-                    if (!params.value) {
-                        return 'No Roles'
-                    }
-
-                    const roleNamesText:string = params.value
-                    const cleanedString = roleNamesText.replace(/{|}/g, "");
-                    if (isNullEmptyOrSpaces(cleanedString)) {
-                        return 'No Roles'
-                    }
-                    return cleanedString
-                }
+                wrapText: true,
+                minWidth: 200,
+                cellRenderer: (params: any): HTMLDivElement | string => renderRolesWithTooltip(params.value),
+                tooltipComponent: RolesTooltip,
+                tooltipField: 'user_role_names'
             },
             {
                 field: 'required_role_names',
-                headerName: 'Required Roles',
+                headerName: 'Accepted Roles',
                 filter: 'agTextColumnFilter',
                 floatingFilter: true,
                 suppressFloatingFilterButton: true,
                 suppressHeaderFilterButton: true,
-                cellRenderer: (params:any) => {
-                    if (!params.value) {
-                        return 'None'
-                    }
-
-                    const roleNamesText:string = params.value
-                    const cleanedString = roleNamesText.replace(/{|}/g, "");
-                    if (isNullEmptyOrSpaces(cleanedString)) {
-                        return 'None'
-                    }
-                    return cleanedString
-                }
+                wrapText: true,
+                minWidth: 200,
+                cellRenderer: (params: any): HTMLDivElement | string => renderRolesWithTooltip(params.value),
+                tooltipComponent: RolesTooltip,
+                tooltipField: 'required_role_names'
             },
             {
                 field: 'status_code',
@@ -216,7 +284,7 @@ function initialiseAgGrid() {
     }
 
     const gridElement = document.getElementById('private-access-log-data-grid')
-    gridElement.style.height = `${window.innerHeight * 0.8}px`;
+    gridElement.style.height = `${window.innerHeight * 0.8}px`
     gridApi = createGrid(gridElement, gridOptions)
 
     populatePrivateAccessLogsTable()
@@ -224,7 +292,10 @@ function initialiseAgGrid() {
 
 async function populatePrivateAccessLogsTable() {
 
-    usersMap = await preLoadUsers()
+    [usersMap, rolesMap] = await Promise.all([
+        preLoadUsers(),
+        preloadRoles()
+    ])
 
     const logsDataSource = {
         rowCount: 0,
@@ -265,14 +336,14 @@ async function populatePrivateAccessLogsTable() {
                     continue
                 }
 
-                const existingValue = queryData[filterKey];
+                const existingValue = queryData[filterKey]
 
                 if (Array.isArray(existingValue)) {
-                    (queryData[filterKey] as any[]).push(filter);
+                    (queryData[filterKey] as any[]).push(filter)
                 } else if (existingValue !== undefined) {
-                    (queryData[filterKey] as any[]) = [queryData[filterKey], filter] as any;
+                    (queryData[filterKey] as any[]) = [queryData[filterKey], filter] as any
                 } else {
-                    (queryData[filterKey] as any[]) = [filter];
+                    (queryData[filterKey] as any[]) = [filter]
                 }
             }
 
@@ -290,7 +361,7 @@ async function populatePrivateAccessLogsTable() {
         }
     }
 
-    gridApi.setGridOption("datasource", logsDataSource);
+    gridApi.setGridOption("datasource", logsDataSource)
 }
 
 async function preLoadUsers() {
@@ -303,4 +374,14 @@ async function preLoadUsers() {
     return usersMap
 }
 
-document.addEventListener("DOMContentLoaded", initialiseAgGrid);
+async function preloadRoles() {
+    const response = await getRoles()
+    let roles = response.data
+    let rolesMap:Record<string,Role> = {}
+    roles.forEach(role => {
+        rolesMap[role.name] = role
+    })
+    return rolesMap
+}
+
+document.addEventListener("DOMContentLoaded", initialiseAgGrid)
