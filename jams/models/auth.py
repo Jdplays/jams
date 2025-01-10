@@ -24,6 +24,15 @@ class Role(db.Model, RoleMixin):
     @property
     def page_ids(self):
         return [role_page.page_id for role_page in self.role_pages]
+    
+    @property
+    def public(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'display_colour': self.display_colour
+        }
 
     # Requires name to be passed
     def __init__(self, name, description=None, display_colour='#828181', priority=10, hidden=False, default=False):
@@ -56,12 +65,16 @@ class User(UserMixin, db.Model):
     first_name = Column(String(50), nullable=True)
     last_name = Column(String(50), nullable=True)
     dob = Column(DateTime(), nullable=True)
-    bio = Column(String(255), nullable=True)
+    bio = Column(String(1000), nullable=True)
     roles = relationship('Role', secondary='user_roles', backref='users')
     fs_uniquifier = Column(String(255), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
     open_id_sub = Column(String(255), unique=True, nullable=True)  # OpenID 'sub' claim
     user_induction = Column(Boolean(), nullable=False, default=False, server_default='false')
     avatar_url = Column(String(255), nullable=True)
+
+    # Extra
+    badge_text = Column(String(100), nullable=True)
+    badge_icon = Column(String(100), nullable=True)
     
     # Tracking
     last_login_at = Column(DateTime(), nullable=True)
@@ -90,6 +103,8 @@ class User(UserMixin, db.Model):
     
     @property
     def main_role(self):
+        if self.badge_text:
+            return self.badge_text
         role = Role.query.filter(Role.id.in_(self.role_ids)).order_by(Role.priority.asc()).first()
         return role.name if role else 'No Role'
 
@@ -196,20 +211,23 @@ class User(UserMixin, db.Model):
             'bio': self.bio,
             'active': self.active,
             'user_induction': self.user_induction,
-            'avatar_url': self.avatar_url
+            'avatar_url': self.avatar_url,
+            'badge_text': self.badge_text,
+            'badge_icon': self.badge_icon
         }
     
     def public_info_dict(self):
         return {
             'id': self.id,
             'username': self.username,
-            'email': self.email,
             'first_name': self.first_name,
             'last_name': self.last_name,
-            'full_name': self.full_name,
             'display_name': self.display_name,
+            'role_ids': self.role_ids,
             'bio': self.bio,
-            'avatar_url': self.avatar_url
+            'avatar_url': self.avatar_url,
+            'badge_text': self.badge_text,
+            'badge_icon': self.badge_icon
         }
     
 ## Role based Auth to pages
@@ -218,16 +236,18 @@ class Page(db.Model):
 
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True, nullable=False)
-    endpoint = Column(String(255), unique=True, nullable=False)
+    endpoint = Column(String(255), unique=True, nullable=True)
     parent_id = Column(Integer, ForeignKey('page.id'), nullable=True)
+    default = Column(Boolean, nullable=False, default=False, server_default='false')
     public = Column(Boolean, nullable=False, default=False)
 
     parent = relationship('Page', remote_side=[id], backref='children')
 
-    def __init__(self, name, endpoint, parent_id=None, public=False):
+    def __init__(self, name, endpoint=None, parent_id=None, default=False, public=False):
         self.name = name
         self.endpoint = endpoint
         self.parent_id = parent_id
+        self.default = default
         self.public = public
 
     def to_dict(self):
@@ -236,6 +256,7 @@ class Page(db.Model):
             'name': self.name,
             'endpoint': self.endpoint,
             'parent_id': self.parent,
+            'default': self.default,
             'public': self.public
         }
 
@@ -247,13 +268,15 @@ class EndpointRule(db.Model):
     id = Column(Integer, primary_key=True)
     endpoint_id = Column(Integer, ForeignKey('endpoint.id'), nullable=False)
     allowed_fields = Column(String(255), nullable=True) # This is a comma seperated list of allowed fields for the endpoint
+    default = Column(Boolean, nullable=False, default=False, server_default='false')
     public = Column(Boolean, nullable=False, default=False)
 
     endpoint = relationship('Endpoint', backref='endpoint_rules')
 
-    def __init__(self, endpoint_id, allowed_fields=None, public=False):
+    def __init__(self, endpoint_id, allowed_fields=None, default=False, public=False):
         self.endpoint_id = endpoint_id
         self.allowed_fields = allowed_fields
+        self.default = default
         self.public = public
 
     def to_dict(self):
@@ -261,6 +284,7 @@ class EndpointRule(db.Model):
             'id': self.id,
             'endpoint_id': self.endpoint_id,
             'allowed_fields': self.allowed_fields if self.allowed_fields is not None else '',
+            'default': self.default,
             'public': self.public
         }
     
