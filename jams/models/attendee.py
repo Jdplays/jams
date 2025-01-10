@@ -40,6 +40,9 @@ class Attendee(db.Model):
         # Link attendee to attendee account
         account = AttendeeAccount.query.filter_by(email=self.email).first()
         if not account:
+            account = db.session.query(AttendeeAccount).join(Attendee).filter(Attendee.external_order_id == self.external_order_id).first()
+            
+        if not account:
             account = AttendeeAccount(email=self.email)
             db.session.add(account)
             db.session.commit()

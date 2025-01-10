@@ -1,5 +1,6 @@
 # API is for serving data to Typscript/Javascript
 from flask import Blueprint, redirect, request, jsonify, abort, session, url_for
+from sqlalchemy import func
 from jams.models import db, AttendeeAccount, AttendeeAccountEvent, Attendee, AttendeeSignup, Event, Session
 from jams.util import helper, attendee_auth
 from jams.decorators import attendee_login_required, protect_attendee_updates
@@ -28,7 +29,7 @@ def login():
 
     if email:
         # Make sure that the account attached to that email has tickets to the event
-        account = AttendeeAccount.query.filter_by(email=email).first()
+        account = AttendeeAccount.query.filter(func.lower(AttendeeAccount.email) == email.lower()).first()
         if not account:
             return jsonify({'message': 'Account does not exist'}), 404
         
