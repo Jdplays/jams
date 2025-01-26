@@ -71,17 +71,20 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     await populateStreakWidget()
 
-    const nextEventIdResponse = await getNextEvent()
-    const nextEventId = nextEventIdResponse.data
+    getNextEvent().then(async (response) => {
+        const nextEventId = response.data
 
-    const event = await getEvent(nextEventId)
-    
-    const currentDate = new Date(event.date)
-    const nextStreakUpdateDate = new Date(currentDate)
-    nextStreakUpdateDate.setUTCDate(currentDate.getUTCDate() + 1)
+        const event = await getEvent(nextEventId)
+        
+        const currentDate = new Date(event.date)
+        const nextStreakUpdateDate = new Date(currentDate)
+        nextStreakUpdateDate.setUTCDate(currentDate.getUTCDate() + 1)
 
-    window.setInterval(() => {
-        const timeUntilString = timeUntil(nextStreakUpdateDate.toISOString())
-        timeUntilText.innerHTML = `Next Update in: ${timeUntilString}`
+        window.setInterval(() => {
+            const timeUntilString = timeUntil(nextStreakUpdateDate.toISOString())
+            timeUntilText.innerHTML = `Next Update in: ${timeUntilString}`
+        })
+    }).catch(() => {
+        timeUntilText.style.display = 'none'
     })
 });
