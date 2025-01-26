@@ -1,6 +1,6 @@
 # API is for serving data to Typscript/Javascript
 from flask import Blueprint, redirect, request, jsonify, abort, session, url_for
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from jams.models import db, AttendeeAccount, AttendeeAccountEvent, Attendee, AttendeeSignup, Event, Session
 from jams.util import helper, attendee_auth
 from jams.decorators import attendee_login_required, protect_attendee_updates
@@ -29,12 +29,32 @@ def login():
 
     if email:
         # Make sure that the account attached to that email has tickets to the event
-        account = AttendeeAccount.query.filter(func.lower(AttendeeAccount.email) == email.lower()).first()
+        account = (
+            db.session.query(AttendeeAccount)
+            .outerjoin(Attendee, AttendeeAccount.id == Attendee.attendee_account_id)
+            .outerjoin(AttendeeAccountEvent, AttendeeAccount.id == AttendeeAccountEvent.attendee_account_id)
+            .filter(
+                or_(
+                    func.lower(AttendeeAccount.email) == email.lower(),
+                    func.lower(Attendee.email) == email.lower()
+                ),
+                AttendeeAccountEvent.event_id == next_event.id
+            ).first()
+        )
+
         if not account:
-            return jsonify({'message': 'Account does not exist'}), 404
-        
-        at_event = AttendeeAccountEvent.query.filter_by(attendee_account_id=account.id, event_id=next_event.id).first() is not None
-        if not at_event:
+            account_without_event = (
+                db.session.query(AttendeeAccount)
+                .outerjoin(Attendee, AttendeeAccount.id == Attendee.attendee_account_id)
+                .filter(
+                    or_(
+                        func.lower(AttendeeAccount.email) == email.lower(),
+                        func.lower(Attendee.email) == email.lower()
+                    )
+                ).first()
+            )
+            if not account_without_event:
+                return jsonify({'message': 'Account does not exist'}), 404
             return jsonify({'message': 'Account does not have access to the current event'}), 403
     else:
         # Order ID is a bit more difficult as it doesnt directly attach to an account

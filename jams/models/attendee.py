@@ -38,9 +38,9 @@ class Attendee(db.Model):
     
     def link_to_account(self):
         # Link attendee to attendee account
-        account = AttendeeAccount.query.filter_by(email=self.email).first()
+        account =  db.session.query(AttendeeAccount).join(Attendee).filter(Attendee.external_order_id == self.external_order_id).first()
         if not account:
-            account = db.session.query(AttendeeAccount).join(Attendee).filter(Attendee.external_order_id == self.external_order_id).first()
+            account = AttendeeAccount.query.filter_by(email=self.email).first()
             
         if not account:
             account = AttendeeAccount(email=self.email)
