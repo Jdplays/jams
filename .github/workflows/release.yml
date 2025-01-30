@@ -1,0 +1,58 @@
+# .github/workflows/release.yml
+
+name: Auto-Version & Release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  versioning:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Ensures full history is fetched for tagging
+
+      - name: Read Current Version
+        id: read_version
+        run: |
+          CURRENT_VERSION=$(cat VERSION)
+          echo "CURRENT_VERSION=${CURRENT_VERSION}" >> $GITHUB_ENV
+
+      - name: Increment Version
+        id: bump_version
+        run: |
+          MAJOR=$(echo "${{ env.CURRENT_VERSION }}" | cut -d. -f1)
+          MINOR=$(echo "${{ env.CURRENT_VERSION }}" | cut -d. -f2)
+          PATCH=$(echo "${{ env.CURRENT_VERSION }}" | cut -d. -f3)
+          NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+          echo "NEW_VERSION=${NEW_VERSION}" >> $GITHUB_ENV
+          echo "${NEW_VERSION}" > VERSION
+
+      - name: Commit New Version
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add VERSION
+          git commit -m "Bump version to ${{ env.NEW_VERSION }}"
+          git push origin master
+
+      - name: Tag Release and Latest
+        run: |
+          git tag v${{ env.NEW_VERSION }}
+          git tag -f latest  # Force update 'latest' to always point to the newest version
+          git push origin v${{ env.NEW_VERSION }}
+          git push origin -f latest  # Force push to update the 'latest' tag
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.NEW_VERSION }}
+          name: Release v${{ env.NEW_VERSION }}
+          body: "Automated release of v${{ env.NEW_VERSION }}"
+          draft: false
+          prerelease: false
