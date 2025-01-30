@@ -1,0 +1,60 @@
+# .github/workflows/enforce-version.yml
+
+name: Enforce Version Update
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  check_version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch the full commit history
+      
+      - name: Ensure All Commits Are Fetched
+        run: git fetch --all
+
+      - name: Check if VERSION file was modified
+        run: |
+          if ! git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep -q '^VERSION$'; then
+            echo "::error ::VERSION file must be updated in this PR before merging into master."
+            exit 1
+          fi
+
+      - name: Compare Version with Previous
+        run: |
+          PREVIOUS_VERSION=$(git show ${{ github.event.pull_request.base.sha }}:VERSION 2>/dev/null || echo "")
+          NEW_VERSION=$(cat VERSION)
+
+          if [ -z "$PREVIOUS_VERSION" ]; then
+            echo "::error ::Could not retrieve previous VERSION file. Ensure it exists in the base branch."
+            exit 1
+          fi
+
+          if [ -z "$NEW_VERSION" ]; then
+            echo "::error ::VERSION file is empty in the new commit."
+            exit 1
+          fi
+
+          # Validate format (basic check to allow only numeric versioning)
+          if ! echo "$PREVIOUS_VERSION" | grep -E '^[0-9]+(\.[0-9]+)*$' > /dev/null; then
+            echo "::error ::Previous version ('$PREVIOUS_VERSION') is not a valid version format."
+            exit 1
+          fi
+
+          if ! echo "$NEW_VERSION" | grep -E '^[0-9]+(\.[0-9]+)*$' > /dev/null; then
+            echo "::error ::New version ('$NEW_VERSION') is not a valid version format."
+            exit 1
+          fi
+
+          # Compare versions
+          if dpkg --compare-versions "$NEW_VERSION" le "$PREVIOUS_VERSION"; then
+            echo "::error ::VERSION file must be incremented. New version ('$NEW_VERSION') must be higher than previous ('$PREVIOUS_VERSION')."
+            exit 1
+          fi
