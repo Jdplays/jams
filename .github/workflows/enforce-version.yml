@@ -1,0 +1,33 @@
+# .github/workflows/enforce-version.yml
+
+name: Enforce Version Update
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  check_version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Check if VERSION file was modified
+        run: |
+          if ! git diff --name-only ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }} | grep -q '^VERSION$'; then
+            echo "::error ::VERSION file must be updated in this PR before merging into master."
+            exit 1
+          fi
+
+      - name: Compare Version with Previous
+        run: |
+          PREVIOUS_VERSION=$(git show ${{ github.event.pull_request.base.sha }}:VERSION)
+          NEW_VERSION=$(cat VERSION)
+
+          if [ "$(printf '%s\n%s' "$PREVIOUS_VERSION" "$NEW_VERSION" | sort -V | head -n1)" != "$PREVIOUS_VERSION" ]; then
+            echo "::error ::VERSION file must be incremented (new version must be higher than previous)."
+            exit 1
+          fi
