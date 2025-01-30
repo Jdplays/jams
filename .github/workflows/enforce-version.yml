@@ -17,7 +17,7 @@ jobs:
 
       - name: Check if VERSION file was modified
         run: |
-          if ! git diff --name-only ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }} | grep -q '^VERSION$'; then
+          if ! git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep -q '^VERSION$'; then
             echo "::error ::VERSION file must be updated in this PR before merging into master."
             exit 1
           fi
