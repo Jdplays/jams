@@ -14,6 +14,11 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch the full commit history
+      
+      - name: Ensure All Commits Are Fetched
+        run: git fetch --all
 
       - name: Check if VERSION file was modified
         run: |
