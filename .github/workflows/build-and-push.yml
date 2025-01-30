@@ -44,5 +44,5 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
       - name: Clean up
-      run: |
-        docker logout ${{ env.REGISTRY }}
+        run: |
+          docker logout ${{ env.REGISTRY }}
