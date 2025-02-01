@@ -843,7 +843,7 @@ def update_scheduled_streak_update_task_date(event, date):
     task_scheduler.modify_task(task_name=task_name, param_dict=params_dict)
 
 def get_latest_release():
-    url = f"https://api.github.com/repos/jdplays/jams/releases/latest"
+    url = "https://api.github.com/repos/jdplays/jams/releases/latest"
     headers = {"Accept": "application/vnd.github.v3+json"}
     try:
         response = requests.get(url, headers=headers, timeout=5)
