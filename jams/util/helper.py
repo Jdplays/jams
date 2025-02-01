@@ -1,7 +1,9 @@
 import pytz
+import markdown
 from datetime import date, datetime, timedelta, UTC, time
 from flask import abort, request, send_file
 from flask_security import current_user
+import requests
 from sqlalchemy import Date, DateTime, String, Integer, Boolean, cast, func, or_, nullsfirst, asc, desc
 from collections.abc import Mapping, Iterable
 from jams.models import db, EventLocation, EventTimeslot, Timeslot, Session, EndpointRule, RoleEndpointRule, PageEndpointRule, Page, Event, User, Role, AttendanceStreak, UserRoles, VolunteerAttendance, FireList, VolunteerSignup
@@ -839,3 +841,25 @@ def update_scheduled_streak_update_task_date(event, date):
     task_name = f'calculate_streaks_for_event_{event.id}'
     params_dict = {'start_datetime': date}
     task_scheduler.modify_task(task_name=task_name, param_dict=params_dict)
+
+def get_latest_release():
+    url = f"https://api.github.com/repos/jdplays/jams/releases/latest"
+    headers = {"Accept": "application/vnd.github.v3+json"}
+    try:
+        response = requests.get(url, headers=headers, timeout=5)
+        response.raise_for_status()
+        data = response.json()
+
+        # Convert Markdown release notes to HTML
+        release_notes_html = markdown.markdown(
+            data["body"],
+            extensions=["fenced_code", "codehilite"]
+        )
+
+        return {
+            "version": data["tag_name"].lstrip("v"),
+            "release_notes": release_notes_html,
+            "url": data["html_url"]
+        }
+    except requests.RequestException:
+        return None
