@@ -5,6 +5,7 @@ from sqlalchemy import exists
 from jams.models import db, Config
 
 class ConfigType(Enum):
+    APP_VERSION = 'APP_VERSION'
     HMAC_SECRET_KEY = 'HMAC_SECRET_KEY'
     EVENTBRITE_ENABLED = 'EVENTBRITE_ENABLED'
     EVENTBRITE_BEARER_TOKEN = 'EVENTBRITE_BEARER_TOKEN'
