@@ -1,6 +1,6 @@
-import { editGeneralConfig, getGeneralConfig, recalculateStreaks } from "@global/endpoints";
+import { editGeneralConfig, getGeneralConfig, getLatestRelease, recalculateStreaks } from "@global/endpoints";
 import { GeneralConfig } from "@global/endpoints_interfaces";
-import { errorToast, isDefined, successToast } from "@global/helper";
+import { errorToast, isDefined, isNullEmptyOrSpaces, successToast } from "@global/helper";
 import { allTimezones } from "@global/timezones";
 
 let currentConfig:Partial<GeneralConfig>|null=null
@@ -15,6 +15,41 @@ function checkIfConentUpdated() {
         saveButton.disabled = false
     } else {
         saveButton.disabled = true
+    }
+}
+
+async function populateVersionSection() {
+    const releaseData = await getLatestRelease()
+    const upToDateVersionBlock = document.getElementById('version-block-utd') as HTMLDivElement
+    const outOfDateVersionBlock = document.getElementById('version-block-ood') as HTMLDivElement
+
+    const upToDateVersionText = document.getElementById('version-text-utd') as HTMLSpanElement
+    const outOfDateVersionText = document.getElementById('version-text-ood') as HTMLSpanElement
+
+    if ((releaseData === null || releaseData === undefined) || isNullEmptyOrSpaces(releaseData.version)) {
+        upToDateVersionBlock.style.display = 'block'
+        upToDateVersionText.innerHTML = `v${currentConfig.APP_VERSION} (Cannot connect to GitHub)`
+        const parent = upToDateVersionText.parentElement
+        const icon = parent.querySelector('i')
+        icon.className = 'ti ti-cloud-off text-danger'
+        return
+    }
+
+    if (currentConfig.APP_VERSION !== releaseData.version) {
+        upToDateVersionBlock.style.display = 'none'
+        outOfDateVersionBlock.style.display = 'block'
+
+        outOfDateVersionText.innerHTML = `v${currentConfig.APP_VERSION} (out of date)`
+
+        if (releaseData.release_notes) {
+            document.getElementById('release-notes').innerHTML = releaseData.release_notes
+        }
+        (document.getElementById('release-btn') as HTMLAnchorElement).href = releaseData.url
+    } else {
+        upToDateVersionBlock.style.display = 'block'
+        outOfDateVersionBlock.style.display = 'none'
+
+        upToDateVersionText.innerHTML = `v${currentConfig.APP_VERSION} (up to date)`
     }
 }
 
@@ -54,6 +89,7 @@ async function setupPage() {
         currentConfig = await getGeneralConfig()
     }
 
+    populateVersionSection()
     populateLocationSelect()
     populateStreaksSection()
 }
