@@ -154,6 +154,7 @@ groups:
     description: Handles configuration for JAMS
     read:
       get_general_config: routes.api_v1.private.general.get_general_config
+      get_latest_release: routes.api_v1.private.general.get_latest_release
     write:
       edit_general_config: routes.api_v1.private.general.edit_general_config
       recalculate_streaks: routes.api_v1.private.general.recalculate_streaks
