@@ -74,7 +74,18 @@ def seed_database(app):
     with app.app_context():
         preform_seed()
 
+def get_app_version():
+    version_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "VERSION")
+    try:
+        with open(version_file, "r") as f:
+            return f.read().strip()
+    except FileNotFoundError:
+        return "Unknown"
+
 def prep_app(app):
+    # Store the version in the DB
+    set_config_value(ConfigType.APP_VERSION, get_app_version())
+
     # Generate HMAC secret key if it doesnt already exist:
     if not config_entry_exists(ConfigType.HMAC_SECRET_KEY):
         key = os.urandom(64)
