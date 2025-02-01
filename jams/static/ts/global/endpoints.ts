@@ -38,7 +38,8 @@ import {
     sessionSettings,
     JOLTStatus,
     JOLTConfig,
-    StreadData
+    StreadData,
+    GitHubReleaseResponse
 } from "@global/endpoints_interfaces";
 import { formatDate } from "./helper";
 
@@ -2260,6 +2261,22 @@ export function getGeneralConfig():Promise<GeneralConfig> {
     return new Promise((resolve, reject) => {
         $.ajax({
             url: `${baseURL}/app/config`,
+            type: 'GET',
+            success: function (response) {
+                resolve(response.data)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(false)
+            }
+        });
+    });
+}
+
+export function getLatestRelease():Promise<GitHubReleaseResponse> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/app/latest_release`,
             type: 'GET',
             success: function (response) {
                 resolve(response.data)

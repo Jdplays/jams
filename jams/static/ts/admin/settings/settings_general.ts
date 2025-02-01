@@ -1,4 +1,4 @@
-import { editGeneralConfig, getGeneralConfig, recalculateStreaks } from "@global/endpoints";
+import { editGeneralConfig, getGeneralConfig, getLatestRelease, recalculateStreaks } from "@global/endpoints";
 import { GeneralConfig } from "@global/endpoints_interfaces";
 import { errorToast, isDefined, successToast } from "@global/helper";
 import { allTimezones } from "@global/timezones";
@@ -15,6 +15,31 @@ function checkIfConentUpdated() {
         saveButton.disabled = false
     } else {
         saveButton.disabled = true
+    }
+}
+
+async function populateVersionSection() {
+    const releaseData = await getLatestRelease()
+    const upToDateVersionBlock = document.getElementById('version-block-utd') as HTMLDivElement
+    const outOfDateVersionBlock = document.getElementById('version-block-ood') as HTMLDivElement
+
+    if (currentConfig.APP_VERSION !== releaseData.version) {
+        upToDateVersionBlock.style.display = 'none'
+        outOfDateVersionBlock.style.display = 'block'
+
+        let versionText = document.getElementById('version-text-ood')
+        versionText.innerHTML = `v${currentConfig.APP_VERSION} (out of date)`
+
+        if (releaseData.release_notes) {
+            document.getElementById('release-notes').innerHTML = releaseData.release_notes
+        }
+        (document.getElementById('release-btn') as HTMLAnchorElement).href = releaseData.url
+    } else {
+        upToDateVersionBlock.style.display = 'block'
+        outOfDateVersionBlock.style.display = 'none'
+
+        let versionText = document.getElementById('version-text-utd')
+        versionText.innerHTML = `v${currentConfig.APP_VERSION} (up to date)`
     }
 }
 
@@ -54,6 +79,7 @@ async function setupPage() {
         currentConfig = await getGeneralConfig()
     }
 
+    populateVersionSection()
     populateLocationSelect()
     populateStreaksSection()
 }

@@ -63,3 +63,33 @@
         display: none;
     }
 }
+
+.release-markdown {
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.release-markdown h1, 
+.release-markdown h2, 
+.release-markdown h3 {
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+.release-markdown pre, .release-markdown code {
+    font-family: monospace;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    margin: 0;
+    padding-left:0;
+}
+
+.release-markdown ul {
+    list-style: disc;
+    margin-left: 20px;
+}
+
+.release-markdown a {
+    color: #ff9800;
+    text-decoration: underline;
+}
