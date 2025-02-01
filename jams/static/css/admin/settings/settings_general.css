@@ -76,12 +76,20 @@
     font-weight: bold;
 }
 
-.release-markdown pre, .release-markdown code {
+.release-markdown pre {
     font-family: monospace;
     white-space: pre-wrap;
     word-wrap: break-word;
     margin: 0;
-    padding-left:0;
+}
+
+.release-markdown code {
+    font-family: monospace;
+}
+
+.release-markdown pre.codehilite code {
+    display: block;
+    padding-left: 10px;
 }
 
 .release-markdown ul {
@@ -92,4 +100,10 @@
 .release-markdown a {
     color: #ff9800;
     text-decoration: underline;
+}
+
+.theme-light .release-markdown pre,
+.theme-light .release-markdown pre code {
+    background-color: #f8f9fa; /* light background */
+    color: #333; /* dark text for readability */
 }
