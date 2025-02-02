@@ -14,4 +14,5 @@ requests
 Authlib
 pytz
 websockets==13.0
+markdown
 Pillow

@@ -14,6 +14,9 @@ WORKDIR /jams
 # Copy the current directory contents into the container at /jams
 COPY /jams ./jams
 
+# Copy the VERSION file into the container
+COPY ./VERSION .
+
 # Copy the entrypoint.sh file into the container
 COPY ./entrypoint.sh .
 

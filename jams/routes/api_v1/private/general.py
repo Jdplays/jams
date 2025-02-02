@@ -26,9 +26,17 @@ def get_current_user_data():
 @api_route
 def get_general_config():
     data = {
+        ConfigType.APP_VERSION.name: get_config_value(ConfigType.APP_VERSION),
         ConfigType.TIMEZONE.name: get_config_value(ConfigType.TIMEZONE),
         ConfigType.STREAKS_ENABLED.name: get_config_value(ConfigType.STREAKS_ENABLED)
     }
+
+    return jsonify({'data': data})
+
+@bp.route('/app/latest_release', methods=['GET'])
+@api_route
+def get_latest_release():
+    data = helper.get_latest_release()
 
     return jsonify({'data': data})
 

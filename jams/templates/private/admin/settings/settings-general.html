@@ -6,7 +6,48 @@
 
 {% block settings_content %}
 
-<div id="eventbrite-settings-content" class="settings-content-container">
+<div id="general-settings-content" class="settings-content-container">
+    <div class="card">
+        <div class="card-body">
+            <!-- Current Version -->
+            <div id="version-block-utd" style="display: none;">
+                <h3>Current Version</h3>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span>
+                        <i class="ti ti-circle-check text-success"></i>
+                        <span id="version-text-utd" class="ms-2"></span>
+                    </span>
+                </div>
+            </div>
+    
+            <!-- Update Section (Hidden Initially) -->
+            <div id="version-block-ood" style="display: none;">
+                <h3 class="mt-3">New Version Available</h3>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span>
+                        <i class="ti ti-alert-circle text-warning"></i>
+                        <span id="version-text-ood" class="ms-2"></span>
+                    </span>
+                    <button class="btn btn-outline-warning" data-bs-toggle="collapse" data-bs-target="#releaseNotesSection">
+                        <i class="ti ti-arrow-down"></i>
+                        <span class="btn-text ms-2">View Release Notes</span>
+                    </button>
+                </div>
+    
+                <!-- Release Notes Accordion -->
+                <div id="releaseNotesSection" class="collapse">
+                    <div class="card card-body">
+                        <p id="release-notes" class="release-markdown">Fetching release notes...</p>
+                        <a id="release-btn" href="#" target="_blank" class="btn btn-outline-warning mt-2">
+                            <i class="ti ti-external-link"></i>
+                            <span class="ms-2">View on GitHub</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <p class="mb-3">Here you can configure general settings for JAMS. More advanced options will have their own setting page on the side bar</p>
 
     <div class="table-responsive">

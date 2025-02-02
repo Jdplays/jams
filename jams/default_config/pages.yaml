@@ -155,6 +155,7 @@ pages:
       - settings_jolt
     api_endpoints:
       get_general_config:
+      get_latest_release:
       edit_general_config:
       recalculate_streaks:
 

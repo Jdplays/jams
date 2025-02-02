@@ -319,6 +319,7 @@ export interface AttendeeSignup {
 }
 
 export interface GeneralConfig {
+    APP_VERSION?:string
     TIMEZONE?:string
     STREAKS_ENABLED?:boolean
 }
@@ -353,4 +354,10 @@ export interface StreadData {
     longest_streak:number
     freezes:number
     total_attended:number
+}
+
+export interface GitHubReleaseResponse {
+    version:string
+    release_notes:string
+    url:string
 }
