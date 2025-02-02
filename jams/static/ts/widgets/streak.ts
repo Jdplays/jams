@@ -99,10 +99,12 @@ document.addEventListener("DOMContentLoaded", async function () {
         const nextStreakUpdateDate = new Date(currentDate)
         nextStreakUpdateDate.setUTCDate(currentDate.getUTCDate() + 1)
 
-        window.setInterval(() => {
-            const timeUntilString = timeUntil(nextStreakUpdateDate.toISOString())
-            timeUntilText.innerHTML = `Next Update in: ${timeUntilString}`
-        })
+        if (timeUntilText !== null) {
+            window.setInterval(() => {
+                const timeUntilString = timeUntil(nextStreakUpdateDate.toISOString())
+                timeUntilText.innerHTML = `Next Update in: ${timeUntilString}`
+            })
+        }
     }).catch(() => {
         timeUntilText.style.display = 'none'
     })

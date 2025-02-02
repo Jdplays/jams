@@ -20,12 +20,12 @@ class UserToolTip implements ITooltipComp {
             return
         }
 
-        const userAvatarInfo = (({id, display_name, first_name, last_name, avatar_url}) => ({
+        const userAvatarInfo = (({id, display_name, first_name, last_name, avatar_file_id}) => ({
             id,
             display_name,
             first_name,
             last_name,
-            avatar_url
+            avatar_file_id
         }))(user)
 
         const avatar = buildUserAvatar(userAvatarInfo)
