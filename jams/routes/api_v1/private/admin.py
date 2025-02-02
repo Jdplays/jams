@@ -1,9 +1,12 @@
 # API is for serving data to Typscript/Javascript
+import io
+from PIL import Image
 from flask import Blueprint, request, jsonify, abort
 from flask_security import login_required, current_user
 from jams.decorators import api_route, protect_user_updates
 from jams.models import db, User, Role, Event, EventLocation, EventTimeslot, Session, Page, Config, Workshop, AttendanceStreak
 from jams.util import helper
+from jams.util import files
 from jams.endpoint_loader import generate_roles_file_from_db, update_pages_assigned_to_role
 from jams.integrations.eventbrite import create_event_update_tasks, deactivate_event_update_tasks
 from jams.util.database import create_event
@@ -90,9 +93,57 @@ def edit_user(user_id):
 
     return jsonify({
         'message': 'User has be updated successfully',
-        'user': user.to_dict()
+        'data': user.to_dict()
     })
 
+@bp.route('/users/me/profile', methods=['POST'])
+@api_route
+def upload_profile_picture():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file provided'}), 400
+
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+    
+    if not file.mimetype.startswith('image/'):
+        return jsonify({'error': 'The uploaded file is not an image'}), 400
+
+    # Verify that the file is a valid image
+    try:
+        img = Image.open(file)
+        img.verify()
+        img = Image.open(file)
+    except (IOError, SyntaxError) as e:
+        return jsonify({'error': f'Invalidimage file: {e}'}), 400
+    
+    # Convert image to png
+    jpeg_image = img.convert('RGB')
+
+    # Resize image to a smaller size for profile pictures
+    MAX_SIZE = (256, 256)
+    jpeg_image.thumbnail(MAX_SIZE, Image.LANCZOS)
+
+    # Save the compressed image
+    image_stream = io.BytesIO()
+    jpeg_image.save(image_stream, format='JPEG', optimize=True, compress_level=85)
+    image_stream.seek(0)
+
+    # Upload to storage
+    file_path = f'users/{current_user.id}/profile.jpg'
+    file_db_obj = files.upload_file(bucket_name=files.user_data_bucket, file_name=file_path, file_data=image_stream)
+
+    if not file_db_obj:
+        return jsonify({'error': 'An error occured while uploading the file'}), 500
+    
+    current_user.avatar_file_id = file_db_obj.id # Set the users profile file ID
+    db.session.commit()
+
+    return jsonify({
+        'message': 'File successfully uploaded',
+        'file_data': file_db_obj.to_dict()
+    })
 
 
 @bp.route('/users/<int:user_id>/archive', methods=['POST'])

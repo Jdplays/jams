@@ -93,6 +93,7 @@ groups:
       get_user_streak: routes.api_v1.private.admin.get_user_streak
     write:
       edit_user: routes.api_v1.private.admin.edit_user
+      upload_profile_picture: routes.api_v1.private.admin.upload_profile_picture
       activate_user: routes.api_v1.private.admin.activate_user
       archive_user: routes.api_v1.private.admin.archive_user
   
