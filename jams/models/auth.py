@@ -1,7 +1,8 @@
 from . import db
 from sqlalchemy  import Column, String, Integer, Boolean, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 from flask_security import UserMixin, RoleMixin
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 import uuid
 
 # Define the UserRoles association table
@@ -70,7 +71,7 @@ class User(UserMixin, db.Model):
     fs_uniquifier = Column(String(255), unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
     open_id_sub = Column(String(255), unique=True, nullable=True)  # OpenID 'sub' claim
     user_induction = Column(Boolean(), nullable=False, default=False, server_default='false')
-    avatar_url = Column(String(255), nullable=True)
+    avatar_file_id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('file.id'), nullable=True)
 
     # Extra
     badge_text = Column(String(100), nullable=True)
@@ -82,6 +83,8 @@ class User(UserMixin, db.Model):
     last_login_ip = Column(String(50), nullable=True)
     current_login_ip  = Column(String(50), nullable=True)
     login_count = Column(Integer, nullable=True)
+
+    avatar_file = relationship('File', foreign_keys=[avatar_file_id])
 
     @property
     def full_name(self):
@@ -109,7 +112,7 @@ class User(UserMixin, db.Model):
         return role.name if role else 'No Role'
 
     # Requires email, username, password to be passed
-    def __init__(self, email, username, password, active=False, first_name=None, last_name=None, dob=None, bio=None, roles=None, role_ids:list[int]=None, fs_uniquifier=None, last_login_at=None, current_login_at=None, last_login_ip=None, current_login_ip=None, login_count=0, open_id_sub=None, user_induction=False, avatar_url=None):
+    def __init__(self, email, username, password, active=False, first_name=None, last_name=None, dob=None, bio=None, roles=None, role_ids:list[int]=None, fs_uniquifier=None, last_login_at=None, current_login_at=None, last_login_ip=None, current_login_ip=None, login_count=0, open_id_sub=None, user_induction=False, avatar_file_id=None):
         self.email = email
         self.username = username
         self.first_name = first_name
@@ -130,7 +133,7 @@ class User(UserMixin, db.Model):
         self.login_count = login_count
         self.open_id_sub = open_id_sub
         self.user_induction = user_induction
-        self.avatar_url = avatar_url
+        self.avatar_file_id = avatar_file_id
 
     def activate(self):
         self.active = True
@@ -211,7 +214,7 @@ class User(UserMixin, db.Model):
             'bio': self.bio,
             'active': self.active,
             'user_induction': self.user_induction,
-            'avatar_url': self.avatar_url,
+            'avatar_file_id': self.avatar_file_id,
             'badge_text': self.badge_text,
             'badge_icon': self.badge_icon
         }
@@ -225,7 +228,7 @@ class User(UserMixin, db.Model):
             'display_name': self.display_name,
             'role_ids': self.role_ids,
             'bio': self.bio,
-            'avatar_url': self.avatar_url,
+            'avatar_file_id': self.avatar_file_id,
             'badge_text': self.badge_text,
             'badge_icon': self.badge_icon
         }
