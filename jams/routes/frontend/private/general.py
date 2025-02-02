@@ -1,6 +1,7 @@
 # Frontend is just for serving pages
 from flask import Blueprint, redirect, render_template, request, url_for
 from flask_security import login_required, current_user
+from datetime import datetime
 
 from jams.decorators import role_based_access_control_fe
 
@@ -12,7 +13,7 @@ bp = Blueprint('general', __name__)
 
 @bp.route('/nav')
 def nav():
-    return render_template(f'{url_prefix}/nav.html')
+    return render_template(f'{url_prefix}/nav.html', timestamp=int(datetime.utcnow().timestamp()))
 
 @bp.route('/')
 @bp.route('/dashboard')
