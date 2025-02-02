@@ -108,7 +108,7 @@ export interface User {
     bio:string
     active:boolean
     user_induction:boolean
-    avatar_url:string
+    avatar_file_id:string
     badge_text:string
     badge_icon:string
 }

@@ -637,12 +637,13 @@ export function formatDateToShort(dateString: string, options:dateTimeFormatterO
 
 
 
-export function buildUserAvatar(UserAvatarInfo:Partial<User>|null=null, size:number|null=40, customText:string|null=null):HTMLSpanElement {
+export function buildUserAvatar(UserAvatarInfo:Partial<User>|null=null, size:number|null=40, customText:string|null=null, customImageUrl:string|null=null):HTMLSpanElement {
     let avatar = document.createElement('span')
+    avatar.id = 'user-avatar'
     avatar.classList.add('avatar')
-    if (!customText && UserAvatarInfo) {
-        if (UserAvatarInfo.avatar_url) {
-            avatar.style.backgroundImage = `url(${UserAvatarInfo.avatar_url})`
+    if (!customText && !customImageUrl && UserAvatarInfo) {
+        if (UserAvatarInfo.avatar_file_id) {
+            avatar.style.backgroundImage = `url(/resources/files/${UserAvatarInfo.avatar_file_id}?t=${new Date().getTime()})`
         } else {
             let userInitials;
             if (UserAvatarInfo.first_name) {
@@ -654,8 +655,10 @@ export function buildUserAvatar(UserAvatarInfo:Partial<User>|null=null, size:num
             avatar.style.fontSize = `${size * 0.6}px`
             avatar.innerHTML = userInitials
         }
-    } else {
+    } else if (!customImageUrl && customText) {
         avatar.innerHTML = customText
+    } else {
+        avatar.style.backgroundImage = `url(${customImageUrl})`
     }
 
     if (size) {
@@ -758,4 +761,52 @@ export function buildRoleBadge(role:Role, roleText:string=null) {
     }
 
     return container
+}
+
+export function compressImage(file:File, maxWidth:number, maxHeight:number, quality:number): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.readAsDataURL(file)
+
+        reader.onload = (event) => {
+            const img = new Image()
+            img.src = event.target?.result as string
+
+            img.onload = () => {
+                const canvas = document.createElement('canvas')
+                let width = img.width
+                let height = img.height
+
+                if (width > maxWidth || height > maxHeight) {
+                    const scale = Math.min(maxWidth / width, maxHeight / height)
+                    width *= scale
+                    height *= scale
+                }
+
+                canvas.width = width
+                canvas.height = height
+
+                const ctx = canvas.getContext('2d')
+                if (!ctx) {
+                    return reject(new Error('Canvas not supported'))
+                }
+
+                ctx.drawImage(img, 0, 0, width, height)
+
+                canvas.toBlob(
+                    (blob) => {
+                        if (blob) {
+                            resolve(blob)
+                        } else {
+                            reject(new Error('Image compression failed'))
+                        }
+                    },
+                    'image/jpeg',
+                    quality
+                )
+            }
+            img.onerror = (err) => reject(err)
+        }
+        reader.onerror = (err) => reject(err)
+    })
 }

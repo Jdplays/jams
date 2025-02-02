@@ -18,6 +18,15 @@ function loadNavigationBar() {
             .then(response => response.text())
             .then(html => {
                 navContainer.innerHTML = html;
+
+                const navRefreshElement = document.getElementById('nav-refresh')
+                window.setInterval(() => {
+                    const refresh = navRefreshElement.getAttribute('refresh') === 'true'
+                    if (refresh) {
+                        loadNavigationBar()
+                    }
+                    navRefreshElement.setAttribute('refresh', 'false')
+                }, 100)
             })
             .catch(error => {
                 console.error('Error loading navigation:', error);

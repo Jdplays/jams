@@ -1174,6 +1174,25 @@ export function editUser(userId:number, data:Partial<User>, queryString:string|n
     });
 }
 
+export function uploadUserProfilePicture(userId:number, fileData:FormData):Promise<FileData> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: `${baseURL}/users/me/profile`,
+            data: fileData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                resolve(response.file_data)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
 export function archiveUser(userID:number):Promise<ApiResponse<User>> {
     return new Promise((resolve, reject) => {
         $.ajax({
