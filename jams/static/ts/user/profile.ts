@@ -9,7 +9,7 @@ let rolesMap:Record<number,Role> = {};
 
 let userAvatarChanged:boolean = false;
 
-function checkIfConentUpdated() {
+function checkIfContentUpdated() {
     const saveButton = document.getElementById('save-button') as HTMLButtonElement
 
     const firstNameInput = document.getElementById('first-name-input') as HTMLInputElement
@@ -24,6 +24,28 @@ function checkIfConentUpdated() {
         saveButton.disabled = true
         unsavedWarningText.style.display = 'none'
     }
+}
+
+function syncInputs(source:string) {
+    const firstNameInput = document.getElementById('first-name-input') as HTMLInputElement
+    const lastNameInput = document.getElementById('last-name-input') as HTMLInputElement
+    const bioInput = document.getElementById('bio-input') as HTMLInputElement
+
+    const firstNameInputMobile = document.getElementById('first-name-input-mobile') as HTMLInputElement
+    const lastNameInputMobile = document.getElementById('last-name-input-mobile') as HTMLInputElement
+    const bioInputMobile = document.getElementById('bio-input-mobile') as HTMLInputElement
+
+    if (source === 'desktop') {
+        firstNameInputMobile.value = firstNameInput.value
+        lastNameInputMobile.value = lastNameInput.value
+        bioInputMobile.value = bioInput.value
+    } else if (source === 'mobile') {
+        firstNameInput.value = firstNameInputMobile.value
+        lastNameInput.value = lastNameInputMobile.value
+        bioInput.value = bioInputMobile.value
+    }
+
+    checkIfContentUpdated()
 }
 
 
@@ -57,7 +79,7 @@ function cancelEditOnClick() {
     userAvatarChanged = false
     imageInput.value = ''
 
-    checkIfConentUpdated()
+    syncInputs('desktop')
 }
 
 function populateProfilePage() {
@@ -144,7 +166,7 @@ function populateProfilePage() {
     emptyElement(editAvatarContainer)
     editAvatarContainer.appendChild(buildUserAvatar(userData, 150))
 
-    checkIfConentUpdated()
+    syncInputs('desktop')
 }
 
 async function preloadRoles(role_ids:number[]) {
@@ -181,7 +203,7 @@ async function uploadProfileImageOnChange() {
             emptyElement(avatar)
             avatar.style.backgroundImage = `url(${e.target.result})`
             userAvatarChanged = true
-            checkIfConentUpdated()
+            checkIfContentUpdated()
         }
         reader.readAsDataURL(compressedFile)
     }
@@ -264,6 +286,6 @@ document.addEventListener("DOMContentLoaded", () => {
         (<any>window).cancelEditOnClick = cancelEditOnClick;
         (<any>window).uploadProfileImageOnChange = uploadProfileImageOnChange;
         (<any>window).saveButtonOnClick = saveButtonOnClick;
-        (<any>window).checkIfConentUpdated = checkIfConentUpdated;
+        (<any>window).syncInputs = syncInputs;
     }
 });

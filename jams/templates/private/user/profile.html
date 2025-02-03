@@ -36,8 +36,8 @@
                     </div>
 
                     {% if is_current_user %}
-                    <div id="edit-profile" class="col-12 col-md-9" style="display: none;">
-                        <div class="d-flex align-items-top mb-4">
+                    <div id="edit-profile" class="col-12 col-md-9 mb-3" style="display: none;">
+                        <div class="d-flex align-items-top">
                             <div class="me-3 position-relative" style="width: 150px; height: 150px;">
                                 <label for="upload-photo" class="m-3 position-relative" style="cursor: pointer;">
                                     <!-- Profile Image -->
@@ -58,24 +58,41 @@
                             </div>
 
                             <div class="flex-grow-1">
-                                <div class="d-flex gap-3 m-3 mb-2">
+                                <div class="input-block-desktop gap-3 m-3 mb-2">
                                     <div class="flex-grow-1">
                                         <label for="first-name-input" class="form-label">First Name</label>
                                         <input type="text" id="first-name-input" class="form-control"
-                                            oninput="checkIfConentUpdated()">
+                                            oninput="syncInputs('desktop')">
                                     </div>
                                     <div class="flex-grow-1">
                                         <label for="last-name-input" class="form-label">Last Name</label>
                                         <input type="text" id="last-name-input" class="form-control"
-                                            oninput="checkIfConentUpdated()">
+                                            oninput="syncInputs('desktop')">
                                     </div>
                                 </div>
-                                <div class="ms-3">
+                                <div class="input-block-mobile m-3">
+                                    <div class="flex-grow-1">
+                                        <label for="first-name-input-mobile" class="form-label">First Name</label>
+                                        <input type="text" id="first-name-input-mobile" class="form-control"
+                                            oninput="syncInputs('mobile')">
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <label for="last-name-input-mobile" class="form-label">Last Name</label>
+                                        <input type="text" id="last-name-input-mobile" class="form-control"
+                                            oninput="syncInputs('mobile')">
+                                    </div>
+                                </div>
+                                <div class="bio-input-desktop m-3">
                                     <label for="bio-input" class="form-label">Bio</label>
                                     <textarea id="bio-input" class="form-control" rows="3"
-                                        oninput="checkIfConentUpdated()"></textarea>
+                                        oninput="syncInputs('desktop')"></textarea>
                                 </div>
                             </div>
+                        </div>
+                        <div class="input-block-mobile m-3 mb-0">
+                            <label for="bio-input-mobile" class="form-label">Bio</label>
+                            <textarea id="bio-input-mobile" class="form-control" rows="5"
+                                oninput="syncInputs('mobile')"></textarea>
                         </div>
                     </div>
 

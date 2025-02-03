@@ -6,17 +6,6 @@
     display: none;
 }
 
-/* Mobile (Smaller screens) */
-@media (max-width: 600px) {
-    .bio-desktop {
-        display: none;
-    }
-    
-    .bio-mobile {
-        display: block;
-    }
-}
-
 #user-avatar-container-edit {
     position: relative;
     width: 40px; /* or 150px if using that size */
@@ -28,4 +17,39 @@
     height: 100%;
     max-width: 100%;
     max-height: 100%;
+}
+
+.input-block-desktop {
+    display: flex;
+}
+
+.bio-input-desktop {
+    display: block;
+}
+
+.input-block-mobile {
+    display: none;
+}
+
+/* Mobile (Smaller screens) */
+@media (max-width: 600px) {
+    .bio-desktop {
+        display: none;
+    }
+    
+    .bio-mobile {
+        display: block;
+    }
+
+    .input-block-desktop {
+        display: none;
+    }
+    
+    .input-block-mobile {
+        display: block;
+    }
+
+    .bio-input-desktop {
+        display: none;
+    }
 }
