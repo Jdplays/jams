@@ -67,9 +67,6 @@ function populateProfilePage() {
     const editActions = document.getElementById('edit-actions') as HTMLElement
 
     viewProfileBlock.style.display = 'block'
-    editProfileBlock.style.display = 'none'
-    saveActionsRow.style.display = 'none'
-    editActions.style.display = 'block'
 
     // Populate View Elements
     const avatarContainer = document.getElementById('user-avatar-container') as HTMLDivElement
@@ -79,9 +76,7 @@ function populateProfilePage() {
     const bioElements = document.querySelectorAll<HTMLElement>('#user-bio')
 
     emptyElement(avatarContainer)
-    emptyElement(editAvatarContainer)
     avatarContainer.appendChild(buildUserAvatar(userData, 150))
-    editAvatarContainer.appendChild(buildUserAvatar(userData, 150))
     displayName.innerHTML = userData.display_name
 
     for (const bioText of Array.from(bioElements)) {
@@ -129,13 +124,24 @@ function populateProfilePage() {
     }
 
     // Populate Edit elements
+    if (editProfileBlock === null || editProfileBlock === undefined) {
+        return
+    }
+    
     const firstNameInput = document.getElementById('first-name-input') as HTMLInputElement
     const lastNameInput = document.getElementById('last-name-input') as HTMLInputElement
     const bioInput = document.getElementById('bio-input') as HTMLInputElement
 
+    editProfileBlock.style.display = 'none'
+    editActions.style.display = 'block'
+    saveActionsRow.style.display = 'none'
+
     firstNameInput.value = userData.first_name
     lastNameInput.value = userData.last_name
     bioInput.value = userData.bio
+
+    emptyElement(editAvatarContainer)
+    editAvatarContainer.appendChild(buildUserAvatar(userData, 150))
 
     checkIfConentUpdated()
 }

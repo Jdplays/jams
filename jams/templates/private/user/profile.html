@@ -6,17 +6,17 @@
 <div id="user-id" data-user-id="{{ user_id }}" style="display: none;"></div>
 
 <div class="card">
-    {% if is_current_user %}
     <div class="card-header">
         <h3 class="card-title">Profile</h3>
+        {% if is_current_user %}
         <div id="edit-actions" class="card-actions" style="display: block;">
             <button class="btn btn-outline-primary" onclick="editOnClick()">
                 <i class="ti ti-edit"></i>
                 <span class="ms-2 action-text">Edit</span>
             </button>
         </div>
+        {% endif %}
     </div>
-    {% endif %}
     <div class="row g-0">
         <div class="col-12 border-end">
             <div class="card-body">
@@ -88,7 +88,7 @@
                     {% endif %}
                 </div>
 
-                <div id="activity-block" style="display: block;">
+                <div id="activity-block" style="display: none;">
                     <h3>Activity</h3>
                     <div class="row">
                         <div class="col-md-4">
@@ -110,8 +110,8 @@
                         <div class="col-md-4">
                             <div class="card mb-3">
                                 <div class="card-body">
-                                    <h5 class="card-title">Something else</h5>
-                                    <p class="card-text">More info about the user</p>
+                                    <h5 class="card-title">Other</h5>
+                                    <p class="card-text">Other info about the user</p>
                                 </div>
                             </div>
                         </div>
