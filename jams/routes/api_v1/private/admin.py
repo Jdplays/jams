@@ -87,6 +87,10 @@ def edit_user(user_id):
                     abort(400, description='User cannot update their own roles')
                 user.set_roles(value)
                 continue
+            if field == 'badge_text' or field == 'badge_icon':
+                if current_user.id == user_id:
+                    abort(400, description='User cannot update their own badge')
+                    continue
             setattr(user, field, value)
     
     db.session.commit()
