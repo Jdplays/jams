@@ -63,7 +63,7 @@
         <!-- User Info and Logout for Mobile (inside collapsible menu) -->
         {% if current_user.is_authenticated %}
         <li id="nav_user_info" class="nav-item d-md-none">
-          <a href="#" class="nav-link d-flex lh-1 p-0">
+          <a href="{{ url_for('routes.frontend.private.general.user_profile')}}" class="nav-link d-flex lh-1 p-0">
             <div class="ps-2">
               <div id="nav_user_name">{{ current_user.display_name }}</div>
               <div id="nav_user_role" class="mt-1 small text-secondary">{{ current_user.main_role }}</div>
