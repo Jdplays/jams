@@ -1,7 +1,7 @@
 # API is for serving data to Typscript/Javascript
 import io
 from PIL import Image
-from flask import Blueprint, request, jsonify, abort
+from flask import Blueprint, request, jsonify, abort, current_app
 from flask_security import login_required, current_user
 from jams.decorators import api_route, protect_user_updates
 from jams.models import db, User, Role, Event, EventLocation, EventTimeslot, Session, Page, Config, Workshop, AttendanceStreak
@@ -120,7 +120,8 @@ def upload_user_avatar():
         img.verify()
         img = Image.open(file)
     except (IOError, SyntaxError) as e:
-        return jsonify({'error': f'Invalidimage file: {e}'}), 400
+        print(f'Invalidimage file: {e}')
+        return jsonify({'error': 'Invalid Image file'}), 400
     
     # Convert image to png
     jpeg_image = img.convert('RGB')
