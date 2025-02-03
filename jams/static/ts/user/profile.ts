@@ -1,6 +1,7 @@
 import { editUser, getRoles, getUser, uploadUserAvatar } from "@global/endpoints";
 import { Role, User } from "@global/endpoints_interfaces";
-import { addSpinnerToElement, buildRoleBadge, buildUserAvatar, compressImage, emptyElement, errorToast, isDefined, isNullEmptyOrSpaces, removeSpinnerFromElement, successToast } from "@global/helper";
+import { addSpinnerToElement, buildQueryString, buildRoleBadge, buildUserAvatar, compressImage, emptyElement, errorToast, isDefined, isNullEmptyOrSpaces, removeSpinnerFromElement, successToast } from "@global/helper";
+import { QueryStringData } from "@global/interfaces";
 
 let userId:number = 0;
 let userData:Partial<User> = null;
@@ -146,8 +147,13 @@ function populateProfilePage() {
     checkIfConentUpdated()
 }
 
-async function preloadRoles() {
-    const response = await getRoles();
+async function preloadRoles(role_ids:number[]) {
+    const data:Partial<QueryStringData> = {
+            id: role_ids,
+            hidden: false
+        }
+    const queryString = buildQueryString(data)
+    const response = await getRoles(queryString);
     let roles = response.data
     let rolesMap:Record<number,Role> = {};
     roles.forEach(role => {
@@ -246,14 +252,8 @@ document.addEventListener("DOMContentLoaded", async function () {
     const userIdElement = document.getElementById('user-id') as HTMLDivElement
     userId = Number(userIdElement.getAttribute('data-user-id'))
 
-    // Run both asynchronous functions concurrently
-    const [rolesResponse, userDataResponse] = await Promise.all([
-        preloadRoles(),
-        getUser(userId)
-    ]);
-
-    rolesMap = rolesResponse
-    userData = userDataResponse as Partial<User>
+    userData = await getUser(userId)
+    rolesMap = await preloadRoles(userData.role_ids)
 
     populateProfilePage()
 });
