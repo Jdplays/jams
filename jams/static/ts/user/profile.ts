@@ -1,4 +1,4 @@
-import { editUser, getRoles, getUser, uploadUserProfilePicture } from "@global/endpoints";
+import { editUser, getRoles, getUser, uploadUserAvatar } from "@global/endpoints";
 import { Role, User } from "@global/endpoints_interfaces";
 import { addSpinnerToElement, buildRoleBadge, buildUserAvatar, compressImage, emptyElement, errorToast, isDefined, isNullEmptyOrSpaces, removeSpinnerFromElement, successToast } from "@global/helper";
 
@@ -182,11 +182,12 @@ async function saveButtonOnClick() {
     const bioInput = document.getElementById('bio-input') as HTMLInputElement
     const imageInput = document.getElementById('upload-photo') as HTMLInputElement
 
-    let profileImageUpdated = false;
+    let avatarUpdated = false
 
     let loadingModal = $('#loading-modal')
     loadingModal.modal('show')
 
+    await new Promise(resolve => loadingModal.one('shown.bs.modal', resolve));
     if (userAvatarChanged) {
         const file = imageInput.files[0]
 
@@ -197,12 +198,13 @@ async function saveButtonOnClick() {
         fileData.append('file', compressedFile);
         
         try {
-            await uploadUserProfilePicture(userId, fileData)
-            successToast('Profile picture successfully updated')
-            profileImageUpdated = true
+            const response = await uploadUserAvatar(fileData)
+            successToast(response.message)
+            avatarUpdated = true
         } catch (error:any) {
             const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
             errorToast(errorMessage)
+            loadingModal.modal('hide')
             return
         }
     }
@@ -215,10 +217,10 @@ async function saveButtonOnClick() {
 
     try {
         const response = await editUser(userId, updatedUserData)
-        successToast('Succesfully updated profile')
+        successToast(response.message)
         userData = response.data
 
-        if (profileImageUpdated) {
+        if (avatarUpdated) {
             await new Promise((resolve) => setTimeout(resolve, 1000))
         }
 

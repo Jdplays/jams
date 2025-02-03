@@ -96,9 +96,9 @@ def edit_user(user_id):
         'data': user.to_dict()
     })
 
-@bp.route('/users/me/profile', methods=['POST'])
+@bp.route('/users/me/avatar', methods=['POST'])
 @api_route
-def upload_profile_picture():
+def upload_user_avatar():
     if 'file' not in request.files:
         return jsonify({'error': 'No file provided'}), 400
 
@@ -141,7 +141,7 @@ def upload_profile_picture():
     db.session.commit()
 
     return jsonify({
-        'message': 'File successfully uploaded',
+        'message': 'Avatar successfully uploaded',
         'file_data': file_db_obj.to_dict()
     })
 

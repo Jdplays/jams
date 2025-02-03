@@ -346,7 +346,7 @@ pages:
       get_roles_field:
         allowed_fields: public
       get_user:
-      upload_profile_picture:
+      upload_user_avatar:
 
 
   # -------------------------------- PUBLIC  -------------------------------- #

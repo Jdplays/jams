@@ -1175,11 +1175,11 @@ export function editUser(userId:number, data:Partial<User>, queryString:string|n
     });
 }
 
-export function uploadUserProfilePicture(userId:number, fileData:FormData):Promise<FileData> {
+export function uploadUserAvatar(fileData:FormData):Promise<ApiResponse<FileData>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             type: 'POST',
-            url: `${baseURL}/users/me/profile`,
+            url: `${baseURL}/users/me/avatar`,
             data: fileData,
             processData: false,
             contentType: false,
