@@ -663,7 +663,9 @@ export function buildUserAvatar(UserAvatarInfo:Partial<User>|null=null, size:num
 
     if (size) {
         avatar.style.width = `${size}px`
+        avatar.style.minWidth = `${size}px`
         avatar.style.height = `${size}px`
+        avatar.style.minHeight = `${size}px`
     }
 
     return avatar
@@ -734,7 +736,7 @@ export function stringToFireListEntryType(type: string | null): FireListEntryTyp
     }
 }
 
-export function buildRoleBadge(role:Role, roleText:string=null) {
+export function buildRoleBadge(role:Role, roleText:string=null, usePointer:boolean=false) {
     const container = document.createElement('span')
 
     if (!role && !roleText) {
@@ -744,6 +746,10 @@ export function buildRoleBadge(role:Role, roleText:string=null) {
     container.classList.add('tag-with-indicator')
     container.style.width = 'fit-content'
     container.style.borderRadius = '90px'
+
+    if (usePointer) {
+        container.style.cursor = 'pointer'
+    }
 
     const text = document.createElement('span')
     if (!role) {
