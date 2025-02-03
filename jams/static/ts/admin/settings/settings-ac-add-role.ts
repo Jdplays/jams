@@ -43,6 +43,7 @@ async function prepAddRoleForm() {
     
     const queryData:Partial<QueryStringData> = {
         parent_id:null,
+        default: false,
         public:false
     }
     const queryString = buildQueryString(queryData)

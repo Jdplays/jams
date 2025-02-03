@@ -1,9 +1,12 @@
 # API is for serving data to Typscript/Javascript
+import io
+from PIL import Image
 from flask import Blueprint, request, jsonify, abort
 from flask_security import login_required, current_user
 from jams.decorators import api_route, protect_user_updates
-from jams.models import db, User, Role, Event, EventLocation, EventTimeslot, Session, Page, Config, Workshop
+from jams.models import db, User, Role, Event, EventLocation, EventTimeslot, Session, Page, Config, Workshop, AttendanceStreak
 from jams.util import helper
+from jams.util import files
 from jams.endpoint_loader import generate_roles_file_from_db, update_pages_assigned_to_role
 from jams.integrations.eventbrite import create_event_update_tasks, deactivate_event_update_tasks
 from jams.util.database import create_event
@@ -32,7 +35,11 @@ def get_users_field(field):
 @api_route
 def get_user(user_id):
     user = User.query.filter_by(id=user_id).first_or_404()
-    return jsonify(user.to_dict())
+
+    if current_user.id == user_id or helper.user_has_access_to_page('user_management'):
+        return jsonify(user.to_dict())
+    else:
+        return jsonify(user.public_info_dict())
 
 @bp.route('/users/<int:user_id>/public_info', methods=['GET'])
 @api_route
@@ -80,15 +87,67 @@ def edit_user(user_id):
                     abort(400, description='User cannot update their own roles')
                 user.set_roles(value)
                 continue
+            if field == 'badge_text' or field == 'badge_icon':
+                if current_user.id == user_id:
+                    abort(400, description='User cannot update their own badge')
+                    continue
             setattr(user, field, value)
     
     db.session.commit()
 
     return jsonify({
         'message': 'User has be updated successfully',
-        'user': user.to_dict()
+        'data': user.to_dict()
     })
 
+@bp.route('/users/me/avatar', methods=['POST'])
+@api_route
+def upload_user_avatar():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file provided'}), 400
+
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+    
+    if not file.mimetype.startswith('image/'):
+        return jsonify({'error': 'The uploaded file is not an image'}), 400
+
+    # Verify that the file is a valid image
+    try:
+        img = Image.open(file)
+        img.verify()
+        img = Image.open(file)
+    except (IOError, SyntaxError) as e:
+        return jsonify({'error': f'Invalidimage file: {e}'}), 400
+    
+    # Convert image to png
+    jpeg_image = img.convert('RGB')
+
+    # Resize image to a smaller size for profile pictures
+    MAX_SIZE = (256, 256)
+    jpeg_image.thumbnail(MAX_SIZE, Image.LANCZOS)
+
+    # Save the compressed image
+    image_stream = io.BytesIO()
+    jpeg_image.save(image_stream, format='JPEG', optimize=True, compress_level=85)
+    image_stream.seek(0)
+
+    # Upload to storage
+    file_path = f'users/{current_user.id}/profile.jpg'
+    file_db_obj = files.upload_file(bucket_name=files.user_data_bucket, file_name=file_path, file_data=image_stream)
+
+    if not file_db_obj:
+        return jsonify({'error': 'An error occured while uploading the file'}), 500
+    
+    current_user.avatar_file_id = file_db_obj.id # Set the users profile file ID
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Avatar successfully uploaded',
+        'file_data': file_db_obj.to_dict()
+    })
 
 
 @bp.route('/users/<int:user_id>/archive', methods=['POST'])
@@ -724,8 +783,6 @@ def get_pages_field(field):
     return jsonify(pages)
 
 
-#------------------------------------------ CONFIG ------------------------------------------#
-
 @bp.route('/config/<string:key>', methods=['GET'])
 @api_route
 def get_config_value(key):
@@ -733,3 +790,14 @@ def get_config_value(key):
         abort(403, description='You do not have access to the requested resource with your current role')
     config = Config.query.filter_by(key=key).first_or_404()
     return jsonify(config.to_dict())
+
+#------------------------------------------ USER STREAKS ------------------------------------------#
+
+@bp.route('/users/me/streak', methods=['GET'])
+@bp.route('/users/<int:user_id>/streak', methods=['GET'])
+@api_route
+def get_user_streak(user_id=None):
+    if user_id is None:
+        user_id = current_user.id
+    streak = AttendanceStreak.query.filter_by(user_id=user_id).first_or_404()
+    return jsonify({'data': streak.to_dict()})

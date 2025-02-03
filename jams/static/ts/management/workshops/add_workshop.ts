@@ -1,4 +1,4 @@
-import { addWorkshop, getDifficultyLevels, getWorkshopField, getWorkshopsField, getWorkshopTypes, uploadFileToWorkshop } from "@global/endpoints"
+import { addWorkshop, getDifficultyLevels, getWorkshopsField, getWorkshopTypes } from "@global/endpoints"
 import { Workshop, WorkshopType } from "@global/endpoints_interfaces"
 import { animateElement, buildQueryString, buildRadioInputSelectionGroup, createRegexFromList, emptyElement, errorToast, getRadioInputGroupSelection, isDefined, isNullEmptyOrSpaces, successToast, validateNumberInput, validateTextInput } from "@global/helper"
 import { InputValidationPattern, QueryStringData } from "@global/interfaces";

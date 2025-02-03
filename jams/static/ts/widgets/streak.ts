@@ -1,6 +1,7 @@
-import { getEvent, getNextEvent, getVolunteerStreak } from "@global/endpoints";
+import { getEvent, getNextEvent, getUserStreak, getCurrentUserStreak } from "@global/endpoints";
 import { StreadData } from "@global/endpoints_interfaces";
 
+let userId:Number = 0
 let widget:HTMLDivElement = null
 let streakData:StreadData = null
 
@@ -11,7 +12,17 @@ async function populateStreakWidget() {
     const freezeCount = widget.querySelector('#freeze-count') as HTMLElement
     const freezeWord = widget.querySelector('#freeze-word') as HTMLSpanElement
 
-    const response = await getVolunteerStreak()
+    let response = null
+    if (userId && userId !== 0) {
+        response = await getUserStreak(userId)
+    } else {
+        response = await getCurrentUserStreak()
+    }
+
+    if (!response) {
+        return
+    }
+    
     streakData = response.data
 
     if (streakData.streak > 0) {
@@ -27,12 +38,17 @@ async function populateStreakWidget() {
     }
 
     streakCount.innerHTML = String(streakData.streak)
-    freezeCount.innerHTML = String(streakData.freezes)
-
-    if (streakData.freezes === 1) {
-        freezeWord.innerHTML = 'freeze'
-    } else {
-        freezeWord.innerHTML = 'freezes'
+    
+    if (freezeCount) {
+        freezeCount.innerHTML = String(streakData.freezes)
+    }
+    
+    if (freezeWord) {
+        if (streakData.freezes === 1) {
+            freezeWord.innerHTML = 'freeze'
+        } else {
+            freezeWord.innerHTML = 'freezes'
+        }
     }
 }
 
@@ -66,6 +82,9 @@ function timeUntil(targetDateISO: string): string {
 
 // Event listeners
 document.addEventListener("DOMContentLoaded", async function () {
+    const userIdElement = document.getElementById('user-id') as HTMLDivElement
+    userId = Number(userIdElement.getAttribute('data-user-id'))
+
     widget = document.getElementById('streak-widget') as HTMLDivElement
     const timeUntilText = widget.querySelector('#time-until') as HTMLParagraphElement
 
@@ -80,10 +99,12 @@ document.addEventListener("DOMContentLoaded", async function () {
         const nextStreakUpdateDate = new Date(currentDate)
         nextStreakUpdateDate.setUTCDate(currentDate.getUTCDate() + 1)
 
-        window.setInterval(() => {
-            const timeUntilString = timeUntil(nextStreakUpdateDate.toISOString())
-            timeUntilText.innerHTML = `Next Update in: ${timeUntilString}`
-        })
+        if (timeUntilText !== null) {
+            window.setInterval(() => {
+                const timeUntilString = timeUntil(nextStreakUpdateDate.toISOString())
+                timeUntilText.innerHTML = `Next Update in: ${timeUntilString}`
+            })
+        }
     }).catch(() => {
         timeUntilText.style.display = 'none'
     })

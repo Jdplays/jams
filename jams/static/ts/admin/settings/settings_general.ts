@@ -5,7 +5,7 @@ import { allTimezones } from "@global/timezones";
 
 let currentConfig:Partial<GeneralConfig>|null=null
 
-function checkIfConentUpdated() {
+function checkIfContentUpdated() {
     const saveButton = document.getElementById('save-button') as HTMLButtonElement
 
     const locationSelect = document.getElementById('loc-select') as HTMLSelectElement
@@ -108,7 +108,7 @@ function generalConfigSaveOnClick() {
         successToast('Config Successfully Updated')
 
         populateStreaksSection()
-        checkIfConentUpdated()
+        checkIfContentUpdated()
     }).catch( () => {
         errorToast()
     }) 
@@ -128,7 +128,7 @@ document.addEventListener("DOMContentLoaded", setupPage);
 
 document.addEventListener("DOMContentLoaded", () => {
     if (isDefined(window)) {
-        (<any>window).checkIfConentUpdated = checkIfConentUpdated;
+        (<any>window).checkIfContentUpdated = checkIfContentUpdated;
         (<any>window).generalConfigSaveOnClick = generalConfigSaveOnClick;
         (<any>window).recalculateStreaksOnClick = recalculateStreaksOnClick;
     }

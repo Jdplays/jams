@@ -69,7 +69,7 @@
                         <label class="text-secondary">This is the location or timezone that JAMS will use when converting dates and times to display to the user. It is recomened that you set this to the same timezone as your events run in.</label>
                     </td>
                     <td class="value-column">
-                        <select id="loc-select" class="form-control form-select" onchange="checkIfConentUpdated()">
+                        <select id="loc-select" class="form-control form-select" onchange="checkIfContentUpdated()">
                         </select>
                     </td>
                     <td>N/A</td>
@@ -84,7 +84,7 @@
                     <td class="value-column">
                         <label class="form-check form-switch">
                             <input id="toggle-streaks-switch" class="form-check-input" type="checkbox"
-                            oninput="checkIfConentUpdated()">
+                            oninput="checkIfContentUpdated()">
                         </label>
                     </td>
                     <td>
@@ -97,9 +97,6 @@
             </tbody>
         </table>
     </div>
-
-    <button id="save-button" class="btn btn-primary" onclick="generalConfigSaveOnClick()"
-                disabled>Save</button>
 </div>
 
 <div id="confirm-recalculate-streaks" class="modal modal-blur fade" id="modal-small" tabindex="-1" style="display: none;"
@@ -131,9 +128,17 @@
             </div>
         </div>
     </div>
+{% endblock %}
+
+{% block settings_content_footer %}
+<button id="save-button" class="btn btn-primary" onclick="generalConfigSaveOnClick()" disabled>
+    <i class="ti ti-device-floppy"></i>
+    <span class="btn-text ms-2">Save</span>
+</button>
 
 <script src="{{ url_for('static', filename='js/admin/settings/settings_general.js') }}" type="module"
     defer></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/admin/settings/settings_general.css') }}">
 
 {% endblock %}
+

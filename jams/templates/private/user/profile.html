@@ -1,0 +1,176 @@
+{% extends '_layout.html' %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div id="user-id" data-user-id="{{ user_id }}" style="display: none;"></div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Profile</h3>
+        {% if is_current_user %}
+        <div id="edit-actions" class="card-actions" style="display: block;">
+            <button class="btn btn-outline-primary" onclick="editOnClick()">
+                <i class="ti ti-edit"></i>
+                <span class="ms-2 action-text">Edit</span>
+            </button>
+        </div>
+        {% endif %}
+    </div>
+    <div class="row g-0">
+        <div class="col-12 border-end">
+            <div class="card-body">
+                <div class="row">
+                    <div id="view-profile" class="col-12 col-md-9" style="display: block;">
+                        <div class="mb-4">
+                            <div class="d-flex align-items-top">
+                                <div id="user-avatar-container" class="m-3"></div>
+                                <div>
+                                    <h2 id="user-display-name" class="mb-2 mt-2"></h2>
+                                    <div id="user-roles-container" class="d-flex flex-wrap mb-2"></div>
+                                    <p id="user-bio" class="text-muted mb-0 bio-desktop"></p>
+                                </div>
+                            </div>
+                            <p id="user-bio" class="text-muted mb-0 bio-mobile"></p>
+                        </div>
+                    </div>
+
+                    {% if is_current_user %}
+                    <div id="edit-profile" class="col-12 col-md-9 mb-3" style="display: none;">
+                        <div class="d-flex align-items-top">
+                            <div class="me-3 position-relative" style="width: 150px; height: 150px;">
+                                <label for="upload-photo" class="m-3 position-relative" style="cursor: pointer;">
+                                    <!-- Profile Image -->
+                                    <div id="user-avatar-container-edit" class="position-relative"
+                                        style="width: 150px; height: 150px;"></div>
+
+                                    <!-- Always Visible Overlay with Plus Icon -->
+                                    <div class="position-absolute rounded d-flex justify-content-center align-items-center"
+                                        style="background-color: rgba(0, 0, 0, 0.5); width: 150px; height: 150px; top: 0;">
+                                        <i class="ti ti-plus"
+                                            style="color: rgba(255, 255, 255, 150); font-size: 2rem;"></i>
+                                    </div>
+
+                                    <!-- Hidden File Input -->
+                                    <input type="file" id="upload-photo" class="d-none" accept="image/*"
+                                        onchange="uploadProfileImageOnChange()">
+                                </label>
+                            </div>
+
+                            <div class="flex-grow-1">
+                                <div class="input-block-desktop gap-3 m-3 mb-2">
+                                    <div class="flex-grow-1">
+                                        <label for="first-name-input" class="form-label">First Name</label>
+                                        <input type="text" id="first-name-input" class="form-control"
+                                            oninput="syncInputs('desktop')">
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <label for="last-name-input" class="form-label">Last Name</label>
+                                        <input type="text" id="last-name-input" class="form-control"
+                                            oninput="syncInputs('desktop')">
+                                    </div>
+                                </div>
+                                <div class="input-block-mobile m-3">
+                                    <div class="flex-grow-1">
+                                        <label for="first-name-input-mobile" class="form-label">First Name</label>
+                                        <input type="text" id="first-name-input-mobile" class="form-control"
+                                            oninput="syncInputs('mobile')">
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <label for="last-name-input-mobile" class="form-label">Last Name</label>
+                                        <input type="text" id="last-name-input-mobile" class="form-control"
+                                            oninput="syncInputs('mobile')">
+                                    </div>
+                                </div>
+                                <div class="bio-input-desktop m-3">
+                                    <label for="bio-input" class="form-label">Bio</label>
+                                    <textarea id="bio-input" class="form-control" rows="3"
+                                        oninput="syncInputs('desktop')"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-block-mobile m-3 mb-0">
+                            <label for="bio-input-mobile" class="form-label">Bio</label>
+                            <textarea id="bio-input-mobile" class="form-control" rows="5"
+                                oninput="syncInputs('mobile')"></textarea>
+                        </div>
+                    </div>
+
+
+                    {% endif %}
+                    {% if get_config_value('STREAKS_ENABLED') %}
+                    {% set hide_elements = true %}
+                    {% set user_id = user_id %}
+                    {% include 'widgets/streak.html'%}
+                    {% endif %}
+                </div>
+
+                <div id="activity-block" style="display: none;">
+                    <h3>Activity</h3>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Workshops</h5>
+                                    <p class="card-text">Overview of workshops ran by this user.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Stats</h5>
+                                    <p class="card-text">Key profile statistics</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Other</h5>
+                                    <p class="card-text">Other info about the user</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    {% if is_current_user %}
+    <div id="save-actions" class="card-footer" style="display: none; position: relative;">
+        <p id="unsaved-warning" class="mb-0 text-warning" style="display: none; position: absolute;">Unsaved changes*
+        </p>
+        <div class="card-actions d-flex justify-content-end gap-2">
+            <button class="btn btn-outline-danger" onclick="cancelEditOnClick()">
+                <i class="ti ti-x"></i>
+                <span class="ms-2">Cancel</span>
+            </button>
+            <button id="save-button" class="btn btn-outline-primary" onclick="saveButtonOnClick()" disabled>
+                <i class="ti ti-device-floppy"></i>
+                <span class="ms-2">Save</span>
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div id="loading-modal" class="modal modal-blur fade" id="modal-small" tabindex="-1" style="display: none;"
+    aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="text-secondary mb-3">Saving...</div>
+                <div class="progress progress-sm">
+                    <div class="progress-bar progress-bar-indeterminate"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/user/profile.js') }}" defer></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/user/profile.css') }}">
+
+{% endblock %}

@@ -1,11 +1,14 @@
+<div id="user-id" data-user-id="{{ user_id }}" style="display: none;"></div>
 <div id="streak-widget" class="col-12 col-md-3">
     <div class="card">
+        {% if not hide_elements %}
         <div class="card-header">
             <div>
                 <h2>Streak</h2>
                 <p id="time-until" class="text-secondary ms-auto mt-1">Updates in 1 hour 30 minutes</p>
             </div>
         </div>
+        {% endif %}
 
         <div class="card-body text-center">
             <div class="streak-content">
@@ -20,10 +23,12 @@
                 </div>
                 <span id="streak-count" class="streak-number-bad">0</span>
             </div>
+            {% if not hide_elements %}
             <p class="freeze-info">
                 <i class="ti ti-snowflake freeze-icon"></i>
                 You have <strong id="freeze-count">2</strong> <span id="freeze-word">freezes</span> left.
             </p>
+            {% endif %}
         </div>
     </div>
 </div>
