@@ -28,13 +28,22 @@
     <div class="d-none d-md-flex ms-auto order-md-last">
       <div id="nav_user_info" class="navbar-nav flex-row order-md-last">
         <div class="nav-item">
-          <a href="#" class="nav-link d-flex lh-1 text-end p-0">
-            <div class="ps-2">
+          <a href="{{ url_for('routes.frontend.private.general.user_profile')}}" class="nav-link d-flex align-items-center lh-1 text-end p-0">
+            {% if current_user.avatar_file_id %}
+              <span class="avatar me-2" 
+                    style="background-image: url('/resources/files/{{ current_user.avatar_file_id }}?t={{ timestamp  }}'); 
+                           width: 25px; 
+                           height: 25px;
+                           background-size: cover;">
+              </span>
+            {% endif %}
+            <div>
               <div id="nav_user_name">{{ current_user.display_name }}</div>
               <div id="nav_user_role" class="mt-1 small text-secondary">{{ current_user.main_role }}</div>
             </div>
           </a>
         </div>
+        
       </div>
       <div id="nav_logout_button" class="navbar-nav flex-row">
         <div class="nav-item">
@@ -54,7 +63,7 @@
         <!-- User Info and Logout for Mobile (inside collapsible menu) -->
         {% if current_user.is_authenticated %}
         <li id="nav_user_info" class="nav-item d-md-none">
-          <a href="#" class="nav-link d-flex lh-1 p-0">
+          <a href="{{ url_for('routes.frontend.private.general.user_profile')}}" class="nav-link d-flex lh-1 p-0">
             <div class="ps-2">
               <div id="nav_user_name">{{ current_user.display_name }}</div>
               <div id="nav_user_role" class="mt-1 small text-secondary">{{ current_user.main_role }}</div>

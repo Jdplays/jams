@@ -6,29 +6,110 @@ import {
     getCurrentUserId,
     getUsersField,
     getAttendanceForUser,
+    getRoles,
 } from '@global/endpoints'
-import { Metadata, VolunteerAttendance } from "@global/endpoints_interfaces";
+import { Metadata, Role, User, VolunteerAttendance } from "@global/endpoints_interfaces";
 import { EventDetails, EventDetailsOptions } from '@global/event_details';
-import { animateElement, buildQueryString, emptyElement, errorToast, successToast, validateTextInput, warningToast } from '@global/helper';
+import { animateElement, buildQueryString, buildRoleBadge, buildUserAvatar, emptyElement, errorToast, successToast, validateTextInput, warningToast } from '@global/helper';
 import { QueryStringData } from '@global/interfaces';
-import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
+import { createGrid, GridApi, GridOptions, ITooltipComp, ITooltipParams } from 'ag-grid-community';
+import { param } from 'jquery';
+import { use } from 'marked';
 
 let gridApi:GridApi<any>;
 let eventDetails:EventDetails;
 
+let rolesMap:Record<number,Role> = {};
 let volunteerRoleIds:number[] = []
 let CurrentUserId = 0
 let currentAttendanceData:VolunteerAttendance|null = null
 
-let userDisplayNamesMap:Record<number, string> = {}
+let userInfoMap:Record<number, Partial<User>> = {}
 let eventAttendancesMetaData:Metadata = {}
 let eventAttendances:Partial<VolunteerAttendance>[] = []
 
 let noteInputValid:boolean = false
 
+class UserToolTip implements ITooltipComp {
+    private tooltipElement: HTMLDivElement
+
+    init(params: any) {
+        const user = userInfoMap[params.value]
+        if (!user) {
+            return
+        }
+
+        this.tooltipElement = document.createElement('div')
+        const avatar = buildUserAvatar(user)
+
+        const tmpRolesContainer = document.createElement('div')
+        if (user.badge_text) {
+            const tag = document.createElement('span')
+            tag.classList.add('tag-with-indicator')
+            tag.style.width = 'fit-content'
+            tag.style.borderRadius = '90px'
+            tag.style.cursor = 'pointer'
+            
+            const text = document.createElement('span')
+            text.innerHTML = user.badge_text
+            tag.appendChild(text)
+    
+            if (user.badge_icon) {
+                const icon = document.createElement('i')
+                icon.classList.add('ti', `ti-${user.badge_icon}`, 'ms-2')
+                icon.style.color = 'rgb(255, 215, 0)'
+                tag.appendChild(icon)
+            }
+    
+            tmpRolesContainer.appendChild(tag)
+        } else {
+            const userRoles = user.role_ids
+                .map(roleId => rolesMap[roleId])
+                .filter(role => role !== undefined)
+                .sort((a, b) => a.priority - b.priority)
+            
+                const badge = buildRoleBadge(userRoles[0], null, true)
+                tmpRolesContainer.appendChild(badge)
+        }
+
+        this.tooltipElement.classList.add('custom-tooltip')
+        this.tooltipElement.innerHTML = `
+            <a href="/private/users/${user.id}" class="text-decoration-none">
+                <div class="card card-sm">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-auto">
+                                ${avatar.outerHTML}
+                            </div>
+                            <div class="col">
+                                <div class="text-truncate">
+                                    ${user.display_name}
+                                </div>
+                                <div id="user-roles-container" class="d-flex flex-wrap mb-2">
+                                    ${tmpRolesContainer.innerHTML}
+                                </div>
+                            </div>
+                            <div class="col-auto d-flex align-items-center">
+                                <i class="ti ti-chevron-right text-muted"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+            `;
+    }
+
+    getGui() {
+        return this.tooltipElement
+    }
+    
+}
+
 function initialiseAgGrid() {
     const gridOptions:GridOptions = {
         domLayout: 'autoHeight',
+        tooltipShowDelay:100,
+        tooltipInteraction: true,
         defaultColDef: {
             wrapHeaderText: true,
             autoHeaderHeight: true,
@@ -36,7 +117,7 @@ function initialiseAgGrid() {
         },
         columnDefs: [
             {
-                field: 'user_display_name',
+                field: 'user_id',
                 headerName: 'Name',
                 cellClassRules: {
                     'current-user': params => {
@@ -48,13 +129,25 @@ function initialiseAgGrid() {
                 cellRenderer: (params:any) => {
                     const data = params.data[1]
                     if (data.user_id) {
-                        if (userDisplayNamesMap[data.user_id]) {
-                            return userDisplayNamesMap[data.user_id]
+                        if (userInfoMap[data.user_id]) {
+                            const div = document.createElement('div')
+                            div.classList.add('d-flex', 'justify-content-center', 'align-items-center')
+
+                            const nameText = document.createElement('p')
+                            nameText.innerHTML = userInfoMap[data.user_id].display_name
+                            div.appendChild(nameText)
+
+                            const icon = document.createElement('i')
+                            icon.classList.add('ti', 'ti-chevron-right', 'ms-auto')
+                            div.appendChild(icon)
+                            return div
                         } else {
                             return 'Unknown User'
                         }
                     }
                 },
+                tooltipComponent: UserToolTip,
+                tooltipValueGetter: (params:any) => params.data[1].user_id,
                 wrapText: true,
                 autoHeight: true,
                 cellStyle: {lineHeight: 1.6},
@@ -63,7 +156,7 @@ function initialiseAgGrid() {
                 initialWidth: 150
             },
             {
-                field: `setup (${eventAttendancesMetaData.setup_count}/${Object.keys(userDisplayNamesMap).length})`,
+                field: `setup (${eventAttendancesMetaData.setup_count}/${Object.keys(userInfoMap).length})`,
                 cellDataType: 'boolean',
                 colSpan: (params:any) => {
                     const data = params.data[1]
@@ -90,7 +183,7 @@ function initialiseAgGrid() {
                 width: 97,
             },
             {
-                field: `main (${eventAttendancesMetaData.main_count}/${Object.keys(userDisplayNamesMap).length})`,
+                field: `main (${eventAttendancesMetaData.main_count}/${Object.keys(userInfoMap).length})`,
                 cellDataType: 'boolean',
                 cellClassRules: {
                     'status-yes': params => params.data[1].main && !params.data[1].noReply,
@@ -105,7 +198,7 @@ function initialiseAgGrid() {
                 width: 97,
             },
             {
-                field: `packdown (${eventAttendancesMetaData.packdown_count}/${Object.keys(userDisplayNamesMap).length})`,
+                field: `packdown (${eventAttendancesMetaData.packdown_count}/${Object.keys(userInfoMap).length})`,
                 cellClassRules: {
                     'status-yes': params => params.data[1].packdown && !params.data[1].noReply,
                     'status-no': params => !params.data[1].packdown && !params.data[1].noReply,
@@ -140,18 +233,18 @@ function initialiseAgGrid() {
 }
 
 
-async function preLoadUserDisplayNames() {
+async function preLoadUsersInfo() {
     const data:Partial<QueryStringData> = {
         role_ids: volunteerRoleIds
     }
     const queryString = buildQueryString(data)
-    const response = await getUsersField('display_name', queryString)
-    let userDisplayNames = response.data
-    let userDisplayNamesMap:Record<number, string> = {}
-    userDisplayNames.forEach(userInfo => {
-        userDisplayNamesMap[userInfo.id] = userInfo.display_name
+    const response = await getUsersField('public_info', queryString)
+    let usersInfo = response.data
+    let userInfoMap:Record<number, Partial<User>> = {}
+    usersInfo.forEach(userInfo => {
+        userInfoMap[userInfo.id] = userInfo
     })
-    return userDisplayNamesMap
+    return userInfoMap
 }
 
 async function loadAttendanceData() {
@@ -161,10 +254,10 @@ async function loadAttendanceData() {
     const queryString = buildQueryString(queryData)
 
     const eventAttendanceResponse = await getAttendanceForEvent(eventDetails.eventId, queryString)
-    userDisplayNamesMap = await preLoadUserDisplayNames()
+    userInfoMap = await preLoadUsersInfo()
     eventAttendancesMetaData = eventAttendanceResponse.metadata
 
-    eventAttendances = Object.keys(userDisplayNamesMap).map((id) => {
+    eventAttendances = Object.keys(userInfoMap).map((id) => {
         for (const attendance of eventAttendanceResponse.data) {
             if (attendance.user_id === Number(id)) {
                 return attendance
@@ -321,7 +414,26 @@ async function loadAttendance() {
     populateUpdateForm()
 
     await loadAttendanceData()
+
+    const roleIdsToLoad = [...new Set(Object.values(userInfoMap).flatMap(user => user.role_ids))];
+
+    rolesMap = await preloadRoles(roleIdsToLoad)
     populateVolunteerAttendanceTable(false)
+}
+
+async function preloadRoles(role_ids:number[]) {
+    const data:Partial<QueryStringData> = {
+        id: role_ids,
+        hidden: false
+    }
+    const queryString = buildQueryString(data)
+    const response = await getRoles(queryString);
+    let roles = response.data
+    let rolesMap:Record<number, Role> = {};
+    roles.forEach(role => {
+        rolesMap[role.id] = role;
+    });
+    return rolesMap;
 }
 
 
@@ -333,10 +445,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     eventDetails = new EventDetails('event-details', eventDetailsOptions)
-    await eventDetails.init()
 
-
-    CurrentUserId = await getCurrentUserId()
+    const [eventDetailsResponse, userIdResponse] = await Promise.all([
+        await eventDetails.init(),
+        await getCurrentUserId()
+    ]);
+        
+    CurrentUserId = userIdResponse
 
     if (eventDetails.eventId === -1) {
         return

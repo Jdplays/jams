@@ -1060,6 +1060,23 @@ export function getUsers(queryString:string|null = null):Promise<ApiMultiEntryRe
     });
 }
 
+export function getUser(userId:number):Promise<User> {
+    return new Promise((resolve, reject) => {
+        let url = `${baseURL}/users/${userId}`
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
 export function getUsersPublicInfo(queryString:string|null = null):Promise<ApiMultiEntryResponse<[Partial<User>]>> {
     return new Promise((resolve, reject) => {
         let url = `${baseURL}/users/public_info`
@@ -1100,14 +1117,10 @@ export function getUsersField(field:string, queryString:string|null = null):Prom
     });
 }
 
-export function getUsersDisplayNames(queryString:string|null = null):Promise<ApiMultiEntryResponse<[Partial<User>]>> {
+export function getUserField(userId:number, field:string):Promise<Partial<User>> {
     return new Promise((resolve, reject) => {
-        let url = `${baseURL}/users/display_name`
-        if (queryString != null) {
-            url += `?${queryString}`
-        }
         $.ajax({
-            url: url,
+            url: `${baseURL}/users/${userId}/${field}`,
             type: 'GET',
             success: function(response) {
                 resolve(response);
@@ -1120,10 +1133,14 @@ export function getUsersDisplayNames(queryString:string|null = null):Promise<Api
     });
 }
 
-export function getUserRoles(userId:number):Promise<Partial<User>> {
+export function getUsersDisplayNames(queryString:string|null = null):Promise<ApiMultiEntryResponse<[Partial<User>]>> {
     return new Promise((resolve, reject) => {
+        let url = `${baseURL}/users/display_name`
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
         $.ajax({
-            url: `${baseURL}/users/${userId}/role_ids`,
+            url: url,
             type: 'GET',
             success: function(response) {
                 resolve(response);
@@ -1149,6 +1166,25 @@ export function editUser(userId:number, data:Partial<User>, queryString:string|n
             contentType: 'application/json',
             success: function (response) {
                 resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function uploadUserAvatar(fileData:FormData):Promise<ApiResponse<FileData>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: `${baseURL}/users/me/avatar`,
+            data: fileData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                resolve(response.file_data)
             },
             error: function (error) {
                 console.log('Error fetching data:', error);
@@ -2311,10 +2347,26 @@ export function editGeneralConfig(data:Partial<GeneralConfig>):Promise<GeneralCo
 
 // #region Streaks
 
-export function getVolunteerStreak():Promise<ApiResponse<StreadData>> {
+export function getCurrentUserStreak():Promise<ApiResponse<StreadData>> {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: `${baseURL}/volunteers/me/streak`,
+            url: `${baseURL}/users/me/streak`,
+            type: 'GET',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function getUserStreak(userId:Number):Promise<ApiResponse<StreadData>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/users/${userId}/streak`,
             type: 'GET',
             success: function (response) {
                 resolve(response)

@@ -39,5 +39,5 @@ def get_workshop_file(file_id):
     if request.args:
         version_id = request.args.get('version_id')
         if version_id:
-            return helper.get_and_prepare_file(files.workshop_bucket, file.name, version_id)
-    return helper.get_and_prepare_file(files.workshop_bucket, file.name, file.current_version_id)
+            return helper.get_and_prepare_file(file.bucket_name, file.name, version_id)
+    return helper.get_and_prepare_file(file.bucket_name, file.name, file.current_version_id)

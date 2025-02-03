@@ -33,19 +33,70 @@
                 <div id="edit-user-roles-container">
                 </div>
             </div>
+            <div id="custom-badge-block" class="mb-3">
+              <h3>Custom Badge</h3>
+              <p class="text-secondary mb-2">This will display like a role on the user's profile page, but is purly visual and has no function</p>
+              <div id="custom-badge-data">
+                <label class="form-check form-switch">
+                  <input id="toggle-custom-badge" class="form-check-input" type="checkbox"
+                      oninput="toggleCustomBadgeOnClick()">
+                  <span class="form-check-label">Enable custom badge</span>
+                </label>
+                <div id="custom-badge-content" style="display: none;">
+                  <div class="mb-3">
+                    <label class="form-label">Name</label>
+                    <input id="edit-user-badge-name" class="form-control" type="text" placeholder="Badge Name">
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Icon</label>
+                    <div id="edit-user-badge-icon" class="form-selectgroup">
+                      <!--Crown-->
+                      <label class="form-selectgroup-item">
+                        <input type="radio" class="form-selectgroup-input" value="crown" name="badge-icon">
+                        <span class="form-selectgroup-label">
+                          <i class="ti ti-crown" style="color: rgb(255, 215, 0);"></i>
+                        </span>
+                      </label>
+                      <!--Notebook-->
+                      <label class="form-selectgroup-item">
+                        <input type="radio" class="form-selectgroup-input" value="notebook" name="badge-icon">
+                        <span class="form-selectgroup-label">
+                          <i class="ti ti-notebook" style="color: rgb(255, 215, 0);"></i>
+                        </span>
+                      </label>
+                      <!--Cash-->
+                      <label class="form-selectgroup-item">
+                        <input type="radio" class="form-selectgroup-input" value="cash" name="badge-icon">
+                        <span class="form-selectgroup-label">
+                          <i class="ti ti-cash" style="color: rgb(255, 215, 0);"></i>
+                        </span>
+                      </label>
+                      <!--Ticket-->
+                      <label class="form-selectgroup-item">
+                        <input type="radio" class="form-selectgroup-input" value="ticket" name="badge-icon">
+                        <span class="form-selectgroup-label">
+                          <i class="ti ti-ticket" style="color: rgb(255, 215, 0);"></i>
+                        </span>
+                      </label>
+                      <!--Heart-->
+                      <label class="form-selectgroup-item">
+                        <input type="radio" class="form-selectgroup-input" value="heart" name="badge-icon">
+                        <span class="form-selectgroup-label">
+                          <i class="ti ti-heart" style="color: rgb(255, 215, 0);"></i>
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+          </div>
           <div class="modal-footer">
             <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">
               Cancel
             </a>
             <a id="edit-user-button" href="#" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
-              <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-plus" width="24" height="24"
-                viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
-                stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                <path d="M12 5l0 14"></path>
-                <path d="M5 12l14 0"></path>
-              </svg>
-              Edit User
+              <i class="ti ti-device-floppy"></i>
+              <span class="btn-text ms-2">Save</span>
             </a>
           </div>
         </div>

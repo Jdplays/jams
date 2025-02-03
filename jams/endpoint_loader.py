@@ -82,15 +82,22 @@ def generate_page_endpoints_structure():
         # Get the first key-value pair from the pages dictionary
         for page_name, page_data in pages.items():
             page_endpoint = page_data.get('endpoint', [])
+            page_is_default = page_data.get('default', [])
             page_is_public = page_data.get('public', [])
+            if page_endpoint == []:
+                page_endpoint = None
+            if not page_is_default:
+                page_is_default = False
             if not page_is_public:
                 page_is_public = False
             page = Page.query.filter_by(name=page_name).first()
             if not page:
-                page = Page(name=page_name, endpoint=page_endpoint, public=page_is_public)
+                page = Page(name=page_name, endpoint=page_endpoint, default=page_is_default, public=page_is_public)
                 db.session.add(page)
             else:
                 page.endpoint = page_endpoint
+                page.default = page_is_default
+                page.public = page_is_public
             
             db.session.commit()
 
@@ -101,6 +108,13 @@ def generate_page_endpoints_structure():
                     child_page = Page.query.filter_by(name=page_name).first()
                     if child_page:
                         child_page.parent_id = page.id
+
+                        # Set all the child pages endpoint rules to be the same default as the parent page
+                        page_endpoint_rules = PageEndpointRule.query.filter_by(page_id=child_page.id).all()
+                        endpoint_rule_ids = [p_er.endpoint_rule_id for p_er in page_endpoint_rules]
+                        endpoint_rules = EndpointRule.query.filter(EndpointRule.id.in_(endpoint_rule_ids)).all()
+                        for er in endpoint_rules:
+                            er.default = page_is_default
                         db.session.commit()
             
 
@@ -115,11 +129,11 @@ def generate_page_endpoints_structure():
                         print(f'Endpoint "{endpoint_name}" does not exist. Skipping...')
                         continue
 
-                    endpoint_rule = EndpointRule.query.filter_by(endpoint_id=endpoint.id, allowed_fields=allowed_fields, public=page_is_public).first()
+                    endpoint_rule = EndpointRule.query.filter_by(endpoint_id=endpoint.id, allowed_fields=allowed_fields, default=page_is_default, public=page_is_public).first()
                     if not endpoint_rule:
                         endpoint_rule = helper.get_endpoint_rule_for_page(endpoint_id=endpoint.id, page_id=page.id, public=page_is_public)
                         if not endpoint_rule:
-                            endpoint_rule = EndpointRule(endpoint_id=endpoint.id, allowed_fields=allowed_fields, public=page_is_public)
+                            endpoint_rule = EndpointRule(endpoint_id=endpoint.id, allowed_fields=allowed_fields, default=page_is_default, public=page_is_public)
                             db.session.add(endpoint_rule)
                         else:
                             endpoint_rule.allowed_fields = allowed_fields

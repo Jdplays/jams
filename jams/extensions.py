@@ -41,6 +41,7 @@ def create_bucket(name, versioning=True):
         return None
 # Create required buckets
 workshop_bucket = create_bucket('jams-workshops', True)
+user_data_bucket = create_bucket('user-data', True)
 
 def clear_table(model):
     if hasattr(db, 'engine'):

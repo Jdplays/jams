@@ -1,9 +1,9 @@
 from flask_security import current_user
-from flask import abort, redirect, request, current_app, session, url_for, jsonify
+from flask import abort, redirect, request, current_app, url_for, jsonify
 from flask_login.config import EXEMPT_METHODS
 from functools import wraps
 from jams.util import helper, attendee_auth
-from jams.models import db, Page, Attendee, Endpoint, APIKeyEndpoint
+from jams.models import db, Page, Attendee, Endpoint, EndpointRule, APIKeyEndpoint
 from jams.configuration import ConfigType, get_config_value
 
 
@@ -15,6 +15,8 @@ def role_based_access_control_fe(func):
         user_role_ids = current_user.role_ids
         endpoint = helper.extract_endpoint()
         page = Page.query.filter_by(endpoint=endpoint).first_or_404()
+        if page.default:
+            return func(*args, **kwargs)
         page_role_ids = [page_role.role_id for page_role in page.role_pages]
 
         for role_id in page_role_ids:
@@ -43,6 +45,11 @@ def enforce_login(func, *args, **kwargs):
 def rbac_api(func, *args, **kwargs):
     endpoint = helper.extract_endpoint()
     endpoint_obj = Endpoint.query.filter_by(endpoint=endpoint).first()
+    # Are there any endpoint rules where this endpoint is default
+    default_endpoint_rule = EndpointRule.query.filter_by(endpoint_id=Endpoint.id, default=True).first()
+    if default_endpoint_rule and current_user.is_authenticated:
+        return func(*args, **kwargs)
+    
     user_role_ids = current_user.role_ids if current_user.is_authenticated else None
     endpoint_rules = helper.get_endpoint_rules_for_roles(endpoint_obj.id, user_role_ids, not current_user.is_authenticated)
     if not endpoint_rules:

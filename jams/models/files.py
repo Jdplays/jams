@@ -12,12 +12,16 @@ class File(db.Model):
     bucket_name = Column(String(), nullable=False)
     current_version_id = Column(String(), nullable=False)
     public = Column(Boolean(), nullable=False, default=False)
+    user_id = Column(Integer(), ForeignKey('user.id'), nullable=True)
 
-    def __init__(self, name, bucket_name, current_version_id, public=False):
+    owner = relationship('User', backref='files', foreign_keys=[user_id])
+
+    def __init__(self, name, bucket_name, current_version_id, public=False, user_id=None):
         self.name = name
         self.bucket_name = bucket_name
         self.current_version_id = current_version_id
         self.public = public
+        self.user_id = user_id
     
     def to_dict(self):
         return {
@@ -25,7 +29,8 @@ class File(db.Model):
             'name': self.name,
             'bucket_name': self.bucket_name,
             'current_version_id': self.current_version_id,
-            'public': self.public
+            'public': self.public,
+            'user_id': self.user_id
         }
     
 class FileVersion(db.Model):
