@@ -30,6 +30,7 @@ export interface Timeslot {
     range:string
     is_break:boolean
     active:boolean
+    capacity_suggestion:boolean
 }
 
 export interface Workshop {
@@ -45,6 +46,7 @@ export interface Workshop {
     publicly_visible:boolean
     min_volunteers:number
     capacity:number
+    overflow:boolean
 }
 
 export interface Session {
@@ -360,4 +362,9 @@ export interface GitHubReleaseResponse {
     version:string
     release_notes:string
     url:string
+}
+
+export interface EventMetadata {
+    id:number
+    attendee_count:number
 }

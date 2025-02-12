@@ -55,6 +55,7 @@ groups:
     read:
       get_next_event_id: routes.api_v1.public.general.get_next_event
       get_event: routes.api_v1.private.admin.get_event
+      get_event_metadata: routes.api_v1.private.admin.get_event_metadata
       get_event_field: routes.api_v1.private.admin.get_event_field
       get_events: routes.api_v1.private.admin.get_events
       get_events_field: routes.api_v1.private.admin.get_events_field

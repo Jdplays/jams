@@ -167,7 +167,8 @@ async function addTimeslotOnClick() {
         'name': (document.getElementById('add-timeslot-name') as HTMLInputElement).value,
         'start': (document.getElementById('add-timeslot-start-time') as HTMLInputElement).value,
         'end': (document.getElementById('add-timeslot-end-time') as HTMLInputElement).value,
-        'is_break': (document.getElementById('add-timeslot-is-break') as HTMLInputElement).checked
+        'is_break': (document.getElementById('add-timeslot-is-break') as HTMLInputElement).checked,
+        'capacity_suggestion': (document.getElementById('add-timeslot-capacity-suggestion') as HTMLInputElement).checked
     }
 
     const response = await addTimeslot(data)
@@ -186,7 +187,8 @@ async function editTimeslotOnClick() {
         'name': (document.getElementById('edit-timeslot-name') as HTMLInputElement).value,
         'start': (document.getElementById('edit-timeslot-start-time') as HTMLInputElement).value,
         'end': (document.getElementById('edit-timeslot-end-time') as HTMLInputElement).value,
-        'is_break': (document.getElementById('edit-timeslot-is-break') as HTMLInputElement).checked
+        'is_break': (document.getElementById('edit-timeslot-is-break') as HTMLInputElement).checked,
+        'capacity_suggestion': (document.getElementById('edit-timeslot-capacity-suggestion') as HTMLInputElement).checked
     }
 
     const response = await editTimeslot(timeslotID, data)
@@ -207,12 +209,14 @@ async function prepEditTimeslotForm(timeslotId:number) {
     const startInput = document.getElementById('edit-timeslot-start-time') as HTMLInputElement
     const endInput = document.getElementById('edit-timeslot-end-time') as HTMLInputElement
     const isBreakInput = document.getElementById('edit-timeslot-is-break') as HTMLInputElement
+    const showCapacitySuggestion = document.getElementById('edit-timeslot-capacity-suggestion') as HTMLInputElement
 
     hiddenIdInput.value = String(timeslotId)
     nameInput.value = timeslot.name
     startInput.value = timeslot.start
     endInput.value = timeslot.end
     isBreakInput.checked = timeslot.is_break
+    showCapacitySuggestion.checked = timeslot.capacity_suggestion
 }
 
 function initialiseTimeslotsAgGrid() {
@@ -243,6 +247,7 @@ function initialiseTimeslotsAgGrid() {
                 },
                 flex: 1, minWidth: 100},
             {field: 'is_break', headerName: 'Break', cellRenderer: 'agCheckboxCellRenderer', flex: 1, minWidth: 50},
+            {field: 'capacity_suggestion', headerName: 'Capacity Suggestion', cellRenderer: 'agCheckboxCellRenderer', flex: 1, minWidth: 50},
             {
                 field: 'options', cellRenderer: (params:any) => {
                     return buildActionButtonsForModel(params.data.id, params.data.active, archiveTimeslotOnClick, activateTimeslotOnClick, 'edit-timeslot-modal', prepEditTimeslotForm)

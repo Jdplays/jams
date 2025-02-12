@@ -54,3 +54,8 @@ export interface dateTimeFormatterOptions {
     includeTime?:boolean
     includeSeconds?:boolean
 }
+
+export interface ScheduleGridTimeslotCapacity {
+    capacity?:number
+    overflow?:number
+}

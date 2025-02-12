@@ -21,12 +21,13 @@ import {
     getAttendeesSignups,
     getWorkshopField,
     recalculateSessionCapacity,
-    updateSessionSettings
+    updateSessionSettings,
+    getEventMetadata
 } from '@global/endpoints'
-import { DifficultyLevel, EventLocation, EventTimeslot, Location, Session, sessionSettings, Timeslot, User, VolunteerSignup, WorkshopType } from '@global/endpoints_interfaces'
+import { DifficultyLevel, EventLocation, EventMetadata, EventTimeslot, Location, Session, sessionSettings, Timeslot, User, VolunteerSignup, Workshop, WorkshopType } from '@global/endpoints_interfaces'
 import {buildQueryString, emptyElement, allowDrop, waitForTransitionEnd, debounce, successToast, errorToast, buildUserAvatar, preloadUsersInfoMap, animateElement, isTouchDevice, hexToRgba, isNullEmptyOrSpaces} from '@global/helper'
 import {WorkshopCard, WorkshopCardOptions} from '@global/workshop_card'
-import { QueryStringData } from './interfaces'
+import { QueryStringData, ScheduleGridTimeslotCapacity } from './interfaces'
 
 type Icons = {[key: string]: any}
 
@@ -74,13 +75,17 @@ export class ScheduleGrid {
     private attendeeSignupCountsMap:Record<number, number> = {}
     private usersInfoMap:Record<number, Partial<User>> = {}
     private sessionsMap:Record<number, Session> = {}
+    private timeslotCapacityMap:Record<number, ScheduleGridTimeslotCapacity> = {}
 
     private difficultyLevels:DifficultyLevel[]
     private workshopTypes:WorkshopType[]
+    private workshopsMap:Record<number, Workshop> = {}
 
     public currentDragType:string
     public scheduleValid:boolean
     public fatalError:boolean
+
+    private eventMetadata:EventMetadata;
 
 
     constructor(scheduleContainerId:string, options:ScheduleGridOptions = {}) {
@@ -173,6 +178,9 @@ export class ScheduleGrid {
 
     // Get the grid ready
     async init(reInit:boolean=false) {
+        if (this.options.edit) {
+            this.eventMetadata = (await getEventMetadata(this.options.eventId)).data
+        }
 
         if (isTouchDevice() && this.options.edit) {
             // Editing is currently not available on touch devices due to drag and drop not working well on them
@@ -227,7 +235,7 @@ export class ScheduleGrid {
             }
         }
 
-        if (this.options.volunteerSignup || this.options.edit) {
+        if (this.options.volunteerSignup) {
             // Preload users Info Map
             if (Object.keys(this.options.userInfoMap).length <= 0) {
                 this.usersInfoMap = await preloadUsersInfoMap()
@@ -598,9 +606,33 @@ export class ScheduleGrid {
             timeslotContainer.appendChild(timeslotName)
 
             let timeslotRange = document.createElement('p')
-            timeslotRange.classList.add('header-row', 'timeslot-range')
+            timeslotRange.classList.add('header-row', 'header-text-secondary')
             timeslotRange.innerText = timeslot.range
             timeslotContainer.appendChild(timeslotRange)
+
+            if (this.options.edit && timeslot.capacity_suggestion) {
+                let capacityVisualiserContainer = document.createElement('span')
+                capacityVisualiserContainer.classList.add('d-flex')
+                capacityVisualiserContainer.style.gap = '5px'
+                capacityVisualiserContainer.title = 'Timeslot capacity (+ overflow slots) / 75% of attendees'
+
+                let capacity = document.createElement('p')
+                capacity.id = `capacity-${timeslot.id}`
+                capacity.classList.add('header-row', 'header-text-secondary')
+                capacityVisualiserContainer.appendChild(capacity)
+                
+                let overflow = document.createElement('p')
+                overflow.id = `overflow-${timeslot.id}`
+                overflow.classList.add('header-row', 'header-text-secondary')
+                capacityVisualiserContainer.appendChild(overflow)
+
+                let totalCap = document.createElement('p')
+                totalCap.id = `total-cap-${timeslot.id}`
+                totalCap.classList.add('header-row', 'header-text-secondary')
+                capacityVisualiserContainer.appendChild(totalCap)
+                
+                timeslotContainer.appendChild(capacityVisualiserContainer)
+            }
 
             let emptyTimeslotRow = document.createElement('div')
             emptyTimeslotRow.classList.add('header-row', 'header-row-spacer')
@@ -1089,6 +1121,11 @@ export class ScheduleGrid {
 
             // Iterate over each workshop to be added and trigger an animation to set the workshop
             for (const workshop of workshopsToAdd) {
+                // Add the workshop to the workshops map
+                if (!this.workshopsMap[workshop.id]) {
+                    this.workshopsMap[workshop.id] = workshop
+                }
+
                 let sessionBlock = document.getElementById(`session-${workshop.event_location_id}-${workshop.event_timeslot_id}`)
                 if (!sessionBlock) {
                     continue
@@ -1241,6 +1278,73 @@ export class ScheduleGrid {
                     sessionBlock.removeEventListener('drop', this.handleDropWithContext)
                     sessionBlock.addEventListener('drop', this.handleDropWithContext)
                     sessionBlock.addEventListener('dragover', allowDrop);
+                }
+
+                // Remove old workshops from the workshops map
+                if (this.workshopsMap[workshop.workshop_id]) {
+                    delete this.workshopsMap[workshop.workshop_id]
+                }
+            }
+        }
+
+        // Add each session's capacity to the capacity map
+        if (this.options.edit) {
+            this.timeslotCapacityMap = {}
+            for (const session of sessions) {    
+                if (!session.has_workshop) {
+                    continue
+                }
+
+                const workshop = this.workshopsMap[session.workshop_id]
+                if (!workshop) {
+                    continue
+                }
+
+                const realTimeslotId = this.getTimeslotIdfromEventTimeslotId(session.event_timeslot_id)
+                if (!this.timeslotCapacityMap[realTimeslotId]) {
+                    let timeslotCapacity:ScheduleGridTimeslotCapacity = {
+                        capacity: 0,
+                        overflow: 0
+                    }
+                    this.timeslotCapacityMap[realTimeslotId] = timeslotCapacity
+                }
+
+                if (realTimeslotId === 6) {
+                }
+
+                if (workshop.overflow) {
+                    this.timeslotCapacityMap[realTimeslotId].overflow += session.capacity
+                } else {
+                    this.timeslotCapacityMap[realTimeslotId].capacity += session.capacity
+                }
+            }
+
+            // Update capacity visualiser
+            for (const [timeslotId, timeslotCapacity] of Object.entries(this.timeslotCapacityMap)) {
+                const capacityText = document.getElementById(`capacity-${timeslotId}`)
+                const overflowText = document.getElementById(`overflow-${timeslotId}`)
+                const totalCapacityText = document.getElementById(`total-cap-${timeslotId}`)
+
+                if (!capacityText || !overflowText || !totalCapacityText) {
+                    continue
+                }
+
+                capacityText.innerHTML = String(timeslotCapacity.capacity)
+                overflowText.innerHTML = `(+${timeslotCapacity.overflow})`
+                const totalCapacity = Math.ceil(this.eventMetadata.attendee_count * 0.75)
+                totalCapacityText.innerHTML = `/${totalCapacity}`
+
+                // Style the text
+                const combinedCapacity = timeslotCapacity.capacity + timeslotCapacity.overflow
+                if (combinedCapacity >= totalCapacity) {
+                    capacityText.classList.remove('text-yellow', 'text-danger')
+                    capacityText.classList.add('text-success')
+                } else if (combinedCapacity <= (totalCapacity) && combinedCapacity > (totalCapacity * 0.5)) {
+                    capacityText.classList.remove('text-success', 'text-danger')
+                    capacityText.classList.add('text-yellow')
+                } else if (combinedCapacity <= (totalCapacity * 0.5)) {
+                    capacityText.classList.remove('text-yellow', 'text-success')
+                    capacityText.classList.add('text-danger')
                 }
             }
         }
@@ -1608,6 +1712,10 @@ export class ScheduleGrid {
                 scheduleGrid.updateSchedule()
             }
         }
+    }
+
+    getTimeslotIdfromEventTimeslotId(eventTimeslotId:number):number {
+        return this.eventTimeslots.find(ts => ts.id === eventTimeslotId).timeslot_id
     }
 }
 

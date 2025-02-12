@@ -39,7 +39,8 @@ import {
     JOLTStatus,
     JOLTConfig,
     StreadData,
-    GitHubReleaseResponse
+    GitHubReleaseResponse,
+    EventMetadata
 } from "@global/endpoints_interfaces";
 import { formatDate } from "./helper";
 
@@ -918,6 +919,22 @@ export function getEventField(eventID:number, field:string):Promise<Partial<Even
     return new Promise((resolve, reject) => {
         $.ajax({
             url: `${baseURL}/events/${eventID}/${field}`,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);   
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error);
+            }
+        });
+    });
+}
+
+export function getEventMetadata(eventID:number):Promise<ApiResponse<EventMetadata>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/events/${eventID}/metadata`,
             type: 'GET',
             success: function(response) {
                 resolve(response);   

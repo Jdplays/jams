@@ -189,6 +189,7 @@ pages:
       get_events_field:
         allowed_fields: id, name
       get_event:
+      get_event_metadata:
       # Workshops
       get_workshops:
       get_difficulty_levels:
