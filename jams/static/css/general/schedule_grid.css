@@ -100,6 +100,8 @@
 .header-text-secondary {
     font-weight: normal;
     font-size: 12;
+    margin-top: 0px;
+    margin-bottom: 0px;
 }
 
 .session-block {

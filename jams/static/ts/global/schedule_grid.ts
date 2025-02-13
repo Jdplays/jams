@@ -28,6 +28,7 @@ import { DifficultyLevel, EventLocation, EventMetadata, EventTimeslot, Location,
 import {buildQueryString, emptyElement, allowDrop, waitForTransitionEnd, debounce, successToast, errorToast, buildUserAvatar, preloadUsersInfoMap, animateElement, isTouchDevice, hexToRgba, isNullEmptyOrSpaces} from '@global/helper'
 import {WorkshopCard, WorkshopCardOptions} from '@global/workshop_card'
 import { QueryStringData, ScheduleGridTimeslotCapacity } from './interfaces'
+import { addTooltipToElement, buildUserTooltip, hideAllTooltips } from './tooltips'
 
 type Icons = {[key: string]: any}
 
@@ -611,25 +612,45 @@ export class ScheduleGrid {
             timeslotContainer.appendChild(timeslotRange)
 
             if (this.options.edit && timeslot.capacity_suggestion) {
-                let capacityVisualiserContainer = document.createElement('span')
-                capacityVisualiserContainer.classList.add('d-flex')
-                capacityVisualiserContainer.style.gap = '5px'
+                let capacityVisualiserContainer = document.createElement('div')
+                capacityVisualiserContainer.classList.add('align-items-center')
                 capacityVisualiserContainer.title = 'Timeslot capacity (+ overflow slots) / 75% of attendees'
+
+                let firstRow = document.createElement('span')
+                firstRow.classList.add('d-flex')
+                firstRow.style.gap = '2px'
 
                 let capacity = document.createElement('p')
                 capacity.id = `capacity-${timeslot.id}`
-                capacity.classList.add('header-row', 'header-text-secondary')
-                capacityVisualiserContainer.appendChild(capacity)
-                
-                let overflow = document.createElement('p')
-                overflow.id = `overflow-${timeslot.id}`
-                overflow.classList.add('header-row', 'header-text-secondary')
-                capacityVisualiserContainer.appendChild(overflow)
+                capacity.classList.add('header-text-secondary')
+                firstRow.appendChild(capacity)
+
+                let divider = document.createElement('p')
+                divider.classList.add('header-text-secondary')
+                divider.innerHTML = '/'
+                firstRow.appendChild(divider)
 
                 let totalCap = document.createElement('p')
                 totalCap.id = `total-cap-${timeslot.id}`
-                totalCap.classList.add('header-row', 'header-text-secondary')
-                capacityVisualiserContainer.appendChild(totalCap)
+                totalCap.classList.add('header-text-secondary')
+                firstRow.appendChild(totalCap)
+                capacityVisualiserContainer.appendChild(firstRow)
+
+                let secondRow = document.createElement('span')
+                secondRow.classList.add('d-flex')
+                secondRow.style.gap = '5px'
+
+                let overflowContainer = document.createElement('span')
+                overflowContainer.classList.add('d-flex',)
+                overflowContainer.style.gap = '2px'
+
+                let overflow = document.createElement('p')
+                overflow.id = `overflow-${timeslot.id}`
+                overflow.classList.add('header-text-secondary')
+                overflowContainer.innerHTML = `(${overflow.outerHTML})`
+                secondRow.appendChild(overflowContainer)
+
+                capacityVisualiserContainer.appendChild(secondRow)
                 
                 timeslotContainer.appendChild(capacityVisualiserContainer)
             }
@@ -1149,6 +1170,7 @@ export class ScheduleGrid {
                         cardBody.appendChild(volunteerCountText)
 
                         if (workshopSignups > 0) {
+                            let avatarContainer = document.createElement('span')
                             const numberOfAvatarsFit = Math.floor(this.options.width / 30)
 
                             let index = 0
@@ -1170,16 +1192,36 @@ export class ScheduleGrid {
 
                                 volunteerAvatar.style.marginBottom = '5px'
                                 volunteerAvatar.style.marginTop = '-30px'
-                                cardBody.appendChild(volunteerAvatar)
+                                avatarContainer.appendChild(volunteerAvatar)
 
                                 index++
                             }
 
+
                             if (index < workshopSignups) {
                                 let volunteerAvatar = buildUserAvatar(null, 25, `+${workshopSignups - index}`)
                                 volunteerAvatar.style.marginBottom = '5px'
-                                cardBody.appendChild(volunteerAvatar)
+                                avatarContainer.appendChild(volunteerAvatar)
                             }
+
+                            // Tooltip
+                            const tooltipElement = document.createElement('div')
+                            tooltipElement.classList.add('card')
+                            for (const userId of currentSignups[workshop.session_id]) {
+                                const user = this.usersInfoMap[userId]
+                                if (!user) {
+                                    continue
+                                }
+
+                                tooltipElement.appendChild(buildUserTooltip(user))
+                            }
+
+                            avatarContainer.onmouseover = ((event) => {
+                                event.stopPropagation()
+                                addTooltipToElement(tooltipElement, avatarContainer)
+                            })
+
+                            cardBody.appendChild(avatarContainer)
                         }
 
                         cardOptions.cardBodyElement = cardBody
@@ -1194,6 +1236,7 @@ export class ScheduleGrid {
                                 cardOptions.backgroundColour = '#38aaffb3'
                                 cardOptions.cardBodyActionIcon = this.icons.userRemove
                                 cardOptions.cardBodyActionFunc = () => {
+                                    hideAllTooltips()
                                     removeVolunteerSignup(this.options.eventId, this.options.userId, workshop.session_id).then((response) => {
                                         successToast(response.message)
                                         this.populateSessions()
@@ -1205,6 +1248,7 @@ export class ScheduleGrid {
                             } else {
                                 cardOptions.cardBodyActionIcon = this.icons.userAdd
                                 cardOptions.cardBodyActionFunc = () => {
+                                    hideAllTooltips()
                                     const data:Partial<VolunteerSignup> = {
                                         session_id: workshop.session_id
                                     }
@@ -1330,21 +1374,31 @@ export class ScheduleGrid {
                 }
 
                 capacityText.innerHTML = String(timeslotCapacity.capacity)
-                overflowText.innerHTML = `(+${timeslotCapacity.overflow})`
+                overflowText.innerHTML = `+${timeslotCapacity.overflow}`
+                this.eventMetadata.attendee_count = 56
                 const totalCapacity = Math.ceil(this.eventMetadata.attendee_count * 0.75)
-                totalCapacityText.innerHTML = `/${totalCapacity}`
+                totalCapacityText.innerHTML = String(totalCapacity)
 
                 // Style the text
                 const combinedCapacity = timeslotCapacity.capacity + timeslotCapacity.overflow
                 if (combinedCapacity >= totalCapacity) {
                     capacityText.classList.remove('text-yellow', 'text-danger')
                     capacityText.classList.add('text-success')
+
+                    overflowText.classList.remove('text-yellow', 'text-danger')
+                    overflowText.classList.add('text-success')
                 } else if (combinedCapacity <= (totalCapacity) && combinedCapacity > (totalCapacity * 0.5)) {
                     capacityText.classList.remove('text-success', 'text-danger')
                     capacityText.classList.add('text-yellow')
+
+                    overflowText.classList.remove('text-success', 'text-danger')
+                    overflowText.classList.add('text-yellow')
                 } else if (combinedCapacity <= (totalCapacity * 0.5)) {
                     capacityText.classList.remove('text-yellow', 'text-success')
                     capacityText.classList.add('text-danger')
+
+                    overflowText.classList.remove('text-yellow', 'text-success')
+                    overflowText.classList.add('text-danger')
                 }
             }
         }
