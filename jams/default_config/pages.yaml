@@ -356,7 +356,7 @@ pages:
     public: true
     api_endpoints:
       get_event_field:
-        allowed_fields: id, name, date
+        allowed_fields: id, name, filtered_name, date
 
         
   public_schedule:

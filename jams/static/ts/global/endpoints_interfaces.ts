@@ -85,6 +85,7 @@ export interface WorkshopType {
 export interface Event {
     id:number
     name:string
+    filtered_name:string
     description:string
     date:string
     start_date_time:string
@@ -324,6 +325,7 @@ export interface GeneralConfig {
     APP_VERSION?:string
     TIMEZONE?:string
     STREAKS_ENABLED?:boolean
+    EVENT_PREFIX_FILTER?:string
 }
 
 export interface FireListEntry {

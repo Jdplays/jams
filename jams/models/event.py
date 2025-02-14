@@ -20,6 +20,11 @@ class Event(db.Model):
     external_id = Column(String(), nullable=True)
     external_url = Column(String(), nullable=True)
 
+    @property
+    def filtered_name(self):
+        from jams.util import helper
+        return helper.remove_event_name_prefix(self.name)
+
     def __init__(self, name, description, date, start_date_time, end_date_time, capacity, password, active=True, external=False, external_id=None, external_url = None):
         self.name = name
         self.description = description
@@ -48,6 +53,7 @@ class Event(db.Model):
         return {
             'id': self.id,
             'name': self.name,
+            'filtered_name': self.filtered_name,
             'description': self.description,
             'date': str(date),
             'start_date_time': str(start_datetime),

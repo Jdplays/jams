@@ -872,3 +872,9 @@ def get_latest_release():
         }
     except requests.RequestException:
         return None
+    
+def remove_event_name_prefix(event_name):
+    prefix = get_config_value(ConfigType.EVENT_PREFIX_FILTER)
+    if not prefix:
+        return event_name
+    return event_name.removeprefix(prefix).strip()
