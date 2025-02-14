@@ -66,6 +66,7 @@ function addWorkshopOnClick() {
     const workshopDescriptionInput = document.getElementById('add-workshop-description') as HTMLInputElement
     const workshopMinVolunteersInput = document.getElementById('add-workshop-min_volunteers') as HTMLInputElement
     const workshopCapacityInput = document.getElementById('add-workshop-capacity') as HTMLInputElement
+    const overflowInput = document.getElementById('add-workshop-overflow') as HTMLInputElement
     const workshopDifficultySelect = document.getElementById('difficulty-selection-container') as HTMLInputElement
     const workshopTypeSelect = document.getElementById('workshop-type-selection-container') as HTMLDivElement
 
@@ -89,6 +90,7 @@ function addWorkshopOnClick() {
         difficulty_id: Number(difficultyId),
         min_volunteers: Number(workshopMinVolunteersInput.value),
         capacity: Number(workshopCapacityInput.value),
+        overflow: overflowInput.checked,
         workshop_type_id: Number(workshopTypeId)
     }
 
@@ -106,6 +108,7 @@ function workshopTypeSelectionGroupOnChange(value:string) {
     const minVolunteersBlock = document.getElementById('min-volunteers-block') as HTMLDivElement
     const capacityBlock = document.getElementById('capacity-block') as HTMLDivElement
     const difficultyBlock = document.getElementById('difficulty-block') as HTMLDivElement
+    const overflowBlock = document.getElementById('overflow-block') as HTMLDivElement
 
     const currentWorkshopType = workshopTypesMap[Number(value)]
 
@@ -118,9 +121,11 @@ function workshopTypeSelectionGroupOnChange(value:string) {
     if (currentWorkshopType.attendee_registration) {
         capacityBlock.style.display = 'block'
         difficultyBlock.style.display = 'block'
+        overflowBlock.style.display = 'block'
     } else {
         capacityBlock.style.display = 'none'
         difficultyBlock.style.display = 'none'
+        overflowBlock.style.display = 'none'
     }
 }
 

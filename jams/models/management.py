@@ -47,6 +47,7 @@ class Workshop(db.Model):
     publicly_visible = Column(Boolean, nullable=False, default=True, server_default='true')
     min_volunteers = Column(Integer(), nullable=True)
     capacity = Column(Integer(), nullable=True)
+    overflow = Column(Boolean, nullable=False, default=False, server_default='false')
 
     difficulty = relationship('DifficultyLevel', backref='workshops')
     workshop_type = relationship('WorkshopType', backref='workshops')
@@ -58,7 +59,7 @@ class Workshop(db.Model):
         return True
 
     # Requires name and description to be passed
-    def __init__(self, name, description, difficulty_id=None, active=True, volunteer_signup=True, attendee_registration=True, publicly_visible=True, min_volunteers=0, capacity=0, workshop_type_id=None):
+    def __init__(self, name, description, difficulty_id=None, active=True, volunteer_signup=True, attendee_registration=True, publicly_visible=True, min_volunteers=0, capacity=0, overflow=False, workshop_type_id=None):
         self.name = name
         self.description = description
         self.difficulty_id = difficulty_id
@@ -68,6 +69,7 @@ class Workshop(db.Model):
         self.publicly_visible = publicly_visible
         self.min_volunteers = min_volunteers
         self.capacity = capacity
+        self.overflow = overflow
         
         if not workshop_type_id:
             workshop_type = WorkshopType.query.filter_by(name='Standard Workshop').first()
@@ -116,6 +118,7 @@ class Workshop(db.Model):
         if not self.attendee_registration:
             self.capacity = None
             self.difficulty_id = None
+            self.overflow = False
 
     def to_dict(self):
         return {
@@ -130,7 +133,8 @@ class Workshop(db.Model):
             'attendee_registration': self.attendee_registration,
             'publicly_visible': self.publicly_visible,
             'min_volunteers': self.min_volunteers,
-            'capacity': self.capacity
+            'capacity': self.capacity,
+            'overflow': self.overflow
         }
     
 class DifficultyLevel(db.Model):

@@ -298,6 +298,12 @@ def get_events_field(field):
     data = helper.filter_model_by_query_and_properties(Event, request.args, field)
     return jsonify(data)
 
+@bp.route('/events/<int:event_id>/metadata', methods=['GET'])
+@api_route
+def get_event_metadata(event_id):
+    event = Event.query.filter_by(id=event_id).first_or_404()
+    return jsonify({'data': event.get_metadata()})
+
 
 @bp.route('/events/<int:event_id>', methods=['GET'])
 @api_route

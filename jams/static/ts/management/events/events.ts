@@ -98,7 +98,8 @@ function initialiseAgGrid() {
         },
         columnDefs: [
             {
-                field: 'name',
+                field: 'filtered_name',
+                headerName: 'Name',
                 cellRenderer: (params:any) => {
                     if (!params.data) {
                       return 'Loading...'

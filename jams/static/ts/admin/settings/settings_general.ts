@@ -10,8 +10,9 @@ function checkIfContentUpdated() {
 
     const locationSelect = document.getElementById('loc-select') as HTMLSelectElement
     const streaksSwitch = document.getElementById('toggle-streaks-switch') as HTMLInputElement
+    const eventPrefixFilterInput = document.getElementById('prefix-filter-input') as HTMLInputElement
 
-    if (locationSelect.value !== currentConfig.TIMEZONE || streaksSwitch.checked !== currentConfig.STREAKS_ENABLED) {
+    if (locationSelect.value !== currentConfig.TIMEZONE || streaksSwitch.checked !== currentConfig.STREAKS_ENABLED || (eventPrefixFilterInput.value ?? '') !== (currentConfig.EVENT_PREFIX_FILTER ?? '')) {
         saveButton.disabled = false
     } else {
         saveButton.disabled = true
@@ -78,10 +79,11 @@ function populateLocationSelect() {
 function populateStreaksSection() {
     const streaksSwitch = document.getElementById('toggle-streaks-switch') as HTMLInputElement
     const refreshButton = document.getElementById('streak-refresh-button') as HTMLButtonElement
+    const eventPrefixFilterInput = document.getElementById('prefix-filter-input') as HTMLInputElement
 
     streaksSwitch.checked = currentConfig.STREAKS_ENABLED
-
     refreshButton.disabled = !currentConfig.STREAKS_ENABLED
+    eventPrefixFilterInput.value = currentConfig.EVENT_PREFIX_FILTER
 }
 
 async function setupPage() {
@@ -97,10 +99,12 @@ async function setupPage() {
 function generalConfigSaveOnClick() {
     const locationSelect = document.getElementById('loc-select') as HTMLSelectElement
     const streaksSwitch = document.getElementById('toggle-streaks-switch') as HTMLInputElement
+    const eventPrefixFilterInput = document.getElementById('prefix-filter-input') as HTMLInputElement
 
     const data:GeneralConfig = {
         TIMEZONE: locationSelect.value,
-        STREAKS_ENABLED: streaksSwitch.checked
+        STREAKS_ENABLED: streaksSwitch.checked,
+        EVENT_PREFIX_FILTER: eventPrefixFilterInput.value
     }
 
     editGeneralConfig(data).then((response) => {

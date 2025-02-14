@@ -1,5 +1,5 @@
 from . import db
-from sqlalchemy  import CheckConstraint, Column, String, Integer, TIME, Boolean, ForeignKey, DateTime, event
+from sqlalchemy  import CheckConstraint, Column, String, Integer, TIME, Boolean, ForeignKey, DateTime, and_, event
 from sqlalchemy.orm import relationship
 from jams.util.enums import FireListPersonType
 
@@ -19,6 +19,11 @@ class Event(db.Model):
     external = Column(Boolean(), nullable=True, default=False)
     external_id = Column(String(), nullable=True)
     external_url = Column(String(), nullable=True)
+
+    @property
+    def filtered_name(self):
+        from jams.util import helper
+        return helper.remove_event_name_prefix(self.name)
 
     def __init__(self, name, description, date, start_date_time, end_date_time, capacity, password, active=True, external=False, external_id=None, external_url = None):
         self.name = name
@@ -48,6 +53,7 @@ class Event(db.Model):
         return {
             'id': self.id,
             'name': self.name,
+            'filtered_name': self.filtered_name,
             'description': self.description,
             'date': str(date),
             'start_date_time': str(start_datetime),
@@ -58,6 +64,14 @@ class Event(db.Model):
             'external': self.external,
             'external_id': self.external_id,
             'external_url': self.external_url
+        }
+    
+    def get_metadata(self):
+        from jams.models import Attendee
+        attendee_count = Attendee.query.filter(and_(Attendee.event_id == self.id, Attendee.registerable == True)).count()
+        return {
+            'id': self.id,
+            'attendee_count': attendee_count
         }
 
 
@@ -99,6 +113,7 @@ class Timeslot(db.Model):
     end = Column(TIME(), nullable=False)
     is_break = Column(Boolean(), nullable=False, default=False, server_default='false')
     active = Column(Boolean(), default=True)
+    capacity_suggestion = Column(Boolean(), nullable=False, default=False, server_default='false')
 
     @property
     def range(self):
@@ -106,12 +121,13 @@ class Timeslot(db.Model):
         end_formatted = self.end.strftime('%H:%M') if self.end else 'N/A'
         return f"{start_formatted} - {end_formatted}"
     
-    def __init__(self, name, start, end, is_break=False, active=True):
+    def __init__(self, name, start, end, is_break=False, active=True, capacity_suggestion=False):
         self.name = name
         self.start = start
         self.end = end
         self.is_break = is_break
         self.active = active
+        self.capacity_suggestion = capacity_suggestion
 
     def activate(self):
         self.active = True
@@ -127,7 +143,8 @@ class Timeslot(db.Model):
             'end': str(self.end),
             'range': self.range,
             'is_break': self.is_break,
-            'active': self.active
+            'active': self.active,
+            'capacity_suggestion': self.capacity_suggestion
         }
 
 # The EventLocations are locations that are in a specific event and reference one of the overall locations along with an order it should be in (lower = first)

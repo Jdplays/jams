@@ -10,11 +10,10 @@ import {
 } from '@global/endpoints'
 import { Metadata, Role, User, VolunteerAttendance } from "@global/endpoints_interfaces";
 import { EventDetails, EventDetailsOptions } from '@global/event_details';
-import { animateElement, buildQueryString, buildRoleBadge, buildUserAvatar, emptyElement, errorToast, successToast, validateTextInput, warningToast } from '@global/helper';
+import { animateElement, buildQueryString, buildRoleBadge, buildUserAvatar, emptyElement, errorToast, isTouchDevice, successToast, validateTextInput, warningToast } from '@global/helper';
 import { QueryStringData } from '@global/interfaces';
-import { createGrid, GridApi, GridOptions, ITooltipComp, ITooltipParams } from 'ag-grid-community';
-import { param } from 'jquery';
-import { use } from 'marked';
+import { addTooltipToElement, buildUserTooltip, hideTooltip } from '@global/tooltips';
+import { CellClickedEvent, CellMouseOverEvent, createGrid, GridApi, GridOptions, ITooltipComp, ITooltipParams } from 'ag-grid-community';
 
 let gridApi:GridApi<any>;
 let eventDetails:EventDetails;
@@ -30,6 +29,8 @@ let eventAttendances:Partial<VolunteerAttendance>[] = []
 
 let noteInputValid:boolean = false
 
+let activeTooltipElement: HTMLElement | null = null
+
 class UserToolTip implements ITooltipComp {
     private tooltipElement: HTMLDivElement
 
@@ -39,64 +40,7 @@ class UserToolTip implements ITooltipComp {
             return
         }
 
-        this.tooltipElement = document.createElement('div')
-        const avatar = buildUserAvatar(user)
-
-        const tmpRolesContainer = document.createElement('div')
-        if (user.badge_text) {
-            const tag = document.createElement('span')
-            tag.classList.add('tag-with-indicator')
-            tag.style.width = 'fit-content'
-            tag.style.borderRadius = '90px'
-            tag.style.cursor = 'pointer'
-            
-            const text = document.createElement('span')
-            text.innerHTML = user.badge_text
-            tag.appendChild(text)
-    
-            if (user.badge_icon) {
-                const icon = document.createElement('i')
-                icon.classList.add('ti', `ti-${user.badge_icon}`, 'ms-2')
-                icon.style.color = 'rgb(255, 215, 0)'
-                tag.appendChild(icon)
-            }
-    
-            tmpRolesContainer.appendChild(tag)
-        } else {
-            const userRoles = user.role_ids
-                .map(roleId => rolesMap[roleId])
-                .filter(role => role !== undefined)
-                .sort((a, b) => a.priority - b.priority)
-            
-                const badge = buildRoleBadge(userRoles[0], null, true)
-                tmpRolesContainer.appendChild(badge)
-        }
-
-        this.tooltipElement.classList.add('custom-tooltip')
-        this.tooltipElement.innerHTML = `
-            <a href="/private/users/${user.id}" class="text-decoration-none">
-                <div class="card card-sm">
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-auto">
-                                ${avatar.outerHTML}
-                            </div>
-                            <div class="col">
-                                <div class="text-truncate">
-                                    ${user.display_name}
-                                </div>
-                                <div id="user-roles-container" class="d-flex flex-wrap mb-2">
-                                    ${tmpRolesContainer.innerHTML}
-                                </div>
-                            </div>
-                            <div class="col-auto d-flex align-items-center">
-                                <i class="ti ti-chevron-right text-muted"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </a>
-            `;
+        this.tooltipElement = buildUserTooltip(user, rolesMap)
     }
 
     getGui() {
@@ -105,16 +49,44 @@ class UserToolTip implements ITooltipComp {
     
 }
 
+function showCustomTooltip(event: CellClickedEvent|CellMouseOverEvent) {
+    if (!isTouchDevice()) {
+        return
+    }
+    
+    if (event.column.getColId() !== 'user_id') {
+        hideTooltip(activeTooltipElement)
+        return
+    }
+
+    
+    if (activeTooltipElement) {
+        hideTooltip(activeTooltipElement)
+    }
+
+    // Create a new tooltip element
+    const user = userInfoMap[event.data[1].user_id]
+    if (!user) {
+        return
+    }
+    
+    const target = event.event?.target as HTMLElement;
+    const tooltip = buildUserTooltip(user, rolesMap)
+    addTooltipToElement(tooltip, target)
+    activeTooltipElement = tooltip;
+}
+
 function initialiseAgGrid() {
     const gridOptions:GridOptions = {
         domLayout: 'autoHeight',
-        tooltipShowDelay:100,
+        tooltipShowDelay:0,
         tooltipInteraction: true,
         defaultColDef: {
             wrapHeaderText: true,
             autoHeaderHeight: true,
             resizable:false
         },
+        onCellClicked: showCustomTooltip,
         columnDefs: [
             {
                 field: 'user_id',
@@ -469,3 +441,7 @@ document.addEventListener("DOMContentLoaded", () => {
         noteInputValid = validateTextInput(attendanceNoteInput, null, false, true)
     }
 })
+
+document.addEventListener("clicked", () => {
+    hideTooltip(activeTooltipElement)
+});

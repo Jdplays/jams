@@ -57,13 +57,14 @@ def add_workshop():
     difficulty_id = data.get('difficulty_id')
     min_volunteers = data.get('min_volunteers')
     capacity = data.get('capacity')
+    overflow = data.get('overflow')
     workshop_type_id = data.get('workshop_type_id')
     
 
     if not name or not description or not difficulty_id or difficulty_id == '-1':
         abort(400, description="No 'name' or 'description' or 'difficulty_id' provided")
 
-    new_workshop = Workshop(name=name, description=description, min_volunteers=min_volunteers, difficulty_id=difficulty_id, capacity=capacity, workshop_type_id=workshop_type_id)
+    new_workshop = Workshop(name=name, description=description, min_volunteers=min_volunteers, difficulty_id=difficulty_id, capacity=capacity, overflow=overflow, workshop_type_id=workshop_type_id)
     db.session.add(new_workshop)
     db.session.commit()
 
@@ -365,11 +366,12 @@ def add_timeslot():
     start = data.get('start')
     end = data.get('end')
     is_break = data.get('is_break')
+    capacity_suggestion = data.get('capacity_suggestion')
 
     if not name:
         abort(400, description="No 'name' provided")
 
-    new_timeslot = Timeslot(name=name, start=start, end=end, is_break=is_break)
+    new_timeslot = Timeslot(name=name, start=start, end=end, is_break=is_break, capacity_suggestion=capacity_suggestion)
     db.session.add(new_timeslot)
     db.session.commit()
 

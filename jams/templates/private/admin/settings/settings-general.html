@@ -76,6 +76,19 @@
                 </tr>
                 <tr>
                     <td class="setting-column">
+                        <p>Event Name Prefix Filter</p>
+                    </td>
+                    <td class="description-column">
+                        <label class="text-secondary">This is a filter for event names. If all your event names start with the same prefix. Eg: "My Event - February 2025" and "My Event - March 2025", you could set the filter to be "My Event - " and anywhere that shows the event name would remove the prefix part.</label>
+                    </td>
+                    <td class="value-column">
+                        <input id="prefix-filter-input" class="form-control" type="text" placeholder="My Event - "
+                        oninput="checkIfContentUpdated()">
+                    </td>
+                    <td>N/A</td>
+                </tr>
+                <tr>
+                    <td class="setting-column">
                         <p>Volunteer Streaks</p>
                     </td>
                     <td class="description-column">
