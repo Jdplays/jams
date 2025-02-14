@@ -37,6 +37,7 @@ function initialiseAgGrid() {
         enableCellTextSelection: true,
         getRowId: (params: any) => String(params.data.id),
         animateRows: true,
+        suppressMovableColumns: true,
         columnDefs: [
             {
                 field: 'name',

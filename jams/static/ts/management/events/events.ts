@@ -96,6 +96,7 @@ function initialiseAgGrid() {
             }
             return null
         },
+        suppressMovableColumns: true,
         columnDefs: [
             {
                 field: 'filtered_name',

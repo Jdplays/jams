@@ -56,6 +56,7 @@ function initialiseAgGrid() {
             }
             return null
         },
+        suppressMovableColumns: true,
         columnDefs: [
             {
                 field: 'name',
