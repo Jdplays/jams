@@ -90,6 +90,7 @@ async function prepEditLocationForm(locationId:number) {
 function initialiseLocationsAgGrid() {
     const gridOptions:GridOptions = {
         domLayout: "autoHeight",
+        suppressMovableColumns: true,
         columnDefs: [
             {
                 field: 'name',
@@ -222,6 +223,7 @@ async function prepEditTimeslotForm(timeslotId:number) {
 function initialiseTimeslotsAgGrid() {
     const gridOptions:GridOptions = {
         domLayout: "autoHeight",
+        suppressMovableColumns: true,
         columnDefs: [
             {
                 field: 'name',

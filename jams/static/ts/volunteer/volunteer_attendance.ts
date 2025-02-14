@@ -81,6 +81,7 @@ function initialiseAgGrid() {
         domLayout: 'autoHeight',
         tooltipShowDelay:0,
         tooltipInteraction: true,
+        suppressMovableColumns: true,
         defaultColDef: {
             wrapHeaderText: true,
             autoHeaderHeight: true,

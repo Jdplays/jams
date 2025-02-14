@@ -186,6 +186,7 @@ function initialiseAgGrid() {
         defaultColDef: {
             sortable: false
           },
+        suppressMovableColumns: true,
         columnDefs: [
             {
                 field: 'date_time',

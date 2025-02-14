@@ -161,6 +161,7 @@ function initialiseAgGrid() {
     const gridOptions:GridOptions = {
         enableCellTextSelection: true,
         domLayout: 'autoHeight',
+        suppressMovableColumns: true,
         defaultColDef: {
             wrapHeaderText: true,
             autoHeaderHeight: true,
