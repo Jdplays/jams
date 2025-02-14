@@ -58,7 +58,13 @@ function initialiseAgGrid() {
                         return params.data.email
                     }
                 },
-                tooltipValueGetter: (params:any) => params.value,
+                tooltipValueGetter: (params:any) => {
+                    if (params.data.type === 'VOLUNTEER') {
+                        return 'N/A'
+                    } else {
+                        return params.data.email
+                    }
+                },
                 flex: 1
             },
             {field: 'type', minWidth:150, flex: 1},
