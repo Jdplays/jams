@@ -37,6 +37,7 @@ function initialiseAgGrid() {
         domLayout: 'autoHeight',
         tooltipShowDelay:100,
         tooltipMouseTrack: true,
+        suppressMovableColumns: true,
         columnDefs: [
             {
                 field: 'name',

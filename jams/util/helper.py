@@ -6,7 +6,7 @@ from flask_security import current_user
 import requests
 from sqlalchemy import Date, DateTime, String, Integer, Boolean, cast, func, or_, nullsfirst, asc, desc
 from collections.abc import Mapping, Iterable
-from jams.models import db, EventLocation, EventTimeslot, Timeslot, Session, EndpointRule, RoleEndpointRule, PageEndpointRule, Page, Event, User, Role, AttendanceStreak, UserRoles, VolunteerAttendance, FireList, VolunteerSignup
+from jams.models import db, EventLocation, EventTimeslot, Timeslot, Session, EndpointRule, RoleEndpointRule, PageEndpointRule, RolePage, Page, Event, User, Role, AttendanceStreak, UserRoles, VolunteerAttendance, FireList, VolunteerSignup
 from jams.configuration import ConfigType, get_config_value
 
 
@@ -456,6 +456,15 @@ def get_and_prepare_file(bucket_name, file_name, version_id):
 def get_required_roles_for_endpoint(endpoint):
     from jams.models import Endpoint
     role_names = []
+
+    page = Page.query.filter_by(endpoint=endpoint).first()
+    if page:
+        role_page_objs = RolePage.query.filter_by(page_id=page.id).all()
+        roles = Role.query.filter(Role.id.in_([rp.role_id for rp in role_page_objs]))
+        role_names = [r.name for r in roles]
+        return role_names
+
+
     endpoint_obj = Endpoint.query.filter_by(endpoint=endpoint).first()
     if not endpoint_obj:
         return role_names
@@ -863,3 +872,9 @@ def get_latest_release():
         }
     except requests.RequestException:
         return None
+    
+def remove_event_name_prefix(event_name):
+    prefix = get_config_value(ConfigType.EVENT_PREFIX_FILTER)
+    if not prefix:
+        return event_name
+    return event_name.removeprefix(prefix).strip()

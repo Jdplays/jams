@@ -28,6 +28,7 @@ async function prepEditWorkshopForm() {
     const descriptionInput = document.getElementById('edit-workshop-description') as HTMLInputElement
     const minVolunteersInput = document.getElementById('edit-workshop-min_volunteers') as HTMLInputElement
     const capacityInput = document.getElementById('edit-workshop-capacity') as HTMLInputElement
+    const overflowInput = document.getElementById('edit-workshop-overflow') as HTMLInputElement
 
     nameInput.value = WorkshopData.name
     descriptionInput.value = WorkshopData.description
@@ -39,6 +40,7 @@ async function prepEditWorkshopForm() {
         capacityInput.value = String(WorkshopData.capacity)
     }
 
+    overflowInput.checked = WorkshopData.overflow
 
     const difficultyLevelSelect = document.getElementById('difficulty-selection-container') as HTMLDivElement
     const workshopTypeSelect = document.getElementById('workshop-type-selection-container') as HTMLDivElement
@@ -221,6 +223,7 @@ function editWorkshopOnClick() {
     const workshopDescriptionInput = document.getElementById('edit-workshop-description') as HTMLInputElement
     const workshopMinVolunteersInput = document.getElementById('edit-workshop-min_volunteers') as HTMLInputElement
     const workshopCapacityInput = document.getElementById('edit-workshop-capacity') as HTMLInputElement
+    const overflowInput = document.getElementById('edit-workshop-overflow') as HTMLInputElement
     const workshopDifficultySelect = document.getElementById('difficulty-selection-container') as HTMLInputElement
     const workshopTypeSelect = document.getElementById('workshop-type-selection-container') as HTMLDivElement
 
@@ -248,6 +251,7 @@ function editWorkshopOnClick() {
         difficulty_id: Number(difficultyId),
         min_volunteers: Number(workshopMinVolunteersInput.value),
         capacity: Number(workshopCapacityInput.value),
+        overflow: overflowInput.checked,
         workshop_type_id: Number(workshopTypeId)
     }
 
@@ -264,6 +268,7 @@ function workshopTypeSelectionGroupOnChange(value:string) {
     const minVolunteersBlock = document.getElementById('min-volunteers-block') as HTMLDivElement
     const capacityBlock = document.getElementById('capacity-block') as HTMLDivElement
     const difficultyBlock = document.getElementById('difficulty-block') as HTMLDivElement
+    const overflowBlock = document.getElementById('overflow-block') as HTMLDivElement
 
     const currentWorkshopType = workshopTypesMap[Number(value)]
 
@@ -276,9 +281,11 @@ function workshopTypeSelectionGroupOnChange(value:string) {
     if (currentWorkshopType.attendee_registration) {
         capacityBlock.style.display = 'block'
         difficultyBlock.style.display = 'block'
+        overflowBlock.style.display = 'block'
     } else {
         capacityBlock.style.display = 'none'
         difficultyBlock.style.display = 'none'
+        overflowBlock.style.display = 'none'
     }
     
     SelectedWorkshopTypeId = currentWorkshopType.id

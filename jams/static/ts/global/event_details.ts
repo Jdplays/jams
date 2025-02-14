@@ -99,10 +99,10 @@ export class EventDetails {
         const eventInfoText = document.createElement('p')
     
         if (this.eventId && this.eventId !== -1) {
-            let eventName = await getEventField(this.eventId, 'name')
+            let eventName = await getEventField(this.eventId, 'filtered_name')
             let eventDate = await getEventField(this.eventId, 'date')
             const date = (eventDate.date)
-            eventInfoText.innerHTML = `<strong>${eventName.name}</strong> - ${formatDateToShort(date, {includeTime:false})}`
+            eventInfoText.innerHTML = `<strong>${eventName.filtered_name}</strong> - ${formatDateToShort(date, {includeTime:false})}`
 
             for (const element of this.options.eventDependentElements) {
                 if (element) {

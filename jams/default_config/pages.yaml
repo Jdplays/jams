@@ -1,6 +1,19 @@
 pages:
 
-# Child Pages
+# -------------------------------- WIDGETS  -------------------------------- #
+
+  jolt:
+    api_endpoints:
+      get_jolt_status:
+      send_jolt_test_print:
+  
+  streak_widget:
+    api_endpoints:
+      get_event:
+      get_next_event_id:
+      get_user_streak:
+
+# -------------------------------- CHILD PAGES  -------------------------------- #
   # Workshops
   # Events
   add_workshop:
@@ -113,6 +126,8 @@ pages:
     api_endpoints:
       get_private_access_logs:
       archive_user:
+      get_roles_field:
+        allowed_field: public
   
   task_scheduler_log:
     endpoint: routes.frontend.private.monitoring.task_scheduler_log
@@ -149,7 +164,7 @@ pages:
     api_endpoints:
       get_users:
       get_user_field:
-        allowed_fields: id, role_ids
+        allowed_fields: id, role_ids, badge_text, badge_icon
       edit_user:
       archive_user:
       activate_user:
@@ -174,6 +189,7 @@ pages:
       get_events_field:
         allowed_fields: id, name
       get_event:
+      get_event_metadata:
       # Workshops
       get_workshops:
       get_difficulty_levels:
@@ -286,14 +302,14 @@ pages:
   # Event
   attendee_list:
     endpoint: routes.frontend.private.event.attendee_list
+    child_pages:
+      jolt:
     api_endpoints:
       get_next_event_id:
       get_events_field:
         allowed_fields: id, name, date
       get_event_field:
         allowed_fields: id, name, date
-      get_jolt_status:
-      send_jolt_test_print:
       get_event_attendees:
       add_attendee:
       edit_attendee:
@@ -302,18 +318,36 @@ pages:
   
   fire_list:
     endpoint: routes.frontend.private.event.fire_list
+    child_pages:
+      jolt:
     api_endpoints:
       get_next_event_id:
       get_events_field:
         allowed_fields: id, name, date
       get_event_field:
         allowed_fields: id, name, date
-      get_jolt_status:
-      send_jolt_test_print:
       get_event_fire_list:
       check_in_event_fire_list_item:
       check_out_event_fire_list_item:
       
+
+  # -------------------------------- DEFAULT  -------------------------------- #
+  dashboard:
+    endpoint: routes.frontend.private.general.dashboard
+    default: true
+    child_pages:
+      - streak_widget
+  
+  profile:
+    endpoint: routes.frontend.private.general.user_profile
+    default: true
+    child_pages:
+      - streak_widget
+    api_endpoints:
+      get_roles_field:
+        allowed_fields: public
+      get_user:
+      upload_user_avatar:
 
 
   # -------------------------------- PUBLIC  -------------------------------- #
@@ -322,7 +356,7 @@ pages:
     public: true
     api_endpoints:
       get_event_field:
-        allowed_fields: id, name, date
+        allowed_fields: id, name, filtered_name, date
 
         
   public_schedule:

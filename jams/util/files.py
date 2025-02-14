@@ -1,5 +1,6 @@
+from flask_login import current_user
 from jams.extensions import minio_client as client
-from jams.extensions import workshop_bucket
+from jams.extensions import workshop_bucket, user_data_bucket
 from jams.models import db, File, FileVersion
 import io
 
@@ -37,6 +38,7 @@ def upload_file(bucket_name, file_name, file_data):
         db.session.commit()
     
     file_db_obj.current_version_id = response.version_id
+    file_db_obj.user_id = current_user.id # Set the file owner
 
     file_version = FileVersion(file_id=file_db_obj.id, version_id=response.version_id)
     db.session.add(file_version)

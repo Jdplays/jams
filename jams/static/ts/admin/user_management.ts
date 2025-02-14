@@ -1,21 +1,20 @@
 import {
     getCurrentUserId,
     getUsers,
-    getUserRoles,
     editUser,
     archiveUser,
     activateUser,
-    getRoleNames
+    getRoles,
+    getUserField
 } from '@global/endpoints'
-import { User } from "@global/endpoints_interfaces";
-import { emptyElement, buildActionButtonsForModel, successToast, errorToast, getSelectValues, formatDateToShort, buildQueryString } from "@global/helper";
+import { Role, User } from "@global/endpoints_interfaces";
+import { emptyElement, buildActionButtonsForModel, successToast, errorToast, formatDateToShort, buildQueryString, buildRoleBadge, addSpinnerToElement, removeSpinnerFromElement, isDefined, getCheckboxInputGroupSelection, getRadioInputGroupSelection, setRadioInputGroupSelection } from "@global/helper";
 import { QueryStringData } from '@global/interfaces';
 import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
-import TomSelect from 'tom-select';
 
 let gridApi:GridApi<any>;
 
-let roleNamesMap:Record<number,string> = {};
+let rolesMap:Record<number,Role> = {};
 let currentUserId:number;
 
 function archiveUserOnClick(userId:number) {
@@ -40,9 +39,22 @@ function activateUserOnClick(userId:number) {
 
 function editUserOnClick() {
     const userId:number = Number((document.getElementById('edit-user-id') as HTMLInputElement).value)
+    const enableCustomBadgeToggle = document.getElementById('toggle-custom-badge') as HTMLInputElement
+
+    let roleIds = getCheckboxInputGroupSelection(document.getElementById('edit-user-select-roles') as HTMLSelectElement, 'roles').map(Number)
+
+    let badgeText = (document.getElementById('edit-user-badge-name') as HTMLInputElement).value
+    let badgeIcon = getRadioInputGroupSelection(document.getElementById('edit-user-badge-icon') as HTMLInputElement, 'badge-icon')
+
+    if (!enableCustomBadgeToggle.checked) {
+        badgeText = null
+        badgeIcon = null
+    }
 
     const data:Partial<User> = {
-        'role_ids': getSelectValues(document.getElementById('edit-user-select-roles') as HTMLSelectElement)
+        role_ids: roleIds,
+        badge_text: badgeText,
+        badge_icon: badgeIcon
     }
 
     editUser(userId, data).then(() => {
@@ -54,34 +66,90 @@ function editUserOnClick() {
     })
 }
 
+function toggleCustomBadgeOnClick() {
+    const badgeToggle = document.getElementById('toggle-custom-badge') as HTMLInputElement
+    const badgeContent = document.getElementById('custom-badge-content') as HTMLDivElement
+
+    if (badgeToggle.checked) {
+        badgeContent.style.display = 'block'
+    } else {
+        badgeContent.style.display = 'none'
+    }
+}
+
 async function prepEditUserForm(userId:number) {
     (document.getElementById('edit-user-id') as HTMLInputElement).value = String(userId)
-    let userRoles = await getUserRoles(userId)
 
-    let editUserRolesContainer = document.getElementById('edit-user-roles-container')
+    const customBadgeBlock = document.getElementById('custom-badge-block')
+    const customBadgeData = document.getElementById('custom-badge-data')
+
+    customBadgeData.style.display = 'none'
+    addSpinnerToElement(customBadgeBlock)
+
+    const editUserRolesContainer = document.getElementById('edit-user-roles-container')
     emptyElement(editUserRolesContainer)
 
-    let select = document.createElement('select')
-    select.id = 'edit-user-select-roles'
-    select.name = 'role_ids[]'
-    select.multiple = true
+    addSpinnerToElement(editUserRolesContainer)
+    getUserField(userId, 'role_ids').then((userRoles) => {
+        let roleOptions = document.createElement('div')
+        roleOptions.id = 'edit-user-select-roles'
+        roleOptions.classList.add('form-selectgroup')
 
-    for (const [id, name] of Object.entries(roleNamesMap)) {
-        let option = document.createElement('option')
-        option.value = id
-        option.text = name
-        option.selected = (userRoles.role_ids.includes(parseInt(id)))
-        select.appendChild(option)
-    }
+        for (const role of Object.values(rolesMap)) {
+            let option = document.createElement('label')
+            option.classList.add('form-selectgroup-item')
 
-    editUserRolesContainer.appendChild(select)
+            let input = document.createElement('input')
+            input.type = 'checkbox'
+            input.name = 'roles'
+            input.value = String(role.id)
+            input.classList.add('form-selectgroup-input')
+            option.appendChild(input)
 
-    // Create a new Tom Select instance
-    new TomSelect("#edit-user-select-roles", {
-        plugins: ['remove_button'],
-        create: false,
-        maxItems: null,
-    });
+            if (userRoles.role_ids.includes(role.id)) {
+                input.checked = true
+            }
+
+            let text = document.createElement('span')
+            text.classList.add('form-selectgroup-label')
+            text.style.width = 'fit-content'
+            text.style.borderRadius = '90px'
+            text.innerHTML = role.name
+
+            let badge = document.createElement('span')
+            badge.classList.add('badge', 'ms-2')
+            badge.style.backgroundColor = role.display_colour
+            text.appendChild(badge)
+            option.appendChild(text)
+
+            roleOptions.appendChild(option)
+        }
+
+        editUserRolesContainer.appendChild(roleOptions)
+        removeSpinnerFromElement(editUserRolesContainer)
+    })
+    
+    const enableCustomBadgeToggle = document.getElementById('toggle-custom-badge') as HTMLInputElement
+
+    const badgeTextInput = document.getElementById('edit-user-badge-name') as HTMLInputElement
+    const badgeIconInput = document.getElementById('edit-user-badge-icon') as HTMLInputElement
+
+    const [badgeTextResponse, badgeIconResponse] = await Promise.all([
+        getUserField(userId, 'badge_text'),
+        getUserField(userId, 'badge_icon')
+    ]);
+    
+    const badgeTextValue = badgeTextResponse.badge_text;
+    const badgeIconValue = badgeIconResponse.badge_icon;
+
+    badgeTextInput.value = badgeTextValue
+    enableCustomBadgeToggle.checked = badgeTextValue !== null
+    setRadioInputGroupSelection(badgeIconInput, 'badge-icon', badgeIconValue)
+
+    customBadgeData.style.display = 'block'
+    removeSpinnerFromElement(customBadgeBlock)
+
+    toggleCustomBadgeOnClick()
 
     // Set button on clcik
     document.getElementById('edit-user-button').onclick = (function () {
@@ -93,6 +161,7 @@ function initialiseAgGrid() {
     const gridOptions:GridOptions = {
         enableCellTextSelection: true,
         domLayout: 'autoHeight',
+        suppressMovableColumns: true,
         defaultColDef: {
             wrapHeaderText: true,
             autoHeaderHeight: true,
@@ -134,20 +203,24 @@ function initialiseAgGrid() {
                 minWidth: 150
             },
             {
-                field: 'roles', cellRenderer: (params:any) => {
-                    const userRoleIds:number[] = params.data.role_ids
-                    let userRoleNames:string
-                    if (!userRoleIds || userRoleIds.length <= 0) {
-                        userRoleNames = 'No Role'
-                    } else {
-                        userRoleNames = userRoleIds.map(id => roleNamesMap[id] || 'Unknown Role').join(', ');
-                    }
-
-                    return userRoleNames
-                },
-                flex: 1,
+                field: 'roles',
                 wrapText: true,
                 autoHeight: true,
+                cellRenderer: (params:any) => {
+                    const userRoleIds:number[] = params.data.role_ids
+                    const flexContainer = document.createElement('div')
+                    flexContainer.classList.add('d-flex', 'flex-wrap')
+                    if (!userRoleIds || userRoleIds.length <= 0) {
+                        flexContainer.innerHTML = 'No Roles'
+                    } else {
+                        userRoleIds.forEach(id => {
+                            flexContainer.appendChild(buildRoleBadge(rolesMap[id]))
+                        })
+                    }
+
+                    return flexContainer
+                },
+                flex: 1,
                 cellStyle: {lineHeight: 1.6},
                 minWidth: 150
             },
@@ -180,14 +253,14 @@ function initialiseAgGrid() {
     gridApi = createGrid(gridElement, gridOptions)
 }
 
-async function preloadRoleNames() {
-    const response = await getRoleNames();
+async function preloadRoles() {
+    const response = await getRoles();
     let roles = response.data
-    let roleNamesMap:Record<number,string> = {};
+    let rolesMap:Record<number,Role> = {};
     roles.forEach(role => {
-        roleNamesMap[role.id] = role.name;
+        rolesMap[role.id] = role;
     });
-    return roleNamesMap;
+    return rolesMap;
 }
 
 async function populateUserManagementTable() {
@@ -197,7 +270,7 @@ async function populateUserManagementTable() {
     const queryString = buildQueryString(queryData)
     const response = await getUsers(queryString)
     let allUsers = response.data
-    roleNamesMap = await preloadRoleNames()
+    rolesMap = await preloadRoles()
 
     gridApi.setGridOption('rowData', allUsers)
 }
@@ -207,4 +280,10 @@ document.addEventListener("DOMContentLoaded", populateUserManagementTable);
 document.addEventListener("DOMContentLoaded", initialiseAgGrid);
 document.addEventListener("DOMContentLoaded", async function () {
     currentUserId = await getCurrentUserId()
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    if (isDefined(window)) {
+        (<any>window).toggleCustomBadgeOnClick = toggleCustomBadgeOnClick;
+    }
 });

@@ -84,3 +84,7 @@
   }
 }
 
+.custom-tooltip {
+  position: absolute;
+  width: fit-content;
+}

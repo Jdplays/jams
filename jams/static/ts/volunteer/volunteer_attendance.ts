@@ -6,37 +6,91 @@ import {
     getCurrentUserId,
     getUsersField,
     getAttendanceForUser,
+    getRoles,
 } from '@global/endpoints'
-import { Metadata, VolunteerAttendance } from "@global/endpoints_interfaces";
+import { Metadata, Role, User, VolunteerAttendance } from "@global/endpoints_interfaces";
 import { EventDetails, EventDetailsOptions } from '@global/event_details';
-import { animateElement, buildQueryString, emptyElement, errorToast, successToast, validateTextInput, warningToast } from '@global/helper';
+import { animateElement, buildQueryString, buildRoleBadge, buildUserAvatar, emptyElement, errorToast, isTouchDevice, successToast, validateTextInput, warningToast } from '@global/helper';
 import { QueryStringData } from '@global/interfaces';
-import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
+import { addTooltipToElement, buildUserTooltip, hideTooltip } from '@global/tooltips';
+import { CellClickedEvent, CellMouseOverEvent, createGrid, GridApi, GridOptions, ITooltipComp, ITooltipParams } from 'ag-grid-community';
 
 let gridApi:GridApi<any>;
 let eventDetails:EventDetails;
 
+let rolesMap:Record<number,Role> = {};
 let volunteerRoleIds:number[] = []
 let CurrentUserId = 0
 let currentAttendanceData:VolunteerAttendance|null = null
 
-let userDisplayNamesMap:Record<number, string> = {}
+let userInfoMap:Record<number, Partial<User>> = {}
 let eventAttendancesMetaData:Metadata = {}
 let eventAttendances:Partial<VolunteerAttendance>[] = []
 
 let noteInputValid:boolean = false
 
+let activeTooltipElement: HTMLElement | null = null
+
+class UserToolTip implements ITooltipComp {
+    private tooltipElement: HTMLDivElement
+
+    init(params: any) {
+        const user = userInfoMap[params.value]
+        if (!user) {
+            return
+        }
+
+        this.tooltipElement = buildUserTooltip(user, rolesMap)
+    }
+
+    getGui() {
+        return this.tooltipElement
+    }
+    
+}
+
+function showCustomTooltip(event: CellClickedEvent|CellMouseOverEvent) {
+    if (!isTouchDevice()) {
+        return
+    }
+    
+    if (event.column.getColId() !== 'user_id') {
+        hideTooltip(activeTooltipElement)
+        return
+    }
+
+    
+    if (activeTooltipElement) {
+        hideTooltip(activeTooltipElement)
+    }
+
+    // Create a new tooltip element
+    const user = userInfoMap[event.data[1].user_id]
+    if (!user) {
+        return
+    }
+    
+    const target = event.event?.target as HTMLElement;
+    const tooltip = buildUserTooltip(user, rolesMap)
+    addTooltipToElement(tooltip, target)
+    activeTooltipElement = tooltip;
+}
+
 function initialiseAgGrid() {
     const gridOptions:GridOptions = {
         domLayout: 'autoHeight',
+        tooltipShowDelay:0,
+        tooltipInteraction: true,
+        suppressMovableColumns: true,
         defaultColDef: {
             wrapHeaderText: true,
             autoHeaderHeight: true,
             resizable:false
         },
+        onCellClicked: showCustomTooltip,
         columnDefs: [
             {
-                field: 'user_display_name',
+                field: 'user_id',
                 headerName: 'Name',
                 cellClassRules: {
                     'current-user': params => {
@@ -48,13 +102,25 @@ function initialiseAgGrid() {
                 cellRenderer: (params:any) => {
                     const data = params.data[1]
                     if (data.user_id) {
-                        if (userDisplayNamesMap[data.user_id]) {
-                            return userDisplayNamesMap[data.user_id]
+                        if (userInfoMap[data.user_id]) {
+                            const div = document.createElement('div')
+                            div.classList.add('d-flex', 'justify-content-center', 'align-items-center')
+
+                            const nameText = document.createElement('p')
+                            nameText.innerHTML = userInfoMap[data.user_id].display_name
+                            div.appendChild(nameText)
+
+                            const icon = document.createElement('i')
+                            icon.classList.add('ti', 'ti-chevron-right', 'ms-auto')
+                            div.appendChild(icon)
+                            return div
                         } else {
                             return 'Unknown User'
                         }
                     }
                 },
+                tooltipComponent: UserToolTip,
+                tooltipValueGetter: (params:any) => params.data[1].user_id,
                 wrapText: true,
                 autoHeight: true,
                 cellStyle: {lineHeight: 1.6},
@@ -63,7 +129,7 @@ function initialiseAgGrid() {
                 initialWidth: 150
             },
             {
-                field: `setup (${eventAttendancesMetaData.setup_count}/${Object.keys(userDisplayNamesMap).length})`,
+                field: `setup (${eventAttendancesMetaData.setup_count}/${Object.keys(userInfoMap).length})`,
                 cellDataType: 'boolean',
                 colSpan: (params:any) => {
                     const data = params.data[1]
@@ -90,7 +156,7 @@ function initialiseAgGrid() {
                 width: 97,
             },
             {
-                field: `main (${eventAttendancesMetaData.main_count}/${Object.keys(userDisplayNamesMap).length})`,
+                field: `main (${eventAttendancesMetaData.main_count}/${Object.keys(userInfoMap).length})`,
                 cellDataType: 'boolean',
                 cellClassRules: {
                     'status-yes': params => params.data[1].main && !params.data[1].noReply,
@@ -105,7 +171,7 @@ function initialiseAgGrid() {
                 width: 97,
             },
             {
-                field: `packdown (${eventAttendancesMetaData.packdown_count}/${Object.keys(userDisplayNamesMap).length})`,
+                field: `packdown (${eventAttendancesMetaData.packdown_count}/${Object.keys(userInfoMap).length})`,
                 cellClassRules: {
                     'status-yes': params => params.data[1].packdown && !params.data[1].noReply,
                     'status-no': params => !params.data[1].packdown && !params.data[1].noReply,
@@ -140,18 +206,18 @@ function initialiseAgGrid() {
 }
 
 
-async function preLoadUserDisplayNames() {
+async function preLoadUsersInfo() {
     const data:Partial<QueryStringData> = {
         role_ids: volunteerRoleIds
     }
     const queryString = buildQueryString(data)
-    const response = await getUsersField('display_name', queryString)
-    let userDisplayNames = response.data
-    let userDisplayNamesMap:Record<number, string> = {}
-    userDisplayNames.forEach(userInfo => {
-        userDisplayNamesMap[userInfo.id] = userInfo.display_name
+    const response = await getUsersField('public_info', queryString)
+    let usersInfo = response.data
+    let userInfoMap:Record<number, Partial<User>> = {}
+    usersInfo.forEach(userInfo => {
+        userInfoMap[userInfo.id] = userInfo
     })
-    return userDisplayNamesMap
+    return userInfoMap
 }
 
 async function loadAttendanceData() {
@@ -161,10 +227,10 @@ async function loadAttendanceData() {
     const queryString = buildQueryString(queryData)
 
     const eventAttendanceResponse = await getAttendanceForEvent(eventDetails.eventId, queryString)
-    userDisplayNamesMap = await preLoadUserDisplayNames()
+    userInfoMap = await preLoadUsersInfo()
     eventAttendancesMetaData = eventAttendanceResponse.metadata
 
-    eventAttendances = Object.keys(userDisplayNamesMap).map((id) => {
+    eventAttendances = Object.keys(userInfoMap).map((id) => {
         for (const attendance of eventAttendanceResponse.data) {
             if (attendance.user_id === Number(id)) {
                 return attendance
@@ -321,7 +387,26 @@ async function loadAttendance() {
     populateUpdateForm()
 
     await loadAttendanceData()
+
+    const roleIdsToLoad = [...new Set(Object.values(userInfoMap).flatMap(user => user.role_ids))];
+
+    rolesMap = await preloadRoles(roleIdsToLoad)
     populateVolunteerAttendanceTable(false)
+}
+
+async function preloadRoles(role_ids:number[]) {
+    const data:Partial<QueryStringData> = {
+        id: role_ids,
+        hidden: false
+    }
+    const queryString = buildQueryString(data)
+    const response = await getRoles(queryString);
+    let roles = response.data
+    let rolesMap:Record<number, Role> = {};
+    roles.forEach(role => {
+        rolesMap[role.id] = role;
+    });
+    return rolesMap;
 }
 
 
@@ -333,10 +418,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     eventDetails = new EventDetails('event-details', eventDetailsOptions)
-    await eventDetails.init()
 
-
-    CurrentUserId = await getCurrentUserId()
+    const [eventDetailsResponse, userIdResponse] = await Promise.all([
+        await eventDetails.init(),
+        await getCurrentUserId()
+    ]);
+        
+    CurrentUserId = userIdResponse
 
     if (eventDetails.eventId === -1) {
         return
@@ -354,3 +442,7 @@ document.addEventListener("DOMContentLoaded", () => {
         noteInputValid = validateTextInput(attendanceNoteInput, null, false, true)
     }
 })
+
+document.addEventListener("clicked", () => {
+    hideTooltip(activeTooltipElement)
+});

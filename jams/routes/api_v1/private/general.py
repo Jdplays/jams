@@ -28,7 +28,8 @@ def get_general_config():
     data = {
         ConfigType.APP_VERSION.name: get_config_value(ConfigType.APP_VERSION),
         ConfigType.TIMEZONE.name: get_config_value(ConfigType.TIMEZONE),
-        ConfigType.STREAKS_ENABLED.name: get_config_value(ConfigType.STREAKS_ENABLED)
+        ConfigType.STREAKS_ENABLED.name: get_config_value(ConfigType.STREAKS_ENABLED),
+        ConfigType.EVENT_PREFIX_FILTER.name: get_config_value(ConfigType.EVENT_PREFIX_FILTER)
     }
 
     return jsonify({'data': data})
@@ -54,10 +55,14 @@ def edit_general_config():
     streaks_enabled = data.get(ConfigType.STREAKS_ENABLED.name)
     if streaks_enabled is not None:
         set_config_value(ConfigType.STREAKS_ENABLED, streaks_enabled)
+
+    event_prefix_filter = data.get(ConfigType.EVENT_PREFIX_FILTER.name)
+    set_config_value(ConfigType.EVENT_PREFIX_FILTER, event_prefix_filter)
     
     config = {
         ConfigType.TIMEZONE.name: get_config_value(ConfigType.TIMEZONE),
-        ConfigType.STREAKS_ENABLED.name: get_config_value(ConfigType.STREAKS_ENABLED)
+        ConfigType.STREAKS_ENABLED.name: get_config_value(ConfigType.STREAKS_ENABLED),
+        ConfigType.EVENT_PREFIX_FILTER.name: get_config_value(ConfigType.EVENT_PREFIX_FILTER)
     } 
 
     return jsonify({'data': config})

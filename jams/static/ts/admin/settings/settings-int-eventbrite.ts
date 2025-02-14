@@ -162,7 +162,7 @@ async function eventbriteIntegrationSaveOnClick() {
         currentConfig = response
         successToast('Eventbrite Integration Updated')
         tokenUpdated = false
-        checkIfConentUpdated()
+        checkIfContentUpdated()
         setupPage()
     } else {
         errorToast()
@@ -212,7 +212,7 @@ async function eventbriteIntegrationDisableOnClick() {
     disableButton.innerHTML = 'Disable'
 }
 
-function checkIfConentUpdated() {
+function checkIfContentUpdated() {
     const saveButton = document.getElementById('eventbrite-save-button') as HTMLButtonElement
     const enableButton = document.getElementById('eventbrite-enable-button') as HTMLButtonElement
     const orgSelect = document.getElementById('eventbrite-org-select') as HTMLSelectElement
@@ -259,7 +259,7 @@ function orgSelectOnChange() {
     }
     
 
-    checkIfConentUpdated()
+    checkIfContentUpdated()
 }
 
 function toggleEventbriteIntegrationOnChange() {
@@ -415,7 +415,7 @@ function eventSelectOnChange() {
         attendeeImportConfigBlock.style.display = 'block'
     }
 
-    checkIfConentUpdated()
+    checkIfContentUpdated()
 }
 
 async function populateTicketTypeSelectGroup() {
@@ -440,7 +440,7 @@ async function populateTicketTypeSelectGroup() {
             checked = true
         }
 
-        const option = buildRadioInputSelectionGroup(type.name, type.description, type.name, 'ticket-type', checked, checkIfConentUpdated, false)
+        const option = buildRadioInputSelectionGroup(type.name, type.description, type.name, 'ticket-type', checked, checkIfContentUpdated, false)
         selectGroup.appendChild(option)
     }
 }
@@ -492,15 +492,15 @@ function ageToggleOnChange() {
         ageFormMapSelect.value = '-1'
     }
 
-    checkIfConentUpdated()
+    checkIfContentUpdated()
 }
 
 function genderToggleOnChange() {
-    checkIfConentUpdated()
+    checkIfContentUpdated()
 }
 
 function ageFieldSelectOnChamge() {
-    checkIfConentUpdated()
+    checkIfContentUpdated()
 }
 
 // EVent Listeners

@@ -29,6 +29,7 @@ class ConfigType(Enum):
     JOLT_ENABLED = 'JOLT_ENABLED',
     JOLT_API_KEY_ID = 'JOLT_API_KEY_ID'
     STREAKS_ENABLED = 'STREAKS_ENABLED'
+    EVENT_PREFIX_FILTER = 'EVENT_PREFIX_FILTER'
 
 
 def config_entry_exists(key:Union[str, ConfigType]):

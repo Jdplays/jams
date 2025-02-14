@@ -55,6 +55,7 @@ groups:
     read:
       get_next_event_id: routes.api_v1.public.general.get_next_event
       get_event: routes.api_v1.private.admin.get_event
+      get_event_metadata: routes.api_v1.private.admin.get_event_metadata
       get_event_field: routes.api_v1.private.admin.get_event_field
       get_events: routes.api_v1.private.admin.get_events
       get_events_field: routes.api_v1.private.admin.get_events_field
@@ -85,12 +86,15 @@ groups:
   users:
     description: Manages user information
     read:
+      get_user: routes.api_v1.private.admin.get_user
       get_users: routes.api_v1.private.admin.get_users
       get_users_field: routes.api_v1.private.admin.get_users_field
       get_user_field: routes.api_v1.private.admin.get_user_field
       get_users_public_info: routes.api_v1.private.admin.get_users_public_info
+      get_user_streak: routes.api_v1.private.admin.get_user_streak
     write:
       edit_user: routes.api_v1.private.admin.edit_user
+      upload_user_avatar: routes.api_v1.private.admin.upload_user_avatar
       activate_user: routes.api_v1.private.admin.activate_user
       archive_user: routes.api_v1.private.admin.archive_user
   
@@ -98,7 +102,6 @@ groups:
     description: Manages voluntter information
     read:
       get_user_attendance: routes.api_v1.private.volunteer.get_user_attendance
-      get_user_streak: routes.api_v1.private.volunteer.get_streak
     write:
       add_user_attendance: routes.api_v1.private.volunteer.add_user_attendance
       edit_user_attendance: routes.api_v1.private.volunteer.edit_user_attendance

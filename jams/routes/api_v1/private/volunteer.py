@@ -1,8 +1,8 @@
 # API is for serving data to Typscript/Javascript
 from flask import Blueprint, request, jsonify, abort
-from flask_security import current_user
+from datetime import datetime, UTC
 from jams.decorators import api_route, protect_user_updates
-from jams.models import db, VolunteerAttendance, VolunteerSignup, Event, User, AttendanceStreak
+from jams.models import db, VolunteerAttendance, VolunteerSignup, Event, User
 from jams.models.event import FireList
 from jams.util import helper
 
@@ -46,8 +46,11 @@ def get_user_attendance(user_id, event_id):
 @protect_user_updates
 @api_route
 def add_user_attendance(user_id, event_id):
-    Event.query.filter_by(id=event_id).first_or_404()
-    user = User.query.filter_by(id=user_id).first_or_404()
+    event = Event.query.filter_by(id=event_id).first_or_404()
+    if event.date.date() < datetime.now(UTC).date():
+        return jsonify({'message': 'Cannot update attendance for a past event'}), 400
+
+    User.query.filter_by(id=user_id).first_or_404()
     att = VolunteerAttendance.query.filter_by(user_id=user_id, event_id=event_id).first()
 
     if att is not None:
@@ -88,8 +91,10 @@ def add_user_attendance(user_id, event_id):
 @protect_user_updates
 @api_route
 def edit_user_attendance(user_id, event_id):
-    Event.query.filter_by(id=event_id).first_or_404()
-    user = User.query.filter_by(id=user_id).first_or_404()
+    event = Event.query.filter_by(id=event_id).first_or_404()
+    if event.date.date() < datetime.now(UTC).date():
+        return jsonify({'message': 'Cannot update attendance for a past event'}), 400
+    User.query.filter_by(id=user_id).first_or_404()
     attendance = VolunteerAttendance.query.filter_by(user_id=user_id, event_id=event_id).first_or_404()
 
     data = request.get_json()
@@ -146,7 +151,9 @@ def get_user_signups(event_id, user_id):
 @protect_user_updates
 @api_route
 def add_volunteer_signup(event_id, user_id):
-    Event.query.filter_by(id=event_id).first_or_404()
+    event = Event.query.filter_by(id=event_id).first_or_404()
+    if event.date.date() < datetime.now(UTC).date():
+        return jsonify({'message': 'Cannot update signups for a past event'}), 400
     User.query.filter_by(id=user_id).first_or_404()
 
     data = request.get_json()
@@ -173,7 +180,9 @@ def add_volunteer_signup(event_id, user_id):
 @protect_user_updates
 @api_route
 def remove_volunteer_signup(event_id, user_id, session_id):
-    Event.query.filter_by(id=event_id).first_or_404()
+    event = Event.query.filter_by(id=event_id).first_or_404()
+    if event.date.date() < datetime.now(UTC).date():
+        return jsonify({'message': 'Cannot update signups for a past event'}), 400
     User.query.filter_by(id=user_id).first_or_404()
 
     signup = VolunteerSignup.query.filter_by(event_id=event_id, user_id=user_id, session_id=session_id).first_or_404()
@@ -184,11 +193,3 @@ def remove_volunteer_signup(event_id, user_id, session_id):
     return jsonify({
         'message': 'Volunteer Signup Entry has been successfully removed'
     })
-
-@bp.route('/volunteers/me/streak', methods=['GET'])
-def get_streak():
-    if not current_user.is_authenticated:
-        return jsonify({'message': 'Please Login to access this'}), 403
-    
-    streak = AttendanceStreak.query.filter_by(user_id=current_user.id).first_or_404()
-    return jsonify({'data': streak.to_dict()})
