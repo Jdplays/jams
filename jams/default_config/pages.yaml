@@ -187,7 +187,7 @@ pages:
       # Events
       get_next_event_id:
       get_events_field:
-        allowed_fields: id, name
+        allowed_fields: id, filtered_name
       get_event:
       get_event_metadata:
       # Workshops
@@ -265,9 +265,9 @@ pages:
     api_endpoints:
       get_next_event_id:
       get_event_field:
-        allowed_fields: id, name, date
+        allowed_fields: id, filtered_name, name, date
       get_events_field:
-        allowed_fields: id, name, date
+        allowed_fields: id, filtered_name, name, date
       get_users_public_info:
       get_event_volunteer_attendance:
       add_user_attendance:
@@ -307,9 +307,9 @@ pages:
     api_endpoints:
       get_next_event_id:
       get_events_field:
-        allowed_fields: id, name, date
+        allowed_fields: id, filtered_name, date
       get_event_field:
-        allowed_fields: id, name, date
+        allowed_fields: id, filtered_name, date
       get_event_attendees:
       add_attendee:
       edit_attendee:
@@ -323,9 +323,9 @@ pages:
     api_endpoints:
       get_next_event_id:
       get_events_field:
-        allowed_fields: id, name, date
+        allowed_fields: id, filtered_name, date
       get_event_field:
-        allowed_fields: id, name, date
+        allowed_fields: id, filtered_name, date
       get_event_fire_list:
       check_in_event_fire_list_item:
       check_out_event_fire_list_item:
