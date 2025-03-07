@@ -46,7 +46,7 @@ def rbac_api(func, *args, **kwargs):
     endpoint = helper.extract_endpoint()
     endpoint_obj = Endpoint.query.filter_by(endpoint=endpoint).first()
     # Are there any endpoint rules where this endpoint is default
-    default_endpoint_rule = EndpointRule.query.filter_by(endpoint_id=Endpoint.id, default=True).first()
+    default_endpoint_rule = EndpointRule.query.filter_by(endpoint_id=endpoint_obj.id, default=True).first()
     if default_endpoint_rule and current_user.is_authenticated:
         return func(*args, **kwargs)
     
