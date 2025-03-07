@@ -1,12 +1,12 @@
-import { dateTimeFormatter, StatusCodeFilter } from '@global/ag_grid_helper'
 import {
     archiveUser,
     getPrivateAccessLogs,
-    getRoles,
-    getUsers
+    getRolesPublicInfo,
+    getUsersPublicInfo
 } from '@global/endpoints'
+import { StatusCodeFilter } from '@global/ag_grid_helper'
 import { Role, User } from "@global/endpoints_interfaces"
-import { isNullEmptyOrSpaces, buildQueryString, successToast, errorToast, buildUserAvatar, formatDate, formatDateToShort, buildRoleBadge } from "@global/helper"
+import { isNullEmptyOrSpaces, buildQueryString, successToast, errorToast, buildUserAvatar, formatDateToShort, buildRoleBadge } from "@global/helper"
 import { QueryStringData, QueryStringKey } from '@global/interfaces'
 import { createGrid, GridApi, GridOptions, ITooltipComp, ITooltipParams } from 'ag-grid-community'
 
@@ -117,8 +117,8 @@ class RolesTooltip {
 
 let gridApi:GridApi<any>
 
-let usersMap:Record<number, User> = {}
-let rolesMap:Record<string,Role> = {}
+let usersMap:Record<number, Partial<User>> = {}
+let rolesMap:Record<string, Partial<Role>> = {}
 
   function getFilterModel() {
     return gridApi.getFilterModel()
@@ -366,9 +366,9 @@ async function populatePrivateAccessLogsTable() {
 }
 
 async function preLoadUsers() {
-    const response = await getUsers()
+    const response = await getUsersPublicInfo()
     let users = response.data
-    let usersMap:Record<number, User> = {}
+    let usersMap:Record<number, Partial<User>> = {}
     users.forEach(user => {
         usersMap[user.id] = user
     })
@@ -376,9 +376,9 @@ async function preLoadUsers() {
 }
 
 async function preloadRoles() {
-    const response = await getRoles()
+    const response = await getRolesPublicInfo()
     let roles = response.data
-    let rolesMap:Record<string,Role> = {}
+    let rolesMap:Record<string,Partial<Role>> = {}
     roles.forEach(role => {
         rolesMap[role.name] = role
     })

@@ -1,6 +1,6 @@
-import { editUser, getRoles, getUser, uploadUserAvatar } from "@global/endpoints";
+import { editUser, getRolesPublicInfo, getUser, uploadUserAvatar } from "@global/endpoints";
 import { Role, User } from "@global/endpoints_interfaces";
-import { addSpinnerToElement, buildQueryString, buildRoleBadge, buildUserAvatar, compressImage, emptyElement, errorToast, isDefined, isNullEmptyOrSpaces, removeSpinnerFromElement, successToast } from "@global/helper";
+import { buildQueryString, buildRoleBadge, buildUserAvatar, compressImage, emptyElement, errorToast, isDefined, isNullEmptyOrSpaces, removeSpinnerFromElement, successToast } from "@global/helper";
 import { QueryStringData } from "@global/interfaces";
 
 let userId:number = 0;
@@ -175,7 +175,7 @@ async function preloadRoles(role_ids:number[]) {
             hidden: false
         }
     const queryString = buildQueryString(data)
-    const response = await getRoles(queryString);
+    const response = await getRolesPublicInfo(queryString);
     let roles = response.data
     let rolesMap:Record<number,Role> = {};
     roles.forEach(role => {

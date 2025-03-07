@@ -122,6 +122,7 @@ groups:
       get_roles: routes.api_v1.private.admin.get_roles
       get_role: routes.api_v1.private.admin.get_role
       get_roles_field: routes.api_v1.private.admin.get_roles_field
+      get_roles_public_info: routes.api_v1.private.admin.get_roles_public_info
     write:
       add_role: routes.api_v1.private.admin.add_role
       edit_role: routes.api_v1.private.admin.edit_role

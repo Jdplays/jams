@@ -10,10 +10,10 @@ import {
 } from '@global/endpoints'
 import { Metadata, Role, User, VolunteerAttendance } from "@global/endpoints_interfaces";
 import { EventDetails, EventDetailsOptions } from '@global/event_details';
-import { animateElement, buildQueryString, buildRoleBadge, buildUserAvatar, emptyElement, errorToast, isTouchDevice, successToast, validateTextInput, warningToast } from '@global/helper';
+import { animateElement, buildQueryString, emptyElement, errorToast, isTouchDevice, successToast, validateTextInput, warningToast } from '@global/helper';
 import { QueryStringData } from '@global/interfaces';
 import { addTooltipToElement, buildUserTooltip, hideTooltip } from '@global/tooltips';
-import { CellClickedEvent, CellMouseOverEvent, createGrid, GridApi, GridOptions, ITooltipComp, ITooltipParams } from 'ag-grid-community';
+import { CellClickedEvent, CellMouseOverEvent, createGrid, GridApi, GridOptions, ITooltipComp } from 'ag-grid-community';
 
 let gridApi:GridApi<any>;
 let eventDetails:EventDetails;
