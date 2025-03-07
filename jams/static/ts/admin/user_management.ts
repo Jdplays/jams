@@ -4,7 +4,7 @@ import {
     editUser,
     archiveUser,
     activateUser,
-    getRoles,
+    getRolesPublicInfo,
     getUserField
 } from '@global/endpoints'
 import { Role, User } from "@global/endpoints_interfaces";
@@ -14,7 +14,7 @@ import { createGrid, GridApi, GridOptions } from 'ag-grid-community';
 
 let gridApi:GridApi<any>;
 
-let rolesMap:Record<number,Role> = {};
+let rolesMap:Record<number, Partial<Role>> = {};
 let currentUserId:number;
 
 function archiveUserOnClick(userId:number) {
@@ -254,9 +254,9 @@ function initialiseAgGrid() {
 }
 
 async function preloadRoles() {
-    const response = await getRoles();
+    const response = await getRolesPublicInfo();
     let roles = response.data
-    let rolesMap:Record<number,Role> = {};
+    let rolesMap:Record<number, Partial<Role>> = {};
     roles.forEach(role => {
         rolesMap[role.id] = role;
     });

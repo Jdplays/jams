@@ -57,6 +57,7 @@ pages:
     api_endpoints:
       verify_eventbrite_api_key:
       get_eventbrite_organisations:
+      get_eventbrite_events:
       get_eventbrite_integration_config:
       get_eventbrite_ticket_types:
       get_eventbrite_custom_questions:
@@ -169,8 +170,7 @@ pages:
       edit_user:
       archive_user:
       activate_user:
-      get_roles_field:
-        allowed_fields: id, name
+      get_roles_public_info:
 
   events:
     endpoint: routes.frontend.private.management.events
