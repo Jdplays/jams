@@ -25,15 +25,6 @@ class Role(db.Model, RoleMixin):
     @property
     def page_ids(self):
         return [role_page.page_id for role_page in self.role_pages]
-    
-    @property
-    def public(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'description': self.description,
-            'display_colour': self.display_colour
-        }
 
     # Requires name to be passed
     def __init__(self, name, description=None, display_colour='#828181', priority=10, hidden=False, default=False):
@@ -54,6 +45,14 @@ class Role(db.Model, RoleMixin):
             'priority': self.priority,
             'hidden': self.hidden,
             'default': self.default
+        }
+    
+    def public_info_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'display_colour': self.display_colour
         }
 
 class User(UserMixin, db.Model):

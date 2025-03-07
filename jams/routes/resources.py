@@ -17,14 +17,6 @@ bp = Blueprint('resources', __name__, url_prefix=url_prefix)
 def files_page():
     return render_template(f'{url_prefix}/files_test.html')
 
-@bp.route('/<uuid:id>')
-@login_required
-def get_file(id):
-    file = File.query.filter_by(id=id).first_or_404()
-    if not file.public:
-        abort(403, description='You do not have access to the requested resource. It might be private.')
-    return helper.get_and_prepare_file(files.workshop_bucket, file.name)
-
 @bp.route('/files/<uuid:file_id>/versions', methods=['GET'])
 @api_route
 def get_file_versions(file_id):
@@ -34,7 +26,7 @@ def get_file_versions(file_id):
 
 @bp.route('/files/<uuid:file_id>', methods=['GET'])
 @api_route
-def get_workshop_file(file_id):
+def get_file(file_id):
     file = File.query.filter_by(id=file_id).first_or_404()
     if request.args:
         version_id = request.args.get('version_id')
