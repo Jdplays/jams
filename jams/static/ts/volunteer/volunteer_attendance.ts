@@ -1,12 +1,11 @@
 import {
-    getRoleNames,
     getAttendanceForEvent,
     addAttendance,
     editAttendance,
     getCurrentUserId,
     getUsersField,
     getAttendanceForUser,
-    getRoles,
+    getRolesPublicInfo,
 } from '@global/endpoints'
 import { Metadata, Role, User, VolunteerAttendance } from "@global/endpoints_interfaces";
 import { EventDetails, EventDetailsOptions } from '@global/event_details';
@@ -18,7 +17,7 @@ import { CellClickedEvent, CellMouseOverEvent, createGrid, GridApi, GridOptions,
 let gridApi:GridApi<any>;
 let eventDetails:EventDetails;
 
-let rolesMap:Record<number,Role> = {};
+let rolesMap:Record<number, Partial<Role>> = {};
 let volunteerRoleIds:number[] = []
 let CurrentUserId = 0
 let currentAttendanceData:VolunteerAttendance|null = null
@@ -380,7 +379,7 @@ async function loadAttendance() {
     })
 
     volunteerRoleIds = []
-    const roleIdResponse = await getRoleNames('name=volunteer')
+    const roleIdResponse = await getRolesPublicInfo('name=volunteer')
     let roleId = roleIdResponse.data[0].id
     volunteerRoleIds.push(roleId)
 
@@ -400,9 +399,9 @@ async function preloadRoles(role_ids:number[]) {
         hidden: false
     }
     const queryString = buildQueryString(data)
-    const response = await getRoles(queryString);
+    const response = await getRolesPublicInfo(queryString);
     let roles = response.data
-    let rolesMap:Record<number, Role> = {};
+    let rolesMap:Record<number, Partial<Role>> = {};
     roles.forEach(role => {
         rolesMap[role.id] = role;
     });

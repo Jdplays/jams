@@ -40,7 +40,7 @@ pages:
   edit_workshop_file:
     endpoint: routes.frontend.private.management.edit_workshop_file
     api_endpoints:
-      get_workshop_file:
+      get_file:
       get_file_versions:
       get_file_data:
       edit_file_data:
@@ -250,8 +250,7 @@ pages:
     endpoint: routes.frontend.private.volunteer.volunteer_attendance
     api_endpoints:
       get_next_event_id:
-      get_roles_field:
-        allowed_fields: id, name
+      get_roles_public_info:
       get_users_public_info:
       get_event_field:
         allowed_fields: id, filtered_name, name, date
@@ -348,6 +347,7 @@ pages:
     api_endpoints:
       get_roles_public_info:
       get_user:
+      get_file:
       upload_user_avatar:
 
 

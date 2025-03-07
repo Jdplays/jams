@@ -12,7 +12,6 @@ groups:
       get_workshops_field: routes.api_v1.private.management.get_workshops_field
       get_workshop: routes.api_v1.private.management.get_workshop
       get_workshop_field: routes.api_v1.private.management.get_workshop_field
-      get_workshop_file: routes.resources.get_workshop_file
       get_workshop_files: routes.api_v1.private.management.get_workshop_files
     write:
       add_workshop: routes.api_v1.private.management.add_workshop
@@ -162,6 +161,11 @@ groups:
     write:
       edit_general_config: routes.api_v1.private.general.edit_general_config
       recalculate_streaks: routes.api_v1.private.general.recalculate_streaks
+  
+  resources:
+    description: Handles files and resource distribution
+    read:
+      get_file: routes.resources.get_file
 
   eventbrite:
     description: Manages Eventbrite integrations
