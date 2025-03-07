@@ -9,7 +9,8 @@ pages:
   
   streak_widget:
     api_endpoints:
-      get_event:
+      get_event_field:
+        allowed_fields: id, date
       get_next_event_id:
       get_user_streak:
 
