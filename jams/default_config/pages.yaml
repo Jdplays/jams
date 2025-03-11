@@ -299,6 +299,12 @@ pages:
       get_webhook_logs_metadata:
       get_external_api_logs_metadata:
   
+  stats:
+    endpoint: routes.frontend.private.monitoring.stats
+    api_endpoints:
+      get_live_stats_sse:
+      get_event_stats:
+  
   # Event
   attendee_list:
     endpoint: routes.frontend.private.event.attendee_list

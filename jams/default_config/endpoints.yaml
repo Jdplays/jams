@@ -138,6 +138,12 @@ groups:
       get_task_scheduler_logs_metadata: routes.api_v1.private.monitoring.get_task_scheduler_logs_metadata
       get_webhook_logs_metadata: routes.api_v1.private.monitoring.get_webhook_logs_metadata
       get_external_api_logs_metadata: routes.api_v1.private.monitoring.get_external_api_logs_metadata
+  
+  stats:
+    description: Reading statistics about events
+    read:
+      get_live_stats_sse: routes.api_v1.private.monitoring.get_live_stats_sse
+      get_event_stats: routes.api_v1.private.monitoring.get_event_stats
 
   files:
     description: Manages files that can be uploaded
