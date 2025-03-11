@@ -1,4 +1,4 @@
-import { EventDetails, EventDetailsOptions } from '@global/event_details';
+import { EventDetails } from '@global/event_details';
 import {ScheduleGrid, ScheduleGridOptions} from '@global/schedule_grid'
 
 const scheduleGridOptions:ScheduleGridOptions = {
@@ -10,10 +10,6 @@ const scheduleGridOptions:ScheduleGridOptions = {
     buildKey: true
 }
 
-const eventDetailsOptions:EventDetailsOptions = {
-    showEventSelection: false
-}
-
 let eventDetails:EventDetails;
 let scheduleGrid:ScheduleGrid;
 
@@ -22,7 +18,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     bodyContainer.classList.remove('container')
     bodyContainer.classList.add('container-fluid')
 
-    eventDetails = new EventDetails('event-details', eventDetailsOptions)
+    eventDetails = new EventDetails('event-details')
     await eventDetails.init()
 
     scheduleGridOptions.eventId = eventDetails.eventId

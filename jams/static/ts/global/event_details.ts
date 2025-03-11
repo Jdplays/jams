@@ -68,8 +68,13 @@ export class EventDetails {
     }
 
     async preLoadEventNames() {
-        const namesResponse = await getEventsField('name')
-        const datesResponse = await getEventsField('date')
+        const queryData:Partial<QueryStringData> = {
+            $order_by: 'date',
+            $order_direction: 'DESC'
+        }
+        const queryString = buildQueryString(queryData)
+        const namesResponse = await getEventsField('name', queryString)
+        const datesResponse = await getEventsField('date', queryString)
         let eventNames = namesResponse.data
         let eventDates = datesResponse.data
 

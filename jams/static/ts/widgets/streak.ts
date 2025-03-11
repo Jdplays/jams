@@ -1,9 +1,9 @@
 import { getNextEvent, getUserStreak, getCurrentUserStreak, getEventField } from "@global/endpoints";
-import { StreadData } from "@global/endpoints_interfaces";
+import { StreakData } from "@global/endpoints_interfaces";
 
 let userId:Number = 0
 let widget:HTMLDivElement = null
-let streakData:StreadData = null
+let streakData:StreakData = null
 
 async function populateStreakWidget() {
     const streakGoodIcon = widget.querySelector('#streak-good-icon') as HTMLDivElement

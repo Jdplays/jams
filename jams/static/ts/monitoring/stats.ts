@@ -1,6 +1,6 @@
-import { getEventStats, getNextEvent } from "@global/endpoints";
+import { getEventStats } from "@global/endpoints";
 import { LiveEventStats } from "@global/endpoints_interfaces";
-import { addSpinnerToElement, emptyElement, removeSpinnerFromElement } from "@global/helper";
+import { emptyElement, removeSpinnerFromElement } from "@global/helper";
 import { CheckInTrendStat, WorkshopPopularityStat } from "@global/interfaces";
 import { getLiveEventStats } from "@global/sse_endpoints";
 import ApexCharts from "apexcharts";
