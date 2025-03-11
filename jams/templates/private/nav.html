@@ -187,7 +187,7 @@
         </li>
         {% endif %}
         <!--Monitoring-->
-        {% if user_has_access_to_page('logs') %}
+        {% if user_has_access_to_page('logs', 'stats') %}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" data-bs-auto-close="outside"
             role="button" aria-expanded="false">
@@ -199,6 +199,11 @@
             {% if user_has_access_to_page('logs') %}
             <a class="dropdown-item" href="{{ url_for('routes.frontend.private.monitoring.logs')}}">
               Logs
+            </a>
+            {% endif %}
+            {% if user_has_access_to_page('stats') %}
+            <a class="dropdown-item" href="{{ url_for('routes.frontend.private.monitoring.stats')}}">
+              Stats
             </a>
             {% endif %}
           </div>
