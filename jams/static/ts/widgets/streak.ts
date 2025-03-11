@@ -1,4 +1,4 @@
-import { getEvent, getNextEvent, getUserStreak, getCurrentUserStreak } from "@global/endpoints";
+import { getNextEvent, getUserStreak, getCurrentUserStreak, getEventField } from "@global/endpoints";
 import { StreadData } from "@global/endpoints_interfaces";
 
 let userId:Number = 0
@@ -93,7 +93,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     getNextEvent().then(async (response) => {
         const nextEventId = response.data
 
-        const event = await getEvent(nextEventId)
+        const event = await getEventField(nextEventId, 'date')
         
         const currentDate = new Date(event.date)
         const nextStreakUpdateDate = new Date(currentDate)

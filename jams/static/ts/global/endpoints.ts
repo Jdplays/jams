@@ -1282,6 +1282,26 @@ export function getRole(roleId:number):Promise<Role> {
     });
 }
 
+export function getRolesPublicInfo(queryString:string|null = null):Promise<ApiMultiEntryResponse<[Role]>> {
+    return new Promise((resolve, reject) => {
+        let url = `${baseURL}/roles/public`
+        if (queryString != null) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                resolve(response);   
+            },
+            error: function(error) {
+                console.log('Error fetching data:', error);
+                reject(error);
+            }
+        });
+    });
+}
+
 export function getRoleNames(queryString:string=null):Promise<ApiMultiEntryResponse<[Partial<Role>]>> {
     return new Promise((resolve, reject) => {
         let url = `${baseURL}/roles/name`

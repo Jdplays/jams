@@ -1,7 +1,7 @@
 import { Role, User } from "./endpoints_interfaces";
 import { buildRoleBadge, buildUserAvatar } from "./helper";
 
-function buildUserTooltipItem(user:Partial<User>, rolesMap:Record<number, Role>|null=null) {
+function buildUserTooltipItem(user:Partial<User>, rolesMap:Record<number, Partial<Role>>|null=null) {
     const itemDiv = document.createElement('div')
     itemDiv.classList.add('row')
 
@@ -74,7 +74,7 @@ function buildUserTooltipItem(user:Partial<User>, rolesMap:Record<number, Role>|
     return itemDiv
 }
 
-export function buildUserTooltip(user:Partial<User>, rolesMap:Record<number, Role>|null=null) {
+export function buildUserTooltip(user:Partial<User>, rolesMap:Record<number, Partial<Role>>|null=null) {
     const tooltipDiv = document.createElement("div");
     const userItem = buildUserTooltipItem(user, rolesMap)
 

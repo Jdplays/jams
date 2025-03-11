@@ -37,7 +37,7 @@ class Endpoint(db.Model):
     write = Column(Boolean, nullable=False, default=False, server_default='false')
     endpoint_group_id = Column(Integer, ForeignKey('endpoint_group.id'), nullable=False)
 
-    webhook = relationship('EndpointGroup', backref='endpoints')
+    group = relationship('EndpointGroup', backref='endpoints')
 
     def __init__(self, name, endpoint, endpoint_group_id, read=False, write=False):
         self.name = name

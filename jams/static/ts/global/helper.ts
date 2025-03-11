@@ -736,7 +736,7 @@ export function stringToFireListEntryType(type: string | null): FireListEntryTyp
     }
 }
 
-export function buildRoleBadge(role:Role, roleText:string=null, usePointer:boolean=false) {
+export function buildRoleBadge(role:Partial<Role>, roleText:string=null, usePointer:boolean=false) {
     const container = document.createElement('span')
 
     if (!role && !roleText) {

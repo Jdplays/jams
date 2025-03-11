@@ -187,6 +187,12 @@ def get_roles_field(field):
     roles = helper.filter_model_by_query_and_properties(Role, request.args, field)
     return jsonify(roles)
 
+@bp.route('/roles/public', methods=['GET'])
+@api_route
+def get_roles_public_info():
+    role_objs, count = helper.filter_model_by_query_and_properties(Role, request.args, return_objects=True)
+    return jsonify({'data': [role.public_info_dict() for role in role_objs]})
+
 
 @bp.route('/roles/<int:role_id>', methods=['GET'])
 @api_route
