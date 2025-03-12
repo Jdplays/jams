@@ -1,12 +1,15 @@
 import { getEventStats } from "@global/endpoints";
-import { LiveEventStats } from "@global/endpoints_interfaces";
-import { emptyElement, removeSpinnerFromElement } from "@global/helper";
+import { LiveEventStats, Event } from "@global/endpoints_interfaces";
+import { EventDetails } from "@global/event_details";
+import { createEventSelectionDropdown, emptyElement, eventDropdownItemText, formatDateToShort, isDefined, preLoadEventDetails, removeSpinnerFromElement } from "@global/helper";
 import { CheckInTrendStat, WorkshopPopularityStat } from "@global/interfaces";
 import { getLiveEventStats } from "@global/sse_endpoints";
 import ApexCharts from "apexcharts";
 
 let liveCheckinTrendChart:ApexCharts = null
 let eventId:number = null
+let latestEventId:number = null
+let eventDetailsMap:Record<number, Partial<Event>> = {}
 
 const checkinChartOptions: ApexCharts.ApexOptions = {
     chart: { type: "bar", height: 300, toolbar: {show:false} },
@@ -151,7 +154,7 @@ function updateLiveEventStats(data: LiveEventStats) {
     const checkInPercentage = data.total_checked_in / data.total_registered
     const checkInsText = document.createElement('span')
     checkInsText.className = getColorClass(checkInPercentage)
-    checkInsText.innerHTML = String(data.total_checked_in)
+    checkInsText.innerHTML = String(data.current_checked_in)
     checkInsContainer.appendChild(checkInsText)
     const checkInsDivider = document.createElement('span')
     checkInsDivider.innerHTML = '/'
@@ -164,12 +167,12 @@ function updateLiveEventStats(data: LiveEventStats) {
     const totalCheckedIn = data.total_checked_in
     const currentCheckedIn = data.current_checked_in
 
-    const retention = (currentCheckedIn / totalCheckedIn)
+    const retention = Math.round((currentCheckedIn / totalCheckedIn) * 100)
 
     emptyElement(retentionContainer)
     const retentionText = document.createElement('span')
     retentionText.className = getColorClass(retention)
-    retentionText.innerHTML = `${retention * 100}%`
+    retentionText.innerHTML = `${retention}%`
     retentionContainer.appendChild(retentionText)
     document.getElementById("live-total-checked-in-text")!.innerHTML = `(Total Check-ins: ${data.total_checked_in})`
 
@@ -193,104 +196,78 @@ async function updatePostEventStats(data:LiveEventStats) {
     const checkInTrendChart = new ApexCharts(checkInTrendChartContainer, checkinChartOptions);
     const workshopOverlapChart = new ApexCharts(workshopOverlapChartContainer, workshopOverlapChartOptions);
 
-    const eventStatsResponse = await getEventStats(data.event_id)
-    const eventStats = eventStatsResponse.data
+    getEventStats(data.event_id).then((response) => {
+        $("#post-event-stats-data").slideDown();
+        document.getElementById('post-event-stats-error').style.display = 'none'
+        const eventStats = response.data
 
-    // Times
-    averageLeaveTimeText.className = ''
-    averageLeaveTimeText.innerHTML = eventStats.average_leave_time.split(':').slice(0,2).join(':')
-    averageDurationTimeText.className = ''
-    averageDurationTimeText.innerHTML = eventStats.average_duration.split(':').slice(0,2).join(':')
+        // Times
+        averageLeaveTimeText.className = ''
+        averageLeaveTimeText.innerHTML = eventStats.average_leave_time.split(':').slice(0,2).join(':')
+        averageDurationTimeText.className = ''
+        averageDurationTimeText.innerHTML = eventStats.average_duration.split(':').slice(0,2).join(':')
 
-    // Gender
-    genderDistributionChartConatiner.className = ''
-    if (eventStats.gender_distribution === null || eventStats.gender_distribution === undefined) {
-        genderDistributionChartConatiner.innerHTML = 'No Data'
-    } else {
-        genderDistributionChart.render()
-        genderDistributionChart.updateSeries([eventStats.gender_distribution.male, eventStats.gender_distribution.female, eventStats.gender_distribution.other])
-    }
-
-    // Age
-    ageDistributionChartConatiner.className = ''
-    if (eventStats.age_distribution === null || eventStats.age_distribution === undefined) {
-        ageDistributionChartConatiner.innerHTML = 'No Data'
-    } else {
-        ageDistributionChart.render()
-        const ageCounts = ageCategories.map(category => eventStats.age_distribution[category] || 0);
-
-        ageDistributionChart.updateOptions({
-            xaxis: {categories: ageCategories}
-        })
-        ageDistributionChart.updateSeries([{name: "Attendees", data: ageCounts}])
-    }
-
-    // Check-ins
-    emptyElement(checkInsContainer)
-    const checkInPercentage = eventStats.total_checked_in / eventStats.total_registered
-    const checkInsText = document.createElement('span')
-    checkInsText.className = getColorClass(checkInPercentage)
-    checkInsText.innerHTML = String(eventStats.total_checked_in)
-    checkInsContainer.appendChild(checkInsText)
-    const checkInsDivider = document.createElement('span')
-    checkInsDivider.innerHTML = '/'
-    checkInsContainer.appendChild(checkInsDivider)
-    const registeredText = document.createElement('span')
-    registeredText.innerHTML = String(eventStats.total_registered)
-    checkInsContainer.appendChild(registeredText)
-
-    // Retention
-    emptyElement(retentionContainer)
-    if (eventStats.retention_rate === null || eventStats.retention_rate === undefined) {
-        retentionContainer.innerHTML = 'No Data'
-    } else {
-        const retentionText = document.createElement('span')
-        retentionText.className = getColorClass(eventStats.retention_rate)
-        retentionText.innerHTML = `${eventStats.retention_rate * 100}%`
-        retentionContainer.appendChild(retentionText)
-    }
-
-    // Check in Trends
-    if (eventStats.check_in_trend === null || eventStats.check_in_trend === undefined) {
-        checkInTrendChartContainer.innerHTML = 'No Data'
-    } else {
-        checkInTrendChart.render()
-        updateCheckinTrend(checkInTrendChart, eventStats.check_in_trend)
-    }
-
-    // Popular Workshops
-    emptyElement(mostPopularWorkshopsContainer)
-    const sortedPopularWorkshops = eventStats.workshop_popularity.sort((a, b) => b.score - a.score).slice(0, 3)
-
-    sortedPopularWorkshops.map((stat:WorkshopPopularityStat, index:number) => {
-        const p = document.createElement('p')
-        const number = document.createElement('span')
-        number.innerHTML = `${index + 1}. `
-        p.appendChild(number)
-
-        const workshop = document.createElement('a')
-        workshop.innerHTML = stat.name
-        workshop.href = `/private/management/workshops/${stat.id}/edit`
-        workshop.target = '_blank'
-        p.appendChild(workshop)
-
-        if (index === 0) {
-            const icon = document.createElement('i')
-            icon.classList.add('ti', 'ti-crown', 'text-yellow', 'ms-2')
-            p.appendChild(icon)
+        // Gender
+        genderDistributionChartConatiner.className = ''
+        if (eventStats.gender_distribution === null || eventStats.gender_distribution === undefined) {
+            genderDistributionChartConatiner.innerHTML = 'No Data'
+        } else {
+            genderDistributionChart.render()
+            genderDistributionChart.updateSeries([eventStats.gender_distribution.male, eventStats.gender_distribution.female, eventStats.gender_distribution.other])
         }
 
-        mostPopularWorkshopsContainer.appendChild(p)
-    })
+        // Age
+        ageDistributionChartConatiner.className = ''
+        if (eventStats.age_distribution === null || eventStats.age_distribution === undefined) {
+            ageDistributionChartConatiner.innerHTML = 'No Data'
+        } else {
+            ageDistributionChart.render()
+            const ageCounts = ageCategories.map(category => eventStats.age_distribution[category] || 0);
 
-    // Dropout Workshops
-    emptyElement(mostDropoutsWorkshopsContainer)
-    if (eventStats.dropout_workshops === null || eventStats.dropout_workshops === undefined) {
-        mostDropoutsWorkshopsContainer.innerHTML = 'No Data'
-    } else {
-        const sortedDropoutWorkshops = eventStats.dropout_workshops.sort((a, b) => b.score - a.score).slice(0, 3)
+            ageDistributionChart.updateOptions({
+                xaxis: {categories: ageCategories}
+            })
+            ageDistributionChart.updateSeries([{name: "Attendees", data: ageCounts}])
+        }
 
-        sortedDropoutWorkshops.map((stat:WorkshopPopularityStat, index:number) => {
+        // Check-ins
+        emptyElement(checkInsContainer)
+        const checkInPercentage = eventStats.total_checked_in / eventStats.total_registered
+        const checkInsText = document.createElement('span')
+        checkInsText.className = getColorClass(checkInPercentage)
+        checkInsText.innerHTML = String(eventStats.total_checked_in)
+        checkInsContainer.appendChild(checkInsText)
+        const checkInsDivider = document.createElement('span')
+        checkInsDivider.innerHTML = '/'
+        checkInsContainer.appendChild(checkInsDivider)
+        const registeredText = document.createElement('span')
+        registeredText.innerHTML = String(eventStats.total_registered)
+        checkInsContainer.appendChild(registeredText)
+
+        // Retention
+        emptyElement(retentionContainer)
+        if (eventStats.retention_rate === null || eventStats.retention_rate === undefined) {
+            retentionContainer.innerHTML = 'No Data'
+        } else {
+            const retentionText = document.createElement('span')
+            retentionText.className = getColorClass(eventStats.retention_rate)
+            retentionText.innerHTML = `${eventStats.retention_rate * 100}%`
+            retentionContainer.appendChild(retentionText)
+        }
+
+        // Check in Trends
+        if (eventStats.check_in_trend === null || eventStats.check_in_trend === undefined) {
+            checkInTrendChartContainer.innerHTML = 'No Data'
+        } else {
+            checkInTrendChart.render()
+            updateCheckinTrend(checkInTrendChart, eventStats.check_in_trend)
+        }
+
+        // Popular Workshops
+        emptyElement(mostPopularWorkshopsContainer)
+        const sortedPopularWorkshops = eventStats.workshop_popularity.sort((a, b) => b.score - a.score).slice(0, 3)
+
+        sortedPopularWorkshops.map((stat:WorkshopPopularityStat, index:number) => {
             const p = document.createElement('p')
             const number = document.createElement('span')
             number.innerHTML = `${index + 1}. `
@@ -302,41 +279,76 @@ async function updatePostEventStats(data:LiveEventStats) {
             workshop.target = '_blank'
             p.appendChild(workshop)
 
-            mostDropoutsWorkshopsContainer.appendChild(p)
-        })
-    }
-
-    // Workshop Overlap Chart
-    const workshopOverlap = eventStats.workshop_overlap
-    if (workshopOverlap === null || workshopOverlap === undefined) {
-        workshopOverlapChartContainer.innerHTML = 'No Data'
-    } else {
-        workshopOverlapChart.render()
-
-        // Extract timeslot and location mappings
-        const timeslotLabels = workshopOverlap.timeslots
-        const locationLabels = workshopOverlap.locations
-
-        const timeslotKeys = Object.keys(timeslotLabels).map(Number).sort((a, b) => b - a) // Reverse order as heatmap shows from bottom up on X axis
-        const locationKeys = Object.keys(locationLabels).map(Number).sort((a, b) => a - b)
-
-        const heatmapData = timeslotKeys.map(timeslot => {
-            return {
-                name: timeslotLabels[timeslot],
-                data: locationKeys.map(location => {
-                    const workshop = workshopOverlap.workshops.find(w => w.timeslot === timeslot && w.location === location)
-                    return {
-                        x: locationLabels[location],
-                        y: workshop ? workshop.normalised_score : 0,
-                        workshop: workshop ? workshop : null
-                    }
-                })
+            if (index === 0) {
+                const icon = document.createElement('i')
+                icon.classList.add('ti', 'ti-crown', 'text-yellow', 'ms-2')
+                p.appendChild(icon)
             }
+
+            mostPopularWorkshopsContainer.appendChild(p)
         })
 
-        workshopOverlapChart.updateSeries(heatmapData)
-    }
-    removeSpinnerFromElement(workshopOverlapChartContainer)
+        // Dropout Workshops
+        emptyElement(mostDropoutsWorkshopsContainer)
+        if (eventStats.dropout_workshops === null || eventStats.dropout_workshops === undefined) {
+            mostDropoutsWorkshopsContainer.innerHTML = 'No Data'
+        } else {
+            const sortedDropoutWorkshops = eventStats.dropout_workshops.sort((a, b) => b.score - a.score).slice(0, 3)
+
+            sortedDropoutWorkshops.map((stat:WorkshopPopularityStat, index:number) => {
+                const p = document.createElement('p')
+                const number = document.createElement('span')
+                number.innerHTML = `${index + 1}. `
+                p.appendChild(number)
+
+                const workshop = document.createElement('a')
+                workshop.innerHTML = stat.name
+                workshop.href = `/private/management/workshops/${stat.id}/edit`
+                workshop.target = '_blank'
+                p.appendChild(workshop)
+
+                mostDropoutsWorkshopsContainer.appendChild(p)
+            })
+        }
+
+        // Workshop Overlap Chart
+        const workshopOverlap = eventStats.workshop_overlap
+        if (workshopOverlap === null || workshopOverlap === undefined) {
+            workshopOverlapChartContainer.innerHTML = 'No Data'
+        } else {
+            workshopOverlapChart.render()
+
+            // Extract timeslot and location mappings
+            const timeslotLabels = workshopOverlap.timeslots
+            const locationLabels = workshopOverlap.locations
+
+            const timeslotKeys = Object.keys(timeslotLabels).map(Number).sort((a, b) => b - a) // Reverse order as heatmap shows from bottom up on X axis
+            const locationKeys = Object.keys(locationLabels).map(Number).sort((a, b) => a - b)
+
+            const heatmapData = timeslotKeys.map(timeslot => {
+                return {
+                    name: timeslotLabels[timeslot],
+                    data: locationKeys.map(location => {
+                        const workshop = workshopOverlap.workshops.find(w => w.timeslot === timeslot && w.location === location)
+                        return {
+                            x: locationLabels[location],
+                            y: workshop ? workshop.normalised_score : 0,
+                            workshop: workshop ? workshop : null
+                        }
+                    })
+                }
+            })
+
+            workshopOverlapChart.updateSeries(heatmapData)
+        }
+        removeSpinnerFromElement(workshopOverlapChartContainer)
+    }).catch((error) => {
+        $("#post-event-stats-data").slideUp();
+        document.getElementById('post-event-stats-error').style.display = 'block'
+    })
+    
+
+    
 }
 
 function updateCheckinTrend(chart:ApexCharts, data:CheckInTrendStat[]) {
@@ -378,24 +390,70 @@ function updateCheckinTrend(chart:ApexCharts, data:CheckInTrendStat[]) {
     ])
 }
 
+function eventSelectionDropdownOnClick(eId:number) {
+    if (eventId === eId) {
+        return
+    }
+
+    const newDropdownText = eventDropdownItemText(eventDetailsMap[eId])
+    document.getElementById('select-event-dropdown-button').innerText = newDropdownText
+
+    const eventTitle = document.getElementById('post-event-title') as HTMLElement
+    eventTitle.innerHTML = eventDetailsMap[eId].name
+    eventId = eId
+    updatePostEventStats({mode: 'POST', event_id: eId})
+}
+
+function latestEventOnClick() {
+    if (eventId === latestEventId) {
+        return
+    }
+
+    eventSelectionDropdownOnClick(latestEventId)
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
     liveCheckinTrendChart = new ApexCharts(document.querySelector("#live-checkin-trend-chart"), checkinChartOptions);
     liveCheckinTrendChart.render();
+    
+    eventDetailsMap = await preLoadEventDetails()
 
     const sse = getLiveEventStats()
     sse.onUpdate((data) => {
+        emptyElement(document.getElementById('event-selection-dropdown'))
         eventId = data.event_id
+        latestEventId = eventId
 
-        if (data.type === "LIVE") {
+        if (data.mode === "LIVE") {
             // Hide post event stats and show live event stats with sliding animation
             $("#post-event-stats-block").slideUp();
             $("#live-event-stats-block").slideDown();
             updateLiveEventStats(data)
-          } else if (data.type === "POST") {
+          } else if (data.mode === "POST") {
             // Hide live event stats and show post event stats with sliding animation
             $("#live-event-stats-block").slideUp();
             $("#post-event-stats-block").slideDown();
             updatePostEventStats(data)
+          } else if(data.mode === 'ERROR') {
+            $("#live-event-stats-block").slideUp();
+            $("#post-event-stats-data").slideUp();
+            $("#post-event-stats-block").slideDown();
+            
+            document.getElementById('post-event-stats-error').style.display = 'block'
+          }
+
+          if (data.mode === 'POST' || data.mode === 'ERROR') {
+            eventSelectionDropdownOnClick(eventId)
+
+            const eventSelectionDropdown = createEventSelectionDropdown(eventId, eventDetailsMap, eventSelectionDropdownOnClick)
+            document.getElementById('event-selection-dropdown').appendChild(eventSelectionDropdown)
+            document.getElementById('select-event-dropdown-button').classList.add('col-12')
           }
     })
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    if (isDefined(window)) {
+        (<any>window).latestEventOnClick = latestEventOnClick;
+    }
 });

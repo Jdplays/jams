@@ -372,7 +372,7 @@ export interface EventMetadata {
 }
 
 export interface LiveEventStats {
-    type:string
+    mode:string
     event_id:number
     total_registered?:number
     total_checked_in?:number
