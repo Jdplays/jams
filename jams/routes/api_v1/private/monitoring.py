@@ -3,6 +3,7 @@ import json
 import sys
 from time import sleep
 from flask import Blueprint, Response, jsonify, request, stream_with_context
+from datetime import datetime, UTC, timedelta
 from jams.decorators import api_route
 from jams.models import db, PrivateAccessLog, TaskSchedulerLog, WebhookLog, ExternalAPILog
 from jams.util import helper, stats
@@ -91,22 +92,14 @@ def get_external_api_logs_metadata():
 def get_live_stats_sse():
     def event_stream():
         last_sent_data = None
-        i = 0
-        type='LIVE'
         while True:
-            cur_event = helper.get_next_event()
-            if i == 15:
-                type = 'POST'
-            elif i == 30:
-                type = 'LIVE'
-                i = 0
-            type = 'POST'
-            current_data = stats.get_live_event_stats(cur_event.id, type=type)
+            mode, event_id = stats.get_event_stats_mode()
+            
+            current_data = stats.get_live_event_stats(event_id, mode=mode)
             if last_sent_data is None or current_data != last_sent_data:
                 last_sent_data = current_data
                 yield f'data: {json.dumps(current_data)}\n\n'
                 sys.stdout.flush()
-            i += 1
             sleep(1)
     return Response(stream_with_context(event_stream()), content_type='text/event-stream')
 

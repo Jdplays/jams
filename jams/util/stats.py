@@ -5,26 +5,53 @@ from datetime import datetime, timedelta, UTC
 from jams.models import db, Attendee, AttendeeCheckInLog, EventStats, Event, Session, AttendeeSignup
 from jams.util import helper
 
-def get_live_event_stats(event_id, type):
+def get_event_stats_mode():
+    cur_event = helper.get_next_event()
+    now = datetime.now(UTC)
+
+    event_start = cur_event.start_date_time
+    event_end = cur_event.end_date_time
+
+    if event_start.tzinfo is None:
+        event_start = event_start.replace(tzinfo=UTC)
+    if event_end.tzinfo is None:
+        event_end = event_end.replace(tzinfo=UTC)
+
+    if event_start.date() == now.date() and now <= event_end + timedelta(hours=1):
+        return 'LIVE', cur_event.id
+    
+    if now > event_end + timedelta(hours=1):
+        post_event_id = cur_event.id
+    else:
+        last_event = Event.query.filter(Event.id != cur_event.id).order_by(Event.date.desc()).first()
+        post_event_id = last_event.id if last_event else None
+    
+    stats = EventStats.query.filter(EventStats.event_id == post_event_id).first()
+    if not stats:
+        return 'ERROR', post_event_id
+        
+    return 'POST', post_event_id
+
+def get_live_event_stats(event_id, mode):
     # Checked in count vs Total attendees
     # A checkin trend chart
     # Reentry rate
 
-    checked_in_count = Attendee.query.filter_by(event_id=event_id, checked_in=True).count()
+    checked_in_count = Attendee.query.filter(Attendee.event_id == event_id, Attendee.checked_in == True).count()
     total_count = Attendee.query.filter_by(event_id=event_id).count()
     total_checked_in_attendees = get_total_checked_in_attendees(event_id)
     check_in_trend = get_check_in_trend(event_id)
 
     timezoned_check_in_trend = convert_check_in_trend_to_Local_timezone(check_in_trend)
 
-    if type == 'POST':
+    if mode == 'POST' or mode == 'ERROR':
         return {
-        'type': type,
+        'mode': mode,
         'event_id': event_id
         }
 
     return {
-        'type': type,
+        'mode': mode,
         'event_id': event_id,
         'total_registered': total_count,
         'total_checked_in': total_checked_in_attendees,
