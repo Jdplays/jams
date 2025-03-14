@@ -17,6 +17,9 @@ const checkinChartOptions: ApexCharts.ApexOptions = {
         { name: "Check-ins", data: [] as { x: number, y: number }[], color: "#28a745" },  // Green
         { name: "Checkouts", data: [] as { x: number, y: number }[], color: "#dc3545" }  // Red
     ],
+    dataLabels: {
+        enabled: false // Hides the value labels on bars
+    },
     xaxis: { type: "datetime", labels: { format: "HH:mm" } },
     yaxis: { title: { text: "Count" } },
     plotOptions: {
@@ -260,7 +263,7 @@ async function updatePostEventStats(data:LiveEventStats) {
         } else {
             const retentionText = document.createElement('span')
             retentionText.className = getColorClass(eventStats.retention_rate)
-            retentionText.innerHTML = `${eventStats.retention_rate * 100}%`
+            retentionText.innerHTML = `${eventStats.retention_rate}%`
             retentionContainer.appendChild(retentionText)
         }
 

@@ -2453,6 +2453,22 @@ export function getEventStats(eventId:Number):Promise<ApiResponse<EventStats>> {
     });
 }
 
+export function recalculateEventStats():Promise<ApiResponse<any>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/stats/recalculate`,
+            type: 'POST',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
 // #endregion
 
 // #region Code Assets

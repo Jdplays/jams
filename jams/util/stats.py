@@ -1,3 +1,4 @@
+from collections import defaultdict
 from statistics import mean
 from sqlalchemy import case, cast, Integer, literal, func, text, and_, exists, select
 from sqlalchemy.orm import aliased
@@ -8,6 +9,10 @@ from jams.util import helper
 def get_event_stats_mode():
     cur_event = helper.get_next_event()
     now = datetime.now(UTC)
+    
+    if not cur_event:
+        last_event = Event.query.order_by(Event.date.desc()).first()
+        return 'POST', last_event.id
 
     event_start = cur_event.start_date_time
     event_end = cur_event.end_date_time
@@ -66,49 +71,37 @@ def get_post_event_stats(event_id):
 
 
 def calculate_check_in_trend(event_id, interval_minutes=10):
-    rounded_time = (
-        func.date_trunc('minute', AttendeeCheckInLog.timestamp) -
-        cast(
-            (cast(func.extract('minute', AttendeeCheckInLog.timestamp), Integer) % interval_minutes),
-            Integer
-        ) * text("INTERVAL '1 minute'")
-    )
+    event = Event.query.filter(Event.id == event_id).first()
+    if not event:
+        return []
 
-    checkin_subquery = (
-        db.session.query(
-            AttendeeCheckInLog.attendee_id,
-            rounded_time.label('timestamp'),
-            literal(1).label('action')  # 1 for check-in
-        )
-        .filter(AttendeeCheckInLog.event_id == event_id, AttendeeCheckInLog.checked_in == True)
-        .group_by(AttendeeCheckInLog.attendee_id, rounded_time)
-    )
+    event_end_time = event.end_date_time
 
-    checkout_subquery = (
-        db.session.query(
-            AttendeeCheckInLog.attendee_id,
-            rounded_time.label('timestamp'),
-            literal(-1).label('action')  # -1 for checkout
-        )
-        .filter(AttendeeCheckInLog.event_id == event_id, AttendeeCheckInLog.checked_in == False)
-        .group_by(AttendeeCheckInLog.attendee_id, rounded_time)
-    )
+    # Retrieve all relevant check-in and check-out logs from the database
+    logs = db.session.query(
+        AttendeeCheckInLog.attendee_id,
+        AttendeeCheckInLog.timestamp,
+        AttendeeCheckInLog.checked_in
+    ).filter(
+        AttendeeCheckInLog.event_id == event_id,
+        AttendeeCheckInLog.timestamp <= event_end_time  # Exclude anything after event ends
+    ).all()
 
-    union_query = checkin_subquery.union_all(checkout_subquery).subquery()
+    # Process logs in Python
+    trend_data = defaultdict(lambda: {"checkins": 0, "checkouts": 0})
 
-    trend_data = (
-        db.session.query(
-            union_query.c.timestamp,
-            func.sum(case((union_query.c.action == 1, 1), else_=0)).label('checkins'),
-            func.sum(case((union_query.c.action == -1, 1), else_=0)).label('checkouts')
-        )
-        .group_by(union_query.c.timestamp)
-        .order_by(union_query.c.timestamp)
-        .all()
-    )
+    for log in logs:
+        # Round timestamp to the nearest interval
+        rounded_time = log.timestamp - timedelta(minutes=log.timestamp.minute % interval_minutes, seconds=log.timestamp.second, microseconds=log.timestamp.microsecond)
+        rounded_time_str = rounded_time.strftime("%H:%M")  # Format for output
+        
+        if log.checked_in:
+            trend_data[rounded_time_str]["checkins"] += 1
+        else:
+            trend_data[rounded_time_str]["checkouts"] += 1
 
-    result = [{'timestamp': row.timestamp.strftime("%H:%M"), 'checkins': row.checkins, 'checkouts': row.checkouts} for row in trend_data]
-
+    # Convert to sorted list of dictionaries
+    result = [{"timestamp": time, "checkins": data["checkins"], "checkouts": data["checkouts"]} for time, data in sorted(trend_data.items())]
     return result
 
 def calculate_total_checked_in_attendees(event_id):
@@ -162,6 +155,9 @@ def calculate_average_leave_time(event_id):
     checkout_times = [co.timestamp() for co in final_checkouts.values()]
     checkout_times.append(default_checkout_time.timestamp())
 
+    if not checkout_times:
+        return None
+    
     avg_checkout_timestamp = mean(checkout_times)
     avg_checkout_datetime = datetime.fromtimestamp(avg_checkout_timestamp)
     localised_datetime = helper.convert_datetime_to_local_timezone(avg_checkout_datetime)
@@ -180,6 +176,9 @@ def calculate_average_duration(event_id):
         
         duration = checkout_time.timestamp() - checkin_time.timestamp()
         durations.append(duration)
+
+    if not durations:
+        return None
     
     avg_duration = mean(durations)
 
@@ -299,7 +298,7 @@ def calculate_workshop_dropout_rates(event_id):
         if session.workshop.attendee_registration:
             signups = AttendeeSignup.query.filter(AttendeeSignup.session_id == session.id).all()
             droupout_count = sum(1 for signup in signups if signup.attendee_id in latest_checkouts)
-            dropout_ratio = droupout_count / len(signups)
+            dropout_ratio = droupout_count / len(signups) if len(signups) > 0 else 0
             workshops_raw_data.append({
                 'id': session.workshop.id,
                 'name': session.workshop.name,

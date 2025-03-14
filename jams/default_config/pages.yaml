@@ -161,6 +161,7 @@ pages:
       get_latest_release:
       edit_general_config:
       recalculate_streaks:
+      recalculate_stats:
 
   user_management:
     endpoint: routes.frontend.private.admin.user_management

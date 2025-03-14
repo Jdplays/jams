@@ -1,4 +1,4 @@
-import { editGeneralConfig, getGeneralConfig, getLatestRelease, recalculateStreaks } from "@global/endpoints";
+import { editGeneralConfig, getGeneralConfig, getLatestRelease, recalculateEventStats, recalculateStreaks } from "@global/endpoints";
 import { GeneralConfig } from "@global/endpoints_interfaces";
 import { errorToast, isDefined, isNullEmptyOrSpaces, successToast } from "@global/helper";
 import { allTimezones } from "@global/timezones";
@@ -127,6 +127,29 @@ function recalculateStreaksOnClick() {
     })
 }
 
+function recalculateStatsOnClick() {
+    const statusFixed = document.getElementById('stats-status-fixed') as HTMLElement
+    const statusRolling = document.getElementById('stats-status-rolling') as HTMLElement
+    statusFixed.style.display = 'none'
+    statusRolling.style.display = 'block'
+
+    recalculateEventStats().then((response) => {
+        successToast(response.message)
+        $('#confirm-recalculate-stats').modal('hide');
+    }).catch((error) => {
+        const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
+        errorToast(errorMessage)
+    }).finally(() => {
+        statusFixed.style.display = 'block'
+        statusRolling.style.display = 'none'
+    })
+
+    setInterval(() => {
+        
+
+    }, 5000);
+}
+
 // Event Listeners
 document.addEventListener("DOMContentLoaded", setupPage);
 
@@ -135,5 +158,6 @@ document.addEventListener("DOMContentLoaded", () => {
         (<any>window).checkIfContentUpdated = checkIfContentUpdated;
         (<any>window).generalConfigSaveOnClick = generalConfigSaveOnClick;
         (<any>window).recalculateStreaksOnClick = recalculateStreaksOnClick;
+        (<any>window).recalculateStatsOnClick = recalculateStatsOnClick;
     }
 });

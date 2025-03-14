@@ -3,9 +3,8 @@ import json
 import sys
 from time import sleep
 from flask import Blueprint, Response, jsonify, request, stream_with_context
-from datetime import datetime, UTC, timedelta
 from jams.decorators import api_route
-from jams.models import db, PrivateAccessLog, TaskSchedulerLog, WebhookLog, ExternalAPILog
+from jams.models import PrivateAccessLog, TaskSchedulerLog, WebhookLog, ExternalAPILog, Event
 from jams.util import helper, stats
 
 bp = Blueprint('monitoring', __name__)
@@ -111,7 +110,18 @@ def get_event_stats(event_id):
     return jsonify({'data': event_stats})
 
 
-@bp.route('/stats/test/<int:event_id>')
-def test(event_id):
-    return jsonify({'data': stats.calculate_workshop_overlap(event_id)})
+@bp.route('/stats/recalculate', methods=['POST'])
+@api_route
+def recalculate_stats():
+    events = Event.query.all()
+
+    try:
+        for event in events:
+            stats.generate_event_stats(event.id, True)
+    except Exception as e:
+        print(e)
+        return jsonify({'message': 'An unknown error occured when recalculating all event stats.'}), 400
+    
+
+    return jsonify({'message': 'All event stats have been successfully recalculated.'}), 200
 

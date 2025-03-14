@@ -145,6 +145,8 @@ groups:
     read:
       get_live_stats_sse: routes.api_v1.private.monitoring.get_live_stats_sse
       get_event_stats: routes.api_v1.private.monitoring.get_event_stats
+    write:
+      recalculate_stats: routes.api_v1.private.monitoring.recalculate_stats
 
   files:
     description: Manages files that can be uploaded
