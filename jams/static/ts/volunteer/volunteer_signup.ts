@@ -35,7 +35,6 @@ function onEventChangeFunc() {
         return
     }
     loadSignupData(true)
-
 }
 
 function populateUsersDropdown() {
