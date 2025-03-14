@@ -2,7 +2,7 @@ Flask
 psycopg2-binary
 Flask-SQLAlchemy
 Flask-Migrate
-flask-security-too
+flask-security-too==5.5.2
 passlib[argon2]
 Flask-WTF
 gunicorn
