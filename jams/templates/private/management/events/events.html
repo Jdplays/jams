@@ -50,6 +50,16 @@
                     <input type="text" class="form-control" name="name" id="edit-external-event-password"
                         placeholder="password123" />
                 </div>
+                <div class="mb-3">
+                    <label class="form-label required">Actions</label>
+                    <div>
+                        <button class="btn btn-outline-danger mb-1" onclick="regenerateEventTasksOnClick()">
+                            <i class="ti ti-refresh-dot"></i>
+                            <span class="btn-text ms-2">Regenerate Event Tasks</span>
+                        </button>
+                        <p class="text-secondary">This will regenerate all shceduled tasks for this event. Use this if a new feature comes out.</p>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">

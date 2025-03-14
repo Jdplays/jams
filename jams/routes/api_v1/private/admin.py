@@ -1,5 +1,6 @@
 # API is for serving data to Typscript/Javascript
 import io
+from datetime import timedelta
 from PIL import Image
 from flask import Blueprint, request, jsonify, abort, current_app
 from flask_security import login_required, current_user
@@ -8,8 +9,9 @@ from jams.models import db, User, Role, Event, EventLocation, EventTimeslot, Ses
 from jams.util import helper
 from jams.util import files
 from jams.endpoint_loader import generate_roles_file_from_db, update_pages_assigned_to_role
-from jams.integrations.eventbrite import create_event_update_tasks, deactivate_event_update_tasks
+from jams.integrations.eventbrite import deactivate_event_update_tasks
 from jams.util.database import create_event
+from jams.util.task_scheduler import create_event_tasks, update_scheduled_post_event_task_date
 
 bp = Blueprint('admin', __name__)
 
@@ -365,8 +367,7 @@ def add_event():
     db.session.add(new_event)
     db.session.commit()
 
-    if new_event.external:
-        create_event_update_tasks(new_event)
+    create_event_tasks(new_event)
 
     return jsonify({
         'message': 'New event has been successfully added',
@@ -388,6 +389,11 @@ def edit_event(event_id):
         if field in allowed_fields:
             if field == 'start_date_time' or field == 'end_date_time':
                 value = helper.convert_local_datetime_to_utc(value)
+
+                # If the end datetime has changed, update the post event task run datetime
+                if field == 'end_date_time':
+                    new_task_datetime = value + timedelta(hours=1)
+                    update_scheduled_post_event_task_date(event, new_task_datetime)
             if field == 'external_id':
                 external_event = Event.query.filter_by(external_id=value).first()
                 if external_event:
@@ -398,22 +404,29 @@ def edit_event(event_id):
                     event.external_id = None
                     event.external_url = None
                     deactivate_event_update_tasks(event)
-            
-            if field == 'date':
-                helper.update_scheduled_streak_update_task_date(event, value)
                 
             setattr(event, field, value)
     
     db.session.commit()
 
-    if event.external:
-        create_event_update_tasks(event)
+    create_event_tasks(event)
 
     return jsonify({
         'message': 'Event has be updated successfully',
         'user': event.to_dict()
     })
 
+@bp.route('/events/<int:event_id>/tasks/regenerate', methods=['POST'])
+@api_route
+def regenerate_event_tasks(event_id):
+    event = Event.query.filter_by(id=event_id).first_or_404()
+    try:
+        create_event_tasks(event)
+    except Exception as e:
+        print(e)
+        return jsonify({'message': 'Failed to regenerate event tasks for unknown reason'}), 400
+    
+    return jsonify({'message': 'Successfully regenerated event tasks'}), 200
 
 @bp.route('/events/<int:event_id>/archive', methods=['POST'])
 @api_route

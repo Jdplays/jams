@@ -81,6 +81,7 @@ groups:
       recalculate_session_capacity: routes.api_v1.private.admin.recalculate_session_capacity
       check_in_event_fire_list_item: routes.api_v1.private.event.check_in_fire_list_item
       check_out_event_fire_list_item: routes.api_v1.private.event.check_out_fire_list_item
+      regenerate_event_tasks: routes.api_v1.private.admin.regenerate_event_tasks
 
   users:
     description: Manages user information
