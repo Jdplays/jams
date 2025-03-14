@@ -142,8 +142,8 @@ def print_queue_open():
     now = datetime.now(UTC)
 
     event_date = next_event.date.date()
-    before_event = next_event.start_date_time - timedelta(hours=2)
-    after_event = next_event.end_date_time + timedelta(hours=2)
+    before_event = next_event.start_date_time.replace(tzinfo=UTC) - timedelta(hours=2)
+    after_event = next_event.end_date_time.replace(tzinfo=UTC) + timedelta(hours=2)
 
     if now.date() == event_date and (now >= before_event and now <= after_event):
         return True

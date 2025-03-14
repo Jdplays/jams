@@ -72,7 +72,7 @@ export class ScheduleGrid {
     private locationsInEvent:LocationsInEvent[]
     private timeslotsInEvent:TimeslotsInEvent[]
 
-    private volunteerSignupsMap:Record<number, number[]> = {}
+    private volunteerSignupsMap:Record<number, Set<number>> = {}
     private attendeeSignupCountsMap:Record<number, number> = {}
     private usersInfoMap:Record<number, Partial<User>> = {}
     private sessionsMap:Record<number, Session> = {}
@@ -285,9 +285,9 @@ export class ScheduleGrid {
 
         volunteerSignupsResponse.data.forEach(signup => {
             if (!this.volunteerSignupsMap[signup.session_id]) {
-                this.volunteerSignupsMap[signup.session_id] = []
+                this.volunteerSignupsMap[signup.session_id] = new Set()
             }
-            this.volunteerSignupsMap[signup.session_id].push(signup.user_id)
+            this.volunteerSignupsMap[signup.session_id].add(signup.user_id)
         })
     }
 
@@ -966,8 +966,8 @@ export class ScheduleGrid {
         }
         this.sessionsMap = sessionsMap
 
-        const oldSignups:Record<number, number[]> = this.volunteerSignupsMap
-        let currentSignups:Record<number, number[]> = {}
+        const oldSignups:Record<number, Set<number>> = this.volunteerSignupsMap
+        let currentSignups:Record<number, Set<number>> = {}
         if (this.options.showVolunteerSignup) {
             await this.preloadVolunteerSignupsMap()
             currentSignups = this.volunteerSignupsMap
@@ -1049,8 +1049,8 @@ export class ScheduleGrid {
                 const areEqual = 
                     oldSignups[session.id] === undefined && currentSignups[session.id] === undefined
                     ? true
-                    : oldSignups[session.id]?.length === currentSignups[session.id]?.length &&
-                    oldSignups[session.id]?.every((value, index) => value === currentSignups[session.id][index])
+                    : oldSignups[session.id]?.size === currentSignups[session.id]?.size &&
+                    Array.from(oldSignups[session.id]).every((value, index) => value === Array.from(currentSignups[session.id])[index])
 
                 if (!areEqual) {
                     if (!sessionWorkshopsToAdd.includes(session)) {
@@ -1157,8 +1157,8 @@ export class ScheduleGrid {
                     let workshopSignups = 0
                     let selectedUserSignupUp = false
                     if (currentSignups[workshop.session_id] !== null && currentSignups[workshop.session_id] !== undefined) {
-                        workshopSignups = currentSignups[workshop.session_id].length
-                        selectedUserSignupUp = currentSignups[workshop.session_id].includes(this.options.userId)
+                        workshopSignups = currentSignups[workshop.session_id].size
+                        selectedUserSignupUp = currentSignups[workshop.session_id].has(this.options.userId)
                     }
 
                     if (workshop.min_volunteers !== null && workshop.min_volunteers !== undefined) {

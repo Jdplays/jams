@@ -13,6 +13,7 @@ bp = Blueprint('auth', __name__)
 
 @bp.route('/login')
 def login():
+    session.clear()
     next_url = request.args.get('next') or current_app.config['SECURITY_POST_LOGIN_VIEW']
 
     local_auth_enabled = get_config_value(ConfigType.LOCAL_AUTH_ENABLED)
