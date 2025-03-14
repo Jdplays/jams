@@ -23,3 +23,8 @@ def post_event_task(event_id):
     from jams.util import stats
     stats.generate_event_stats(event_id)
 
+    # Check out all remaining attendees
+    attendees = Attendee.query.filter(Attendee.event_id == event_id).all()
+    for attendee in attendees:
+        attendee.check_out()
+
