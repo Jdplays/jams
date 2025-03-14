@@ -93,11 +93,11 @@ document.addEventListener("DOMContentLoaded", async function () {
     getNextEvent().then(async (response) => {
         const nextEventId = response.data
 
-        const event = await getEventField(nextEventId, 'date')
+        const event = await getEventField(nextEventId, 'end_date_time')
         
-        const currentDate = new Date(event.date)
-        const nextStreakUpdateDate = new Date(currentDate)
-        nextStreakUpdateDate.setUTCDate(currentDate.getUTCDate() + 1)
+        const eventEnd = new Date(event.end_date_time)
+        const nextStreakUpdateDate = new Date(eventEnd)
+        nextStreakUpdateDate.setUTCHours(eventEnd.getUTCHours() + 1)
 
         if (timeUntilText !== null) {
             window.setInterval(() => {

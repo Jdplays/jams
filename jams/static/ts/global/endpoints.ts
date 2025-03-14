@@ -984,6 +984,22 @@ export function editEvent(eventID:number, data:Partial<RequestMultiModelJSONData
     });
 }
 
+export function regenerateEventTasks(eventID:number):Promise<ApiResponse<any>> {
+    return new Promise((resolve) => {
+        $.ajax({
+            type: 'POST',
+            url: `${baseURL}/events/${eventID}/tasks/regenerate`,
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(error)
+            }
+        });
+    });
+}
+
 export function archiveEvent(eventID:number):Promise<boolean> {
     return new Promise((resolve) => {
         $.ajax({
