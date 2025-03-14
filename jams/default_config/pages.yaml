@@ -373,4 +373,6 @@ pages:
       get_event_timeslots:
       get_timeslots:
       get_event_sessions:
+      get_events_field:
+        allowed_fields: id, name, filtered_name, date
 
