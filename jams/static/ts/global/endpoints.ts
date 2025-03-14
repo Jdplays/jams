@@ -38,9 +38,10 @@ import {
     sessionSettings,
     JOLTStatus,
     JOLTConfig,
-    StreadData,
+    StreakData,
     GitHubReleaseResponse,
-    EventMetadata
+    EventMetadata,
+    EventStats
 } from "@global/endpoints_interfaces";
 import { formatDate } from "./helper";
 
@@ -978,6 +979,22 @@ export function editEvent(eventID:number, data:Partial<RequestMultiModelJSONData
             error: function (error) {
                 console.log('Error fetching data:', error);
                 resolve(false)
+            }
+        });
+    });
+}
+
+export function regenerateEventTasks(eventID:number):Promise<ApiResponse<any>> {
+    return new Promise((resolve) => {
+        $.ajax({
+            type: 'POST',
+            url: `${baseURL}/events/${eventID}/tasks/regenerate`,
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(error)
             }
         });
     });
@@ -2384,7 +2401,7 @@ export function editGeneralConfig(data:Partial<GeneralConfig>):Promise<GeneralCo
 
 // #region Streaks
 
-export function getCurrentUserStreak():Promise<ApiResponse<StreadData>> {
+export function getCurrentUserStreak():Promise<ApiResponse<StreakData>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             url: `${baseURL}/users/me/streak`,
@@ -2400,11 +2417,47 @@ export function getCurrentUserStreak():Promise<ApiResponse<StreadData>> {
     });
 }
 
-export function getUserStreak(userId:Number):Promise<ApiResponse<StreadData>> {
+export function getUserStreak(userId:Number):Promise<ApiResponse<StreakData>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             url: `${baseURL}/users/${userId}/streak`,
             type: 'GET',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+// #endregion
+
+// #region Stats
+
+export function getEventStats(eventId:Number):Promise<ApiResponse<EventStats>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/stats/events/${eventId}`,
+            type: 'GET',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function recalculateEventStats():Promise<ApiResponse<any>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/stats/recalculate`,
+            type: 'POST',
             success: function (response) {
                 resolve(response)
             },

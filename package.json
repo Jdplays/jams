@@ -2,6 +2,7 @@
   "type": "module",
   "dependencies": {
     "ag-grid-community": "^32.1.0",
+    "apexcharts": "^4.5.0",
     "dropzone": "^6.0.0-beta.2",
     "marked": "^14.0.0",
     "sweetalert2": "^11.12.4",

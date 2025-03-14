@@ -1,9 +1,9 @@
 import { getNextEvent, getUserStreak, getCurrentUserStreak, getEventField } from "@global/endpoints";
-import { StreadData } from "@global/endpoints_interfaces";
+import { StreakData } from "@global/endpoints_interfaces";
 
 let userId:Number = 0
 let widget:HTMLDivElement = null
-let streakData:StreadData = null
+let streakData:StreakData = null
 
 async function populateStreakWidget() {
     const streakGoodIcon = widget.querySelector('#streak-good-icon') as HTMLDivElement
@@ -93,11 +93,11 @@ document.addEventListener("DOMContentLoaded", async function () {
     getNextEvent().then(async (response) => {
         const nextEventId = response.data
 
-        const event = await getEventField(nextEventId, 'date')
+        const event = await getEventField(nextEventId, 'end_date_time')
         
-        const currentDate = new Date(event.date)
-        const nextStreakUpdateDate = new Date(currentDate)
-        nextStreakUpdateDate.setUTCDate(currentDate.getUTCDate() + 1)
+        const eventEnd = new Date(event.end_date_time)
+        const nextStreakUpdateDate = new Date(eventEnd)
+        nextStreakUpdateDate.setUTCHours(eventEnd.getUTCHours() + 1)
 
         if (timeUntilText !== null) {
             window.setInterval(() => {

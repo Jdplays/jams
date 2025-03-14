@@ -1,7 +1,9 @@
+from jams.util import helper
 from . import db
-from sqlalchemy  import Boolean, Column, ForeignKey, String, Integer, UniqueConstraint
+from sqlalchemy  import Boolean, Column, DateTime, ForeignKey, String, Integer, UniqueConstraint
 from sqlalchemy.orm import relationship
 from jams.util.enums import AttendeeSource
+from datetime import datetime, UTC
 
 class Attendee(db.Model):
     __tablename__ = 'attendee'
@@ -38,7 +40,10 @@ class Attendee(db.Model):
     
     def link_to_account(self):
         # Link attendee to attendee account
-        account =  db.session.query(AttendeeAccount).join(Attendee).filter(Attendee.external_order_id == self.external_order_id).first()
+        account = None
+        if self.external_order_id:
+            account =  db.session.query(AttendeeAccount).join(Attendee).filter(Attendee.external_order_id == self.external_order_id).first()
+
         if not account:
             account = AttendeeAccount.query.filter_by(email=self.email).first()
             
@@ -66,6 +71,11 @@ class Attendee(db.Model):
         else:
             fire_list_entry.checked_in = self.checked_in
             db.session.commit()
+    
+    def log_check_in(self):
+        log = AttendeeCheckInLog(self.id, self.event_id, self.checked_in)
+        db.session.add(log)
+        db.session.commit()
 
     def check_in(self, source=AttendeeSource.LOCAL):
         from jams.configuration import ConfigType, get_config_value
@@ -76,6 +86,7 @@ class Attendee(db.Model):
         
         self.checked_in = True
         self.create_fire_list_entry()
+        self.log_check_in()
 
         if (get_config_value(ConfigType.JOLT_ENABLED)):
             jolt.add_attendee_to_print_queue(self)
@@ -85,6 +96,7 @@ class Attendee(db.Model):
             return
         self.checked_in = False
         self.create_fire_list_entry()
+        self.log_check_in()
 
     
     def to_dict(self):
@@ -159,4 +171,28 @@ class AttendeeSignup(db.Model):
             'attendee_id': self.attendee_id,
             'session_id': self.session_id
         }
+    
+class AttendeeCheckInLog(db.Model):
+    __tablename__ = 'attendee_check_in_log'
 
+    id = Column(Integer, primary_key=True)
+    attendee_id = Column(Integer(), ForeignKey('attendee.id'), nullable=False)
+    event_id = Column(Integer(), ForeignKey('event.id'), nullable=False)
+    checked_in = Column(Boolean, nullable=False, default=False, server_default='false')
+    timestamp = Column(DateTime, nullable=True)
+
+    def __init__(self, attendee_id, event_id, checked_in):
+        self.attendee_id = attendee_id
+        self.event_id = event_id
+        self.checked_in = checked_in
+        self.timestamp = datetime.now(UTC)
+    
+    def to_dict(self):
+        timestamp = helper.convert_datetime_to_local_timezone(self.timestamp)
+        return {
+            'id': self.id,
+            'attendee_id': self.attendee_id,
+            'event_id': self.event_id,
+            'checked_in': self.checked_in,
+            'timestamp': timestamp.isoformat()
+        }

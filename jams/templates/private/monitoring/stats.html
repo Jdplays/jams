@@ -1,0 +1,268 @@
+{% extends '_layout.html' %}
+
+{% block title %}Stats{% endblock %}
+
+{% block content %}
+
+<div class="content-wrapper">
+    <div class="main-content">
+        <h1>Stats</h1>
+    </div>
+</div>
+
+<div id="live-event-stats-block">
+    <div class="row row-cards">
+        <!-- Header -->
+        <span class="d-flex align-items-center">
+            <h2>Live Event Stats</h2>
+            <span class="status-indicator status-green status-indicator-animated">
+                <span class="status-indicator-circle"></span>
+                <span class="status-indicator-circle"></span>
+                <span class="status-indicator-circle"></span>
+            </span>
+        </span>
+
+        <!-- Left Section: Check-ins and Retention -->
+        <div class="col-md-3 col-12 mb-2">
+            <div class="d-flex flex-column gap-3 h-100">
+                <div class="card text-center shadow-sm">
+                    <div class="card-header">
+                        <div class="d-flex">
+                            <span class="medium strong">Check-in</span>
+                            <i class="ti ti-user-check fs-2 ms-2"></i>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="live-checked-in-attendees-container" class="display-4 fw-bold mb-1">
+                            <span class="spinner-border"></span>
+                        </div>
+                        <div class="text-muted small">Currently checked in / total attendees</div>
+                    </div>
+                </div>
+                <div class="card text-center shadow-sm">
+                    <div class="card-header">
+                        <div class="d-flex">
+                            <span class="medium strong">Retention <span id="live-total-checked-in-text"></span></span>
+                            <i class="ti ti-users-group fs-2 ms-2"></i>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="live-attendee-retention-container" class="display-4 fw-bold mb-1">
+                            <span class="spinner-border"></span>
+                        </div>
+                        <div class="text-muted small">Current checked in / total checked in</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Section: Check-in Trends Chart -->
+        <div class="col-md-9 col-12 mb-2">
+            <div class="card shadow-sm h-100">
+                <div class="card-header">
+                    <h5 class="card-title m-0">Check-in Trends</h5>
+                </div>
+                <div class="card-body d-flex align-items-center justify-content-center">
+                    <div id="live-checkin-trend-chart" class="w-100"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="post-event-stats-block">
+    <!-- Header -->
+    <span class="d-flex align-items-center">
+        <h2>Post Event Stats</h2>
+    </span>
+    <h4 id="post-event-title"></h4>
+    <div class="row mb-3">
+        <div class="col-xl-3">
+            <button class="w-100 btn btn-outline-primary" onclick="latestEventOnClick()">Latest</button>
+        </div>
+        <div class="col-xl-9">
+            <div id="event-selection-dropdown" class="w-100"></div>
+        </div>
+    </div>
+    <div id="post-event-stats-data">
+        <div class="row row-cards">
+            <!-- Card: Average Leave Time -->
+            <div class="col-md-6 col-xl-3 mb-2">
+                <div class="card text-center shadow-sm h-100">
+                    <div class="card-header">
+                        <div class="d-flex">
+                            <span class="medium strong">Average Leave Time</span>
+                            <i class="ti ti-clock fs-2 ms-2"></i>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="display-4 fw-bold mb-1">
+                            <span id="post-avg-leave" class="spinner-border"></span>
+                        </div>
+                        <div class="text-muted small">Average time attendees leave the event</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card: Average Duration -->
+            <div class="col-md-6 col-xl-3 mb-2">
+                <div class="card text-center shadow-sm h-100">
+                    <div class="card-header">
+                        <div class="d-flex">
+                            <span class="medium strong">Average Duration</span>
+                            <i class="ti ti-hourglass fs-2 ms-2"></i>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="display-4 fw-bold mb-1">
+                            <span id="post-avg-duration" class="spinner-border"></span>
+                        </div>
+                        <div class="text-muted small">Average duration an attendee spends at the event</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card: Gender -->
+            <div class="col-md-6 col-xl-3 mb-2">
+                <div class="card text-center shadow-sm h-100">
+                    <div class="card-header">
+                        <div class="d-flex">
+                            <span class="medium strong">Gender</span>
+                            <i class="ti ti-user fs-2 ms-2"></i>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="display-4 fw-bold mb-1">
+                            <div id="post-gender-dis" class="spinner-border"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card: Age -->
+            <div class="col-md-6 col-xl-3 mb-2">
+                <div class="card text-center shadow-sm h-100">
+                    <div class="card-header">
+                        <div class="d-flex">
+                            <span class="medium strong">Age</span>
+                            <i class="ti ti-calendar fs-2 ms-2"></i>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="display-4 fw-bold mb-1">
+                            <div id="post-age-dis" class="spinner-border"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Left Section: Check-ins and Retention -->
+            <div class="col-md-3 col-12 mb-2">
+                <div class="d-flex flex-column gap-3 h-100">
+                    <div class="card text-center shadow-sm">
+                        <div class=" card-header d-flex">
+                            <span class="medium strong">Check-ins</span>
+                            <i class="ti ti-user-check fs-2 ms-2"></i>
+                        </div>
+                        <div class="card-body">
+                            <div id="post-checked-in-attendees-conatiner" class="display-4 fw-bold mb-1">
+                                <span class="spinner-border"></span>
+                            </div>
+                            <div class="text-muted small">Currently checked in / total attendees</div>
+                        </div>
+                    </div>
+                    <div class="card text-center shadow-sm">
+                        <div class="card-header d-flex">
+                            <h5 class="card-title m-0">Retention</h5>
+                            <i class="ti ti-users-group fs-2 ms-2"></i>
+                        </div>
+                        <div class="card-body">
+                            <div id="post-attendee-retention-container" class="display-4 fw-bold mb-1">
+                                <span class="spinner-border"></span>
+                            </div>
+                            <div class="text-muted small">Current checked in / total checked in</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Section: Check-in Trends Chart -->
+            <div class="col-md-9 col-12 mb-2">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header d-flex">
+                        <span class="medium strong">Check-in Trends</span>
+                        <i class="ti ti-trending-up fs-2 ms-2"></i>
+                    </div>
+                    <div class="card-body d-flex align-items-center justify-content-center">
+                        <div id="post-check-in-trend-chart" class="w-100">
+                            <span class="spinner-border"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Left Section: Workshop Popularity -->
+            <div class="col-md-3 col-12 mb-2">
+                <div class="d-flex flex-column gap-3 h-100">
+                    <div class="card text-center shadow-sm">
+                        <div class="card-header">
+                            <h5 class="card-title m-0">Most Popular Workshops</h5>
+                            <i class="ti ti-arrow-big-up fs-2 ms-2"></i>
+                        </div>
+                        <div class="card-body">
+                            <div id="post-most-popular-workshops-container" class="text-start">
+                                <span class="spinner-border"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card text-center shadow-sm">
+                        <div class="card-header">
+                            <h5 class="card-title m-0">High Dropout Workshops</h5>
+                            <i class="ti ti-arrow-big-down fs-2 ms-2"></i>
+                        </div>
+                        <div class="card-body">
+                            <div id="post-most-dropout-workshops-container" class="text-start">
+                                <span class="spinner-border"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Section: Workshop Overlap -->
+            <div class="col-md-9 col-12 mb-2">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header">
+                        <h5 class="card-title m-0">Workshop Overlap</h5>
+                        <i class="ti ti-layers-difference fs-2 ms-2"></i>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <div id="post-workshop-overlap-chart" class="w-100">
+                                <span class="spinner-border"></span>
+                            </div>
+                        </div>
+                        <div class="text-muted small">Shows which workshops pull attendees away from others</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="post-event-stats-error">
+        <div class="text-center">
+            <div class="empty">
+                <div class="empty-icon">
+                    <i class="ti ti-database-off" style="font-size: 4rem; color: #adb5bd;"></i>
+                </div>
+                <p class="empty-title">No Data</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="{{ url_for('static', filename='js/monitoring/stats.js') }}" type="module" defer></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/monitoring/stats.css') }}">
+
+{% endblock %}
