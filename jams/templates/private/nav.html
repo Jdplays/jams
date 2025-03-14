@@ -163,29 +163,6 @@
           </div>
         </li>
         {% endif %}
-        <!--Admin-->
-        {% if user_has_access_to_page('settings', 'user_management') %}
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" data-bs-auto-close="outside"
-            role="button" aria-expanded="false">
-            <span class="nav-link-title">
-              Admin
-            </span>
-          </a>
-          <div class="dropdown-menu">
-            {% if user_has_access_to_page('settings') %}
-            <a class="dropdown-item" href="{{ url_for('routes.frontend.private.admin.settings')}}">
-              Settings
-            </a>
-            {% endif %}
-            {% if user_has_access_to_page('user_management') %}
-            <a class="dropdown-item" href="{{ url_for('routes.frontend.private.admin.user_management')}}">
-              User Management
-            </a>
-            {% endif %}
-          </div>
-        </li>
-        {% endif %}
         <!--Monitoring-->
         {% if user_has_access_to_page('logs', 'stats') %}
         <li class="nav-item dropdown">
@@ -204,6 +181,29 @@
             {% if user_has_access_to_page('stats') %}
             <a class="dropdown-item" href="{{ url_for('routes.frontend.private.monitoring.stats')}}">
               Stats
+            </a>
+            {% endif %}
+          </div>
+        </li>
+        {% endif %}
+        <!--Admin-->
+        {% if user_has_access_to_page('settings', 'user_management') %}
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+            role="button" aria-expanded="false">
+            <span class="nav-link-title">
+              Admin
+            </span>
+          </a>
+          <div class="dropdown-menu">
+            {% if user_has_access_to_page('settings') %}
+            <a class="dropdown-item" href="{{ url_for('routes.frontend.private.admin.settings')}}">
+              Settings
+            </a>
+            {% endif %}
+            {% if user_has_access_to_page('user_management') %}
+            <a class="dropdown-item" href="{{ url_for('routes.frontend.private.admin.user_management')}}">
+              User Management
             </a>
             {% endif %}
           </div>
