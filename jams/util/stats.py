@@ -24,12 +24,12 @@ def get_event_stats_mode():
         post_event_id = cur_event.id
     else:
         last_event = Event.query.filter(Event.id != cur_event.id).order_by(Event.date.desc()).first()
-        post_event_id = last_event.id if last_event else None
+        post_event_id = last_event.id if last_event else cur_event.id
     
     stats = EventStats.query.filter(EventStats.event_id == post_event_id).first()
     if not stats:
         return 'ERROR', post_event_id
-        
+    
     return 'POST', post_event_id
 
 def get_live_event_stats(event_id, mode):
@@ -39,8 +39,8 @@ def get_live_event_stats(event_id, mode):
 
     checked_in_count = Attendee.query.filter(Attendee.event_id == event_id, Attendee.checked_in == True).count()
     total_count = Attendee.query.filter_by(event_id=event_id).count()
-    total_checked_in_attendees = get_total_checked_in_attendees(event_id)
-    check_in_trend = get_check_in_trend(event_id)
+    total_checked_in_attendees = calculate_total_checked_in_attendees(event_id)
+    check_in_trend = calculate_check_in_trend(event_id)
 
     timezoned_check_in_trend = convert_check_in_trend_to_Local_timezone(check_in_trend)
 
@@ -59,8 +59,13 @@ def get_live_event_stats(event_id, mode):
         'check_in_trend': timezoned_check_in_trend
     }
 
+def get_post_event_stats(event_id):
+    stats = EventStats.query.filter_by(event_id=event_id).first_or_404()
+    
+    return stats.to_dict()
 
-def get_check_in_trend(event_id, interval_minutes=10):
+
+def calculate_check_in_trend(event_id, interval_minutes=10):
     rounded_time = (
         func.date_trunc('minute', AttendeeCheckInLog.timestamp) -
         cast(
@@ -106,7 +111,7 @@ def get_check_in_trend(event_id, interval_minutes=10):
 
     return result
 
-def get_total_checked_in_attendees(event_id):
+def calculate_total_checked_in_attendees(event_id):
     total_checked_in = (
         db.session.query(func.count(func.distinct(AttendeeCheckInLog.attendee_id)))
         .filter(AttendeeCheckInLog.event_id == event_id, AttendeeCheckInLog.checked_in == True)
@@ -114,11 +119,6 @@ def get_total_checked_in_attendees(event_id):
     )
 
     return  total_checked_in
-
-def get_post_event_stats(event_id):
-    stats = EventStats.query.filter_by(event_id=event_id).first_or_404()
-    
-    return stats.to_dict()
 
 def convert_check_in_trend_to_Local_timezone(check_in_trend):
     for trend_slot in check_in_trend:
@@ -129,7 +129,7 @@ def convert_check_in_trend_to_Local_timezone(check_in_trend):
     
     return check_in_trend
 
-def get_unique_checkin_outs(event_id):
+def calculate_unique_checkin_outs(event_id):
     checkin_logs = AttendeeCheckInLog.query.filter_by(event_id=event_id).all()
 
     earliest_checkins = {}
@@ -143,12 +143,12 @@ def get_unique_checkin_outs(event_id):
 
     return (earliest_checkins, latest_checkouts)
 
-def get_average_leave_time(event_id):
+def calculate_average_leave_time(event_id):
     event = Event.query.filter_by(id=event_id).first_or_404()
     
     default_checkout_time = event.end_date_time
 
-    earliest_checkins, latest_checkouts = get_unique_checkin_outs(event_id)
+    earliest_checkins, latest_checkouts = calculate_unique_checkin_outs(event_id)
 
     final_checkouts = {
         attendee_id: checkout_time
@@ -168,12 +168,12 @@ def get_average_leave_time(event_id):
     return localised_datetime
 
 
-def get_average_duration(event_id):
+def calculate_average_duration(event_id):
     event = Event.query.filter_by(id=event_id).first_or_404()
     
     default_checkout_time = event.end_date_time
 
-    earliest_checkins, latest_checkouts = get_unique_checkin_outs(event_id)
+    earliest_checkins, latest_checkouts = calculate_unique_checkin_outs(event_id)
     durations = []
     for attendee_id, checkin_time in earliest_checkins.items():
         checkout_time = latest_checkouts.get(attendee_id, default_checkout_time)
@@ -182,10 +182,12 @@ def get_average_duration(event_id):
         durations.append(duration)
     
     avg_duration = mean(durations)
-    return avg_duration
+
+    timedelta_duration = timedelta(seconds=avg_duration)
+    return timedelta_duration
 
 
-def get_gender_distribution(event_id):
+def calculate_gender_distribution(event_id):
     Event.query.filter_by(id=event_id).first_or_404()
     gender_labels_response = db.session.query(Attendee.gender).filter(Attendee.event_id == event_id).distinct().all()
     gender_labels = [g[0] for g in gender_labels_response]
@@ -197,7 +199,7 @@ def get_gender_distribution(event_id):
 
     return distribution
 
-def get_age_distribution(event_id):
+def calculate_age_distribution(event_id):
     Event.query.filter_by(id=event_id).first_or_404()
     base_query = Attendee.query.filter(Attendee.event_id == event_id)
 
@@ -222,7 +224,7 @@ def calculate_retention_rate(event_id, grace_threshold=0.9, min_threshold=0.5):
     event_end = event.end_date_time
     event_duration = event_end.timestamp() - event_start.timestamp()
 
-    earliest_checkins, latest_checkouts = get_unique_checkin_outs(event_id)
+    earliest_checkins, latest_checkouts = calculate_unique_checkin_outs(event_id)
 
     attendance_durations = [latest_checkouts.get(i, event_end).timestamp() - earliest_checkins[i].timestamp() for i in earliest_checkins.keys()]
 
@@ -287,7 +289,7 @@ def calculate_workshop_popularity(event_id):
 
 def calculate_workshop_dropout_rates(event_id):
     Event.query.filter_by(id=event_id).first_or_404()
-    latest_checkouts = get_unique_checkin_outs(event_id)[1]
+    latest_checkouts = calculate_unique_checkin_outs(event_id)[1]
     sessions_in_event = Session.query.filter(Session.event_id == event_id).all()
     workshops_raw_data = []
     for session in sessions_in_event:
@@ -381,7 +383,6 @@ def calculate_workshop_overlap(event_id):
         
         # Normalise scores within the timeslot
         max_socre = max(w['pull_score'] for w in workshops) or 1
-        print(f'Max: {max_socre}')
         for workshop in workshops:
             workshop['normalised_score'] = round(workshop['pull_score'] / max_socre, 2)
         
@@ -395,4 +396,57 @@ def calculate_workshop_overlap(event_id):
 
     return return_obj
 
+
+def generate_event_stats(event_id, update=False):
+    stats = EventStats.query.filter(EventStats.event_id == event_id).first()
+    if stats and not update:
+        return # Only update stats if requested
+    
+    average_leave_time = calculate_average_leave_time(event_id)
+    average_duration = calculate_average_duration(event_id)
+    gender_distribution = calculate_gender_distribution(event_id)
+    age_distribution = calculate_age_distribution(event_id)
+    total_attendee_count = Attendee.query.filter_by(event_id=event_id).count()
+    total_checked_in_count = calculate_total_checked_in_attendees(event_id)
+    retention_rate = calculate_retention_rate(event_id)
+    check_in_trend = calculate_check_in_trend(event_id)
+    workshop_popularity = calculate_workshop_popularity(event_id)
+    workshop_dropout_rates = calculate_workshop_dropout_rates(event_id)
+    workshop_overlap = calculate_workshop_overlap(event_id)
+
+    # Update existing stats if requested
+    if stats and update:
+        stats.total_registered = total_attendee_count
+        stats.total_checked_in = total_checked_in_count
+        stats.gender_distribution = gender_distribution
+        stats.age_distribution = age_distribution
+        stats.check_in_trend = check_in_trend
+        stats.workshop_popularity = workshop_popularity
+        stats.dropout_workshops = workshop_dropout_rates
+        stats.workshop_overlap = workshop_overlap
+        stats.average_leave_time = average_leave_time
+        stats.average_duration = average_duration
+        stats.retention_rate = retention_rate
+        db.session.commit()
+        return
+    
+    last_event = Event.query.filter(Event.id != event_id).order_by(Event.date.desc()).first()
+    stats = EventStats(
+        event_id=event_id,
+        total_registered=total_attendee_count,
+        total_checked_in=total_checked_in_count,
+        gender_distribution=gender_distribution,
+        age_distribution=age_distribution,
+        check_in_trend=check_in_trend,
+        workshop_popularity=workshop_popularity,
+        dropout_workshops=workshop_dropout_rates,
+        workshop_overlap=workshop_overlap,
+        average_leave_time=average_leave_time,
+        average_duration=average_duration,
+        retention_rate=retention_rate,
+        last_event_id=last_event.id
+    )
+
+    db.session.add(stats)
+    db.session.commit()
 
