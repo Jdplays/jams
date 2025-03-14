@@ -6,7 +6,7 @@ flask-security-too==5.5.2
 passlib[argon2]
 Flask-WTF
 gunicorn
-uvicorn
+gevent
 python-dotenv
 pyyaml
 minio
