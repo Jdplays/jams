@@ -27,7 +27,7 @@ seed_database(app)
 EOF
 
     # Start Gunicorn
-    exec gunicorn -k gevent -w 2 -b 0.0.0.0:5000 "jams:create_app()"
+    exec gunicorn -k gevent -w 2 --preload -b 0.0.0.0:5000 "jams:create_app()"
 else
     echo "Database is not ready. Waiting 10 seconds..."
     sleep 10
