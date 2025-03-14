@@ -118,6 +118,11 @@ class WebsocketServer:
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
 
-        self.loop.run_until_complete(websockets.serve(self.websocket_handler, '0.0.0.0', 8002))
+        # Use asyncio.run() instead of run_until_complete()
+        async def start_server():
+            server = await websockets.serve(self.websocket_handler, '0.0.0.0', 8002)
+            await server.wait_closed()
+
+        self.loop.run_until_complete(start_server())
         self.loop.create_task(self.websocket_loop())
         self.loop.run_forever()
