@@ -43,8 +43,8 @@ class EventStats(db.Model):
     def to_dict(self):
         from jams.util import helper, stats
         created_at = helper.convert_datetime_to_local_timezone(self.created_at)
-        average_leave_time = helper.convert_time_to_local_timezone(self.average_leave_time)
-        check_in_trend = stats.convert_check_in_trend_to_Local_timezone(self.check_in_trend)
+        average_leave_time = helper.convert_time_to_local_timezone(self.average_leave_time) if self.average_leave_time else None
+        check_in_trend = stats.convert_check_in_trend_to_Local_timezone(self.check_in_trend) if self.check_in_trend else None
         return {
             'id': self.id,
             'event_id': self.event_id,
@@ -57,8 +57,8 @@ class EventStats(db.Model):
             'workshop_popularity': self.workshop_popularity,
             'dropout_workshops': self.dropout_workshops,
             'workshop_overlap': self.workshop_overlap,
-            'average_leave_time': str(average_leave_time),
-            'average_duration': str(self.average_duration),
+            'average_leave_time': str(average_leave_time) if average_leave_time else None,
+            'average_duration': str(self.average_duration) if self.average_duration else None,
             'retention_rate': self.retention_rate,
             'created_at': created_at.isoformat()
         }

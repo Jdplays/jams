@@ -1,7 +1,7 @@
 import { getEventStats } from "@global/endpoints";
 import { LiveEventStats, Event } from "@global/endpoints_interfaces";
 import { EventDetails } from "@global/event_details";
-import { createEventSelectionDropdown, emptyElement, eventDropdownItemText, formatDateToShort, isDefined, preLoadEventDetails, removeSpinnerFromElement } from "@global/helper";
+import { createEventSelectionDropdown, emptyElement, eventDropdownItemText, formatDateToShort, isDefined, isNullEmptyOrSpaces, preLoadEventDetails, removeSpinnerFromElement } from "@global/helper";
 import { CheckInTrendStat, WorkshopPopularityStat } from "@global/interfaces";
 import { getLiveEventStats } from "@global/sse_endpoints";
 import ApexCharts from "apexcharts";
@@ -203,14 +203,23 @@ async function updatePostEventStats(data:LiveEventStats) {
 
         // Times
         averageLeaveTimeText.className = ''
-        averageLeaveTimeText.innerHTML = eventStats.average_leave_time.split(':').slice(0,2).join(':')
+        if (isNullEmptyOrSpaces(eventStats.average_leave_time)) {
+            averageLeaveTimeText.innerHTML = createNoDataElement().outerHTML
+        } else {
+            averageLeaveTimeText.innerHTML = eventStats.average_leave_time.split(':').slice(0,2).join(':')
+        }
+
         averageDurationTimeText.className = ''
-        averageDurationTimeText.innerHTML = eventStats.average_duration.split(':').slice(0,2).join(':')
+        if (isNullEmptyOrSpaces(eventStats.average_duration)) {
+            averageDurationTimeText.innerHTML = createNoDataElement().outerHTML
+        } else {
+            averageDurationTimeText.innerHTML = eventStats.average_duration.split(':').slice(0,2).join(':')
+        }
 
         // Gender
         genderDistributionChartConatiner.className = ''
         if (eventStats.gender_distribution === null || eventStats.gender_distribution === undefined) {
-            genderDistributionChartConatiner.innerHTML = 'No Data'
+            genderDistributionChartConatiner.innerHTML = createNoDataElement().outerHTML
         } else {
             genderDistributionChart.render()
             genderDistributionChart.updateSeries([eventStats.gender_distribution.male, eventStats.gender_distribution.female, eventStats.gender_distribution.other])
@@ -219,7 +228,7 @@ async function updatePostEventStats(data:LiveEventStats) {
         // Age
         ageDistributionChartConatiner.className = ''
         if (eventStats.age_distribution === null || eventStats.age_distribution === undefined) {
-            ageDistributionChartConatiner.innerHTML = 'No Data'
+            ageDistributionChartConatiner.innerHTML = createNoDataElement().outerHTML
         } else {
             ageDistributionChart.render()
             const ageCounts = ageCategories.map(category => eventStats.age_distribution[category] || 0);
@@ -247,7 +256,7 @@ async function updatePostEventStats(data:LiveEventStats) {
         // Retention
         emptyElement(retentionContainer)
         if (eventStats.retention_rate === null || eventStats.retention_rate === undefined) {
-            retentionContainer.innerHTML = 'No Data'
+            retentionContainer.innerHTML = createNoDataElement().outerHTML
         } else {
             const retentionText = document.createElement('span')
             retentionText.className = getColorClass(eventStats.retention_rate)
@@ -257,7 +266,7 @@ async function updatePostEventStats(data:LiveEventStats) {
 
         // Check in Trends
         if (eventStats.check_in_trend === null || eventStats.check_in_trend === undefined) {
-            checkInTrendChartContainer.innerHTML = 'No Data'
+            checkInTrendChartContainer.innerHTML = createNoDataElement().outerHTML
         } else {
             checkInTrendChart.render()
             updateCheckinTrend(checkInTrendChart, eventStats.check_in_trend)
@@ -265,33 +274,37 @@ async function updatePostEventStats(data:LiveEventStats) {
 
         // Popular Workshops
         emptyElement(mostPopularWorkshopsContainer)
-        const sortedPopularWorkshops = eventStats.workshop_popularity.sort((a, b) => b.score - a.score).slice(0, 3)
+        if (eventStats.workshop_popularity === null || eventStats.workshop_popularity === undefined) {
+            mostPopularWorkshopsContainer.innerHTML = createNoDataElement().outerHTML
+        } else {
+            const sortedPopularWorkshops = eventStats.workshop_popularity.sort((a, b) => b.score - a.score).slice(0, 3)
 
-        sortedPopularWorkshops.map((stat:WorkshopPopularityStat, index:number) => {
-            const p = document.createElement('p')
-            const number = document.createElement('span')
-            number.innerHTML = `${index + 1}. `
-            p.appendChild(number)
+            sortedPopularWorkshops.map((stat:WorkshopPopularityStat, index:number) => {
+                const p = document.createElement('p')
+                const number = document.createElement('span')
+                number.innerHTML = `${index + 1}. `
+                p.appendChild(number)
 
-            const workshop = document.createElement('a')
-            workshop.innerHTML = stat.name
-            workshop.href = `/private/management/workshops/${stat.id}/edit`
-            workshop.target = '_blank'
-            p.appendChild(workshop)
+                const workshop = document.createElement('a')
+                workshop.innerHTML = stat.name
+                workshop.href = `/private/management/workshops/${stat.id}/edit`
+                workshop.target = '_blank'
+                p.appendChild(workshop)
 
-            if (index === 0) {
-                const icon = document.createElement('i')
-                icon.classList.add('ti', 'ti-crown', 'text-yellow', 'ms-2')
-                p.appendChild(icon)
-            }
+                if (index === 0) {
+                    const icon = document.createElement('i')
+                    icon.classList.add('ti', 'ti-crown', 'text-yellow', 'ms-2')
+                    p.appendChild(icon)
+                }
 
-            mostPopularWorkshopsContainer.appendChild(p)
-        })
+                mostPopularWorkshopsContainer.appendChild(p)
+            })
+        }
 
         // Dropout Workshops
         emptyElement(mostDropoutsWorkshopsContainer)
         if (eventStats.dropout_workshops === null || eventStats.dropout_workshops === undefined) {
-            mostDropoutsWorkshopsContainer.innerHTML = 'No Data'
+            mostDropoutsWorkshopsContainer.innerHTML = createNoDataElement().outerHTML
         } else {
             const sortedDropoutWorkshops = eventStats.dropout_workshops.sort((a, b) => b.score - a.score).slice(0, 3)
 
@@ -314,7 +327,7 @@ async function updatePostEventStats(data:LiveEventStats) {
         // Workshop Overlap Chart
         const workshopOverlap = eventStats.workshop_overlap
         if (workshopOverlap === null || workshopOverlap === undefined) {
-            workshopOverlapChartContainer.innerHTML = 'No Data'
+            workshopOverlapChartContainer.innerHTML = createNoDataElement().outerHTML
         } else {
             workshopOverlapChart.render()
 
@@ -388,6 +401,22 @@ function updateCheckinTrend(chart:ApexCharts, data:CheckInTrendStat[]) {
         { name: "Check-ins", data: formattedCheckins },
         { name: "Checkouts", data: formattedCheckouts }
     ])
+}
+
+function createNoDataElement() {
+    const span = document.createElement('span')
+    span.classList.add('text-center')
+
+    const icon = document.createElement('i')
+    icon.classList.add('ti', 'ti-database-off')
+
+    const text = document.createElement('span')
+    text.classList.add('ms-2')
+    text.innerHTML = 'No Data'
+
+    span.appendChild(icon)
+    span.appendChild(text)
+    return span
 }
 
 function eventSelectionDropdownOnClick(eId:number) {
