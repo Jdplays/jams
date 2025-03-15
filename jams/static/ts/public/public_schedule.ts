@@ -17,15 +17,36 @@ const eventDetailsOptions:EventDetailsOptions = {
 let eventDetails:EventDetails;
 let scheduleGrid:ScheduleGrid;
 
+function onEventChangeFunc() {
+    if (!scheduleGrid) {
+        loadPublicSchedule()
+        return
+    }
+    loadPublicSchedule(true)
+}
+
+async function loadPublicSchedule(reloadGrid:boolean=false) {
+    if (!eventDetails.eventId) {
+        return
+    }
+
+    scheduleGridOptions.eventId = eventDetails.eventId
+
+    if (reloadGrid) {
+            await scheduleGrid.updateOptions(scheduleGridOptions)
+        } else {
+            scheduleGrid = new ScheduleGrid('schedule-container', scheduleGridOptions)
+            await scheduleGrid.init()
+        }
+}
+
 document.addEventListener("DOMContentLoaded", async function () {
     let bodyContainer = document.getElementById('body-container')
     bodyContainer.classList.remove('container')
     bodyContainer.classList.add('container-fluid')
 
-    eventDetails = new EventDetails('event-details', eventDetailsOptions)
+    eventDetails = new EventDetails('event-details', {eventOnChangeFunc: onEventChangeFunc})
     await eventDetails.init()
 
-    scheduleGridOptions.eventId = eventDetails.eventId
-    scheduleGrid = new ScheduleGrid('schedule-container', scheduleGridOptions)
-    scheduleGrid.init()
+    loadPublicSchedule()
 });
