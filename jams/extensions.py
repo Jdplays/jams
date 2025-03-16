@@ -9,15 +9,33 @@ from minio import Minio
 from minio.error import S3Error
 from minio.versioningconfig import VersioningConfig, ENABLED
 from authlib.integrations.flask_client import OAuth
-from jams.util.websocket_server import WebsocketServer
+from jams.util.enums import APIKeyType
+from websocket_server import WSS
 
 load_dotenv()
+
+# The main JOLT loop that will run when JOLT websocket clients are connected
+def jolt_loop():
+    from jams.integrations.jolt import healthcheck_loop, process_print_queue
+    if len(WSS.connected_clients[APIKeyType.JOLT.name]) == 0:
+        return
+    
+    process_print_queue()
+    healthcheck_loop()
+
+def websocket_server_process_handler(group, json_data):
+    from jams.integrations.jolt import process_request
+    match group:
+        case 'JOLT':
+            process_request(json_data)
+
+WSS.register_loop(jolt_loop)
+WSS.register_process_message_handler(websocket_server_process_handler)
 
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
 oauth = OAuth()
-WSS = WebsocketServer()
 
 # Initialise client MinIO for object storage
 minio_client = Minio(
