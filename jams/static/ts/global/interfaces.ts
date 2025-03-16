@@ -59,3 +59,49 @@ export interface ScheduleGridTimeslotCapacity {
     capacity?:number
     overflow?:number
 }
+
+export interface GenderDistributionStat {
+    male:number
+    female:number
+    other:number
+}
+
+export interface AgeDistributionStat {
+    [key:string]:number
+}
+
+export interface CheckInTrendStat {
+    timestamp:string
+    checkins:number
+    checkouts:number
+}
+
+export interface WorkshopPopularityStat {
+    id:number
+    name:string
+    score:number
+}
+
+export interface WorkshopDropoutStat {
+    id:number
+    name:string
+    score:number
+}
+
+export interface WorkshopOverlapWorkshop {
+    id: number
+    name:string
+    timeslot:number
+    location:number
+    capacity:number
+    attendees:number
+    occupancy:number
+    pull_score:number
+    normalised_score:number
+}
+
+export interface WorkshopOverlapStat {
+    timeslots:Record<number, string>
+    locations:Record<number, string>
+    workshops:WorkshopOverlapWorkshop[]
+}

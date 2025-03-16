@@ -9,7 +9,7 @@ from jams.util import task_scheduler_funcs
 
 class TaskActionEnum(Enum):
     UPDATE_EVENTBRITE_EVENT_ATTENDEES = 'update_eventbrite_event_attendees'
-    CALCULATE_STREAKS_FOR_EVENT = 'CALCULATE_STREAKS_FOR_EVENT'
+    POST_EVENT_TASK = 'post_event_task'
 
 class TaskScheduler:
     def __init__(self, app, interval=60, max_workers=4) -> None:
@@ -117,8 +117,8 @@ class TaskScheduler:
                     case TaskActionEnum.UPDATE_EVENTBRITE_EVENT_ATTENDEES.name:
                         task_scheduler_funcs.update_event_attendees_task(**task.params)
                         return
-                    case TaskActionEnum.CALCULATE_STREAKS_FOR_EVENT.name:
-                        task_scheduler_funcs.calculate_streaks_for_event_task(**task.params)
+                    case TaskActionEnum.POST_EVENT_TASK.name:
+                        task_scheduler_funcs.post_event_task(**task.params)
                         return
                     
             except Exception as e:
@@ -153,6 +153,50 @@ def modify_task(task_name, param_dict):
     task = TaskSchedulerModel.query.filter_by(name=task_name).first()
     if not task:
         return
-    
+    modified = False
     for field, value in param_dict.items():
+        if getattr(task, field) != value:
+            modified = True
         setattr(task, field, value)
+    
+    if modified:
+        task.log('modified')
+
+
+#### Generate Tasks Functions ####
+
+def create_event_tasks(event):
+    if event.external:
+        from jams.integrations.eventbrite import create_event_update_tasks
+        task = TaskSchedulerModel.query.filter(TaskSchedulerModel.name == f'update_attendees_for_upcoming_event_{event.id}').first()
+        if not task:
+            create_event_update_tasks(event)
+    
+    # Post Event task
+    task = TaskSchedulerModel.query.filter(TaskSchedulerModel.name == f'post_event_task_for_event_{event.id}').first()
+    if not task:
+        event_end = event.end_date_time + timedelta(hours=1)
+        end_date = event_end + timedelta(hours=12)
+        params_dict = {'event_id': event.id}
+
+        create_task(
+            name=f'post_event_task_for_event_{event.id}',
+            start_datetime=event_end,
+            end_datetime=end_date,
+            action_enum=TaskActionEnum.POST_EVENT_TASK,
+            interval=timedelta(days=1),
+            params=params_dict
+        )
+
+def update_scheduled_post_event_task_date(event, date):
+    from jams.configuration import get_config_value, ConfigType
+    if not get_config_value(ConfigType.STREAKS_ENABLED):
+        return
+    
+    task_name = f'post_event_task_for_event_{event.id}'
+    params_dict = {
+        'start_datetime': date,
+        'next_run_datetime': date
+        }
+    
+    modify_task(task_name=task_name, param_dict=params_dict)

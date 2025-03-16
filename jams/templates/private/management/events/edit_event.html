@@ -92,6 +92,17 @@
                 oninput="onInputChangeValidate(this)" />
         </div>
 
+        <div class="mb-3">
+            <label class="form-label required">Actions</label>
+            <div>
+                <button class="btn btn-outline-danger mb-1" onclick="regenerateEventTasksOnClick()">
+                    <i class="ti ti-refresh-dot"></i>
+                    <span class="btn-text ms-2">Regenerate Event Tasks</span>
+                </button>
+                <p class="text-secondary">This will regenerate all shceduled tasks for this event. Use this if a new feature comes out.</p>
+            </div>
+        </div>
+
         <input type="hidden" id="edit-eventbrite-id" name="eventbrite_id">
         <input type="hidden" id="edit-eventbrite-url" name="eventbrite_url">
     </div>

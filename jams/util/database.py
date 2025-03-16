@@ -1,5 +1,5 @@
 from jams.models import db, Event
-from jams.util import helper
+from jams.util import task_scheduler
 
 def create_event(name, description, date, start_date_time, end_date_time, capacity, password, active=True, external=False, external_id=None, external_url = None):
     event = Event(
@@ -17,6 +17,6 @@ def create_event(name, description, date, start_date_time, end_date_time, capaci
     db.session.add(event)
     db.session.commit()
 
-    helper.schedule_streaks_update_task(event)
+    task_scheduler.create_event_tasks(event)
 
     return event

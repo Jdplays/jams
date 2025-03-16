@@ -7,6 +7,7 @@ roles:
       - schedule_planner
       - settings
       - logs
+      - stats
       - volunteer_attendance
       - volunteer_signup
       - workshops

@@ -1,4 +1,7 @@
 # This script contains the server code for the JOLT integration (JAMS Onsite Labeling Tool)
+import gevent.monkey
+gevent.monkey.patch_all()
+
 import asyncio
 from collections import defaultdict
 import json
@@ -115,9 +118,17 @@ class WebsocketServer:
 
     # The method that starts the websocket server
     def run(self):
+        if self.loop and self.loop.is_running():
+            print("WebSocket server is already running. Skipping duplicate start.")
+            return
+
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
 
-        self.loop.run_until_complete(websockets.serve(self.websocket_handler, '0.0.0.0', 8002))
+        async def start_server():
+            server = await websockets.serve(self.websocket_handler, '0.0.0.0', 8002)
+            await server.wait_closed()
+
+        self.loop.run_until_complete(start_server)
         self.loop.create_task(self.websocket_loop())
         self.loop.run_forever()

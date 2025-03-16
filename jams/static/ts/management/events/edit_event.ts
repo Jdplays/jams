@@ -1,6 +1,6 @@
-import { addNewEvent, editEvent, getEvent, getEventbriteEvents, getEventsField } from "@global/endpoints"
+import { addNewEvent, editEvent, getEvent, getEventbriteEvents, getEventsField, regenerateEventTasks } from "@global/endpoints"
 import { EventbriteEvent, Event } from "@global/endpoints_interfaces"
-import { addSpinnerToElement, animateElement, buildQueryString, combineDateTime, convertToDateInputFormat, createDropdown, createRegexFromList, errorToast, formatDateToShort, isDefined, isNullEmptyOrSpaces, removeSpinnerFromElement, validateNumberInput, validateTextInput } from "@global/helper"
+import { addSpinnerToElement, animateElement, buildQueryString, combineDateTime, convertToDateInputFormat, createDropdown, createRegexFromList, errorToast, formatDateToShort, isDefined, isNullEmptyOrSpaces, removeSpinnerFromElement, successToast, validateNumberInput, validateTextInput } from "@global/helper"
 import { InputValidationPattern, QueryStringData } from "@global/interfaces"
 
 let EventId:number
@@ -218,6 +218,15 @@ function onInputChangeValidate(element:HTMLInputElement) {
     }
 }
 
+function regenerateEventTasksOnClick() {
+    regenerateEventTasks(EventId).then((response) => {
+        successToast(response.message)
+    }).catch((error) => {
+        const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
+        errorToast(errorMessage)
+    })
+}
+
 // EVent Listeners
 document.addEventListener("DOMContentLoaded", async () => {
     const pagePath = window.location.pathname
@@ -296,5 +305,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (isDefined(window)) {
         (<any>window).toggleEventbriteImportOnChange = toggleEventbriteImportOnChange;
         (<any>window).editEventOnclick = editEventOnclick;
+        (<any>window).regenerateEventTasksOnClick = regenerateEventTasksOnClick;
     }
 });

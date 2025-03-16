@@ -107,6 +107,23 @@
                         </button>
                     </td>
                 </tr>
+                <tr>
+                    <td class="setting-column">
+                        <p>Stats Module</p>
+                    </td>
+                    <td class="description-column">
+                        <label class="text-secondary">The stats module automatically generates insights on your events, including check-in trends and demographics. Stats are calculated 1 hour after an event ends. You can manually recalculate all event stats from this page.</label>
+                    </td>
+                    <td class="value-column">
+                        N/A
+                    </td>
+                    <td>
+                        <button id="streak-refresh-button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirm-recalculate-stats">
+                            <i class="ti ti-refresh-alert"></i>
+                            <span class="ms-2 action-text">Recalculate Stats</span>
+                        </button>
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>
@@ -134,6 +151,41 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal" onclick="recalculateStreaksOnClick()">Yes,
+                        Recalculate</button>
+                    <button type="button" class="btn btn-link link-secondary ms-auto"
+                        data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-recalculate-stats" class="modal modal-blur fade" id="modal-small" tabindex="-1" style="display: none;"
+        aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div id="stats-status-fixed" class="modal-status bg-danger"></div>
+                <div id="stats-status-rolling" class="modal-status p-0" style="display: none;">
+                    <div class="progress" style="height: 4px;">
+                        <div class="progress-bar progress-bar-indeterminate bg-danger"></div>
+                    </div>
+                </div>                
+                <div class="modal-body text-center py-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="icon mb-2 text-danger icon-lg">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M12 9v4"></path>
+                        <path
+                            d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z">
+                        </path>
+                        <path d="M12 16h.01"></path>
+                    </svg>
+                    <div class="modal-title">Are you sure?</div>
+                    <div>Recalculating all event stats may take some time. This will overwrite existing stats with newly computed data. Are you sure you want to proceed?</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-danger" onclick="recalculateStatsOnClick()">Yes,
                         Recalculate</button>
                     <button type="button" class="btn btn-link link-secondary ms-auto"
                         data-bs-dismiss="modal">Cancel</button>

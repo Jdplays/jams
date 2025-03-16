@@ -121,6 +121,7 @@ pages:
       edit_event:
       get_events_field:
         allowed_fields: id, name
+      regenerate_event_tasks:
   
   # Logs
   private_access_log:
@@ -160,6 +161,7 @@ pages:
       get_latest_release:
       edit_general_config:
       recalculate_streaks:
+      recalculate_stats:
 
   user_management:
     endpoint: routes.frontend.private.admin.user_management
@@ -181,6 +183,7 @@ pages:
       get_events:
       archive_event:
       activate_event:
+      regenerate_event_tasks:
 
   schedule_planner:
     endpoint: routes.frontend.private.event.schedule_planner
@@ -300,6 +303,12 @@ pages:
       get_task_scheduler_logs_metadata:
       get_webhook_logs_metadata:
       get_external_api_logs_metadata:
+  
+  stats:
+    endpoint: routes.frontend.private.monitoring.stats
+    api_endpoints:
+      get_live_stats_sse:
+      get_event_stats:
   
   # Event
   attendee_list:

@@ -1,10 +1,15 @@
 # API is for serving data to Typscript/Javascript
-from flask import Blueprint, jsonify, request
+import json
+import sys
+from time import sleep
+from flask import Blueprint, Response, jsonify, request, stream_with_context
 from jams.decorators import api_route
-from jams.models import db, PrivateAccessLog, TaskSchedulerLog, WebhookLog, ExternalAPILog
-from jams.util import helper
+from jams.models import PrivateAccessLog, TaskSchedulerLog, WebhookLog, ExternalAPILog, Event
+from jams.util import helper, stats
 
 bp = Blueprint('monitoring', __name__)
+
+#------------------------------------------ LOGS ------------------------------------------#
 
 # Private Access Log
 @bp.route('/private_access_logs', methods=['GET'])
@@ -78,3 +83,45 @@ def get_external_api_logs_metadata():
         'table_size': ExternalAPILog.size()
     }
     return jsonify(data)
+
+#------------------------------------------ Stats ------------------------------------------#
+
+@bp.route('/stats/live/stream')
+@api_route
+def get_live_stats_sse():
+    def event_stream():
+        last_sent_data = None
+        while True:
+            mode, event_id = stats.get_event_stats_mode()
+            
+            current_data = stats.get_live_event_stats(event_id, mode=mode)
+            if last_sent_data is None or current_data != last_sent_data:
+                last_sent_data = current_data
+                yield f'data: {json.dumps(current_data)}\n\n'
+                sys.stdout.flush()
+            sleep(1)
+    return Response(stream_with_context(event_stream()), content_type='text/event-stream')
+
+@bp.route('/stats/events/<int:event_id>', methods=['GET'])
+@api_route
+def get_event_stats(event_id):
+    event_stats = stats.get_post_event_stats(event_id)
+
+    return jsonify({'data': event_stats})
+
+
+@bp.route('/stats/recalculate', methods=['POST'])
+@api_route
+def recalculate_stats():
+    events = Event.query.all()
+
+    try:
+        for event in events:
+            stats.generate_event_stats(event.id, True)
+    except Exception as e:
+        print(e)
+        return jsonify({'message': 'An unknown error occured when recalculating all event stats.'}), 400
+    
+
+    return jsonify({'message': 'All event stats have been successfully recalculated.'}), 200
+

@@ -1,7 +1,7 @@
 import {Toast} from "@global/sweet_alert"
 import { dateTimeFormatterOptions, FireListEntryType, InputValidationPattern, QueryStringData } from "./interfaces";
-import { Page, Role, User } from "./endpoints_interfaces";
-import { getUsersPublicInfo } from "./endpoints";
+import { Event, Role, User } from "./endpoints_interfaces";
+import { getEventsField, getUsersPublicInfo } from "./endpoints";
 
 type QueryStringParams = {[key: string]: any}
 type ModelModityFunc = ((arg1:number) => void)
@@ -160,7 +160,7 @@ export function waitForTransitionEnd(element:HTMLElement):Promise<void> {
     });
 }
 
-type OnAnyFunc = (ev: Event) => void
+type OnAnyFunc = (ev: globalThis.Event) => void
 // Creates a generic dropdown based on inputs
 export function createDropdown(options:any[], defualtOptionText:string, onChangeFunc:OnAnyFunc):HTMLSelectElement {
     const select = document.createElement('select')
@@ -815,4 +815,84 @@ export function compressImage(file:File, maxWidth:number, maxHeight:number, qual
         }
         reader.onerror = (err) => reject(err)
     })
+}
+
+export function eventDropdownItemText(event:Partial<Event>) {
+    const date = (event.date)
+    return `${event.name} - ${formatDateToShort(date, {includeTime:false})}`
+}
+
+export async function preLoadEventDetails() {
+        const queryData:Partial<QueryStringData> = {
+            $order_by: 'date',
+            $order_direction: 'DESC'
+        }
+        const queryString = buildQueryString(queryData)
+        const namesResponse = await getEventsField('name', queryString)
+        const datesResponse = await getEventsField('date', queryString)
+        let eventNames = namesResponse.data
+        let eventDates = datesResponse.data
+
+        if (!eventNames || !eventDates) {
+            return null
+        }
+
+        let eventDetailsMap:Record<number, Partial<Event>> = eventNames.reduce((acc, en) => {
+            const matchedEvent = eventDates.find((ed) => en.id === ed.id)
+            if (matchedEvent && en.id !== undefined) {
+                acc[en.id] = {...en, ...matchedEvent}
+            } else if (en.id !== undefined) {
+                acc[en.id] = {...en}
+            }
+            return acc
+            },
+            {} as Record<number, Partial<Event>>
+        )
+
+        return eventDetailsMap
+    }
+
+export function createEventSelectionDropdown(currentEventId:number, eventDetailsMap:Record<number, Partial<Event>>, eventOnChangeFunc:((eventId:number) => any)) {
+    let eventSelectionDropdown = document.createElement('div')
+
+    let dropdownButton = document.createElement('a')
+    dropdownButton.id = 'select-event-dropdown-button'
+    dropdownButton.classList.add('btn', 'dropdown-toggle')
+    dropdownButton.setAttribute('data-bs-toggle', 'dropdown')
+    dropdownButton.innerHTML = 'Select Event'
+    if (currentEventId && currentEventId !== -1) {
+        dropdownButton.innerHTML = eventDropdownItemText(eventDetailsMap[currentEventId])
+    }
+
+    eventSelectionDropdown.appendChild(dropdownButton)
+
+    let dropdown = document.createElement('div')
+    dropdown.id = 'select-event-dropdown'
+    dropdown.classList.add('dropdown-menu')
+
+    const sortedEvents = Object.values(eventDetailsMap)
+            .map(event => event as Partial<Event>)
+            .sort((eventA, eventB) => 
+                new Date(eventB.date).getTime() - new Date(eventA.date).getTime()
+    )
+
+    sortedEvents.forEach((event:Partial<Event>) => {
+        let item = document.createElement('a')
+        item.classList.add('dropdown-item')
+
+        let text = document.createElement('span')
+        text.innerHTML = eventDropdownItemText(event)
+
+        item.appendChild(text)
+
+        item.onclick = () => {
+            eventOnChangeFunc(Number(event.id))
+        }
+
+        dropdown.appendChild(item)
+    })
+
+    eventSelectionDropdown.appendChild(dropdown)
+
+    return eventSelectionDropdown
 }

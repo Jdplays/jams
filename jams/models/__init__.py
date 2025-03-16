@@ -9,8 +9,9 @@ from .audit import PrivateAccessLog, WebsocketLog
 from .config import Config
 from .task_scheduler import TaskSchedulerModel, TaskSchedulerLog
 from .api import EndpointGroup, Endpoint, Webhook, WebhookLog, ExternalAPILog, APIKey, APIKeyEndpoint, APILog
-from .attendee import Attendee, AttendeeAccount, AttendeeAccountEvent, AttendeeSignup
+from .attendee import Attendee, AttendeeAccount, AttendeeAccountEvent, AttendeeSignup, AttendeeCheckInLog
 from .integrations import JOLTPrintQueue, JOLTHealthCheck
+from .stats import EventStats
 
 __all__ = [
     name for name in globals().keys() 

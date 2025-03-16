@@ -31,7 +31,7 @@ class TaskSchedulerModel(db.Model):
             self.end_datetime = end_datetime
         else:
             self.end_datetime = start_datetime + (interval * run_quantity)
-        self.next_run_datetime = start_datetime + interval
+        self.next_run_datetime = start_datetime
         self.last_run_datetime = None
         self.run_count = 0
         self.action_enum = action_enum

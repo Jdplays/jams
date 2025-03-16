@@ -1,3 +1,4 @@
+from jams.util import helper
 from . import db
 from sqlalchemy  import Boolean, Column, DateTime, ForeignKey, String, Integer, UniqueConstraint
 from sqlalchemy.orm import relationship
@@ -186,7 +187,7 @@ class AttendeeCheckInLog(db.Model):
         self.event_id = event_id
         self.checked_in = checked_in
         self.timestamp = datetime.now(UTC)
-
+    
     def to_dict(self):
         timestamp = helper.convert_datetime_to_local_timezone(self.timestamp)
         return {
@@ -196,5 +197,3 @@ class AttendeeCheckInLog(db.Model):
             'checked_in': self.checked_in,
             'timestamp': timestamp.isoformat()
         }
-
-

@@ -36,3 +36,9 @@ def webhooks_log():
 @role_based_access_control_fe
 def external_api_log():
     return render_template(f'{url_prefix}/external_api_log.html')
+
+@bp.route('/stats')
+@login_required
+@role_based_access_control_fe
+def stats():
+    return render_template(f'{url_prefix}/stats.html')
