@@ -138,11 +138,13 @@ class WebsocketServer:
         asyncio.set_event_loop(self.loop)
 
         async def start_server():
+            print("Starting WebSocket server...")
             server = await websockets.serve(self.websocket_handler, '0.0.0.0', 8002)
-            await server.wait_closed()
-
-        self.loop.create_task(self.websocket_loop())
+            print("WebSocket Server started on ws://0.0.0.0:8002")
+            return server
+        
         self.loop.run_until_complete(start_server())
+        self.loop.create_task(self.websocket_loop())
         self.loop.run_forever()
 
 WSS = WebsocketServer()

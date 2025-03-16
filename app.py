@@ -17,7 +17,6 @@ def run_websocket_server(app):
 
 if __name__ == "__main__":
     try:
-        print("Starting Websocket Server...")
         flask_thread = threading.Thread(target=run_websocket_server, args=(app,))
         flask_thread.daemon = True  # Set thread as daemon so it exits when the main program exits
         flask_thread.start()
