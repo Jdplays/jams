@@ -2,8 +2,9 @@ from jams.util import helper
 from . import db
 from sqlalchemy  import Boolean, Column, DateTime, ForeignKey, String, Integer, UniqueConstraint
 from sqlalchemy.orm import relationship
-from jams.util.enums import AttendeeSource
 from datetime import datetime, UTC
+from jams.util.enums import AttendeeSource
+from jams.util import helper
 
 class Attendee(db.Model):
     __tablename__ = 'attendee'
