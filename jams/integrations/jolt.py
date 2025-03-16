@@ -1,5 +1,6 @@
 import json
 from enum import Enum
+from time import sleep
 from uuid import uuid4
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta, UTC
@@ -8,7 +9,7 @@ from jams.models import db, JOLTPrintQueue, JOLTHealthCheck, APIKey, APIKeyEndpo
 from jams.util import helper
 from jams.util.enums import JOLTPrintQueueStatus, JOLTPrintJobType, JOLTRequestType, JOLTHealthCheckStatus, APIKeyType
 from jams.configuration import ConfigType, get_config_value
-from jams import WSS
+from websocket_server import WSS
 
 config_items = [
     ConfigType.JOLT_ENABLED,
@@ -21,11 +22,6 @@ def config_dict():
         dict[item.name] = get_config_value(item)
     
     return dict
-
-# The main JOLT loop that will run when JOLT websocket clients are connected
-def websocket_loop():
-    process_print_queue()
-    healthcheck_loop()
 
 # A loop to sned healthchecks to the JOLT clients
 def healthcheck_loop():

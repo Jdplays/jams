@@ -26,8 +26,18 @@ app = create_app()
 seed_database(app)
 EOF
 
-    # Start Gunicorn
+    export PYTHONUNBUFFERED=1
+    echo "Starting WebSocket Server..."
+    nohup python -m websocket_server > /var/log/wss.log 2>&1 &
+
+    sleep 3
+
+    echo "Starting JAMS Web App..."
     exec gunicorn -k gevent -w 2 -b 0.0.0.0:5000 "jams:create_app()"
+    
+    # ✅ Start Supervisor instead of Gunicorn directly
+    #echo "Starting Supervisor..."
+    #exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
 else
     echo "Database is not ready. Waiting 10 seconds..."
     sleep 10

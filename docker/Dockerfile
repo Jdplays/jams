@@ -6,7 +6,9 @@ RUN apt-get update && apt-get install -y curl
 
 # Install Node.js and npm
 RUN curl -fsSl https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs
+    && apt-get install -y nodejs \
+    && apt-get install -y supervisor \
+    && mkdir -p /var/log/supervisor
 
 # Set the working directory
 WORKDIR /jams
@@ -22,6 +24,12 @@ COPY ./entrypoint.sh .
 
 # Copy the entrypoint.sh file into the container
 COPY ./requirements.txt .
+
+# Copy the websocket server script into the container
+COPY ./websocket_server.py .
+
+# Copy the supervisor config file into the container
+COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Copy the check_db.py file into the container
 COPY ./check_db.py .
@@ -55,8 +63,8 @@ RUN chmod +x entrypoint.sh
 # Make check_db.py executable
 RUN chmod +x check_db.py
 
-# Make port 5000 available to the world outside this container
-EXPOSE 5000
+# Make port 5000 and 8002 available to the world outside this container
+EXPOSE 5000 8002
 
 # Run flask app with gunicorn
 CMD ["bash", "entrypoint.sh"]

@@ -1,22 +1,39 @@
 # This script contains the server code for the JOLT integration (JAMS Onsite Labeling Tool)
-import gevent.monkey
-gevent.monkey.patch_all()
-
 import asyncio
 from collections import defaultdict
 import json
 import websockets
 from urllib.parse import urlparse, parse_qs
 
-from jams.util.enums import APIKeyType
-
 class WebsocketServer:
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(WebsocketServer, cls).__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
+
     def __init__(self):
+        if self._initialized:
+            return
+        self._initialized = True
+
         self.connected_clients = defaultdict(list)
         self.loop = None
+        self.app = None
+        self.registered_loops = []
+        self.process_message_handler = None
     
     def init_app(self, app):
         self.app = app
+
+    def register_loop(self, loop_func):
+        """Register a function to be called inside WSS's loop."""
+        self.registered_loops.append(loop_func)
+    
+    def register_process_message_handler(self, func):
+        self.process_message_handler = func
     
     # Adds a client to the connected clients dictionary
     def add_client(self, group, client):
@@ -86,24 +103,22 @@ class WebsocketServer:
 
     # A loop on the websocket thread for any other service to use
     async def websocket_loop(self):
-         from jams.integrations import jolt
-         with self.app.app_context():
-             while True:
-                await asyncio.sleep(0.5)
-                if len(self.connected_clients) <= 0:
-                    continue
-                
-                try:
-                    # Only do the JOLT loop if one of the connected clients is a JOLT client
-                    if self.connected_clients[APIKeyType.JOLT.name]:
-                        jolt.websocket_loop()
-                except Exception as e:
-                    print(f"Error in websocket Loop: {e}")
-    
+        while True:
+            await asyncio.sleep(0.5)
+
+            if len(self.connected_clients) <= 0:
+                continue
+
+            with self.app.app_context():
+                for loop_func in self.registered_loops:
+                    try:
+                        loop_func()
+                    except Exception as e:
+                        print(f"Error in registered loop function: {e}")
+
         
     # A function that processes incoming messages and route them depending on the group the client is in
     def process_incoming_message(self, group, message):
-        from jams.integrations import jolt
         json_data = None
         try:
             json_data = json.loads(message)
@@ -111,12 +126,9 @@ class WebsocketServer:
             print(f'Error loading JSON: {e}')
             return
         
-        match group:
-            case APIKeyType.JOLT.name:
-                jolt.process_request(json_data)
+        self.process_message_handler(group, json_data)
 
 
-    # The method that starts the websocket server
     def run(self):
         if self.loop and self.loop.is_running():
             print("WebSocket server is already running. Skipping duplicate start.")
@@ -126,9 +138,16 @@ class WebsocketServer:
         asyncio.set_event_loop(self.loop)
 
         async def start_server():
+            print("Starting WebSocket server...")
             server = await websockets.serve(self.websocket_handler, '0.0.0.0', 8002)
-            await server.wait_closed()
-
-        self.loop.run_until_complete(start_server)
+            print("WebSocket Server started on ws://0.0.0.0:8002")
+            return server
+        
+        self.loop.run_until_complete(start_server())
         self.loop.create_task(self.websocket_loop())
         self.loop.run_forever()
+
+WSS = WebsocketServer()
+
+if __name__ == "__main__":
+    WSS.run()

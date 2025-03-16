@@ -15,7 +15,6 @@ from jams.seeder import preform_seed
 from jams.forms.flask_security import CustomLoginForm, CustomRegisterForm
 from jams.util import helper
 from jams.integrations.oauth import setup_oauth
-from jams.util.websocket_server import WebsocketServer
 from jams.routes.error import not_found, server_error, forbidden
 from jams.configuration import config_entry_exists, get_config_value, ConfigType, set_config_value
 from jams.util.task_scheduler import TaskScheduler
@@ -43,6 +42,7 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
+    WSS.init_app(app)
 
     user_datastore = SQLAlchemyUserDatastore(db, User, Role)
     security = Security()
@@ -115,9 +115,3 @@ def prep_app(app):
     scheduler_thread = threading.Thread(target=scheduler.run)
     scheduler_thread.daemon = True
     scheduler_thread.start()
-
-    # Setup the websocket listener
-    WSS.init_app(app)
-    websocket_server_thread = threading.Thread(target=WSS.run)
-    websocket_server_thread.daemon = True
-    websocket_server_thread.start()
