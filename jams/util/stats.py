@@ -189,12 +189,27 @@ def calculate_average_duration(event_id):
 def calculate_gender_distribution(event_id):
     Event.query.filter_by(id=event_id).first_or_404()
     gender_labels_response = db.session.query(Attendee.gender).filter(Attendee.event_id == event_id).distinct().all()
-    gender_labels = [g[0] for g in gender_labels_response]
+    gender_labels = []
+    for g in gender_labels_response:
+        if g[0] is not None:
+            gender_labels.append(g[0])
     
     distribution = {}
     for label in gender_labels:
         count = Attendee.query.filter(Attendee.event_id == event_id, Attendee.gender == label).count()
         distribution[label] = count
+
+    if 'male' not in distribution:
+        distribution['male'] = 0
+
+    if 'female' not in distribution:
+        distribution['female'] = 0
+
+    if 'other' not in distribution:
+        distribution['other'] = 0
+
+    none_count = Attendee.query.filter(Attendee.event_id == event_id, Attendee.gender == None).count()
+    distribution['other'] = distribution['other'] + none_count
 
     return distribution
 

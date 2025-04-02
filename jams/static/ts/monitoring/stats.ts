@@ -35,8 +35,8 @@ const genderDistributionChartOptions: ApexCharts.ApexOptions = {
         type: 'pie',
         height: 100
     },
-    labels: ['Female', 'Male', 'Other'],
-    colors: ['#FF6384', '#36A2EB', '#FFCE56'],
+    labels: ['Male', 'Female', 'Other'],
+    colors: ['#36A2EB', '#FF6384', '#FFCE56'],
     legend: {
         position: 'right'
     }
@@ -71,7 +71,7 @@ const ageDistributionChartOptions: ApexCharts.ApexOptions = {
     }
 }
 
-let workshopOverlapChartOptions:ApexCharts.ApexOptions = {
+const workshopOverlapChartOptions:ApexCharts.ApexOptions = {
     series: [],
     chart: {
         type: 'heatmap',
@@ -185,7 +185,7 @@ function updateLiveEventStats(data: LiveEventStats) {
 async function updatePostEventStats(data:LiveEventStats) {
     const averageLeaveTimeText = document.getElementById('post-avg-leave') as HTMLElement
     const averageDurationTimeText = document.getElementById('post-avg-duration') as HTMLElement
-    const genderDistributionChartConatiner = document.getElementById('post-gender-dis') as HTMLDivElement
+    const genderDistributionChartContainer = document.getElementById('post-gender-dis') as HTMLDivElement
     const ageDistributionChartConatiner = document.getElementById('post-age-dis') as HTMLDivElement
     const checkInsContainer = document.getElementById('post-checked-in-attendees-conatiner') as HTMLDivElement
     const retentionContainer = document.getElementById('post-attendee-retention-container') as HTMLDivElement
@@ -194,7 +194,7 @@ async function updatePostEventStats(data:LiveEventStats) {
     const mostDropoutsWorkshopsContainer = document.getElementById('post-most-dropout-workshops-container') as HTMLDivElement
     const workshopOverlapChartContainer = document.getElementById('post-workshop-overlap-chart') as HTMLDivElement
 
-    const genderDistributionChart = new ApexCharts(genderDistributionChartConatiner, genderDistributionChartOptions);
+    const genderDistributionChart = new ApexCharts(genderDistributionChartContainer, genderDistributionChartOptions);
     const ageDistributionChart = new ApexCharts(ageDistributionChartConatiner, ageDistributionChartOptions);
     const checkInTrendChart = new ApexCharts(checkInTrendChartContainer, checkinChartOptions);
     const workshopOverlapChart = new ApexCharts(workshopOverlapChartContainer, workshopOverlapChartOptions);
@@ -220,9 +220,9 @@ async function updatePostEventStats(data:LiveEventStats) {
         }
 
         // Gender
-        genderDistributionChartConatiner.className = ''
+        genderDistributionChartContainer.className = ''
         if (eventStats.gender_distribution === null || eventStats.gender_distribution === undefined) {
-            genderDistributionChartConatiner.innerHTML = createNoDataElement().outerHTML
+            genderDistributionChartContainer.innerHTML = createNoDataElement().outerHTML
         } else {
             genderDistributionChart.render()
             genderDistributionChart.updateSeries([eventStats.gender_distribution.male, eventStats.gender_distribution.female, eventStats.gender_distribution.other])
