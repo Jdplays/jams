@@ -118,17 +118,9 @@ class WebsocketServer:
 
     # The method that starts the websocket server
     def run(self):
-        if self.loop and self.loop.is_running():
-            print("WebSocket server is already running. Skipping duplicate start.")
-            return
-
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
 
-        async def start_server():
-            server = await websockets.serve(self.websocket_handler, '0.0.0.0', 8002)
-            await server.wait_closed()
-
-        self.loop.run_until_complete(start_server)
+        self.loop.run_until_complete(websockets.serve(self.websocket_handler, '0.0.0.0', 8002))
         self.loop.create_task(self.websocket_loop())
         self.loop.run_forever()
