@@ -115,6 +115,7 @@ groups:
       edit_attendee: routes.api_v1.private.event.edit_attendee
       check_in_attendee: routes.api_v1.private.event.check_in_attendee
       check_out_attendee: routes.api_v1.private.event.check_out_attendee
+      print_attendee_label: routes.api_v1.private.event.print_attendee_label
 
   roles:
     description: Manages user roles and permissions

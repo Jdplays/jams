@@ -117,6 +117,20 @@ def check_out_attendee(event_id, attendee_id):
         'data': attendee.to_dict()
     })
 
+@bp.route('/events/<int:event_id>/attendees/<int:attendee_id>/print_label', methods=['POST'])
+@api_route
+def print_attendee_label(event_id, attendee_id):
+    Event.query.filter_by(id=event_id).first_or_404()
+    attendee = Attendee.query.filter_by(id=attendee_id).first_or_404()
+
+    from jams.integrations import jolt
+    if (get_config_value(ConfigType.JOLT_ENABLED)):
+        (status, response) = jolt.add_attendee_to_print_queue(attendee)
+
+    return jsonify({
+        'message': response,
+    }), 200 if status else 400
+
 
 #------------------------------------------ FIRELIST ------------------------------------------#
 

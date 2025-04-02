@@ -306,6 +306,7 @@ export interface Attendee {
     gender:string
     external_order_id:string
     source:string
+    label_printed:boolean
 }
 
 export interface AttendeeLogin {

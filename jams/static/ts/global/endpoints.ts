@@ -1807,6 +1807,22 @@ export function checkOutAttendee(eventId:number, attendeeId:number):Promise<ApiR
     });
 }
 
+export function printLabel(eventId:number, attendeeId:number):Promise<ApiResponse<Attendee>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: `${baseURL}/events/${eventId}/attendees/${attendeeId}/print_label`,
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
 // #endregion
 
 // #region Fire List

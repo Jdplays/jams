@@ -3,7 +3,8 @@ import {
     checkInAttendee,
     checkOutAttendee,
     editAttendee,
-    getAttendees
+    getAttendees,
+    printLabel
 } from "@global/endpoints";
 import { Attendee } from "@global/endpoints_interfaces";
 import { EventDetails, EventDetailsOptions } from "@global/event_details";
@@ -96,9 +97,22 @@ function initialiseAgGrid() {
                         }
                         div.appendChild(checkInButton)
                     }
+
+                    if (params.data.label_printed) {
+                        let printLabelButton = document.createElement('button')
+                        printLabelButton.classList.add('btn', 'btn-outline-primary', 'py-1', 'px-2', 'mb-1', 'ms-2')
+                        let icon = document.createElement('i')
+                        icon.classList.add('ti', 'ti-printer')
+                        printLabelButton.appendChild(icon)
+                        printLabelButton.title = 'Print Attendee Label'
+                        printLabelButton.onclick = () => {
+                            printLabelOnClick(params.data.id)
+                        }
+                        div.appendChild(printLabelButton)
+                    }
                     return div
                 },
-                minWidth: 160,
+                minWidth: 220,
                 flex: 1
             }
         ]
@@ -321,6 +335,15 @@ function checkInOnClick(attendeeId:number) {
 
 function checkOutOnClick(attendeeId:number) {
     checkOutAttendee(eventDetails.eventId, attendeeId).then((response) => {
+        successToast(response.message)
+    }).catch(error => {
+        const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
+        errorToast(errorMessage)
+    })
+}
+
+function printLabelOnClick(attendeeId:number) {
+    printLabel(eventDetails.eventId, attendeeId).then((response) => {
         successToast(response.message)
     }).catch(error => {
         const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';

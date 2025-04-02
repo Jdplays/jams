@@ -170,7 +170,10 @@ function updateLiveEventStats(data: LiveEventStats) {
     const totalCheckedIn = data.total_checked_in
     const currentCheckedIn = data.current_checked_in
 
-    const retention = Math.round((currentCheckedIn / totalCheckedIn) * 100)
+    let retention = Math.round((currentCheckedIn / totalCheckedIn) * 100)
+    if (Number.isNaN(retention)) {
+        retention = 0
+    }
 
     emptyElement(retentionContainer)
     const retentionText = document.createElement('span')

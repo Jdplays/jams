@@ -326,6 +326,7 @@ pages:
       edit_attendee:
       check_in_attendee:
       check_out_attendee:
+      print_attendee_label:
   
   fire_list:
     endpoint: routes.frontend.private.event.fire_list
