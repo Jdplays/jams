@@ -211,7 +211,7 @@ pages:
       add_event_timeslot:
       delete_event_timeslot:
       # Sessions
-      get_event_sessions:
+      get_event_sessions_sse:
       add_workshop_to_session:
       remove_workshop_from_session:
       update_session_settings:
@@ -276,7 +276,7 @@ pages:
       get_users_public_info:
       get_event_volunteer_attendance:
       add_user_attendance:
-      get_event_volunteer_signups:
+      get_event_volunteer_signups_sse:
       add_volunteer_signup:
       remove_volunteer_signup:
       # Schedule Grid
@@ -287,7 +287,7 @@ pages:
       get_locations:
       get_event_timeslots:
       get_timeslots:
-      get_event_sessions:
+      get_event_sessions_sse:
       
 
   # Monitoring
@@ -382,7 +382,7 @@ pages:
       get_locations:
       get_event_timeslots:
       get_timeslots:
-      get_event_sessions:
+      get_event_sessions_sse:
       get_events_field:
         allowed_fields: id, name, date
 

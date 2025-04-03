@@ -61,8 +61,10 @@ groups:
       get_event_locations: routes.api_v1.private.admin.get_event_locations
       get_event_timeslots: routes.api_v1.private.admin.get_event_timeslots
       get_event_sessions: routes.api_v1.private.admin.get_event_sessions
+      get_event_sessions_sse: routes.api_v1.private.admin.get_event_sessions_sse
       get_event_volunteer_attendance: routes.api_v1.private.volunteer.get_event_attendance
       get_event_volunteer_signups: routes.api_v1.private.volunteer.get_event_volunteer_signups
+      get_event_volunteer_signups_sse: routes.api_v1.private.volunteer.get_event_volunteer_signups_sse
       get_event_attendees: routes.api_v1.private.event.get_attendees
       get_event_fire_list: routes.api_v1.private.event.get_fire_list
     write:
