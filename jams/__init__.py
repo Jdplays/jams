@@ -35,8 +35,14 @@ def create_app():
     load_dotenv()
     app.config['SECRET_KEY']= os.getenv('SECRET_KEY', 'jams_flask_secret')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://jams:jams@db:5432/jams-main')
-    app.config["SECURITY_PASSWORD_SALT"] = os.environ.get( "SECURITY_PASSWORD_SALT", "ab3d3a0f6984c4f5hkao41509b097a7bd498e903f3c9b2eea667h16")
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        "pool_size": 20,
+        "max_overflow": 20,
+        "pool_timeout": 30,
+        "pool_recycle": 1800
+    }
+    app.config["SECURITY_PASSWORD_SALT"] = os.environ.get( "SECURITY_PASSWORD_SALT", "ab3d3a0f6984c4f5hkao41509b097a7bd498e903f3c9b2eea667h16")
     app.config["SECURITY_REGISTERABLE"] = True
     app.config['SECURITY_POST_REGISTER_VIEW'] = '/private/dashboard'
     app.config['SECURITY_POST_LOGIN_VIEW'] = '/private/dashboard'
