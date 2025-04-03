@@ -1,11 +1,16 @@
 # API is for serving data to Typscript/Javascript
-import json
-import sys
-from time import sleep
-from flask import Blueprint, Response, jsonify, request, stream_with_context
+from flask import Blueprint, jsonify, request
 from jams.decorators import api_route
-from jams.models import PrivateAccessLog, TaskSchedulerLog, WebhookLog, ExternalAPILog, Event
+from jams.models import db, PrivateAccessLog, TaskSchedulerLog, WebhookLog, ExternalAPILog, Event
 from jams.util import helper, stats
+from jams.util.sse import sse_stream
+
+# Use gevent.sleep if available to avoid blocking the event loop.
+# Falls back to time.sleep in development or if gevent is not installed.
+try:
+    from gevent import sleep as smart_sleep
+except ImportError:
+    from time import sleep as smart_sleep 
 
 bp = Blueprint('monitoring', __name__)
 
@@ -89,18 +94,10 @@ def get_external_api_logs_metadata():
 @bp.route('/stats/live/stream')
 @api_route
 def get_live_stats_sse():
-    def event_stream():
-        last_sent_data = None
-        while True:
-            mode, event_id = stats.get_event_stats_mode()
-            
-            current_data = stats.get_live_event_stats(event_id, mode=mode)
-            if last_sent_data is None or current_data != last_sent_data:
-                last_sent_data = current_data
-                yield f'data: {json.dumps(current_data)}\n\n'
-                sys.stdout.flush()
-            sleep(1)
-    return Response(stream_with_context(event_stream()), content_type='text/event-stream')
+    def fetch_data():
+        mode, event_id = stats.get_event_stats_mode()
+        return stats.get_live_event_stats(event_id, mode=mode)
+    return sse_stream(fetch_data)
 
 @bp.route('/stats/events/<int:event_id>', methods=['GET'])
 @api_route
