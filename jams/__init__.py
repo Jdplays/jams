@@ -8,7 +8,7 @@ from flask_security import Security, SQLAlchemyUserDatastore
 from uuid import UUID, uuid4
 import logging
 
-from jams.extensions import db, migrate, login_manager, oauth, WSS
+from jams.extensions import db, migrate, login_manager, oauth, WSS, logger
 from jams.models import User, Role, APIKey
 from jams.routes import routes_bp
 from jams.seeder import preform_seed
@@ -28,6 +28,10 @@ hmac_secret = None
 
 def create_app():
     app = Flask(__name__)
+
+    # Setup logger first
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s [%(name)s]: %(message)s")
+
     load_dotenv()
     app.config['SECRET_KEY']= os.getenv('SECRET_KEY', 'jams_flask_secret')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://jams:jams@db:5432/jams-main')

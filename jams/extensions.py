@@ -1,4 +1,5 @@
 import os
+import logging
 from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
@@ -13,6 +14,7 @@ from jams.util.websocket_server import WebsocketServer
 
 load_dotenv()
 
+logger = logging.getLogger('app')
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
