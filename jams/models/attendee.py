@@ -1,3 +1,4 @@
+from jams.util import helper
 from . import db
 from sqlalchemy  import Boolean, Column, DateTime, ForeignKey, String, Integer, UniqueConstraint
 from sqlalchemy.orm import relationship
@@ -21,11 +22,12 @@ class Attendee(db.Model):
     source = Column(String(100), nullable=False, default=AttendeeSource.LOCAL.name, server_default=AttendeeSource.LOCAL.name)
     attendee_account_id = Column(Integer(), ForeignKey('attendee_account.id'), nullable=True)
     last_update_source = Column(String(100), nullable=False, default=AttendeeSource.LOCAL.name, server_default=AttendeeSource.LOCAL.name)
+    label_printed = Column(Boolean, nullable=False, default=False, server_default='false')
 
     event = relationship('Event', backref='attendees')
     attendee_account = relationship('AttendeeAccount', backref='attendees')
 
-    def __init__(self, event_id, name, external_id=None, email=None, checked_in=False, registerable=True, age=None, gender=None, external_order_id=None, source=AttendeeSource.LOCAL.name):
+    def __init__(self, event_id, name, external_id=None, email=None, checked_in=False, registerable=True, age=None, gender=None, external_order_id=None, source=AttendeeSource.LOCAL.name, lable_printed=False):
         self.event_id = event_id
         self.name = name
         self.external_id = external_id
@@ -37,6 +39,7 @@ class Attendee(db.Model):
         self.external_order_id = external_order_id
         self.source = source
         self.last_update_source = self.source
+        self.label_printed = lable_printed
     
     def link_to_account(self):
         # Link attendee to attendee account
@@ -88,7 +91,7 @@ class Attendee(db.Model):
         self.create_fire_list_entry()
         self.log_check_in()
 
-        if (get_config_value(ConfigType.JOLT_ENABLED)):
+        if (get_config_value(ConfigType.JOLT_ENABLED) and not self.label_printed):
             jolt.add_attendee_to_print_queue(self)
 
     def check_out(self, source=AttendeeSource.LOCAL):
@@ -112,7 +115,8 @@ class Attendee(db.Model):
             'gender': self.gender,
             'external_order_id': self.external_order_id,
             'source': self.source,
-            'attendee_account_id': self.attendee_account_id
+            'attendee_account_id': self.attendee_account_id,
+            'label_printed': self.label_printed
         }
     
 class AttendeeAccount(db.Model):
@@ -186,7 +190,7 @@ class AttendeeCheckInLog(db.Model):
         self.event_id = event_id
         self.checked_in = checked_in
         self.timestamp = datetime.now(UTC)
-
+    
     def to_dict(self):
         timestamp = helper.convert_datetime_to_local_timezone(self.timestamp)
         return {
@@ -196,5 +200,3 @@ class AttendeeCheckInLog(db.Model):
             'checked_in': self.checked_in,
             'timestamp': timestamp.isoformat()
         }
-
-

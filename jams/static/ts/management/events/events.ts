@@ -4,7 +4,8 @@ import {
     addNewEvent,
     editEvent,
     archiveEvent,
-    activateEvent
+    activateEvent,
+    regenerateEventTasks
 } from "@global/endpoints"
 import { RequestMultiModelJSONData, Event } from "@global/endpoints_interfaces";
 import { buildActionButtonsForModel, successToast, errorToast, isDefined, buildArchiveActivateButtonForModel, formatDateToShort, isNullEmptyOrSpaces, buildQueryString } from "@global/helper";
@@ -248,6 +249,16 @@ async function populateEventsTable() {
 
 }
 
+function regenerateEventTasksOnClick() {
+    const eventId:number = Number((document.getElementById('edit-external-event-id') as HTMLInputElement).value)
+    regenerateEventTasks(eventId).then((response) => {
+        successToast(response.message)
+    }).catch((error) => {
+        const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
+        errorToast(errorMessage)
+    })
+}
+
 
 // Event listeners
 document.addEventListener("DOMContentLoaded", initialiseAgGrid);
@@ -256,5 +267,6 @@ document.addEventListener("DOMContentLoaded", () => {
         (<any>window).editExternalEventOnClick = editExternalEventOnClick;
         (<any>window).unlinkExternalEventOnClick = unlinkExternalEventOnClick;
         (<any>window).applyQuickFilter = applyQuickFilter;
+        (<any>window).regenerateEventTasksOnClick = regenerateEventTasksOnClick;
     }
 });

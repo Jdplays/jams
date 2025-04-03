@@ -5,6 +5,14 @@ from jams.decorators import api_route, protect_user_updates
 from jams.models import db, VolunteerAttendance, VolunteerSignup, Event, User
 from jams.models.event import FireList
 from jams.util import helper
+from jams.util.sse import sse_stream
+
+# Use gevent.sleep if available to avoid blocking the event loop.
+# Falls back to time.sleep in development or if gevent is not installed.
+try:
+    from gevent import sleep as smart_sleep
+except ImportError:
+    from time import sleep as smart_sleep 
 
 bp = Blueprint('volunteer', __name__)
 
@@ -134,8 +142,21 @@ def get_event_volunteer_signups(event_id):
     Event.query.filter_by(id=event_id).first_or_404()
     signups = VolunteerSignup.query.filter_by(event_id=event_id).all()
     data = helper.filter_model_by_query_and_properties(VolunteerSignup, request.args, input_data=signups)
-
     return jsonify(data)
+
+@bp.route('/events/<int:event_id>/volunteer_signups/stream')
+@api_route
+def get_event_volunteer_signups_sse(event_id):
+    Event.query.filter_by(id=event_id).first_or_404()
+
+    def fetch_data():
+        args = request.args.to_dict()
+        args['$all_rows'] = 'True'
+        signups = VolunteerSignup.query.filter_by(event_id=event_id).all()
+        signups, _ = helper.filter_model_by_query_and_properties(VolunteerSignup, args, input_data=signups, return_objects=True)
+        return [signup.to_dict() for signup in signups]
+    
+    return sse_stream(fetch_data)
 
 @bp.route('/events/<int:event_id>/volunteer_signups/<int:user_id>', methods=['GET'])
 @api_route

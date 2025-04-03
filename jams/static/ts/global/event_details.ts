@@ -1,6 +1,6 @@
 import { getEventField, getEventsField, getNextEvent } from "./endpoints"
 import { ApiResponse, Event } from "./endpoints_interfaces"
-import { buildQueryString, emptyElement, formatDateToShort } from "./helper"
+import { buildQueryString, createEventSelectionDropdown, emptyElement, eventDropdownItemText, formatDateToShort, preLoadEventDetails } from "./helper"
 import { QueryStringData } from "./interfaces"
 
 export interface EventDetailsOptions {
@@ -58,38 +58,13 @@ export class EventDetails {
         this.detailsContainer.insertBefore(infoTextDiv, this.detailsContainer.firstChild)
 
         if (this.options.showEventSelection) {
-            this.eventDetailsMap = await this.preLoadEventNames()
+            this.eventDetailsMap = await preLoadEventDetails()
             if (this.eventDetailsMap) {
                 await this.populateEventSelectionDropdown()
             }
         }
 
         await this.populateEventDetails()
-    }
-
-    async preLoadEventNames() {
-        const namesResponse = await getEventsField('name')
-        const datesResponse = await getEventsField('date')
-        let eventNames = namesResponse.data
-        let eventDates = datesResponse.data
-
-        if (!eventNames || !eventDates) {
-            return null
-        }
-
-        let eventDetailsMap:Record<number, Partial<Event>> = eventNames.reduce((acc, en) => {
-            const matchedEvent = eventDates.find((ed) => en.id === ed.id)
-            if (matchedEvent && en.id !== undefined) {
-                acc[en.id] = {...en, ...matchedEvent}
-            } else if (en.id !== undefined) {
-                acc[en.id] = {...en}
-            }
-            return acc
-            },
-            {} as Record<number, Partial<Event>>
-        )
-
-        return eventDetailsMap
     }
 
     async populateEventDetails() {
@@ -137,6 +112,16 @@ export class EventDetails {
         infoTextDiv.appendChild(eventInfoText)
     }
 
+    async eventSelectionDropdownOnClick(edo:EventDetails, eId:number) {
+        edo.eventId = Number(eId)
+        await edo.populateEventDetails()
+        document.getElementById('select-event-dropdown-button').innerText = eventDropdownItemText(edo.eventDetailsMap[edo.eventId])
+
+        if (edo.options.eventOnChangeFunc) {
+            edo.options.eventOnChangeFunc()
+        }
+    }
+
     // Populates the Event selection dropdown with all of the events
     async populateEventSelectionDropdown() {
         let eventSelectionDropdown = document.querySelector('#select-event-dropdown-container') as HTMLElement
@@ -144,55 +129,11 @@ export class EventDetails {
             emptyElement(eventSelectionDropdown)
         }
 
-        eventSelectionDropdown = document.createElement('div')
-        eventSelectionDropdown.classList.add('mb-3')
-        eventSelectionDropdown.id = 'select-event-dropdown-container'
-
-        let selectionHeader = document.createElement('div')
-        selectionHeader.classList.add('form-label')
-        selectionHeader.style.marginRight = '10px'
-        selectionHeader.innerHTML = 'Select Event:'
-
-        eventSelectionDropdown.appendChild(selectionHeader)
-
-        let dropdownButton = document.createElement('a')
-        dropdownButton.id = 'select-event-dropdown-button'
-        dropdownButton.classList.add('btn', 'dropdown-toggle')
-        dropdownButton.setAttribute('data-bs-toggle', 'dropdown')
-        dropdownButton.innerHTML = 'Select Event'
-        if (this.eventId && this.eventId !== -1) {
-            dropdownButton.innerHTML = this.eventDropdownItemText(this.eventDetailsMap[this.eventId])
-        }
-
-        eventSelectionDropdown.appendChild(dropdownButton)
-
-        let dropdown = document.createElement('div')
-        dropdown.id = 'select-event-dropdown'
-        dropdown.classList.add('dropdown-menu')
-
-        Object.entries(this.eventDetailsMap).forEach(([id, event]) => {
-            let item = document.createElement('a')
-            item.classList.add('dropdown-item')
-
-            let text = document.createElement('span')
-            text.innerHTML = this.eventDropdownItemText(event)
-
-            item.appendChild(text)
-
-            item.onclick =  async () => {
-                this.eventId = Number(id)
-                await this.populateEventDetails()
-                dropdownButton.innerHTML = this.eventDropdownItemText(this.eventDetailsMap[this.eventId])
-
-                if (this.options.eventOnChangeFunc) {
-                    this.options.eventOnChangeFunc()
-                }
-            }
-
-            dropdown.appendChild(item)
+        eventSelectionDropdown = createEventSelectionDropdown(this.eventId, this.eventDetailsMap, (eId) => {
+            this.eventSelectionDropdownOnClick(this, eId)
         })
-
-        eventSelectionDropdown.appendChild(dropdown)
+        
+        eventSelectionDropdown.classList.add('mb-3')
 
         const dropdownsContainer = this.detailsContainer.querySelector('.grid-columns-flex')
         if (dropdownsContainer) {

@@ -4,6 +4,7 @@ from sqlalchemy import func, or_
 from jams.models import db, AttendeeAccount, AttendeeAccountEvent, Attendee, AttendeeSignup, Event, Session
 from jams.util import helper, attendee_auth
 from jams.decorators import attendee_login_required, protect_attendee_updates
+from jams.util.sse import sse_stream
 
 bp = Blueprint('attendee', __name__, url_prefix='/attendee')
 
@@ -96,6 +97,16 @@ def get_attendee_signups():
     data = helper.filter_model_by_query_and_properties(AttendeeSignup, request.args)
 
     return jsonify(data)
+
+@bp.route('/signups/stream')
+def get_attendee_signups_sse():
+    def fetch_data():
+        args = request.args.to_dict()
+        args['$all_rows'] = 'True'
+        signups, _ = helper.filter_model_by_query_and_properties(AttendeeSignup, request.args, return_objects=True)
+        return [signup.to_dict() for signup in signups]
+    return sse_stream(fetch_data)
+
 
 @bp.route('/accounts/me/attendees/signups', methods=['GET'])
 @attendee_login_required

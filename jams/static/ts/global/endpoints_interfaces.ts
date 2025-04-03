@@ -1,4 +1,4 @@
-import { FireListEntryType } from "./interfaces"
+import { AgeDistributionStat, CheckInTrendStat, FireListEntryType, GenderDistributionStat, WorkshopDropoutStat, WorkshopOverlapStat, WorkshopPopularityStat } from "./interfaces"
 
 export interface EventLocation {
     id:number
@@ -306,6 +306,7 @@ export interface Attendee {
     gender:string
     external_order_id:string
     source:string
+    label_printed:boolean
 }
 
 export interface AttendeeLogin {
@@ -351,7 +352,7 @@ export interface JOLTStatus {
     local_ip:string
 }
 
-export interface StreadData {
+export interface StreakData {
     id:number
     user_id:number
     streak:number
@@ -369,4 +370,33 @@ export interface GitHubReleaseResponse {
 export interface EventMetadata {
     id:number
     attendee_count:number
+}
+
+export interface LiveEventStats {
+    mode:string
+    event_id:number
+    total_registered?:number
+    total_checked_in?:number
+    current_checked_in?:number
+    check_in_trend?:CheckInTrendStat[]
+}
+
+export interface EventStats {
+    id:number
+    event_id:number
+    last_event_id:number
+    total_registered:number
+    total_checked_in:number
+    gender_distribution:GenderDistributionStat
+    age_distribution:AgeDistributionStat
+    check_in_trend:CheckInTrendStat[]
+    workshop_popularity:WorkshopPopularityStat[]
+    dropout_workshops:WorkshopDropoutStat[]
+    workshop_overlap:WorkshopOverlapStat
+    average_leave_time:string
+    average_duration:string
+    retention_rate:number
+    created_at:Date
+    duration_diff:number
+    retention_diff:number
 }

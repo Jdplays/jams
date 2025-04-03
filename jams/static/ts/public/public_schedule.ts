@@ -1,4 +1,4 @@
-import { EventDetails, EventDetailsOptions } from '@global/event_details';
+import { EventDetails } from '@global/event_details';
 import {ScheduleGrid, ScheduleGridOptions} from '@global/schedule_grid'
 
 const scheduleGridOptions:ScheduleGridOptions = {
@@ -8,10 +8,6 @@ const scheduleGridOptions:ScheduleGridOptions = {
     showPrivate: false,
     showAttendeeSignupCounts: true,
     buildKey: true
-}
-
-const eventDetailsOptions:EventDetailsOptions = {
-    showEventSelection: false
 }
 
 let eventDetails:EventDetails;

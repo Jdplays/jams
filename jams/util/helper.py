@@ -823,34 +823,6 @@ def recalculate_streaks():
     except Exception as e:
         db.session.rollback()
 
-def schedule_streaks_update_task(event):
-    from jams.util import task_scheduler
-    if not get_config_value(ConfigType.STREAKS_ENABLED):
-        return
-    
-    midnight = time(00, 00, 00)
-    event_day_end = datetime.combine(event.date, midnight)
-    end_date = event_day_end + timedelta(days=1, hours=1)
-    params_dict = {'event_id': event.id}
-    
-    task_scheduler.create_task(
-        name=f'calculate_streaks_for_event_{event.id}',
-        start_datetime=event_day_end,
-        end_datetime=end_date,
-        action_enum=task_scheduler.TaskActionEnum.CALCULATE_STREAKS_FOR_EVENT,
-        interval=timedelta(days=1),
-        params=params_dict
-    )
-
-def update_scheduled_streak_update_task_date(event, date):
-    from jams.util import task_scheduler
-    if not get_config_value(ConfigType.STREAKS_ENABLED):
-        return
-    
-    task_name = f'calculate_streaks_for_event_{event.id}'
-    params_dict = {'start_datetime': date}
-    task_scheduler.modify_task(task_name=task_name, param_dict=params_dict)
-
 def get_latest_release():
     url = "https://api.github.com/repos/jdplays/jams/releases/latest"
     headers = {"Accept": "application/vnd.github.v3+json"}

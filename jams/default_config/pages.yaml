@@ -121,6 +121,7 @@ pages:
       edit_event:
       get_events_field:
         allowed_fields: id, name
+      regenerate_event_tasks:
   
   # Logs
   private_access_log:
@@ -160,6 +161,7 @@ pages:
       get_latest_release:
       edit_general_config:
       recalculate_streaks:
+      recalculate_stats:
 
   user_management:
     endpoint: routes.frontend.private.admin.user_management
@@ -181,6 +183,7 @@ pages:
       get_events:
       archive_event:
       activate_event:
+      regenerate_event_tasks:
 
   schedule_planner:
     endpoint: routes.frontend.private.event.schedule_planner
@@ -208,7 +211,7 @@ pages:
       add_event_timeslot:
       delete_event_timeslot:
       # Sessions
-      get_event_sessions:
+      get_event_sessions_sse:
       add_workshop_to_session:
       remove_workshop_from_session:
       update_session_settings:
@@ -273,7 +276,7 @@ pages:
       get_users_public_info:
       get_event_volunteer_attendance:
       add_user_attendance:
-      get_event_volunteer_signups:
+      get_event_volunteer_signups_sse:
       add_volunteer_signup:
       remove_volunteer_signup:
       # Schedule Grid
@@ -284,7 +287,7 @@ pages:
       get_locations:
       get_event_timeslots:
       get_timeslots:
-      get_event_sessions:
+      get_event_sessions_sse:
       
 
   # Monitoring
@@ -300,6 +303,12 @@ pages:
       get_task_scheduler_logs_metadata:
       get_webhook_logs_metadata:
       get_external_api_logs_metadata:
+  
+  stats:
+    endpoint: routes.frontend.private.monitoring.stats
+    api_endpoints:
+      get_live_stats_sse:
+      get_event_stats:
   
   # Event
   attendee_list:
@@ -317,6 +326,7 @@ pages:
       edit_attendee:
       check_in_attendee:
       check_out_attendee:
+      print_attendee_label:
   
   fire_list:
     endpoint: routes.frontend.private.event.fire_list
@@ -372,7 +382,7 @@ pages:
       get_locations:
       get_event_timeslots:
       get_timeslots:
-      get_event_sessions:
+      get_event_sessions_sse:
       get_events_field:
         allowed_fields: id, name, date
 

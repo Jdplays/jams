@@ -6,6 +6,7 @@ flask-security-too==5.5.2
 passlib[argon2]
 Flask-WTF
 gunicorn
+gevent
 python-dotenv
 pyyaml
 minio
@@ -16,3 +17,4 @@ pytz
 websockets==13.0
 markdown
 Pillow
+gevent
