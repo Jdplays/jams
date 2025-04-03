@@ -3,6 +3,8 @@ import { Attendee, DifficultyLevel, EventLocation, EventTimeslot, Session, Times
 import { EventDetails, EventDetailsOptions } from "@global/event_details";
 import { addSpinnerToElement, buildQueryString, emptyElement, errorToast, isDefined, isNullEmptyOrSpaces, removeSpinnerFromElement, successToast } from "@global/helper";
 import { QueryStringData } from "@global/interfaces";
+import { getLiveAttendeeSignups } from "@global/sse_endpoints";
+import { SSEManager } from "@global/sse_manager";
 
 let eventDetails:EventDetails;
 
@@ -22,6 +24,9 @@ let workshopTypesMap:Record<number, WorkshopType>
 
 let attendeesMap:Record<number, Attendee>
 let attendeeSignupMap:Record<number, AttendeeSignup>
+
+// SSE handlers
+let attendeeSignupsSSEHandler:SSEManager<[AttendeeSignup]> = null
 
 function populateTimeslostStepElement() {
     const timeslotNameText = document.getElementById('timeslot-name')
@@ -248,7 +253,8 @@ function buildWorkshopSelectionGroup(attendeeId:number, wsMap:Record<number, Wor
                 data.session_id = Number(sessionId)
                 addAttendeeSignup(attendeeId, data).then((response) => {
                     successToast(response.message)
-                    loadAttendeeSignupData()
+                    attendeeSignupMap[response.data.id] = response.data
+                    populateAttendeeSignupData()
                 }).catch((error) => {
                     const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
                     errorToast(errorMessage)
@@ -278,7 +284,9 @@ function buildWorkshopSelectionGroup(attendeeId:number, wsMap:Record<number, Wor
                 if (Object.keys(sessionsMap).includes(sessionId)) {
                     removeAttendeeSignup(attendeeId, Number(sessionId), data).then((response) => {
                         successToast(response.message)
-                        loadAttendeeSignupData()
+                        const signup = Object.values(attendeeSignupMap).find(signup => signup.attendee_id === attendeeId && signup.session_id === Number(sessionId))
+                        delete attendeeSignupMap[signup.id]
+                        populateAttendeeSignupData()
                     }).catch((error) => {
                         const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
                         errorToast(errorMessage)
@@ -287,7 +295,7 @@ function buildWorkshopSelectionGroup(attendeeId:number, wsMap:Record<number, Wor
             }
 
             if (!sessionId) {
-                loadAttendeeSignupData()
+                populateAttendeeSignupData()
             }
         }
     }
@@ -737,13 +745,6 @@ async function loadAttendeeSection() {
     attendeeTable.style.display = 'block'
 }
 
-async function loadAttendeeSignupData() {
-    await loadSessionsMap()
-    await loadAttendeeSignupMap()
-
-    populateAttendeeSignupData()
-}
-
 // Event Listeners
 document.addEventListener("DOMContentLoaded", () => {
     const pageContainer = document.querySelector('.container-tight')
@@ -770,14 +771,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Attendee Assignment
     await loadAttendeeSection()
 
-    // Attendee Signup Data
-    loadAttendeeSignupData()
-});
+    // Start attendee signups SSE
+    attendeeSignupsSSEHandler = getLiveAttendeeSignups(eventDetails.eventId)
+    attendeeSignupsSSEHandler.onUpdate(async (data) => {
+        let _attendeeSignupMap:Record<number, AttendeeSignup> = {}
 
-document.addEventListener("DOMContentLoaded", () => {
-    window.setInterval(async () => {
-        loadAttendeeSignupData()
-    }, 1000)
+        if (!data) {
+            attendeeSignupMap = null
+            return
+        }
+
+        data.forEach(signup => {
+            _attendeeSignupMap[signup.id] = signup
+        })
+
+        attendeeSignupMap = _attendeeSignupMap
+
+        await loadSessionsMap()
+        populateAttendeeSignupData()
+    })
 });
 
 document.addEventListener("DOMContentLoaded", () => {
