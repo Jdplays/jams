@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from flask import Flask
 from flask_security import Security, SQLAlchemyUserDatastore
 from uuid import UUID, uuid4
-
+import logging
 
 from jams.extensions import db, migrate, login_manager, oauth, WSS
 from jams.models import User, Role, APIKey
@@ -22,6 +22,7 @@ from jams.util.task_scheduler import TaskScheduler
 from jams.util import attendee_auth
 from jams.util.enums import APIKeyType
 
+logger = logging.getLogger(__name__)
 scheduler = None
 hmac_secret = None
 

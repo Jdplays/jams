@@ -1,17 +1,14 @@
 import json
 import sys
-from functools import wraps
 from flask import Response, stream_with_context, request
 from jams.models import db
-import logging
-logger = logging.getLogger(__name__)
+from jams import logger
 
 try:
     from gevent import sleep as smart_sleep
 except ImportError:
+    logger.warn('Warning - Could not import Gevent Sleep, falling back to normal sleep')
     from time import sleep as smart_sleep
-
-active_sse_connections = 0
 
 
 def sse_stream(fetch_data_func, *, detect_changes=True, sleep_interval=1):
@@ -34,9 +31,7 @@ def sse_stream(fetch_data_func, *, detect_changes=True, sleep_interval=1):
         
     @stream_with_context
     def generator():
-        global active_sse_connections
-        active_sse_connections += 1
-        logger.error(f"🔌 SSE connected — total: {active_sse_connections}")
+        logger.info("SSE connected")
     
         last_sent_data = None
         environ = request.environ
@@ -45,7 +40,7 @@ def sse_stream(fetch_data_func, *, detect_changes=True, sleep_interval=1):
             while True:
                 # Detect client disconnect (works best in prod when using gevent)
                 if client_disconnected(environ):
-                    logger.error("Client disconnected")
+                    logger.info("Client disconnected")
                     break
 
                 try:
@@ -67,14 +62,13 @@ def sse_stream(fetch_data_func, *, detect_changes=True, sleep_interval=1):
                 yield ": keep-alive\n\n"
 
         except GeneratorExit:
-            logger.error("Client disconnected (GeneratorExit)")
+            logger.info("Client disconnected (GeneratorExit)")
         except (ConnectionResetError, BrokenPipeError):
             logger.error("Client forcibly closed the connection")
         except Exception as e:
             logger.error(f"SSE error: {e}")
         finally:
-            active_sse_connections -= 1
-            logger.error(f"SSE cleaned up — remaining: {active_sse_connections}")
+            logger.info(f"SSE cleaned up")
     return Response(
         generator(),
         content_type='text/event-stream',
