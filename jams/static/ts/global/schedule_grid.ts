@@ -88,6 +88,7 @@ export class ScheduleGrid {
     public fatalError:boolean
 
     private eventMetadata:EventMetadata;
+    private gridInitialised:boolean = false
 
     // SSE handlers
     private sessionsSSEHandler:SSEManager<[Session]> = null
@@ -182,6 +183,7 @@ export class ScheduleGrid {
 
     // Get the grid ready
     async init(reInit:boolean=false) {
+        this.gridInitialised = false
         if (this.options.edit) {
             this.eventMetadata = (await getEventMetadata(this.options.eventId)).data
         }
@@ -259,7 +261,7 @@ export class ScheduleGrid {
         this.setupWorkshopCardOptions()
 
         // Start SSE handlers
-        this.initialiseSSEHandlers()
+        await this.initialiseSSEHandlers()
 
         // Build the grid
         await this.updateSchedule()
@@ -276,6 +278,8 @@ export class ScheduleGrid {
         if (this.options.edit) {
             this.scheduleContainer.style.paddingLeft = '0'
         }
+
+        this.gridInitialised = true
     }
 
     teardownSSEHandlers() {
@@ -284,60 +288,87 @@ export class ScheduleGrid {
         this.attendeeSignupsSSEHandler?.stop()
     }
 
-    initialiseSSEHandlers() {
+    async initialiseSSEHandlers(): Promise<void> {
         // Clean up old SSE handlers
         this.teardownSSEHandlers()
 
+        const promises: Promise<void>[] = []
+
         // Start the sessions SSE
-        const queryData = {
-            show_private: this.options.showPrivate,
-            '$all_rows': true
-        }
-        this.sessionsSSEHandler = getLiveEventSessions(this.options.eventId, queryData)
-        this.sessionsSSEHandler.onUpdate((data) => {
-            this.eventSessions = data
-            for (const session of this.eventSessions) {
-                this.sessionsMap[session.id] = session
+        const sessionsPromise = new Promise<void>((resolve) => {
+            const queryData = {
+                show_private: this.options.showPrivate,
+                '$all_rows': true
             }
-            this.SessionsMapOLD = cloneMap(this.sessionsMap, (session) => ({ ...session }))
-            this.populateSessions()
+            this.sessionsSSEHandler = getLiveEventSessions(this.options.eventId, queryData)
+            this.sessionsSSEHandler.onUpdate((data) => {
+                this.eventSessions = data
+                for (const session of this.eventSessions) {
+                    this.sessionsMap[session.id] = session
+                }
+                this.SessionsMapOLD = cloneMap(this.sessionsMap, (session) => ({ ...session }))
+                
+                if (this.gridInitialised) {
+                    this.populateSessions()
+                }
+
+                resolve()
+            })
         })
+        promises.push(sessionsPromise)
 
         if (this.options.volunteerSignup) {
             // Start volunteer signups SSE
-            this.volunteerSignupsSSEHandler = getLiveVolunteerSignups(this.options.eventId)
-            this.volunteerSignupsSSEHandler.onUpdate((data) => {
-                this.volunteerSignupsMapOLD = cloneMap(this.volunteerSignupsMap, (set) => new Set(set))
+            const volunteerPromise = new Promise<void>((resolve) => {
+                this.volunteerSignupsSSEHandler = getLiveVolunteerSignups(this.options.eventId)
+                this.volunteerSignupsSSEHandler.onUpdate((data) => {
+                    this.volunteerSignupsMapOLD = cloneMap(this.volunteerSignupsMap, (set) => new Set(set))
 
-                this.volunteerSignupsMap = {}
-                data.forEach(signup => {
-                    if (!this.volunteerSignupsMap[signup.session_id]) {
-                        this.volunteerSignupsMap[signup.session_id] = new Set()
+                    this.volunteerSignupsMap = {}
+                    data.forEach(signup => {
+                        if (!this.volunteerSignupsMap[signup.session_id]) {
+                            this.volunteerSignupsMap[signup.session_id] = new Set()
+                        }
+                        this.volunteerSignupsMap[signup.session_id].add(signup.user_id)
+                    })
+
+                    if (this.gridInitialised) {
+                        this.populateSessions()
                     }
-                    this.volunteerSignupsMap[signup.session_id].add(signup.user_id)
+
+                    resolve()
                 })
-                this.populateSessions()
             })
+            promises.push(volunteerPromise)
         }
 
         if (this.options.showAttendeeSignupCounts) {
             // Start attendee signups SSE
-            this.attendeeSignupsSSEHandler = getLiveAttendeeSignups(this.options.eventId)
-            this.attendeeSignupsSSEHandler.onUpdate((data) => {
-                this.attendeeSignupCountsMapOLD = cloneMap(this.attendeeSignupCountsMap)
+            const attendeePromise = new Promise<void>((resolve) => {
+                this.attendeeSignupsSSEHandler = getLiveAttendeeSignups(this.options.eventId)
+                this.attendeeSignupsSSEHandler.onUpdate((data) => {
+                    this.attendeeSignupCountsMapOLD = cloneMap(this.attendeeSignupCountsMap)
 
-                this.attendeeSignupCountsMap = {}
-                data.forEach(signup => {
-                    if (!this.attendeeSignupCountsMap[signup.session_id]) {
-                        this.attendeeSignupCountsMap[signup.session_id] = 0
+                    this.attendeeSignupCountsMap = {}
+                    data.forEach(signup => {
+                        if (!this.attendeeSignupCountsMap[signup.session_id]) {
+                            this.attendeeSignupCountsMap[signup.session_id] = 0
+                        }
+
+                        this.attendeeSignupCountsMap[signup.session_id]++
+                    })
+
+                    if (this.gridInitialised) {
+                        this.populateSessions()
                     }
 
-                    this.attendeeSignupCountsMap[signup.session_id]++
+                    resolve()
                 })
-
-                this.populateSessions()
             })
+            promises.push(attendeePromise)
         }
+
+        await Promise.all(promises)
     }
 
     // Setup the options object for workshop cards within the grid
@@ -1782,7 +1813,9 @@ export class ScheduleGrid {
             scheduleGrid.options.workshopCardOptions.height = scheduleGrid.options.height
 
             if (oldWidth !== blockWidth || oldHeight !== blockHeight) {
-                scheduleGrid.updateSchedule()
+                if (this.gridInitialised) {
+                    this.populateSessions()
+                }
             }
         }
     }
