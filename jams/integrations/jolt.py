@@ -156,6 +156,8 @@ def add_attendee_to_print_queue(attendee):
     if not print_queue_open():
         return (False, 'Print Queue is not currently open')
     
+    attendee.label_printed = True
+    
     existing_jobs = JOLTPrintQueue.query.filter(
         and_(
             JOLTPrintQueue.type == JOLTPrintJobType.ATTENDEE_LABEL.name,

@@ -93,7 +93,6 @@ class Attendee(db.Model):
 
         if (get_config_value(ConfigType.JOLT_ENABLED) and not self.label_printed):
             jolt.add_attendee_to_print_queue(self)
-            self.label_printed = True
 
     def check_out(self, source=AttendeeSource.LOCAL):
         if self.last_update_source == AttendeeSource.LOCAL.name and source.name is not AttendeeSource.LOCAL.name:
