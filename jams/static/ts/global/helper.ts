@@ -896,3 +896,14 @@ export function createEventSelectionDropdown(currentEventId:number, eventDetails
 
     return eventSelectionDropdown
 }
+
+export function cloneMap<T>(
+    inputMap: Record<string | number, T>,
+    cloneFn?: (value: T) => T
+): Record<string | number, T> {
+    const tmpMap: Record<string | number, T> = {};
+    for (const [key, value] of Object.entries(inputMap)) {
+        tmpMap[key] = cloneFn ? cloneFn(value) : value
+    }
+    return tmpMap
+}

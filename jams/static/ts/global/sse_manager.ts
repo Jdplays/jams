@@ -29,6 +29,7 @@ export class SSEManager<T> {
     }
 
     public stop():void {
+        console.log('Stopping SSE connection')
         if (this.eventSource) {
             this.eventSource.close()
             this.eventSource = null

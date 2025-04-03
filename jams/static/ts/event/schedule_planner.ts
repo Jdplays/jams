@@ -36,8 +36,7 @@ const scheduleGridOptions:ScheduleGridOptions = {
     eventId: 1,
     edit: true,
     size: 200,
-    showPrivate: true,
-    autoRefresh: true
+    showPrivate: true
 }
 
 let scheduleGrid:ScheduleGrid
