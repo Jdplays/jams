@@ -54,6 +54,8 @@ def sse_stream(fetch_data_func, *, detect_changes=True, sleep_interval=1):
                 smart_sleep(sleep_interval)
         except GeneratorExit:
             print("Client disconnected (GeneratorExit)")
+        except (ConnectionResetError, BrokenPipeError):
+            print("Client forcibly closed the connection")
         except Exception as e:
             print(f"SSE error: {e}")
     return Response(
