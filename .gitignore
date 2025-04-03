@@ -1,5 +1,5 @@
 # Ignore Python virtual environment
-venv/
+*venv/
 
 # Ignore instance folder (for storing local configuration)
 instance/

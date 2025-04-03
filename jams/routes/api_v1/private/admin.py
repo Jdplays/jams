@@ -2,7 +2,7 @@
 import io
 from datetime import timedelta
 from PIL import Image
-from flask import Blueprint, request, jsonify, abort, current_app
+from flask import Blueprint, request, jsonify, abort
 from flask_security import login_required, current_user
 from jams.decorators import api_route, protect_user_updates
 from jams.models import db, User, Role, Event, EventLocation, EventTimeslot, Session, Page, Config, Workshop, AttendanceStreak
@@ -12,6 +12,15 @@ from jams.endpoint_loader import generate_roles_file_from_db, update_pages_assig
 from jams.integrations.eventbrite import deactivate_event_update_tasks
 from jams.util.database import create_event
 from jams.util.task_scheduler import create_event_tasks, update_scheduled_post_event_task_date
+from jams.util.database import fetch_event_sessions
+from jams.util.sse import sse_stream
+
+# Use gevent.sleep if available to avoid blocking the event loop.
+# Falls back to time.sleep in development or if gevent is not installed.
+try:
+    from gevent import sleep as smart_sleep
+except ImportError:
+    from time import sleep as smart_sleep 
 
 bp = Blueprint('admin', __name__)
 
@@ -655,28 +664,16 @@ def delete_event_timeslot(event_id, event_timeslot_id):
 @bp.route('/events/<int:event_id>/sessions', methods=['GET'])
 @api_route
 def get_event_sessions(event_id):
-    # Check if the event exists
-    Event.query.filter_by(id=event_id).first_or_404()
-    sessions = Session.query.filter_by(event_id=event_id).all()
-
-    mutable_args = request.args.to_dict()
-    mutable_args['event_id'] = str(event_id)
-    show_private_text = mutable_args.pop('show_private', None)
-    show_private = False
-    if show_private_text:
-        show_private = show_private_text.lower() == 'true'
-    
-    data, row_count = helper.filter_model_by_query_and_properties(Session, mutable_args, input_data=sessions, return_objects=True)
-    
-    tmp_data = data.copy()
-    for session in tmp_data:
-        if (not session.event_location.publicly_visible and not show_private) or (not session.event_timeslot.publicly_visible and not show_private) and not session.event_timeslot.timeslot.is_break:
-
-            data.remove(session)
-
-    return_obj = [session.to_dict() for session in data]
+    return_obj = fetch_event_sessions(event_id)
 
     return jsonify({'data': return_obj})
+
+@bp.route('/events/<int:event_id>/sessions/stream')
+@api_route
+def get_event_sessions_sse(event_id):
+    def fetch_data():
+        return fetch_event_sessions(event_id)
+    return sse_stream(fetch_data)
 
 #------------------------------------------ SESSION ------------------------------------------#
 

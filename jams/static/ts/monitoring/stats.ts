@@ -1,7 +1,6 @@
 import { getEventStats } from "@global/endpoints";
 import { LiveEventStats, Event } from "@global/endpoints_interfaces";
-import { EventDetails } from "@global/event_details";
-import { createEventSelectionDropdown, emptyElement, eventDropdownItemText, formatDateToShort, isDefined, isNullEmptyOrSpaces, preLoadEventDetails, removeSpinnerFromElement } from "@global/helper";
+import { createEventSelectionDropdown, emptyElement, eventDropdownItemText, isDefined, isNullEmptyOrSpaces, preLoadEventDetails, removeSpinnerFromElement } from "@global/helper";
 import { CheckInTrendStat, WorkshopPopularityStat } from "@global/interfaces";
 import { getLiveEventStats } from "@global/sse_endpoints";
 import ApexCharts from "apexcharts";

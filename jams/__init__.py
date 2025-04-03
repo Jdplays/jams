@@ -6,9 +6,9 @@ from dotenv import load_dotenv
 from flask import Flask
 from flask_security import Security, SQLAlchemyUserDatastore
 from uuid import UUID, uuid4
+import logging
 
-
-from jams.extensions import db, migrate, login_manager, oauth, WSS
+from jams.extensions import db, migrate, login_manager, oauth, WSS, logger
 from jams.models import User, Role, APIKey
 from jams.routes import routes_bp
 from jams.seeder import preform_seed
@@ -22,16 +22,27 @@ from jams.util.task_scheduler import TaskScheduler
 from jams.util import attendee_auth
 from jams.util.enums import APIKeyType
 
+logger = logging.getLogger(__name__)
 scheduler = None
 hmac_secret = None
 
 def create_app():
     app = Flask(__name__)
+
+    # Setup logger first
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s [%(name)s]: %(message)s")
+
     load_dotenv()
     app.config['SECRET_KEY']= os.getenv('SECRET_KEY', 'jams_flask_secret')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://jams:jams@db:5432/jams-main')
-    app.config["SECURITY_PASSWORD_SALT"] = os.environ.get( "SECURITY_PASSWORD_SALT", "ab3d3a0f6984c4f5hkao41509b097a7bd498e903f3c9b2eea667h16")
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        "pool_size": 20,
+        "max_overflow": 20,
+        "pool_timeout": 30,
+        "pool_recycle": 1800
+    }
+    app.config["SECURITY_PASSWORD_SALT"] = os.environ.get( "SECURITY_PASSWORD_SALT", "ab3d3a0f6984c4f5hkao41509b097a7bd498e903f3c9b2eea667h16")
     app.config["SECURITY_REGISTERABLE"] = True
     app.config['SECURITY_POST_REGISTER_VIEW'] = '/private/dashboard'
     app.config['SECURITY_POST_LOGIN_VIEW'] = '/private/dashboard'
