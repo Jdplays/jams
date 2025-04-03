@@ -17,14 +17,23 @@ def sse_stream(fetch_data_func, *, detect_changes=True, sleep_interval=1):
     - Error handling
     - Optional change detection
     """
+
+    def client_disconnected():
+        """Check if client has disconnected, compatible with Werkzeug and Gevent."""
+        try:
+            return request.environ.get('wsgi.input') and request.environ['wsgi.input'].closed
+        except AttributeError:
+            # Gevent's Body object doesn't support `.closed`
+            return False
+        
     @stream_with_context
     def generator():
         last_sent_data = None
         try:
             while True:
                 # Detect client disconnect (works best in prod when using gevent)
-                if request.environ.get('wsgi.input') and request.environ['wsgi.input'].closed:
-                    print("Client disconnected via wsgi.input.closed")
+                if client_disconnected():
+                    print("Client disconnected")
                     break
 
                 try:
