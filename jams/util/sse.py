@@ -1,5 +1,6 @@
 import json
 import sys
+import copy
 from flask import Response, stream_with_context, request
 from jams.models import db
 from jams import logger
@@ -48,9 +49,9 @@ def sse_stream(fetch_data_func, *, detect_changes=True, sleep_interval=1):
 
                     # Only send if data changed (if enabled)
                     if not detect_changes or current_data != last_sent_data:
-                        last_sent_data = current_data
                         yield f"data: {json.dumps(current_data)}\n\n"
                         sys.stdout.flush()
+                        last_sent_data = copy.deepcopy(current_data)
                 
                 except Exception as e:
                     logger.error(f"SSE loop error: {e}")

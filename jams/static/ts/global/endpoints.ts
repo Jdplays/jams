@@ -41,7 +41,8 @@ import {
     StreakData,
     GitHubReleaseResponse,
     EventMetadata,
-    EventStats
+    EventStats,
+    DiscordIntegrationConfig
 } from "@global/endpoints_interfaces";
 import { formatDate } from "./helper";
 
@@ -2350,6 +2351,126 @@ export function sendJoltTestPrintRequest():Promise<string> {
             type: 'POST',
             success: function (response) {
                 resolve(response.message)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+// #endregion
+
+// #region Discord Integration
+
+export function getDiscordIntegrationConfig():Promise<ApiResponse<DiscordIntegrationConfig>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/discord/config`,
+            type: 'GET',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function saveDiscordIntegrationConfig(data:Partial<DiscordIntegrationConfig>):Promise<ApiResponse<DiscordIntegrationConfig>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/discord/config`,
+            type: 'POST',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function verifyDiscordBotToken(token:string):Promise<boolean> {
+    return new Promise((resolve) => {
+        const data:Partial<DiscordIntegrationConfig> = {
+            DISCORD_BOT_TOKEN: token
+        }
+
+        $.ajax({
+            url: `${baseURL}/integrations/discord/verify`,
+            type: 'POST',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response.verified)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(false)
+            }
+        });
+    });
+}
+
+export function verifyDiscordClientSecret(secret:string):Promise<boolean> {
+    return new Promise((resolve) => {
+        const data:Partial<DiscordIntegrationConfig> = {
+            DISCORD_CLIENT_SECRET: secret
+        }
+
+        $.ajax({
+            url: `${baseURL}/integrations/discord/verify_secret`,
+            type: 'POST',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response.verified)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(false)
+            }
+        });
+    });
+}
+
+export function enableDiscordIntegration(guildId:string):Promise<ApiResponse<DiscordIntegrationConfig>> {
+    return new Promise((resolve, reject) => {
+        const data:Partial<DiscordIntegrationConfig> = {
+            DISCORD_BOT_GUILD_ID: guildId
+        }
+
+        $.ajax({
+            url: `${baseURL}/integrations/discord/enable`,
+            type: 'POST',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(false)
+            }
+        });
+    });
+}
+
+export function disableDiscordIntegrationConfig():Promise<ApiResponse<DiscordIntegrationConfig>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/discord/disable`,
+            type: 'POST',
+            success: function (response) {
+                resolve(response)
             },
             error: function (error) {
                 console.log('Error fetching data:', error);

@@ -400,3 +400,32 @@ export interface EventStats {
     duration_diff:number
     retention_diff:number
 }
+
+export interface DiscordIntegrationConfig {
+    DISCORD_BOT_ENABLED:boolean
+    DISCORD_CLIENT_ID:string
+    DISCORD_CLIENT_SECRET:string
+    DISCORD_BOT_TOKEN:string
+    DISCORD_BOT_GUILD_ID:string
+    DISCORD_BOT_ANNOUNCEMENT_CHANNEL_ID:string
+    DISCORD_BOT_DM_ENABLED:boolean
+    DISCORD_BOT_NAME_SYNC_ENABLED:boolean
+    DISCORD_BOT_GUILD_NAME?:string
+    DISCORD_BOT_CHANNELS?:DiscordChannel[]
+}
+
+export interface DiscordGuild {
+    id:string
+    name:string
+}
+
+export interface DiscordChannel {
+    id:string
+    name:string
+}
+
+export interface DiscordBotStartupResponse {
+    status?:string
+    client_id?:string
+    guild_list?:DiscordGuild[]
+}
