@@ -7,7 +7,7 @@
 {% block settings_content %}
 
 <div id="eventbrite-settings-content" class="settings-content-container">
-    <p>You can enable the eventbrite API integration in order to import events and automtically have attendees accounts
+    <p>You can enable the eventbrite API integration in order to import events and automatically have attendees accounts
         created for registration</p>
 
     <div id="form-container">
@@ -20,7 +20,7 @@
                 </label>
 
                 <div id="eventbrite-token-block" style="display: none;">
-                    <label class="form-label">Private API Toekn</label>
+                    <label class="form-label">Private API Token</label>
                     <div class="input-group">
                         <input id="eventbrite-api-token-input" type="password" class="form-control" autocomplete="off">
                         <button id="eventbrite-api-token-verify-button" type="button" class="btn">Verify</button>
@@ -38,7 +38,7 @@
                     <h2 class="mb-3">Advanced Configuration</h2>
                     <div id="eventbrite-event-select-container" class="mb-3">
                         <label class="form-label">Select Event from Eventbrite</label>
-                        <p>This event will be used to configure settings that depend on an event. It is recomened that
+                        <p>This event will be used to configure settings that depend on an event. It is recommend that
                             you use a template event that you create all of your events from.</p>
                         <select id="eventbrite-event-select" class="form-control form-select"
                             onchange="eventSelectOnChange()"></select>
@@ -53,7 +53,7 @@
                         </div>
                         <div id="eventbrite-optional-import-fields" class="mb-3">
                             <label class="form-label">Optional Imports</label>
-                            <p>These are pieces of data that arent usually collected by eventbrite. But if your tickets
+                            <p>These are pieces of data that aren't usually collected by eventbrite. But if your tickets
                                 have a custom form, you can map the answer of that question. JAMS will then import that
                                 data into the attendee.</p>
                             <div class="table-responsive">
@@ -93,7 +93,7 @@
                                             <td>
                                                 <select id="eventbrite-age-form-question-select"
                                                     class="form-control form-select" disabled
-                                                    onchange="ageFieldSelectOnChamge()">
+                                                    onchange="ageFieldSelectOnChange()">
                                                 </select>
                                             </td>
                                         </tr>

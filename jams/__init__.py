@@ -76,7 +76,7 @@ def create_app():
         # Create database tables
         db.create_all()
 
-        # Only run prep app when the app is actually starting. Dont runn it when db migrate or shell is running
+        # Only run prep app when the app is actually starting. Dont run it when db migrate or shell is running
         if not ('db' in sys.argv or 'shell' in sys.argv):
             prep_app(app)
         

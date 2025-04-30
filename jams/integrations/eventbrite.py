@@ -9,7 +9,6 @@ from jams.util import helper
 from jams.util.enums import AttendeeSource
 
 base_url = 'https://www.eventbriteapi.com/v3'
-#base_url = 'https://private-anon-60974f3b0d-eventbriteapiv3public.apiary-mock.com/v3' # This is just the mock server and should be updated later.
 
 configItems = [
     ConfigType.EVENTBRITE_BEARER_TOKEN,

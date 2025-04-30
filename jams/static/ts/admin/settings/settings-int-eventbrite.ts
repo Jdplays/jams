@@ -1,5 +1,5 @@
 import { verifyEventbriteApiToken, getIconData, getEventbriteUserOrganisations, enableEventbriteIntegration, getEventbriteIntegrationConfig, editEventbriteIntegrationConfig, disableEventbriteIntegration, getEventbriteEvents, getEventbriteTicketTypes, getEventbriteCustomQuestions } from "@global/endpoints"
-import { addSpinnerToElement, buildRadioInputSelectionGroup, createDropdown, emptyElement, errorToast, getCheckboxInputGroupSelection, getRadioInputGroupSelection, getSelectedDropdownText, isDefined, isNullEmptyOrSpaces, removeSpinnerFromElement, successToast } from "@global/helper"
+import { addSpinnerToElement, buildRadioInputSelectionGroup, emptyElement, errorToast, getCheckboxInputGroupSelection, getSelectedDropdownText, isDefined, isNullEmptyOrSpaces, removeSpinnerFromElement, successToast } from "@global/helper"
 import { EventbriteEvent, EventbriteIntegrationConfig, EventbriteOrganisation } from "@global/endpoints_interfaces"
 
 let loadingIcon:string;
@@ -499,7 +499,7 @@ function genderToggleOnChange() {
     checkIfContentUpdated()
 }
 
-function ageFieldSelectOnChamge() {
+function ageFieldSelectOnChange() {
     checkIfContentUpdated()
 }
 
@@ -546,7 +546,7 @@ document.addEventListener("DOMContentLoaded", () => {
         (<any>window).eventbriteIntegrationEnableOnClick = eventbriteIntegrationEnableOnClick;
         (<any>window).eventbriteIntegrationDisableOnClick = eventbriteIntegrationDisableOnClick;
         (<any>window).ageToggleOnChange = ageToggleOnChange;
-        (<any>window).ageFieldSelectOnChamge = ageFieldSelectOnChamge;
+        (<any>window).ageFieldSelectOnChange = ageFieldSelectOnChange;
         (<any>window).genderToggleOnChange = genderToggleOnChange;
     }
 });
