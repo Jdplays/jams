@@ -1260,6 +1260,41 @@ export function activateUser(userID:number):Promise<ApiResponse<User>> {
         });
     });
 }
+
+export function updateUserConfig(userId:number, data:Partial<User>):Promise<ApiResponse<User>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: `${baseURL}/users/${userId}/config`,
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function unlinkDiscordAccount(userId:number):Promise<ApiResponse<User>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: `${baseURL}/users/${userId}/discord/unlink`,
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
 // #endregion
 
 // #region Roles

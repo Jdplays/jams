@@ -98,6 +98,16 @@ export interface Event {
     external_url:string
 }
 
+export interface UserConfig {
+    id?:number
+    user_id?:number
+    discord_account_id?:string
+    discord_username?:string
+    discord_show_username?:boolean
+    discord_sync_streaks?:boolean
+    discord_last_reminder_timestamp?:string
+}
+
 export interface User {
     id:number
     username:string
@@ -114,6 +124,7 @@ export interface User {
     avatar_file_id:string
     badge_text:string
     badge_icon:string
+    config?:UserConfig
 }
 
 export interface Role {
