@@ -195,6 +195,19 @@ class User(UserMixin, db.Model):
     def user_has_role(self, role_name):
         return any(role_name == role.name for role in self.roles)
     
+    def update_config(self, config_dict):
+        from jams.models import UserConfig
+        if not self.config:
+            config = UserConfig(self.id)
+            config.user = self
+            db.session.add(config)
+            db.session.flush()
+        
+        for key, value in config_dict.items():
+            setattr(self.config, key, value)
+        
+        db.session.commit()
+    
     
     def to_dict(self):
         from jams.util import helper
@@ -215,7 +228,8 @@ class User(UserMixin, db.Model):
             'user_induction': self.user_induction,
             'avatar_file_id': self.avatar_file_id,
             'badge_text': self.badge_text,
-            'badge_icon': self.badge_icon
+            'badge_icon': self.badge_icon,
+            'config': self.config.to_dict() if self.config else {}
         }
     
     def public_info_dict(self):
@@ -229,7 +243,8 @@ class User(UserMixin, db.Model):
             'bio': self.bio,
             'avatar_file_id': self.avatar_file_id,
             'badge_text': self.badge_text,
-            'badge_icon': self.badge_icon
+            'badge_icon': self.badge_icon,
+            'config': self.config.public_info_dict() if self.config else {}
         }
     
 ## Role based Auth to pages
