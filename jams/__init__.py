@@ -21,9 +21,11 @@ from jams.configuration import config_entry_exists, get_config_value, ConfigType
 from jams.util.task_scheduler import TaskScheduler
 from jams.util import attendee_auth
 from jams.util.enums import APIKeyType
+from jams.services.discord_bot import DiscordBotServer
 
 logger = logging.getLogger(__name__)
 scheduler = None
+DiscordBot = None
 hmac_secret = None
 
 def create_app():
@@ -132,3 +134,8 @@ def prep_app(app):
     websocket_server_thread = threading.Thread(target=WSS.run)
     websocket_server_thread.daemon = True
     websocket_server_thread.start()
+
+    # Try start discord bot
+    global DiscordBot
+    DiscordBot = DiscordBotServer()
+    DiscordBot.init_app(app)
