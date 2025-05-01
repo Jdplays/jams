@@ -1261,11 +1261,11 @@ export function activateUser(userID:number):Promise<ApiResponse<User>> {
     });
 }
 
-export function updateUserConfig(userId:number, data:Partial<User>):Promise<ApiResponse<User>> {
+export function updateUserConfig(data:Partial<User>):Promise<ApiResponse<User>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             type: 'POST',
-            url: `${baseURL}/users/${userId}/config`,
+            url: `${baseURL}/users/me/config`,
             data: JSON.stringify(data),
             contentType: 'application/json',
             success: function (response) {
@@ -1279,11 +1279,11 @@ export function updateUserConfig(userId:number, data:Partial<User>):Promise<ApiR
     });
 }
 
-export function unlinkDiscordAccount(userId:number):Promise<ApiResponse<User>> {
+export function unlinkDiscordAccount():Promise<ApiResponse<User>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             type: 'POST',
-            url: `${baseURL}/users/${userId}/discord/unlink`,
+            url: `${baseURL}/users/me/discord/unlink`,
             contentType: 'application/json',
             success: function (response) {
                 resolve(response)

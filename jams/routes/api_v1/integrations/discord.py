@@ -10,7 +10,7 @@ bp = Blueprint('discord', __name__, url_prefix='/discord')
 # URL PREFIX = /api/v1
 
 @bp.route('/config', methods=['GET'])
-#@api_route
+@api_route
 def get_config():
     discord_config = {}
 
@@ -33,8 +33,8 @@ def get_config():
     return jsonify({'data': discord_config})
 
 @bp.route('/config', methods=['POST'])
-#@api_route
-def set_config():
+@api_route
+def edit_config():
     data = request.get_json()
     if not data:
         return jsonify({'message': 'No data provided'}), 400
@@ -64,8 +64,8 @@ def set_config():
     return jsonify({'data': discord_config})
 
 @bp.route('/verify', methods=['POST'])
-#@api_route
-def verify():
+@api_route
+def verify_bot_token():
     data = request.get_json()
     if not data:
         return jsonify({'message': 'No data provided'}), 400
@@ -78,7 +78,7 @@ def verify():
     return jsonify({'verified': verified})
 
 @bp.route('/verify_secret', methods=['POST'])
-#@api_route
+@api_route
 def verify_client_secret():
     data = request.get_json()
     if not data:
@@ -91,9 +91,9 @@ def verify_client_secret():
     verified = discord.verify_client_secret(secret)
     return jsonify({'verified': verified})
 
-@bp.route('/startup', methods=['GET'])
-#@api_route
-def startup():
+@bp.route('/setup-status', methods=['GET'])
+@api_route
+def get_setup_status():
     from jams import DiscordBot
 
     state = {
@@ -128,7 +128,7 @@ def startup():
     return sse_stream(fetch_data)
 
 @bp.route('/enable', methods=['POST'])
-#@api_route
+@api_route
 def enable():
     data = request.get_json()
     if not data:
@@ -162,7 +162,7 @@ def enable():
     })
 
 @bp.route('/disable', methods=['POST'])
-#@api_route
+@api_route
 def disable():
     for config in discord.configItems:
         remove_config_entry(config)

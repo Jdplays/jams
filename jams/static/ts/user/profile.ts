@@ -309,7 +309,7 @@ async function saveButtonOnClick() {
             discord_sync_streaks: discordSyncStreak.checked
         };
 
-        const response = await updateUserConfig(userId, updatedUserConfigData);
+        const response = await updateUserConfig(updatedUserConfigData);
         userData = response.data;
 
         successToast('User updated successfully');
@@ -330,7 +330,7 @@ async function saveButtonOnClick() {
 }
 
 function unLinkDiscordOnClick() {
-    unlinkDiscordAccount(userId).then((response) => {
+    unlinkDiscordAccount().then((response) => {
         userData = response.data
         successToast(response.message)
         populateProfilePage()

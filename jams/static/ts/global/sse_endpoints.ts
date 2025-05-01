@@ -44,7 +44,7 @@ export function getLiveAttendeeSignups(eventId:number):SSEManager<[AttendeeSignu
 }
 
 export function startupDiscordIntegrationGuildList():SSEManager<DiscordBotStartupResponse> {
-    const url = `${baseURL}/integrations/discord/startup`
+    const url = `${baseURL}/integrations/discord/setup-status`
 
     const sse = new SSEManager<DiscordBotStartupResponse>(url)
     sse.start()

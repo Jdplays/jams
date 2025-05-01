@@ -233,13 +233,14 @@ class User(UserMixin, db.Model):
         }
     
     def public_info_dict(self):
+        public_role_ids = [r.id for r in self.roles if not r.hidden]
         return {
             'id': self.id,
             'username': self.username,
             'first_name': self.first_name,
             'last_name': self.last_name,
             'display_name': self.display_name,
-            'role_ids': self.role_ids,
+            'role_ids': public_role_ids,
             'bio': self.bio,
             'avatar_file_id': self.avatar_file_id,
             'badge_text': self.badge_text,

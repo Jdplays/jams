@@ -79,6 +79,17 @@ pages:
       enable_jolt_integration:
       disable_jolt_integration:
       refresh_jolt_integration_api_token:
+  
+  settings_discord:
+    endpoint: routes.frontend.private.admin.settings_discord
+    api_endpoints:
+      get_discord_config:
+      get_discord_setup_status:
+      edit_discord_config:
+      verify_discord_bot_token:
+      verify_discord_client_secret:
+      enable_discord_integration:
+      disable_discord_integration:
 
   settings_add_role:
     endpoint: routes.frontend.private.admin.settings_add_role
@@ -156,6 +167,7 @@ pages:
       - settings_eventbrite
       - settings_auth_sources
       - settings_jolt
+      - settings_discord
     api_endpoints:
       get_general_config:
       get_latest_release:
@@ -360,6 +372,8 @@ pages:
       get_user:
       get_file:
       upload_user_avatar:
+      update_user_config:
+      unlink_user_discord:
 
 
   # -------------------------------- PUBLIC  -------------------------------- #
