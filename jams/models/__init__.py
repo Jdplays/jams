@@ -12,6 +12,7 @@ from .api import EndpointGroup, Endpoint, Webhook, WebhookLog, ExternalAPILog, A
 from .attendee import Attendee, AttendeeAccount, AttendeeAccountEvent, AttendeeSignup, AttendeeCheckInLog
 from .integrations import JOLTPrintQueue, JOLTHealthCheck
 from .stats import EventStats
+from .discord import DiscordBotMessage
 
 __all__ = [
     name for name in globals().keys() 

@@ -4,7 +4,7 @@ import base64
 import requests
 from jams.configuration import ConfigType, get_config_value, set_config_value
 from jams import logger
-from jams.models import db, ExternalAPILog
+from jams.models import db, ExternalAPILog, DiscordBotMessage
 
 base_url = 'https://discord.com/api/v10'
 
@@ -170,3 +170,10 @@ def get_channels_in_server(guild_id):
 
     channels_dict = [{'id': str(c.id), 'name': str(c.name)} for c in channels]
     return channels_dict
+
+def get_params_for_message(message_db_id):
+    message = DiscordBotMessage.query.filter_by(id=message_db_id).first()
+    if not message:
+        return None
+    
+    return message.view_data

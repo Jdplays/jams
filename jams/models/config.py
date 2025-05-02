@@ -1,6 +1,8 @@
 from . import db
-from sqlalchemy  import Boolean, Column, DateTime, ForeignKey, String, Integer
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy  import Boolean, Column, ForeignKey, String, Integer
+from sqlalchemy.orm import relationship, backref, Mapped, mapped_column
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from uuid import UUID
 
 class Config(db.Model):
     __tablename__ = 'config'
@@ -27,13 +29,14 @@ class UserConfig(db.Model):
     __tablename__ = 'user_config'
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer(), ForeignKey('user.id'), nullable=False, unique=True)
-    discord_account_id = Column(String(), nullable=True)
+    discord_account_id = Column(String(), nullable=True, unique=True)
     discord_username = Column(String(), nullable=True)
     discord_show_username = Column(Boolean(), default=False, server_default='false')
     discord_sync_streaks = Column(Boolean(), default=False, server_default='false')
-    discord_last_reminder_timestamp = Column(DateTime, nullable=True)
+    discord_last_reminder_message_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('discord_bot_message.id'), nullable=True)
 
     user = relationship('User', backref=backref('config', uselist=False))
+    last_discord_reminder_message = relationship('DiscordBotMessage')
 
     def __init__(self, user_id):
         self.user_id = user_id
@@ -43,7 +46,7 @@ class UserConfig(db.Model):
         self.discord_username = None
         self.discord_show_username = False
         self.discord_sync_streaks = False
-        self.discord_last_reminder_timestamp = None
+        self.discord_last_reminder_message_id = None
 
         db.session.commit()
 
@@ -55,7 +58,7 @@ class UserConfig(db.Model):
                 'discord_account_id': self.discord_account_id,
                 'discord_username': self.discord_username,
                 'discord_show_username': self.discord_show_username,
-                'discord_last_reminder_timestamp': self.discord_last_reminder_timestamp
+                'discord_last_reminder_message_id': self.discord_last_reminder_message_id
             })
             if get_config_value(ConfigType.STREAKS_ENABLED):
                 return_obj.update({

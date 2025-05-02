@@ -28,3 +28,13 @@ def post_event_task(event_id):
     for attendee in attendees:
         attendee.check_out()
 
+# BACKGROUND TASK FUNCTIONS
+def background_task():
+    pass
+
+def calculate_reminder_message_recipients():
+    event = helper.get_next_event()
+    if not event:
+        return
+    
+    

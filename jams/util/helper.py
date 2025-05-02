@@ -850,3 +850,11 @@ def remove_event_name_prefix(event_name):
     if not prefix:
         return event_name
     return event_name.removeprefix(prefix).strip()
+
+def is_event_over(event_id):
+    event = Event.query.filter_by(id=event_id).first()
+    if not event:
+        return True
+    
+    now = datetime.now(UTC)
+    return now > event.end_date_time

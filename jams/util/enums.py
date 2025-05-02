@@ -35,3 +35,17 @@ class JOLTHealthCheckStatus(Enum):
     PENDING = 'PENDING'
     SUCCESS = 'SUCCESS'
     FAILED = 'FAILED'
+
+class DiscordMessageType(Enum):
+    RSVP_REMINDER = 'RSVP_REMINDER'
+    RSVP_CONFIRM = 'RSVP_CONFIRM'
+
+class DiscordMessageViews(Enum):
+    RSVP_REMINDER_VIEW = 'RSVP_REMINDER_VIEW'
+    RSVP_CONFIRM_VIEW = 'RSVP_CONFIRM_VIEW'
+
+class DiscordMessageState(Enum):
+    SENT = 'SENT'
+    RESPONDED = 'RESPONDED'
+    EXPIRED = 'EXPIRED'
+    UPDATED = 'UPDATED'
