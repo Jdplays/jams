@@ -1,6 +1,12 @@
-from jams.models import Event, Attendee
+from datetime import datetime, timedelta, UTC
+from uuid import uuid4
+from babel.dates import format_date
+
+from sqlalchemy import and_
+from jams.models import db, Event, Attendee, DiscordBotMessage, VolunteerAttendance, User
 from jams.util import helper
-from jams.configuration import ConfigType
+from jams.configuration import ConfigType, get_config_value
+from jams.util.enums import DiscordMessageType, DiscordMessageView
 
 def update_event_attendees_task(event_id):
     from jams.integrations.eventbrite import sync_all_attendees_at_event
@@ -15,7 +21,7 @@ def post_event_task(event_id):
     if not event:
         raise Exception('Requested event does not exist in the database')
     # Calculate Streaks if enabled
-    if helper.get_config_value(ConfigType.STREAKS_ENABLED):
+    if get_config_value(ConfigType.STREAKS_ENABLED):
         from jams.util.helper import calculate_streaks
         calculate_streaks(event_id)
     
@@ -30,11 +36,130 @@ def post_event_task(event_id):
 
 # BACKGROUND TASK FUNCTIONS
 def background_task():
-    pass
+    from jams import DiscordBot
+    if get_config_value(ConfigType.DISCORD_BOT_ENABLED) and DiscordBot.is_ready():
+        send_attendance_reminders()
 
-def calculate_reminder_message_recipients():
+def send_attendance_reminders():
+    from jams import DiscordBot
     event = helper.get_next_event()
     if not event:
         return
     
+    due_reminder = get_due_reminder(event)
+    if not due_reminder:
+        return
     
+    recipients = (
+        db.session.query(User)
+        .outerjoin(VolunteerAttendance,
+            and_(
+                User.id == VolunteerAttendance.user_id,
+                VolunteerAttendance.event_id == event.id
+            )
+        )
+        .filter(VolunteerAttendance.id == None)
+        .all()
+    )
+
+    base_url = get_config_value(ConfigType.APP_URL)
+    attendance_url = f'{base_url}/private/volunteer/attendance'
+
+    for recipient in recipients:
+        if not recipient.config or recipient.config.discord_account_id is None:
+            continue
+
+        previous_event_reminders = DiscordBotMessage.query.filter(
+            DiscordBotMessage.user_id == recipient.id,
+            DiscordBotMessage.event_id == event.id,
+            DiscordBotMessage.message_type == DiscordMessageType.RSVP_REMINDER.name
+        ).all()
+
+        base_message = get_reminder_message(due_reminder, (len(previous_event_reminders) == 0), event.start_date_time)
+
+        response = DiscordBot.send_dm_to_user(
+            recipient.id, recipient.config.discord_account_id,
+            base_message,
+            DiscordMessageView.RSVP_REMINDER_VIEW,
+            {'url': attendance_url},
+            event.id
+        )
+
+        if response:
+            for prev_message in previous_event_reminders:
+                DiscordBot.update_dm_to_user(prev_message)
+
+
+
+def get_due_reminder(event):
+    # Normalise event date to midnight
+    event_datetime_normalised = event.start_date_time.replace(hour=0, minute=0, second=0, microsecond=0)
+    now_normalised = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
+
+    # Get the last reminder
+    last_reminder_normalised = None
+    last_reminder_message = DiscordBotMessage.query.filter(
+        DiscordBotMessage.event_id == event.id,
+        DiscordBotMessage.message_type == DiscordMessageType.RSVP_REMINDER.name
+    ).order_by(DiscordBotMessage.timestamp.desc()).first()
+
+    if last_reminder_message:
+        last_reminder_normalised = last_reminder_message.timestamp.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # Reminder thresholds
+    reminder_schedule = [
+        ('early', timedelta(days=365)), # Anything earlier than 3 weeks
+        ("3-week", timedelta(weeks=3)),
+        ("2-week", timedelta(weeks=2)),
+        ("1-week", timedelta(weeks=1)),
+        ("3-day", timedelta(days=3)),
+    ]
+
+    for i, (label, delta) in enumerate(reminder_schedule):
+        lower_bound = event_datetime_normalised - delta
+        
+        if i + 1 < len(reminder_schedule):
+            next_delta = reminder_schedule[i+1][1]
+            upper_bound = event_datetime_normalised - next_delta
+        else:
+            upper_bound = event_datetime_normalised
+
+        if label == 'early':
+            if now_normalised < upper_bound:
+                if last_reminder_normalised is None or not (lower_bound <= last_reminder_normalised < upper_bound):
+                    return label
+                else:
+                    return None
+        else:
+            if lower_bound <= now_normalised < upper_bound:
+                if last_reminder_normalised is None or not (lower_bound <= last_reminder_normalised < upper_bound):
+                    return label
+                else:
+                    return None
+        
+    return None
+    
+def get_reminder_message(due_reminder, first_reminder, event_date):
+    weekday = format_date(event_date, format="EEEE", locale="en_GB")
+    month = format_date(event_date, format="MMMM", locale="en_GB")
+    day_with_suffix = helper.ordinal(event_date.day)
+    default_message = f'Hey, are you free on {weekday} the {day_with_suffix} of {month} for the Jam?'
+    match due_reminder:
+        case 'early':
+            return f'It\'s a while off, but are you thinking of helping out at the Jam on {weekday} the {day_with_suffix} of {month}?'
+        case '3-week':
+            return default_message
+        case '2-week':
+            if first_reminder:
+                return default_message
+            return f'Poke! Are you available on {weekday} the {day_with_suffix} of {month} for the Jam?'
+        case '1-week':
+            if first_reminder:
+                return f'Hey! Are you around to help next {weekday} ({day_with_suffix} of {month}) for the Jam?'
+            return f'The Jam is just a week away, are you up for helping out next {weekday}'
+        case '3-day':
+            if first_reminder:
+                return f'Just checking, can you help out this {weekday} ({day_with_suffix} of {month}) for the Jam?'
+            return f'Only a few days to go! Can we count on you this {weekday} for the Jam?'
+        case _:
+            return default_message

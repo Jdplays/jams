@@ -39,8 +39,9 @@ class JOLTHealthCheckStatus(Enum):
 class DiscordMessageType(Enum):
     RSVP_REMINDER = 'RSVP_REMINDER'
     RSVP_CONFIRM = 'RSVP_CONFIRM'
+    RSVP_EXPIRED = 'RSVP_EXPIRED'
 
-class DiscordMessageViews(Enum):
+class DiscordMessageView(Enum):
     RSVP_REMINDER_VIEW = 'RSVP_REMINDER_VIEW'
     RSVP_CONFIRM_VIEW = 'RSVP_CONFIRM_VIEW'
 

@@ -19,3 +19,4 @@ markdown
 Pillow
 gevent
 discord.py
+babel

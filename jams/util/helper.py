@@ -856,5 +856,12 @@ def is_event_over(event_id):
     if not event:
         return True
     
-    now = datetime.now(UTC)
+    now = datetime.now(UTC).replace(tzinfo=None)
     return now > event.end_date_time
+
+def ordinal(n):
+    if 11 < (n % 100) <= 13:
+        suffix = 'th'
+    else:
+        suffix = {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')
+    return f'{n}{suffix}'
