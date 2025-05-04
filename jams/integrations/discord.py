@@ -120,15 +120,11 @@ def get_discord_user_info(access_token):
 def start_server():
     from jams import DiscordBot
     DiscordBot.start()
+    DiscordBot.wait_until_ready(timeout=10)
 
 def stop_server():
     from jams import DiscordBot
     DiscordBot.stop()
-
-@staticmethod
-async def wait_until_ready():
-    from jams import DiscordBot
-    await DiscordBot._ready_event.wait()
 
 def get_bot_client_id():
     from jams import DiscordBot

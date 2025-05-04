@@ -35,8 +35,8 @@ class DiscordBotServer:
         if get_config_value(ConfigType.DISCORD_BOT_ENABLED):
             self.start()
     
-    async def wait_until_ready(self):
-        await self._ready_event.wait()
+    def wait_until_ready(self, timeout=None):
+        self._ready_event.wait(timeout=timeout)
 
     def is_ready(self):
         return self._ready_event.is_set()
