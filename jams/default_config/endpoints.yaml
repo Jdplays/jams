@@ -107,7 +107,6 @@ groups:
     read:
       get_user_attendance: routes.api_v1.private.volunteer.get_user_attendance
     write:
-      add_user_attendance: routes.api_v1.private.volunteer.add_user_attendance
       edit_user_attendance: routes.api_v1.private.volunteer.edit_user_attendance
       add_volunteer_signup: routes.api_v1.private.volunteer.add_volunteer_signup
       remove_volunteer_signup: routes.api_v1.private.volunteer.remove_volunteer_signup

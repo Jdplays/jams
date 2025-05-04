@@ -4,12 +4,18 @@ from uuid import uuid4
 import discord
 from discord.ext import commands
 from jams.configuration import ConfigType, get_config_value, set_config_value
-from jams.services import discord_ui
+from jams.services.discord import ui
 from jams.models import db, DiscordBotMessage
 from jams.util.enums import DiscordMessageType, DiscordMessageView
 from jams.integrations.discord import get_params_for_message
 from jams.util import helper
 from jams import logger
+
+# Import all handlers to have them registered
+from jams.services.discord import handlers
+from jams.services.discord.interaction_router import INTERACTION_HANDLERS
+from jams.services.discord.ui import VIEW_REGISTRY
+from jams.services.discord.helper import make_stub_view
 
 class DiscordBotServer:
     def __init__(self):
@@ -21,7 +27,6 @@ class DiscordBotServer:
         self._is_running = False
         self._ready_event = asyncio.Event()
         self._guild_list = []
-        self._rsvp_selection_store = {}
 
     
     def init_app(self, app):
@@ -70,8 +75,13 @@ class DiscordBotServer:
             client_id = self.get_bot_client_id()
 
             # Register persistent handlers globally
-            self._bot.add_view(discord_ui.RSVPView(message_db_id='1', url='https://example.com'))
-            #self._bot.add_view(discord_ui.RSVPSelect())
+            for view_type, view_class in VIEW_REGISTRY.items():
+                try:
+                    stub_view = make_stub_view(view_class)
+                    self._bot.add_view(stub_view)
+                    logger.info(f"[DiscordBot] Registered persistent view: {view_type}")
+                except Exception as e:
+                    logger.warning(f"[DiscordBot] Failed to register view {view_type}: {e}")
 
             with self._app.app_context():
                 set_config_value(ConfigType.DISCORD_CLIENT_ID, client_id)
@@ -90,20 +100,25 @@ class DiscordBotServer:
         # Interaction Router
         @self._bot.event
         async def on_interaction(interaction: discord.Interaction):
-            if interaction.type == discord.InteractionType.component:
-                custom_id = interaction.data.get("custom_id", "")
-                
-                # Check if its an open rsvp modal interaction
-                if custom_id.startswith("open_rsvp_modal:"):
-                    _, message_db_id = custom_id.split(":", 1)
-
-                    selected_values = interaction.data.get("values", [])
-
-                    with self._app.app_context():
-                        params = get_params_for_message(message_db_id)
-                        self.store_rsvp_selection(message_db_id, selected_values)
-
-                        await interaction.response.send_modal(discord_ui.RSVPModal(message_db_id=message_db_id, **params))
+            custom_id = interaction.data.get("custom_id", "")
+            if ":" not in custom_id:
+                return  # Invalid format, ignore
+            
+            prefix, message_db_id = custom_id.split(":", 1)
+            if not message_db_id:
+                logger.warning(f"Invalid message ID in custom_id: {custom_id}")
+                return
+            
+            for registered_prefix, handler in INTERACTION_HANDLERS.items():
+                if prefix.startswith(registered_prefix):
+                    try:
+                        with self._app.app_context():
+                            await handler(interaction, message_db_id)
+                    except Exception as e:
+                        logger.error(f"[DiscordBot] Error handling interaction '{custom_id}': {e}")
+                    return
+            
+            logger.warning(f"[DiscordBot] No handler found for custom_id: {custom_id}")
 
 
         def run_bot():
@@ -186,33 +201,37 @@ class DiscordBotServer:
         if self._loop and self._is_running:
             asyncio.run_coroutine_threadsafe(_send(), self._loop)
     
-    def send_dm_to_user(self, user_id, discord_user_id, base_message, message_view=None, view_data=None, event_id=None):
-        async def _send():
-            user = await self._bot.fetch_user(discord_user_id)
-            try:
-                if not user:
-                    logger.warning(f"[DiscordBot] User {user_id} not found")
-                
-                message_db_id = uuid4()
-                match message_view:
-                    case DiscordMessageView.RSVP_REMINDER_VIEW:
-                        view = discord_ui.RSVPView(message_db_id=message_db_id, **view_data)
-                        message = f'🗓️ **{base_message}**\nPlease fill out the form bellow:'
-                        sent_message = await user.send(message, view=view)
-                    case _:
-                        sent_message = await user.send(base_message)
+    async def send_dm_to_user_async(self, user_id, discord_user_id, message, message_type, view_type=None, view_data=None, event_id=None):
+        user = await self._bot.fetch_user(discord_user_id)
+        try:
+            if not user:
+                logger.warning(f"[DiscordBot] User {user_id} not found")
+            
+            message_db_id = uuid4()
 
+            send_kwargs = {}
+            send_kwargs['content'] = message
+
+            # Create a view if a view type is provided
+            view_instance = self.get_view_from_type(message_db_id, view_type, view_data)
+            send_kwargs['view'] = view_instance
+
+            # Send the message
+            if send_kwargs:
+                sent_message = await user.send(**send_kwargs)
+
+                # Save the message as a persistent message in the DB
                 if sent_message:
                     with self._app.app_context():
                         persistent_message = DiscordBotMessage(
                             id=message_db_id,
                             message_id=sent_message.id,
                             channel_id=sent_message.channel.id,
-                            message_type=DiscordMessageType.RSVP_REMINDER.name,
+                            message_type=message_type.name,
                             user_id=user_id,
                             event_id=event_id,
                             account_id=discord_user_id,
-                            view_type=DiscordMessageView.RSVP_REMINDER_VIEW.name,
+                            view_type=view_type.name,
                             view_data=view_data
                         )
 
@@ -220,52 +239,80 @@ class DiscordBotServer:
                         db.session.commit()
 
                     return sent_message
-            except discord.Forbidden:
-                logger.warning(f"[DiscordBot] Cannot DM user {user_id}")
-            except Exception as e:
-                logger.error(f"[DiscordBot] Error sending DM to user {user_id}: {e}")
+        except discord.Forbidden:
+            logger.warning(f"[DiscordBot] Cannot DM user {user_id}")
+        except Exception as e:
+            logger.error(f"[DiscordBot] Error sending DM to user {user_id}: {e}")
+            
+    def send_dm_to_user(self, *args, **kwargs):
+        if self._loop and self._is_running:
+            self._loop.call_soon_threadsafe(
+                asyncio.create_task,
+                self.send_dm_to_user_async(*args, **kwargs),
+            )
         
-        if self._loop and self._is_running:
-            future = asyncio.run_coroutine_threadsafe(_send(), self._loop)
-            return future.result(timeout=10)
     
-    def update_dm_to_user(self, msg):
-        async def _update():
-            if not msg.account_id:
-                logger.warning(f"[DiscordBot] Persistent message {msg.id} does not have a user account id. Skipping DM update...")
+    async def update_dm_to_user_async(self, msg_obj, expired=False, new_content=None, new_view_type=None, new_message_type=None):
+        if not msg_obj.account_id:
+            logger.warning(f"[DiscordBot] Persistent message {msg_obj.id} does not have a user account id. Skipping DM update...")
+            return
+        try:
+            user = await self._bot.fetch_user(msg_obj.account_id)
+            channel = await user.create_dm()
+            discord_message = await channel.fetch_message(msg_obj.message_id)
+            current_content = discord_message.content
+
+            # Handle RSVP expiration override
+            if expired and msg_obj.view_type == DiscordMessageView.RSVP_REMINDER_VIEW.name:
+                try:
+                    updated_content = current_content.replace('Please fill out the form bellow:', '⚠️ This RSVP has expired.')
+                    await discord_message.edit(content=updated_content, view=None)
+
+                    msg_obj.view_type = None
+                    msg_obj.view_data = None
+                    msg_obj.message_type =  DiscordMessageType.RSVP_EXPIRED.name
+                    msg_obj.active = False
+                        
+                except Exception as e:
+                    logger.warning(f"[DiscordBot] Could not update expired message {msg_obj.message_id}: {e}")
                 return
+
+            # Create a new view if a new view type is provided
+            view_instance = self.get_view_from_type(msg_obj.id, new_view_type, msg_obj.view_data)
+
+            # Handle generic content/view update
             try:
-                user = await self._bot.fetch_user(msg.account_id)
-                channel = await user.create_dm()
-                discord_message = await channel.fetch_message(msg.message_id)
-                message_body = discord_message.content
+                edit_kwargs = {}
+                if new_content is not None:
+                    edit_kwargs['content'] = new_content
+                if new_view_type is not None:
+                    edit_kwargs['view'] = view_instance
+                
+                if edit_kwargs:
+                    await discord_message.edit(**edit_kwargs)
 
-                match msg.view_type:
-                    case DiscordMessageView.RSVP_REMINDER_VIEW.name:
-                        try:
-                            new_message_body = message_body.replace('Please fill out the form bellow:', '⚠️ This RSVP has expired.')
-                            await discord_message.edit(content=new_message_body, view=None)
-
-                            msg.view_type = None
-                            msg.view_data = None
-                            msg.message_type =  DiscordMessageType.RSVP_EXPIRED.name
-                            msg.active = False
-                                
-                        except Exception as e:
-                            logger.warning(f"[DiscordBot] Could not update expired message {msg.message_id}: {e}")
-
-            except discord.NotFound:
-                logger.warning(f"[DiscordBot] User {msg.account_id} not found")
-                return
+                    msg_obj.message_type = new_message_type.name if new_message_type else msg_obj.message_type
+                    msg_obj.view_type = new_view_type.name if new_view_type else msg_obj.view_type
             except Exception as e:
-                logger.error(f"[DiscordBot] Error creating DM with user {msg.account_id}: {e}")
+                logger.warning(f"[DiscordBot] Could not update message {msg_obj.message_id}: {e}")
                 return
-            finally:
-                db.session.commit()
 
+        except discord.NotFound:
+            logger.warning(f"[DiscordBot] User {msg_obj.account_id} not found")
+            return
+        except Exception as e:
+            logger.error(f"[DiscordBot] Error creating DM with user {msg_obj.account_id}: {e}")
+            return
+        finally:
+            db.session.commit()
+    
+    def update_dm_to_user(self, *args, **kwargs):
         if self._loop and self._is_running:
-            future = asyncio.run_coroutine_threadsafe(_update(), self._loop)
-            return future.result(timeout=10)
+            self._loop.call_soon_threadsafe(
+                asyncio.create_task,
+                self.update_dm_to_user_async(*args, **kwargs),
+            )
+        
     
     def save_guild_list(self):
         guilds = self._bot.guilds
@@ -282,36 +329,36 @@ class DiscordBotServer:
 
     async def restore_bot_views(self):
         messages = DiscordBotMessage.query.filter(DiscordBotMessage.active == True, DiscordBotMessage.view_type != None).all()
-        for msg in messages:
+        for msg_obj in messages:
             expired = False
 
-            if msg.event_id and helper.is_event_over(event_id=msg.event_id):
+            if msg_obj.event_id and helper.is_event_over(event_id=msg_obj.event_id):
                 expired = True
             
             try:
-                if msg.account_id is not None:
+                if msg_obj.account_id is not None:
                     # This is a DM
                     try:
-                        user = await self._bot.fetch_user(msg.account_id)
+                        user = await self._bot.fetch_user(msg_obj.account_id)
                         channel = await user.create_dm()
                     except discord.NotFound:
-                        logger.warning(f"[DiscordBot] User {msg.account_id} not found")
+                        logger.warning(f"[DiscordBot] User {msg_obj.account_id} not found")
                         continue
                     except Exception as e:
-                        logger.error(f"[DiscordBot] Error creating DM with user {msg.account_id}: {e}")
+                        logger.error(f"[DiscordBot] Error creating DM with user {msg_obj.account_id}: {e}")
                         continue
                 else:
                     # This is a guild channel
-                    channel = self._bot.get_channel(msg.channel_id)
+                    channel = self._bot.get_channel(msg_obj.channel_id)
                     if channel is None:
                         try:
                             # Fallback to fetch in case it's not cached
-                            channel = await self._bot.fetch_channel(msg.channel_id)
+                            channel = await self._bot.fetch_channel(msg_obj.channel_id)
                         except discord.NotFound:
-                            logger.warning(f"[DiscordBot] Channel {msg.channel_id} not found (possibly deleted)")
+                            logger.warning(f"[DiscordBot] Channel {msg_obj.channel_id} not found (possibly deleted)")
                             continue
                         except Exception as e:
-                            logger.error(f"[DiscordBot] Error fetching channel {msg.channel_id}: {e}")
+                            logger.error(f"[DiscordBot] Error fetching channel {msg_obj.channel_id}: {e}")
                             continue
                 
                 if not channel:
@@ -319,33 +366,37 @@ class DiscordBotServer:
 
                 if expired:
                     try:
-                        discord_message = await channel.fetch_message(msg.message_id)
+                        discord_message = await channel.fetch_message(msg_obj.message_id)
                         await discord_message.edit(content="⚠️ This RSVP has expired.", view=None)
                     except Exception as e:
-                        logger.warning(f"[DiscordBot] Could not update expired message {msg.message_id}: {e}")
-                    msg.active = False
+                        logger.warning(f"[DiscordBot] Could not update expired message {msg_obj.message_id}: {e}")
+                    msg_obj.active = False
                 else:
-                    view = self.get_view_from_type(msg.id, msg.view_type, msg.view_data)
-                    if view:
-                        self._bot.add_view(view, message_id=msg.message_id)
-                        logger.info(f"[DiscordBot] Reattached view to message {msg.message_id}")
+                    view_instance = self.get_view_from_type(msg_obj.id, msg_obj.view_type, msg_obj.view_data)
+                    if view_instance:
+                        self._bot.add_view(view_instance, message_id=msg_obj.message_id)
+                        logger.info(f"[DiscordBot] Reattached view to message {msg_obj.message_id}")
                     else:
-                        logger.warning(f"[DiscordBot] Unknown view_type: {msg.view_type}")
+                        logger.warning(f"[DiscordBot] Unknown view_type: {msg_obj.view_type}")
             except Exception as e:
-                logger.error(f"[DiscordBot] Failed to restore view for message {msg.message_id}: {e}")
+                logger.error(f"[DiscordBot] Failed to restore view for message {msg_obj.message_id}: {e}")
             finally:
                 db.session.commit()
 
-    def get_view_from_type(self, message_db_id, view_type, view_params):
-        match view_type:
-            case DiscordMessageView.RSVP_REMINDER_VIEW.name:
-                return discord_ui.RSVPView(message_db_id=message_db_id, **view_params)
-            case _:
-                return None
-    
+    def get_view_from_type(self, message_db_id, view_type, view_data):
+        if type(view_type) == DiscordMessageView:
+            view_type = view_type.value
 
-    def store_rsvp_selection(self, message_db_id, selection):
-        self._rsvp_selection_store[message_db_id] = selection
+        view_instance = None
+        if view_type is not None:
+            try:
+                view_class = VIEW_REGISTRY.get(view_type)
+                if view_class:
+                    view_instance = view_class(message_db_id=message_db_id, **(view_data or {}))
+                else:
+                    logger.warning(f"[DiscordBot] No view class registered for {view_type}")
+            except Exception as e:
+                logger.warning(f"[DiscordBot] Failed to construct view for message {message_db_id}: {e}")
+
+        return view_instance
     
-    def pop_rsvp_selection(self, message_db_id):
-        return self._rsvp_selection_store.pop(message_db_id, [])

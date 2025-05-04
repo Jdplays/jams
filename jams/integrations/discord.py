@@ -171,8 +171,12 @@ def get_channels_in_server(guild_id):
     channels_dict = [{'id': str(c.id), 'name': str(c.name)} for c in channels]
     return channels_dict
 
-def get_params_for_message(message_db_id):
+def get_persistent_message(message_db_id):
     message = DiscordBotMessage.query.filter_by(id=message_db_id).first()
+    return message
+
+def get_params_for_message(message_db_id):
+    message = get_persistent_message(message_db_id)
     if not message:
         return None
     

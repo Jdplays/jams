@@ -4,7 +4,6 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from uuid import UUID
 from datetime import datetime, UTC
-from jams.util.enums import DiscordMessageState
 
 class DiscordBotMessage(db.Model):
     __tablename__ = 'discord_bot_message'
@@ -20,7 +19,6 @@ class DiscordBotMessage(db.Model):
     message_type = Column(String, nullable=False)
     view_type = Column(String, nullable=True)
     view_data = Column(JSON, nullable=True)
-    message_state = Column(String, nullable=False, default="SENT")  # sent, responded, expired, updated
 
     timestamp = Column(DateTime, nullable=True)
     active = Column(Boolean, default=True)
@@ -41,7 +39,6 @@ class DiscordBotMessage(db.Model):
         self.view_type = view_type
         self.view_data = view_data
         self.timestamp = datetime.now(UTC)
-        self.message_state = DiscordMessageState.SENT.name
     
     def to_dict(self):
         return {
@@ -54,7 +51,6 @@ class DiscordBotMessage(db.Model):
             'message_type': self.message_type,
             'view_type': self.view_type,
             'view_data': self.view_data,
-            'message_state': self.message_state,
             'timestamp': self.timestamp,
             'active': self.active,
             'updated': self.updated

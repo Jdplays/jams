@@ -274,7 +274,6 @@ pages:
         allowed_fields: id, filtered_name, name, date
       get_event_volunteer_attendance:
       get_user_attendance:
-      add_user_attendance:
       edit_user_attendance:
 
   volunteer_signup:
@@ -287,7 +286,6 @@ pages:
         allowed_fields: id, filtered_name, name, date
       get_users_public_info:
       get_event_volunteer_attendance:
-      add_user_attendance:
       get_event_volunteer_signups_sse:
       add_volunteer_signup:
       remove_volunteer_signup:

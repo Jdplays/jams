@@ -21,7 +21,7 @@ from jams.configuration import config_entry_exists, get_config_value, ConfigType
 from jams.util.task_scheduler import TaskScheduler
 from jams.util import attendee_auth
 from jams.util.enums import APIKeyType
-from jams.services.discord_bot import DiscordBotServer
+from jams.services.discord.bot import DiscordBotServer
 
 logger = logging.getLogger(__name__)
 scheduler = None

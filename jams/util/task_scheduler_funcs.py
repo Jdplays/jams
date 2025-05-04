@@ -62,8 +62,7 @@ def send_attendance_reminders():
         .all()
     )
 
-    base_url = get_config_value(ConfigType.APP_URL)
-    attendance_url = f'{base_url}/private/volunteer/attendance'
+    attendance_url = helper.get_volunteer_attendance_url()
 
     for recipient in recipients:
         if not recipient.config or recipient.config.discord_account_id is None:
@@ -76,18 +75,21 @@ def send_attendance_reminders():
         ).all()
 
         base_message = get_reminder_message(due_reminder, (len(previous_event_reminders) == 0), event.start_date_time)
+        full_message = f'🗓️ **{base_message}**\nPlease fill out the form bellow:'
 
         response = DiscordBot.send_dm_to_user(
-            recipient.id, recipient.config.discord_account_id,
-            base_message,
-            DiscordMessageView.RSVP_REMINDER_VIEW,
-            {'url': attendance_url},
-            event.id
+            user_id=recipient.id,
+            discord_user_id=recipient.config.discord_account_id,
+            message=full_message,
+            message_type=DiscordMessageType.RSVP_REMINDER,
+            view_type=DiscordMessageView.RSVP_REMINDER_VIEW,
+            view_data={'url': attendance_url},
+            event_id=event.id
         )
 
         if response:
             for prev_message in previous_event_reminders:
-                DiscordBot.update_dm_to_user(prev_message)
+                DiscordBot.update_dm_to_user(prev_message, expired=True)
 
 
 
