@@ -26,7 +26,7 @@ class DiscordBotServer:
         self._thread = None
         self._is_running = False
         self._guild_id = None
-        self._ready_event = asyncio.Event()
+        self._ready_event = threading.Event()
         self._guild_list = []
 
     
@@ -181,7 +181,7 @@ class DiscordBotServer:
             self._bot = None
             self._client = None
             self._is_running = False
-            self._ready_event = asyncio.Event()
+            self._ready_event = threading.Event()
 
             logger.info("[DiscordBot] Shutdown complete.")
         else:
