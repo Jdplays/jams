@@ -52,19 +52,25 @@ class DiscordBotServer:
         async def main():
             try:
                 self._is_running = True
-                self._loop = asyncio.get_running_loop()
+                self._loop = asyncio.get_event_loop()
                 await self._bot.start(self._token)
             except Exception as e:
                 logger.error(f"[DiscordBot] Failed to run: {e}")
             finally:
-                self._is_running = False
                 logger.info("[DiscordBot] Cleaning up event loop...")
+                self._is_running = False
                 self._ready_event.clear()
         
         try:
-            asyncio.run(main())
+            self._loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self._loop)
+            self._loop.run_until_complete(main())
         except Exception as e:
             logger.error(f"[DiscordBot] run_bot crashed: {e}")
+        finally:
+            if self._loop:
+                self._loop.close()
+
 
     def start(self):
         if self._is_running:
