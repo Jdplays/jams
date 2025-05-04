@@ -117,6 +117,7 @@ def get_discord_user_info(access_token):
     )
     return user_response
 
+# Start the discord server
 def start_server():
     from jams import DiscordBot
     DiscordBot.start()
