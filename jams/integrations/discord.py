@@ -5,6 +5,7 @@ import requests
 from jams.configuration import ConfigType, get_config_value, set_config_value
 from jams import logger
 from jams.models import db, ExternalAPILog, DiscordBotMessage
+from asyncio import run_coroutine_threadsafe
 
 base_url = 'https://discord.com/api/v10'
 
@@ -71,18 +72,14 @@ def verify_client_secret(secret):
         'grant_type': 'client_credentials',
         'scope': 'identify'
     }
-
-    # Encode client_id:client_secret in base64 for Basic Auth
-    credentials = f"{DISCORD_CLIENT_ID}:{secret}"
-    b64_credentials = base64.b64encode(credentials.encode()).decode()
-
     headers = {
-        'Authorization': f'Basic {b64_credentials}',
         'Content-Type': 'application/x-www-form-urlencoded'
     }
 
+    auth=(DISCORD_CLIENT_ID, secret)
+
     try:
-        r = requests.post(token_url, data=data, headers=headers)
+        r = requests.post(token_url,data=data, headers=headers, auth=auth)
         if r.status_code == 200:
             set_config_value(ConfigType.DISCORD_CLIENT_SECRET, secret)
             verified = True
@@ -181,3 +178,17 @@ def get_params_for_message(message_db_id):
         return None
     
     return message.view_data
+
+def set_bot_guild_id(guild_id):
+    from jams import DiscordBot
+    DiscordBot._guild_id = guild_id
+
+def fetch_discord_user_nickname(account_id):
+    from jams import DiscordBot
+    future = run_coroutine_threadsafe(DiscordBot.fetch_discord_user_nickname_async(account_id), DiscordBot._loop)
+    return future.result(timeout=5)
+
+def set_discord_user_nickname(account_id, new_nick):
+    from jams import DiscordBot
+    future = run_coroutine_threadsafe(DiscordBot.set_discord_user_nickname_async(account_id, new_nick), DiscordBot._loop)
+    return future.result(timeout=5)

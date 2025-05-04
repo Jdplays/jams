@@ -250,7 +250,7 @@ function setupStepTwo() {
             tickIcon.classList.add('ti', 'ti-check')
             verifyButton.appendChild(tickIcon)
 
-            botAddToServerURL.value = `https://discord.com/oauth2/authorize?client_id=${data.client_id}&permissions=17600910673984&integration_type=0&scope=bot+applications.commands`
+            botAddToServerURL.value = `https://discord.com/oauth2/authorize?client_id=${data.client_id}&permissions=1706588545468480&integration_type=0&scope=bot+applications.commands`
             
             incrementSetupStep()
 

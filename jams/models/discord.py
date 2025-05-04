@@ -22,7 +22,6 @@ class DiscordBotMessage(db.Model):
 
     timestamp = Column(DateTime, nullable=True)
     active = Column(Boolean, default=True)
-    updated = Column(Boolean, default=False)
     
     event = relationship('Event', backref='discord_messages')
     user = relationship('User', backref='discord_messages')
@@ -52,6 +51,5 @@ class DiscordBotMessage(db.Model):
             'view_type': self.view_type,
             'view_data': self.view_data,
             'timestamp': self.timestamp,
-            'active': self.active,
-            'updated': self.updated
+            'active': self.active
         }

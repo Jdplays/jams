@@ -1,6 +1,6 @@
 from . import db
 from sqlalchemy  import Column, DateTime, String, Integer, Boolean, ForeignKey, UniqueConstraint
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from datetime import datetime, UTC
 
 class VolunteerAttendance (db.Model):
@@ -78,7 +78,7 @@ class AttendanceStreak(db.Model):
     freezes = Column(Integer(), nullable=False, default=2)
     total_attended = Column(Integer(), nullable=False, default=0)
 
-    user = relationship('User', backref='attendance_streak')
+    user = relationship('User', backref=backref('attendance_streak', uselist=False))
 
     def __init__(self, user_id):
         self.user_id = user_id

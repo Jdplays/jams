@@ -3,10 +3,11 @@ from uuid import uuid4
 from babel.dates import format_date
 
 from sqlalchemy import and_
-from jams.models import db, Event, Attendee, DiscordBotMessage, VolunteerAttendance, User
+from jams.models import db, Event, Attendee, DiscordBotMessage, VolunteerAttendance, User, UserConfig
 from jams.util import helper
 from jams.configuration import ConfigType, get_config_value
 from jams.util.enums import DiscordMessageType, DiscordMessageView
+from jams.integrations import discord
 
 def update_event_attendees_task(event_id):
     from jams.integrations.eventbrite import sync_all_attendees_at_event
@@ -39,15 +40,14 @@ def background_task():
     from jams import DiscordBot
     if get_config_value(ConfigType.DISCORD_BOT_ENABLED) and DiscordBot.is_ready():
         send_attendance_reminders()
+        sync_discord_nicknames()
+        expire_old_rsvp_messages()
+
 
 def send_attendance_reminders():
     from jams import DiscordBot
     event = helper.get_next_event()
     if not event:
-        return
-    
-    due_reminder = get_due_reminder(event)
-    if not due_reminder:
         return
     
     recipients = (
@@ -68,6 +68,10 @@ def send_attendance_reminders():
         if not recipient.config or recipient.config.discord_account_id is None:
             continue
 
+        due_reminder = get_due_reminder(event, recipient)
+        if not due_reminder:
+            return
+
         previous_event_reminders = DiscordBotMessage.query.filter(
             DiscordBotMessage.user_id == recipient.id,
             DiscordBotMessage.event_id == event.id,
@@ -77,7 +81,7 @@ def send_attendance_reminders():
         base_message = get_reminder_message(due_reminder, (len(previous_event_reminders) == 0), event.start_date_time)
         full_message = f'🗓️ **{base_message}**\nPlease fill out the form bellow:'
 
-        response = DiscordBot.send_dm_to_user(
+        DiscordBot.send_dm_to_user(
             user_id=recipient.id,
             discord_user_id=recipient.config.discord_account_id,
             message=full_message,
@@ -87,13 +91,15 @@ def send_attendance_reminders():
             event_id=event.id
         )
 
-        if response:
-            for prev_message in previous_event_reminders:
-                DiscordBot.update_dm_to_user(prev_message, expired=True)
+        for prev_message in previous_event_reminders:
+            DiscordBot.update_dm_to_user(
+                message_db_id=prev_message.id,
+                expired=True
+            )
 
 
 
-def get_due_reminder(event):
+def get_due_reminder(event, user):
     # Normalise event date to midnight
     event_datetime_normalised = event.start_date_time.replace(hour=0, minute=0, second=0, microsecond=0)
     now_normalised = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
@@ -102,7 +108,8 @@ def get_due_reminder(event):
     last_reminder_normalised = None
     last_reminder_message = DiscordBotMessage.query.filter(
         DiscordBotMessage.event_id == event.id,
-        DiscordBotMessage.message_type == DiscordMessageType.RSVP_REMINDER.name
+        DiscordBotMessage.message_type == DiscordMessageType.RSVP_REMINDER.name,
+        DiscordBotMessage.user_id == user.id
     ).order_by(DiscordBotMessage.timestamp.desc()).first()
 
     if last_reminder_message:
@@ -158,10 +165,35 @@ def get_reminder_message(due_reminder, first_reminder, event_date):
         case '1-week':
             if first_reminder:
                 return f'Hey! Are you around to help next {weekday} ({day_with_suffix} of {month}) for the Jam?'
-            return f'The Jam is just a week away, are you up for helping out next {weekday}'
+            return f'The Jam is just a week away, are you up for helping out next {weekday} ({day_with_suffix} of {month})'
         case '3-day':
             if first_reminder:
                 return f'Just checking, can you help out this {weekday} ({day_with_suffix} of {month}) for the Jam?'
             return f'Only a few days to go! Can we count on you this {weekday} for the Jam?'
         case _:
             return default_message
+
+def expire_old_rsvp_messages():
+    pass
+
+def sync_discord_nicknames():
+    is_global_nickname_sync_enabled = get_config_value(ConfigType.DISCORD_BOT_NAME_SYNC_ENABLED)
+
+    discord_enabled_users = (
+        db.session.query(User)
+        .outerjoin(UserConfig, User.id == UserConfig.user_id)
+        .filter(UserConfig.discord_account_id != None)
+        .all()
+    )
+
+    for user in discord_enabled_users:
+        current_nickname = discord.fetch_discord_user_nickname(user.config.discord_account_id)
+        new_nickname = current_nickname
+
+        if is_global_nickname_sync_enabled:
+            new_nickname = user.display_name.strip()
+        
+        if user.config.discord_sync_streaks:
+            new_nickname = f'{new_nickname} - {user.attendance_streak.streak}🔥'.strip()
+        
+        discord.set_discord_user_nickname(user.config.discord_account_id, new_nickname)

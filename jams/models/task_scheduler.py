@@ -1,5 +1,5 @@
 from . import db
-from sqlalchemy  import Column, ForeignKey, String, Integer, DateTime, Boolean, JSON
+from sqlalchemy  import Column, ForeignKey, String, Integer, DateTime, Boolean, JSON, Time
 from sqlalchemy.dialects.postgresql import INTERVAL
 from sqlalchemy.orm import relationship
 from datetime import datetime, UTC
@@ -24,8 +24,9 @@ class TaskSchedulerModel(db.Model):
     running = Column(Boolean(), nullable=False, default=False, server_default='false')
     queued = Column(Boolean(), nullable=False, default=False, server_default='false')
     event_id = Column(Integer, ForeignKey('event.id'), nullable=True)
+    fixed_time = Column(Time, nullable=True)
 
-    def __init__(self, name, action_enum, interval, params=None, start_datetime=datetime.now(UTC), end_datetime=datetime.now(UTC), run_quantity=None, private=True, event_id=None):
+    def __init__(self, name, action_enum, interval, params=None, start_datetime=datetime.now(UTC), end_datetime=datetime.now(UTC), run_quantity=None, private=True, event_id=None, fixed_time=None):
         self.name = name
         self.start_datetime = start_datetime
         if not run_quantity:
@@ -44,6 +45,7 @@ class TaskSchedulerModel(db.Model):
         self.running = False
         self.queued = False
         self.event_id = event_id
+        self.fixed_time = fixed_time
 
     def enable_task(self):
         self.active = True

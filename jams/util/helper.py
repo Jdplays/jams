@@ -875,10 +875,19 @@ def get_volunteer_attendance_url():
 def add_or_update_volunteer_attendance(user_id, event_id, setup, main, packdown, note):
     attendance = VolunteerAttendance.query.filter_by(user_id=user_id, event_id=event_id).first()
 
+    attendance_changed = True
+
     if not attendance:
         attendance = VolunteerAttendance(event_id=event_id, user_id=user_id, setup=setup, main=main, packdown=packdown, note=note)
         db.session.add(attendance)
+        attendance_changed = True
     else:
+        attendance_changed = (
+            setup != attendance.setup or
+            main != attendance.main or
+            packdown != attendance.packdown
+        )
+        
         attendance.setup = setup
         attendance.main = main
         attendance.packdown = packdown
@@ -900,7 +909,7 @@ def add_or_update_volunteer_attendance(user_id, event_id, setup, main, packdown,
 
     db.session.commit()
 
-    if get_config_value(ConfigType.DISCORD_BOT_ENABLED):
+    if get_config_value(ConfigType.DISCORD_BOT_ENABLED) and attendance_changed:
         send_or_update_latest_rsvp_reminder_to_confirm(attendance)
     
     return attendance

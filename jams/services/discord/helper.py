@@ -20,17 +20,32 @@ def send_or_update_latest_rsvp_reminder_to_confirm(volunteer_attendance):
     attending_packdown = volunteer_attendance.packdown
 
     if not attending_setup and not attending_main and not attending_packdown:
+        # No to all
         new_message = '😞 No problem! Thanks for letting us know.'
     elif all([attending_setup, attending_main, attending_packdown]):
-        new_message = '😃 Thats great news! Thank you.'
-    elif attending_setup and not (attending_main and attending_packdown):
-        new_message = '😃 Really appreciate the support before the Jam!'
-    elif attending_packdown and not (attending_main and attending_setup):
-        new_message = '😃 Really appreciate the support after the Jam!'
-    elif attending_main and not (attending_setup and attending_packdown):
-        new_message = '😃 Great, we\'ll see you there!'
+        # Yes to all
+        new_message = '🥳 That\'s great news, Thank you!'
+    elif attending_setup and not attending_main and not attending_packdown:
+        # Just Setup
+        new_message = '🧰 Really appreciate the support before the Jam!'
+    elif attending_packdown and not attending_main and not attending_setup:
+        # Just Packdown
+        new_message = '🧹 Really appreciate the support after the Jam!'
+    elif (attending_setup and attending_packdown) and not attending_main:
+        # Setup and Packdown
+        new_message = '🛠️ Really appreciate the support before and after the Jam!'
+    elif (attending_setup and attending_main) and not attending_packdown:
+        # Setup and Main
+        new_message = '😃 Great, we\'ll try to not stretch setup out too long.'
+    elif (attending_packdown and attending_main) and not attending_setup:
+        # Packdown and Main
+        new_message = '😃 Perfect, thanks for the support during and after the Jam!'
+    elif attending_main and not attending_setup and not attending_packdown:
+        # Just the main event
+        new_message = '🎯 Great, we\'ll see you there!'
     else:
-        new_message = '✅ Thanks for filling in the form!' # More of a fallback
+        # More of a fallback
+        new_message = '✅ Thanks for filling in the form!'
 
     full_message = f"**{new_message}**\nIf plans change, you can update your response any time on JAMS."
 
@@ -45,10 +60,11 @@ def send_or_update_latest_rsvp_reminder_to_confirm(volunteer_attendance):
 
     if latest_reminder:
         DiscordBot.update_dm_to_user(
-            msg_obj=latest_reminder,
+            message_db_id=latest_reminder.id,
             new_content=full_message,
             new_view_type=DiscordMessageView.RSVP_COMPLETE_VIEW,
-            new_message_type=DiscordMessageType.RSVP_COMPLETE
+            new_message_type=DiscordMessageType.RSVP_COMPLETE,
+            active=False
         )
     else:
         attendance_url = get_volunteer_attendance_url()
@@ -59,7 +75,8 @@ def send_or_update_latest_rsvp_reminder_to_confirm(volunteer_attendance):
             message_type=DiscordMessageType.RSVP_COMPLETE,
             view_type=DiscordMessageView.RSVP_COMPLETE_VIEW,
             view_data={'url': attendance_url},
-            event_id=volunteer_attendance.event_id
+            event_id=volunteer_attendance.event_id,
+            active=False
 
         )
 
