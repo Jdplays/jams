@@ -120,7 +120,6 @@ def get_discord_user_info(access_token):
 def start_server():
     from jams import DiscordBot
     DiscordBot.start()
-    DiscordBot.save_guild_list()
 
 def stop_server():
     from jams import DiscordBot
