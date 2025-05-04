@@ -139,3 +139,6 @@ def prep_app(app):
     global DiscordBot
     DiscordBot = DiscordBotServer()
     DiscordBot.init_app(app)
+
+    if get_config_value(ConfigType.DISCORD_BOT_ENABLED):
+        DiscordBot.start()

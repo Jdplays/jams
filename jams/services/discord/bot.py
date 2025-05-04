@@ -22,6 +22,7 @@ class DiscordBotServer:
         self._app = None
         self._bot = None
         self._client = None
+        self._token = None
         self._loop = None
         self._thread = None
         self._is_running = False
@@ -32,8 +33,6 @@ class DiscordBotServer:
     
     def init_app(self, app):
         self._app = app
-        if get_config_value(ConfigType.DISCORD_BOT_ENABLED):
-            self.start()
     
     def wait_until_ready(self, timeout=None):
         self._ready_event.wait(timeout=timeout)
@@ -48,14 +47,32 @@ class DiscordBotServer:
 
     def get_guild_list(self):
         return self._guild_list if self.is_ready() else []
+    
+    def run_bot(self):
+        async def main():
+            try:
+                self._is_running = True
+                self._loop = asyncio.get_running_loop()
+                await self._bot.start(self._token)
+            except Exception as e:
+                logger.error(f"[DiscordBot] Failed to run: {e}")
+            finally:
+                self._is_running = False
+                logger.info("[DiscordBot] Cleaning up event loop...")
+                self._ready_event.clear()
+        
+        try:
+            asyncio.run(main())
+        except Exception as e:
+            logger.error(f"[DiscordBot] run_bot crashed: {e}")
 
     def start(self):
         if self._is_running:
             logger.info("[DiscordBot] Already running.")
             return
 
-        token = get_config_value(ConfigType.DISCORD_BOT_TOKEN)
-        if not token:
+        self._token = get_config_value(ConfigType.DISCORD_BOT_TOKEN)
+        if not self._token:
             logger.error("[DiscordBot] No token found. Skipping bot startup.")
             return
 
@@ -124,28 +141,8 @@ class DiscordBotServer:
             logger.warning(f"[DiscordBot] No handler found for custom_id: {custom_id}")
 
 
-        def run_bot():
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            self._loop = loop
-
-            async def main():
-                try:
-                    self._is_running = True
-                    await self._bot.start(token)
-                except Exception as e:
-                    logger.error(f"[DiscordBot] Failed to run: {e}")
-                finally:
-                    self._is_running = False
-            
-            try:
-                loop.run_until_complete(main())
-            finally:
-                logger.info("[DiscordBot] Cleaning up event loop...")
-                loop.run_until_complete(self._bot.close())
-                loop.close()
-
-        self._thread = threading.Thread(target=run_bot, daemon=True)
+        self._ready_event.clear()
+        self._thread = threading.Thread(target=self.run_bot, daemon=True)
         self._thread.start()
 
     def stop(self):
@@ -155,37 +152,32 @@ class DiscordBotServer:
 
         logger.info("[DiscordBot] Shutting down bot...")
 
-
         async def shutdown():
             await self._bot.close()
             logger.info("[DiscordBot] Bot closed.")
-            self._is_running = False
 
 
-        if self._loop and self._loop.is_running():
+        if self._bot:
             try:
                 future = asyncio.run_coroutine_threadsafe(shutdown(), self._loop)
                 future.result(timeout=10)
-                logger.info("[DiscordBot] Shutdown completed.")
             except Exception as e:
                 logger.error(f"[DiscordBot] Failed to shut down bot: {e}")
             
-            # Wait for the bot thread to exit
-            if self._thread:
-                self._thread.join(timeout=5)
-                logger.info("[DiscordBot] Bot thread joined.")
+        if self._thread:
+            self._thread.join(timeout=5)
 
-            # Clean up references so we know it’s shut down
-            self._thread = None
-            self._loop = None
-            self._bot = None
-            self._client = None
-            self._is_running = False
-            self._ready_event = threading.Event()
+        # Clean up
+        self._bot = None
+        self._client = None
+        self._token = None
+        self._loop = None
+        self._thread = None
+        self._is_running = False
+        self._guild_id = None
+        self._guild_list = []
+        self._ready_event.clear()
 
-            logger.info("[DiscordBot] Shutdown complete.")
-        else:
-            logger.warning("[DiscordBot] Event loop is not running; skipping shutdown coroutine.")
 
     def send_message_to_channel(self, channel_id, message):
         async def _send():
