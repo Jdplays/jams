@@ -4,6 +4,7 @@ from jams.models import db, User, Role, Workshop, Event, Location, Timeslot, Dif
 from jams.util.database import create_event
 from jams.endpoint_loader import generate_full_rbac
 from jams.configuration import ConfigType, set_config_value
+from jams.util.task_scheduler import create_background_task
 from flask_security.utils import hash_password
 import datetime
 
@@ -13,6 +14,7 @@ def preform_seed():
     seed_difficulty_levels()
     seed_workshop_types()
     seed_config()
+    create_background_task()
 
 def seed_users():
     # Check if the Admin user already exists

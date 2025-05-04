@@ -3,13 +3,17 @@ import time
 import functools
 from enum import Enum
 from datetime import datetime, timedelta, UTC
+from datetime import time as dt_time
 from concurrent.futures import ThreadPoolExecutor
+
+from sqlalchemy import or_
 from jams.models import db, TaskSchedulerModel
 from jams.util import task_scheduler_funcs
 
 class TaskActionEnum(Enum):
     UPDATE_EVENTBRITE_EVENT_ATTENDEES = 'update_eventbrite_event_attendees'
     POST_EVENT_TASK = 'post_event_task'
+    BACKGROUND_TASK = 'background_task'
 
 class TaskScheduler:
     def __init__(self, app, interval=60, max_workers=4) -> None:
@@ -69,6 +73,12 @@ class TaskScheduler:
 
                 task.queued = False
 
+                if task.fixed_time is not None:
+                    task.next_run_datetime = datetime.combine(
+                        task.next_run_datetime.date(),
+                        task.fixed_time
+                    )
+
                 db.session.commit()
 
     def check_tasks(self):
@@ -87,7 +97,7 @@ class TaskScheduler:
 
         tasks = TaskSchedulerModel.query.filter(
             TaskSchedulerModel.next_run_datetime <= now,
-            TaskSchedulerModel.end_datetime >= now,
+            or_(TaskSchedulerModel.end_datetime == None, TaskSchedulerModel.end_datetime >= now),
             TaskSchedulerModel.running == False,
             TaskSchedulerModel.active == True,
             TaskSchedulerModel.queued == False
@@ -115,10 +125,13 @@ class TaskScheduler:
 
                 match task.action_enum:
                     case TaskActionEnum.UPDATE_EVENTBRITE_EVENT_ATTENDEES.name:
-                        task_scheduler_funcs.update_event_attendees_task(**task.params)
+                        task_scheduler_funcs.update_event_attendees_task(**task.params or {})
                         return
                     case TaskActionEnum.POST_EVENT_TASK.name:
-                        task_scheduler_funcs.post_event_task(**task.params)
+                        task_scheduler_funcs.post_event_task(**task.params or {})
+                        return
+                    case TaskActionEnum.BACKGROUND_TASK.name:
+                        task_scheduler_funcs.background_task(**task.params or {})
                         return
                     
             except Exception as e:
@@ -126,8 +139,10 @@ class TaskScheduler:
                 raise e
 
 
-def create_task(name, action_enum:TaskActionEnum, interval, params=None, start_datetime=datetime.now(UTC), end_datetime=datetime.now(UTC), run_quantity=None, private=True):
-    new_task:TaskSchedulerModel = TaskSchedulerModel(name=name, action_enum=action_enum.name, interval=interval, params=params, start_datetime=start_datetime, end_datetime=end_datetime, run_quantity=run_quantity, private=private)
+def create_task(name, action_enum:TaskActionEnum, interval, params=None, start_datetime=datetime.now(UTC), end_datetime=datetime.now(UTC), run_quantity=None, private=True, event_id=None, forever=False, fixed_time=None):
+    if forever:
+        end_datetime = None
+    new_task:TaskSchedulerModel = TaskSchedulerModel(name=name, action_enum=action_enum.name, interval=interval, params=params, start_datetime=start_datetime, end_datetime=end_datetime, run_quantity=run_quantity, private=private, event_id=event_id, fixed_time=fixed_time)
     existing_task:TaskSchedulerModel = TaskSchedulerModel.query.filter_by(name=name).first()
 
     if existing_task:
@@ -139,6 +154,8 @@ def create_task(name, action_enum:TaskActionEnum, interval, params=None, start_d
         existing_task.end_datetime = new_task.end_datetime
         existing_task.next_run_datetime = new_task.next_run_datetime
         existing_task.private = new_task.private
+        existing_task.event_id = new_task.event_id
+        existing_task.fixed_time = new_task.fixed_time
 
         db.session.commit()
         return
@@ -185,7 +202,8 @@ def create_event_tasks(event):
             end_datetime=end_date,
             action_enum=TaskActionEnum.POST_EVENT_TASK,
             interval=timedelta(days=1),
-            params=params_dict
+            params=params_dict,
+            event_id=event.id
         )
 
 def update_scheduled_post_event_task_date(event, date):
@@ -200,3 +218,17 @@ def update_scheduled_post_event_task_date(event, date):
         }
     
     modify_task(task_name=task_name, param_dict=params_dict)
+
+
+# Create background task
+def create_background_task():
+    task_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+    fixed_time = dt_time(hour=0, minute=0, second=0, microsecond=0)
+    create_task(
+        name='background_task',
+        start_datetime=task_start,
+        interval=timedelta(days=1),
+        forever=True,
+        action_enum=TaskActionEnum.BACKGROUND_TASK,
+        fixed_time=fixed_time
+    )

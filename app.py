@@ -2,7 +2,7 @@
 
 import threading
 import time
-from jams import create_app, scheduler
+from jams import create_app, scheduler, DiscordBot
 
 app = create_app()
 
@@ -21,6 +21,9 @@ if __name__ == "__main__":
             time.sleep(1)
     except KeyboardInterrupt:
         print('Shutting Down...')
-        print('Finishing running tasks... Please wait')
         if scheduler:
+            print('Finishing running tasks... Please wait')
             scheduler.stop()
+        if DiscordBot and DiscordBot._is_running:
+            print('Shutting down Discord bot... Please wait')
+            DiscordBot.stop()

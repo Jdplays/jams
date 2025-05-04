@@ -14,6 +14,7 @@ from jams.util.database import create_event
 from jams.util.task_scheduler import create_event_tasks, update_scheduled_post_event_task_date
 from jams.util.database import fetch_event_sessions
 from jams.util.sse import sse_stream
+from jams import logger
 
 # Use gevent.sleep if available to avoid blocking the event loop.
 # Falls back to time.sleep in development or if gevent is not installed.
@@ -182,6 +183,41 @@ def activate_user(user_id):
     db.session.commit()
 
     return jsonify({'message': 'The user has been successfully activated'})
+
+
+@bp.route('/users/me/config', methods=['POST'])
+@api_route
+def update_user_config():
+    user = User.query.filter_by(id=current_user.id).first_or_404()
+
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
+    
+    try:
+        user.update_config(data)
+    except Exception as e:
+        logger.error(f'An error occurred when updating user config: {e}')
+        return jsonify({'message': 'Unknown error occurred'}), 400
+
+    return jsonify({
+        'message': 'The user config has been successfully updated',
+        'data': user.to_dict()})
+
+@bp.route('/users/me/discord/unlink', methods=['POST'])
+@api_route
+def unlink_user_discord():
+    user = User.query.filter_by(id=current_user.id).first_or_404()
+    
+    try:
+        user.config.unlink_discord()
+    except Exception as e:
+        logger.error(f'An error occurred when unlinking user discord: {e}')
+        return jsonify({'message': 'Unknown error occurred'}), 400
+
+    return jsonify({
+        'message': 'Discord Account unlinked',
+        'data': user.to_dict()})
 
 #------------------------------------------ ROLE ------------------------------------------#
 

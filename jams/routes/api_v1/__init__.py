@@ -11,3 +11,9 @@ api_v1_bp.register_blueprint(private_bp)
 api_v1_bp.register_blueprint(public_bp)
 api_v1_bp.register_blueprint(integrations_bp)
 api_v1_bp.register_blueprint(webhooks_bp)
+
+@api_v1_bp.route('discord-test')
+def discord_test():
+    from jams.util.task_scheduler_funcs import background_task
+    background_task()
+    return 'Message Sent!'

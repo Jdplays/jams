@@ -162,14 +162,14 @@ export function waitForTransitionEnd(element:HTMLElement):Promise<void> {
 
 type OnAnyFunc = (ev: globalThis.Event) => void
 // Creates a generic dropdown based on inputs
-export function createDropdown(options:any[], defualtOptionText:string, onChangeFunc:OnAnyFunc):HTMLSelectElement {
+export function createDropdown(options:any[], defaultOptionText:string, onChangeFunc:OnAnyFunc, defaultValue:any=null):HTMLSelectElement {
     const select = document.createElement('select')
     const defaultOptionsElement = document.createElement('option');
-    defaultOptionsElement.innerText = defualtOptionText
+    defaultOptionsElement.innerText = defaultOptionText
     defaultOptionsElement.disabled = true;
     defaultOptionsElement.selected = true;
     defaultOptionsElement.hidden = true;
-    const defaultOptionData = options.filter(op => op.name === defualtOptionText)
+    const defaultOptionData = options.filter(op => op.name === defaultOptionText)
     if (defaultOptionData.length > 0) {
         defaultOptionsElement.value = defaultOptionData[0].id;
     }
@@ -182,6 +182,10 @@ export function createDropdown(options:any[], defualtOptionText:string, onChange
     }
 
     select.onchange = onChangeFunc
+
+    if (defaultValue !== null) {
+        select.value = defaultValue
+    }
 
     return select
 }

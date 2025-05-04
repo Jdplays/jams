@@ -51,18 +51,15 @@ def get_user_attendance(user_id, event_id):
 
 
 @bp.route('/users/<int:user_id>/volunteer_attendences/<int:event_id>', methods=['POST'])
+@bp.route('/users/<int:user_id>/volunteer_attendences/<int:event_id>', methods=['PATCH'])
 @protect_user_updates
 @api_route
-def add_user_attendance(user_id, event_id):
+def edit_user_attendance(user_id, event_id):
     event = Event.query.filter_by(id=event_id).first_or_404()
     if event.date.date() < datetime.now(UTC).date():
         return jsonify({'message': 'Cannot update attendance for a past event'}), 400
 
     User.query.filter_by(id=user_id).first_or_404()
-    att = VolunteerAttendance.query.filter_by(user_id=user_id, event_id=event_id).first()
-
-    if att is not None:
-        return edit_user_attendance(user_id=user_id, event_id=event_id)
 
     data = request.get_json()
     if not data:
@@ -73,64 +70,18 @@ def add_user_attendance(user_id, event_id):
     packdown = bool(data.get('packdown'))
     note = data.get('note')
 
-    attendance = VolunteerAttendance(event_id=event_id, user_id=user_id, setup=setup, main=main, packdown=packdown, note=note)
-    db.session.add(attendance)
-    db.session.commit()
+    attendance = helper.add_or_update_volunteer_attendance(
+        user_id=user_id,
+        event_id=event_id,
+        setup=setup,
+        main=main,
+        packdown=packdown,
+        note=note
+    )
 
-    # Create fire list entry
-    fire_list_entry = FireList.query.filter_by(event_id=event_id, user_id=user_id).first()
-    if attendance.main:
-        if not fire_list_entry:
-            fire_list_entry = FireList(event_id=event_id, user_id=user_id)
-            db.session.add(fire_list_entry)
-            db.session.commit()
-    else:
-        if fire_list_entry:
-            db.session.delete(fire_list_entry)
-            db.session.commit()
-
-    return jsonify({
-        'message': 'Volunteer Attendance has been successfully added',
-        'data': attendance.to_dict()
-    })
-
-
-@bp.route('/users/<int:user_id>/volunteer_attendences/<int:event_id>', methods=['PATCH'])
-@protect_user_updates
-@api_route
-def edit_user_attendance(user_id, event_id):
-    event = Event.query.filter_by(id=event_id).first_or_404()
-    if event.date.date() < datetime.now(UTC).date():
-        return jsonify({'message': 'Cannot update attendance for a past event'}), 400
-    User.query.filter_by(id=user_id).first_or_404()
-    attendance = VolunteerAttendance.query.filter_by(user_id=user_id, event_id=event_id).first_or_404()
-
-    data = request.get_json()
-    if not data:
-        abort(400, description="No data provided")
     
-    # Update each allowed field
-    allowed_fields = list(attendance.to_dict().keys())
-    for field, value in data.items():
-        if field in allowed_fields:
-            setattr(attendance, field, value)
-
-    db.session.commit()
-
-    # Create fire list entry
-    fire_list_entry = FireList.query.filter_by(event_id=event_id, user_id=user_id).first()
-    if attendance.main:
-        if not fire_list_entry:
-            fire_list_entry = FireList(event_id=event_id, user_id=user_id)
-            db.session.add(fire_list_entry)
-            db.session.commit()
-    else:
-        if fire_list_entry:
-            db.session.delete(fire_list_entry)
-            db.session.commit()
-
     return jsonify({
-        'message': 'Volunteer Attendance has been successfully edited',
+        'message': 'Volunteer Attendance has been successfully updated',
         'data': attendance.to_dict()
     })
 

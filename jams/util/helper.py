@@ -8,6 +8,7 @@ from sqlalchemy import Date, DateTime, String, Integer, Boolean, cast, func, or_
 from collections.abc import Mapping, Iterable
 from jams.models import db, EventLocation, EventTimeslot, Timeslot, Session, EndpointRule, RoleEndpointRule, PageEndpointRule, RolePage, Page, Event, User, Role, AttendanceStreak, UserRoles, VolunteerAttendance, FireList, VolunteerSignup
 from jams.configuration import ConfigType, get_config_value
+from jams.services.discord.helper import send_or_update_latest_rsvp_reminder_to_confirm
 
 
 from jams.models.api import APIKey
@@ -850,3 +851,65 @@ def remove_event_name_prefix(event_name):
     if not prefix:
         return event_name
     return event_name.removeprefix(prefix).strip()
+
+def is_event_over(event_id):
+    event = Event.query.filter_by(id=event_id).first()
+    if not event:
+        return True
+    
+    now = datetime.now(UTC).replace(tzinfo=None)
+    return now > event.end_date_time
+
+def ordinal(n):
+    if 11 < (n % 100) <= 13:
+        suffix = 'th'
+    else:
+        suffix = {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')
+    return f'{n}{suffix}'
+
+def get_volunteer_attendance_url():
+    base_url = get_config_value(ConfigType.APP_URL)
+    attendance_url = f'{base_url}/private/volunteer/attendance'
+    return attendance_url
+
+def add_or_update_volunteer_attendance(user_id, event_id, setup, main, packdown, note):
+    attendance = VolunteerAttendance.query.filter_by(user_id=user_id, event_id=event_id).first()
+
+    attendance_changed = True
+
+    if not attendance:
+        attendance = VolunteerAttendance(event_id=event_id, user_id=user_id, setup=setup, main=main, packdown=packdown, note=note)
+        db.session.add(attendance)
+        attendance_changed = True
+    else:
+        attendance_changed = (
+            setup != attendance.setup or
+            main != attendance.main or
+            packdown != attendance.packdown
+        )
+        
+        attendance.setup = setup
+        attendance.main = main
+        attendance.packdown = packdown
+        attendance.note = note
+        attendance.timestamp = datetime.now(UTC)
+    
+    # Create fire list entry
+    fire_list_entry = FireList.query.filter_by(event_id=event_id, user_id=user_id).first()
+    if attendance.main:
+        if not fire_list_entry:
+            fire_list_entry = FireList(event_id=event_id, user_id=user_id)
+            db.session.add(fire_list_entry)
+            db.session.commit()
+    else:
+        if fire_list_entry:
+            db.session.delete(fire_list_entry)
+            db.session.commit()
+
+
+    db.session.commit()
+
+    if get_config_value(ConfigType.DISCORD_BOT_ENABLED) and attendance_changed:
+        send_or_update_latest_rsvp_reminder_to_confirm(attendance)
+    
+    return attendance

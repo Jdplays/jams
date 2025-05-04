@@ -21,9 +21,11 @@ from jams.configuration import config_entry_exists, get_config_value, ConfigType
 from jams.util.task_scheduler import TaskScheduler
 from jams.util import attendee_auth
 from jams.util.enums import APIKeyType
+from jams.services.discord.bot import DiscordBotServer
 
 logger = logging.getLogger(__name__)
 scheduler = None
+DiscordBot = None
 hmac_secret = None
 
 def create_app():
@@ -74,7 +76,7 @@ def create_app():
         # Create database tables
         db.create_all()
 
-        # Only run prep app when the app is actually starting. Dont runn it when db migrate or shell is running
+        # Only run prep app when the app is actually starting. Dont run it when db migrate or shell is running
         if not ('db' in sys.argv or 'shell' in sys.argv):
             prep_app(app)
         
@@ -132,3 +134,11 @@ def prep_app(app):
     websocket_server_thread = threading.Thread(target=WSS.run)
     websocket_server_thread.daemon = True
     websocket_server_thread.start()
+
+    # Try start discord bot
+    global DiscordBot
+    DiscordBot = DiscordBotServer()
+    DiscordBot.init_app(app)
+
+    if get_config_value(ConfigType.DISCORD_BOT_ENABLED):
+        DiscordBot.start()
