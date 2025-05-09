@@ -5,7 +5,8 @@ import {
     editEvent,
     archiveEvent,
     activateEvent,
-    regenerateEventTasks
+    regenerateEventTasks,
+    syncEventbriteEvent
 } from "@global/endpoints"
 import { RequestMultiModelJSONData, Event } from "@global/endpoints_interfaces";
 import { buildActionButtonsForModel, successToast, errorToast, isDefined, buildArchiveActivateButtonForModel, formatDateToShort, isNullEmptyOrSpaces, buildQueryString } from "@global/helper";
@@ -259,6 +260,16 @@ function regenerateEventTasksOnClick() {
     })
 }
 
+function syncEventbriteOnClick() {
+    const eventId:number = Number((document.getElementById('edit-external-event-id') as HTMLInputElement).value)
+    syncEventbriteEvent(eventId).then((response) => {
+        successToast(response.message)
+    }).catch((error) => {
+        const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
+        errorToast(errorMessage)
+    })
+}
+
 
 // Event listeners
 document.addEventListener("DOMContentLoaded", initialiseAgGrid);
@@ -268,5 +279,6 @@ document.addEventListener("DOMContentLoaded", () => {
         (<any>window).unlinkExternalEventOnClick = unlinkExternalEventOnClick;
         (<any>window).applyQuickFilter = applyQuickFilter;
         (<any>window).regenerateEventTasksOnClick = regenerateEventTasksOnClick;
+        (<any>window).syncEventbriteOnClick = syncEventbriteOnClick;
     }
 });
