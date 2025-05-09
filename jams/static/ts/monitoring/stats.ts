@@ -4,6 +4,7 @@ import { createEventSelectionDropdown, emptyElement, eventDropdownItemText, isDe
 import { CheckInTrendStat, WorkshopPopularityStat } from "@global/interfaces";
 import { getLiveEventStats } from "@global/sse_endpoints";
 import ApexCharts from "apexcharts";
+import { format } from 'date-fns';
 
 let liveCheckinTrendChart:ApexCharts = null
 let eventId:number = null
@@ -19,7 +20,12 @@ const checkinChartOptions: ApexCharts.ApexOptions = {
     dataLabels: {
         enabled: false // Hides the value labels on bars
     },
-    xaxis: { type: "datetime", labels: { format: "HH:mm" } },
+    xaxis: {
+        labels: {
+            rotate: -45,
+            style: { fontSize: '10px' }
+        }
+    },
     yaxis: { title: { text: "Count" } },
     plotOptions: {
         bar: {
@@ -384,17 +390,21 @@ function updateCheckinTrend(chart:ApexCharts, data:CheckInTrendStat[]) {
     const latestTime = parsedData[parsedData.length - 1].timestamp
 
     // Generate 5-minute interval time slots
-    const intervalMs = 10 * 60 * 1000
-    const timeBuckets = new Map<number, { checkins: number; checkouts: number }>()
+    const isMobile = window.innerWidth < 768
+    const intervalMinutes = isMobile ? 30 : 10
+    const intervalMs = intervalMinutes * 60 * 1000
+    const timeBuckets = new Map<string, { checkins: number; checkouts: number }>()
 
     for (let time = earliestTime; time <= latestTime; time += intervalMs) {
-        timeBuckets.set(time, {checkins: 0, checkouts: 0})
+        const dt = format(new Date(time), 'HH:mm')
+        timeBuckets.set(dt, {checkins: 0, checkouts: 0})
     }
 
     // Fill in actual data points
     parsedData.forEach(({ timestamp, checkins, checkouts }) => {
         const roundedTime = Math.floor(timestamp / intervalMs) * intervalMs
-        timeBuckets.set(roundedTime, {checkins, checkouts})
+        const dt = format(new Date(roundedTime), 'HH:mm')
+        timeBuckets.set(dt, {checkins, checkouts})
     })
 
     // Convert Map back to array for ApexCharts
