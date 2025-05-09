@@ -68,7 +68,7 @@ class Event(db.Model):
     
     def get_metadata(self):
         from jams.models import Attendee
-        attendee_count = Attendee.query.filter(and_(Attendee.event_id == self.id, Attendee.registerable == True)).count()
+        attendee_count = Attendee.query.filter(and_(Attendee.event_id == self.id, Attendee.registerable == True, Attendee.canceled == False)).count()
         return {
             'id': self.id,
             'attendee_count': attendee_count
