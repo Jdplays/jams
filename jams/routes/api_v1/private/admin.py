@@ -9,11 +9,12 @@ from jams.models import db, User, Role, Event, EventLocation, EventTimeslot, Ses
 from jams.util import helper
 from jams.util import files
 from jams.endpoint_loader import generate_roles_file_from_db, update_pages_assigned_to_role
-from jams.integrations.eventbrite import deactivate_event_update_tasks
+from jams.integrations.eventbrite import deactivate_event_update_tasks, sync_all_attendees_at_event
 from jams.util.database import create_event
 from jams.util.task_scheduler import create_event_tasks, update_scheduled_post_event_task_date
 from jams.util.database import fetch_event_sessions
 from jams.util.sse import sse_stream
+from jams import logger
 
 # Use gevent.sleep if available to avoid blocking the event loop.
 # Falls back to time.sleep in development or if gevent is not installed.
@@ -455,6 +456,17 @@ def activate_event(event_id):
     db.session.commit()
 
     return jsonify({'message': 'The event has been successfully activated'})
+
+@bp.route('/events/<int:event_id>/eventbrite/sync', methods=['POST'])
+@api_route
+def sync_eventbrite_event(event_id):
+    event = Event.query.filter_by(id=event_id).first_or_404()
+    try:
+        sync_all_attendees_at_event(event.external_id)
+    except Exception as e:
+        logger.error(f'An error occurred while trying to sync eventbrite event: {e}')
+        return jsonify({'message': 'An unknown error occurred'}), 500
+    return jsonify({'message': 'Eventbrite sync started'}), 200
 
 #------------------------------------------ EVENT LOCATION / TIMESLOT ------------------------------------------#
 

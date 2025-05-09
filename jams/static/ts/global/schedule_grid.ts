@@ -1415,7 +1415,7 @@ export class ScheduleGrid {
 
                 capacityText.innerHTML = String(timeslotCapacity.capacity)
                 overflowText.innerHTML = `+${timeslotCapacity.overflow}`
-                const totalCapacity = Math.ceil(this.eventMetadata.attendee_count * 0.75)
+                const totalCapacity = this.eventMetadata.attendee_count
                 totalCapacityText.innerHTML = String(totalCapacity)
 
                 // Style the text

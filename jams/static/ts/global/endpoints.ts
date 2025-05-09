@@ -1000,6 +1000,22 @@ export function regenerateEventTasks(eventID:number):Promise<ApiResponse<any>> {
     });
 }
 
+export function syncEventbriteEvent(eventID:number):Promise<ApiResponse<any>> {
+    return new Promise((resolve) => {
+        $.ajax({
+            type: 'POST',
+            url: `${baseURL}/events/${eventID}/eventbrite/sync`,
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(error)
+            }
+        });
+    });
+}
+
 export function archiveEvent(eventID:number):Promise<boolean> {
     return new Promise((resolve) => {
         $.ajax({

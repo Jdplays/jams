@@ -84,6 +84,7 @@ groups:
       check_in_event_fire_list_item: routes.api_v1.private.event.check_in_fire_list_item
       check_out_event_fire_list_item: routes.api_v1.private.event.check_out_fire_list_item
       regenerate_event_tasks: routes.api_v1.private.admin.regenerate_event_tasks
+      sync_eventbrite_event: routes.api_v1.private.admin.sync_eventbrite_event
 
   users:
     description: Manages user information
@@ -101,7 +102,7 @@ groups:
       archive_user: routes.api_v1.private.admin.archive_user
   
   volunteer:
-    description: Manages voluntter information
+    description: Manages volunteer information
     read:
       get_user_attendance: routes.api_v1.private.volunteer.get_user_attendance
     write:
