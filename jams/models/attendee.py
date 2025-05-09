@@ -23,11 +23,12 @@ class Attendee(db.Model):
     attendee_account_id = Column(Integer(), ForeignKey('attendee_account.id'), nullable=True)
     last_update_source = Column(String(100), nullable=False, default=AttendeeSource.LOCAL.name, server_default=AttendeeSource.LOCAL.name)
     label_printed = Column(Boolean, nullable=False, default=False, server_default='false')
+    canceled = Column(Boolean, nullable=False, default=False, server_default='false')
 
     event = relationship('Event', backref='attendees')
     attendee_account = relationship('AttendeeAccount', backref='attendees')
 
-    def __init__(self, event_id, name, external_id=None, email=None, checked_in=False, registerable=True, age=None, gender=None, external_order_id=None, source=AttendeeSource.LOCAL.name, lable_printed=False):
+    def __init__(self, event_id, name, external_id=None, email=None, checked_in=False, registerable=True, age=None, gender=None, external_order_id=None, source=AttendeeSource.LOCAL.name, label_printed=False, canceled=False):
         self.event_id = event_id
         self.name = name
         self.external_id = external_id
@@ -39,7 +40,8 @@ class Attendee(db.Model):
         self.external_order_id = external_order_id
         self.source = source
         self.last_update_source = self.source
-        self.label_printed = lable_printed
+        self.label_printed = label_printed
+        self.canceled = canceled
     
     def link_to_account(self):
         # Link attendee to attendee account
@@ -116,7 +118,8 @@ class Attendee(db.Model):
             'external_order_id': self.external_order_id,
             'source': self.source,
             'attendee_account_id': self.attendee_account_id,
-            'label_printed': self.label_printed
+            'label_printed': self.label_printed,
+            'canceled': self.canceled
         }
     
 class AttendeeAccount(db.Model):

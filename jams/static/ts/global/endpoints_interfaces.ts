@@ -307,6 +307,7 @@ export interface Attendee {
     external_order_id:string
     source:string
     label_printed:boolean
+    canceled:boolean
 }
 
 export interface AttendeeLogin {

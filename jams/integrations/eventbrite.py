@@ -182,6 +182,7 @@ def update_or_add_attendee_from_data(attendee_JSON):
     external_order_id = attendee_JSON.get('order_id')
     external_attendee_id = attendee_JSON.get('id')
     external_event_id = attendee_JSON.get('event_id')
+    canceled = attendee_JSON.get('cancelled', False)
 
     registerable = False
     ticket_type = attendee_JSON.get('ticket_class_name')
@@ -215,7 +216,7 @@ def update_or_add_attendee_from_data(attendee_JSON):
     attendee = Attendee.query.filter_by(external_id=external_attendee_id).first()
 
     if not attendee:
-        attendee = Attendee(name=name, email=email, external_order_id=external_order_id, external_id=external_attendee_id, event_id=event.id, registerable=registerable, age=age, gender=gender, source=AttendeeSource.EVENTBRITE.name)
+        attendee = Attendee(name=name, email=email, external_order_id=external_order_id, external_id=external_attendee_id, event_id=event.id, registerable=registerable, age=age, gender=gender, source=AttendeeSource.EVENTBRITE.name, canceled=canceled)
         db.session.add(attendee)
         db.session.commit()
     else:
@@ -225,6 +226,7 @@ def update_or_add_attendee_from_data(attendee_JSON):
             attendee.registerable = registerable
             attendee.age = age
             attendee.gender = gender
+            attendee.canceled = canceled
 
             db.session.commit()
     
