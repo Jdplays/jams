@@ -97,7 +97,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         
         const eventEnd = new Date(event.end_date_time)
         const nextStreakUpdateDate = new Date(eventEnd)
-        nextStreakUpdateDate.setUTCHours(eventEnd.getUTCHours() + 1)
+        nextStreakUpdateDate.setHours(eventEnd.getHours() + 1)
 
         if (timeUntilText !== null) {
             window.setInterval(() => {
