@@ -43,7 +43,7 @@ def get_live_event_stats(event_id, mode):
     # Reentry rate
 
     checked_in_count = Attendee.query.filter(Attendee.event_id == event_id, Attendee.checked_in == True).count()
-    total_count = Attendee.query.filter_by(event_id=event_id).count()
+    total_count = Attendee.query.filter(Attendee.event_id == event_id, Attendee.canceled == False).count()
     total_checked_in_attendees = calculate_total_checked_in_attendees(event_id)
     check_in_trend = calculate_check_in_trend(event_id)
 
@@ -160,8 +160,7 @@ def calculate_average_leave_time(event_id):
     
     avg_checkout_timestamp = mean(checkout_times)
     avg_checkout_datetime = datetime.fromtimestamp(avg_checkout_timestamp)
-    localised_datetime = helper.convert_datetime_to_local_timezone(avg_checkout_datetime)
-    return localised_datetime
+    return avg_checkout_datetime
 
 
 def calculate_average_duration(event_id):
@@ -420,7 +419,7 @@ def generate_event_stats(event_id, update=False):
     average_duration = calculate_average_duration(event_id)
     gender_distribution = calculate_gender_distribution(event_id)
     age_distribution = calculate_age_distribution(event_id)
-    total_attendee_count = Attendee.query.filter_by(event_id=event_id).count()
+    total_attendee_count = Attendee.query.filter(Attendee.event_id == event_id, Attendee.canceled == False).count()
     total_checked_in_count = calculate_total_checked_in_attendees(event_id)
     retention_rate = calculate_retention_rate(event_id)
     check_in_trend = calculate_check_in_trend(event_id)

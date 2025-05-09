@@ -132,7 +132,8 @@ async function populateAttendeesTable(init:Boolean = false) {
     const queryData:Partial<QueryStringData> = {
         $order_by: 'checked_in',
         $order_direction: 'DESC',
-        $all_rows: true
+        $all_rows: true,
+        canceled: false
     }
     const queryString = buildQueryString(queryData)
 

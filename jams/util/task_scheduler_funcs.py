@@ -24,7 +24,7 @@ def post_event_task(event_id):
     stats.generate_event_stats(event_id)
 
     # Check out all remaining attendees
-    attendees = Attendee.query.filter(Attendee.event_id == event_id).all()
+    attendees = Attendee.query.filter(Attendee.event_id == event_id, Attendee.checked_in == True).all()
     for attendee in attendees:
         attendee.check_out()
 

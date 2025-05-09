@@ -558,6 +558,8 @@ def format_timedelta(td: timedelta) -> str:
     return ", ".join(parts) if parts else "0 seconds"
 
 def try_parse_int(value):
+    if not value:
+        return None
     try:
         return int(value)
     except ValueError:
