@@ -1,14 +1,14 @@
 #!/bin/bash
 
 # Define the flask app location
-export FLASK_APP=jams
+export FLASK_APP=server
 
 python3 check_db.py > /dev/null 2>&1
 DB_STATUS=$?
 
 # Check if the db is ready
 if [ $DB_STATUS -eq 1 ]; then
-    echo "Databse is ready. Starting application..."
+    echo "Database is ready. Starting application..."
 
     # Check if the migrations directory exists, if not, initialize it
     if [ ! -d "migrations" ] || [ -z "$(ls -A migrations)" ]; then
@@ -21,13 +21,13 @@ if [ $DB_STATUS -eq 1 ]; then
 
     # Prepare the application
     flask shell <<EOF
-from jams import create_app, seed_database
+from server import create_app, seed_database
 app = create_app()
 seed_database(app)
 EOF
 
     # Start Gunicorn
-    exec gunicorn -k gevent -w 1 -b 0.0.0.0:5000 "jams:create_app()"
+    exec gunicorn -b 0.0.0.0:5001 "server:create_app()"
 else
     echo "Database is not ready. Waiting 10 seconds..."
     sleep 10

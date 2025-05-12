@@ -11,31 +11,25 @@ RUN curl -fsSl https://deb.nodesource.com/setup_20.x | bash - \
 # Set the working directory
 WORKDIR /jams
 
-# Copy the current directory contents into the container at /jams
-COPY /jams ./jams
+# App Code
+COPY jams/web ./web
+COPY jams/common ./common
+COPY jams/default_config ./default_config
 
-# Copy the VERSION file into the container
-COPY ./VERSION .
+# Shared files
+COPY config ./config
+COPY requirements.txt .
+COPY LICENSE .
+COPY VERSION .
 
-# Copy the entrypoint.sh file into the container
-COPY ./entrypoint.sh .
-
-# Copy the entrypoint.sh file into the container
-COPY ./requirements.txt .
-
-# Copy the check_db.py file into the container
-COPY ./check_db.py .
-
-# Copy the user config folder into the container
-COPY ./config .
+# Entrypoint and DB check
+COPY jams/infra/docker/web/entrypoint.sh ./entrypoint.sh
+COPY jams/infra/check_db.py ./check_db.py
 
 # Copy required files for typescript
-COPY ./package.json .
-COPY ./tsconfig.json .
-COPY ./docker/webpack-prod.config.mjs ./webpack.config.mjs
-
-# Copy the licence into the container
-COPY ./LICENSE .
+COPY package.json .
+COPY jams/infra/docker/web/tsconfig-prod.json ./tsconfig.json
+COPY jams/infra/docker/web/webpack-prod.config.mjs ./webpack.config.mjs
 
 # Install node packages
 RUN npm i
@@ -44,7 +38,7 @@ RUN npm i
 RUN npm run build
 
 # Remove the typescript files
-RUN rm -rf ./jams/static/ts
+RUN rm -rf ./web/static/ts
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
