@@ -1,0 +1,137 @@
+# API is for serving data to TypeScript/Javascript
+from flask import Blueprint, request, jsonify, abort
+
+from common.integrations import eventbrite
+from common.configuration import ConfigType, get_config_value, set_config_value, create_config_entry, remove_config_entry
+
+from web.util.decorators import api_route, eventbrite_integration_route
+
+bp = Blueprint('eventbrite', __name__, url_prefix='/eventbrite')
+
+# URL PREFIX = /api/v1
+@bp.route('/verify', methods=['POST'])
+@api_route
+def verify():
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
+    
+    custom_token = data.get(ConfigType.EVENTBRITE_BEARER_TOKEN.name)
+    if custom_token == None:
+        abort(400, description="Private token not provided")
+    
+    verified = eventbrite.verify(custom_token)
+
+    return jsonify({'verified': verified})
+
+@bp.route('/organisations', methods=['POST'])
+@api_route
+def get_organisations():
+    data = request.get_json()
+    custom_token = data.get(ConfigType.EVENTBRITE_BEARER_TOKEN.name)
+    if custom_token:
+        organisations = eventbrite.get_organisations(custom_token)
+    else:
+        organisations = eventbrite.get_organisations()
+
+    return jsonify({'organisations': [org.to_dict() for org in organisations]})
+
+@bp.route('/config', methods=['GET'])
+@api_route
+def get_config():
+    eventbrite_config = {}
+
+    enabled = get_config_value(ConfigType.EVENTBRITE_ENABLED)
+    if enabled == None:
+        enabled = False
+
+    eventbrite_config = eventbrite.eventbrite_config_dict()
+
+    return jsonify({'eventbrite_config': eventbrite_config})
+
+@bp.route('/config', methods=['PATCH'])
+@api_route
+def edit_config():
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
+    
+    new_org = False
+    allowed_fields = list(config_item.name for config_item in eventbrite.configItems)
+    for config_name, value in data.items():
+        if config_name in allowed_fields:
+            if value == '' or value == None:
+                remove_config_entry(ConfigType[config_name])
+            if config_name == ConfigType.EVENTBRITE_ORGANISATION_ID.name:
+                if value != get_config_value(ConfigType.EVENTBRITE_ORGANISATION_ID):
+                    new_org = True
+            set_config_value(ConfigType[config_name], value)
+
+    if new_org:
+        remove_config_entry(ConfigType.EVENTBRITE_CONFIG_EVENT_ID)
+        eventbrite.create_eventbrite_webhooks()
+
+    eventbrite_config = {}
+
+    enabled = get_config_value(ConfigType.EVENTBRITE_ENABLED)
+    if enabled == None:
+        enabled = False
+
+
+    eventbrite_config = eventbrite.eventbrite_config_dict()
+
+    return jsonify({'eventbrite_config': eventbrite_config})
+
+@bp.route('/enable', methods=['POST'])
+@api_route
+def enable():
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
+    
+    allowed_fields = list(config_item.name for config_item in eventbrite.configItems)
+    for config_name, value in data.items():
+        if config_name in allowed_fields:
+            if not value:
+                value = ''
+            create_config_entry(ConfigType[config_name], value)
+    
+    eventbrite.create_eventbrite_webhooks()
+
+    return jsonify({'message': 'Eventbrite Integration has been successfully enabled'})
+
+@bp.route('/disable', methods=['DELETE'])
+@api_route
+@eventbrite_integration_route
+def disable():
+    for config in eventbrite.configItems:
+        remove_config_entry(config)
+    eventbrite.deactivate_eventbrite_webhooks()
+    return jsonify({'message': 'Eventbrite Integration has been successfully enabled'})
+
+
+@bp.route('/events', methods=['GET'])
+@api_route
+@eventbrite_integration_route
+def get_events():
+    events = eventbrite.get_events()
+
+    return jsonify({'events': [event.to_dict() for event in events]})
+
+
+@bp.route('/ticket_types', methods=['GET'])
+@api_route
+def get_ticket_types():
+    ticket_types = eventbrite.get_ticket_types()
+
+    if not ticket_types:
+        return jsonify({'ticket_types': []})
+
+    return jsonify({'ticket_types': [tt.to_dict() for tt in ticket_types]})
+
+@bp.route('/custom_questions', methods=['GET'])
+@api_route
+def get_custom_questions():
+    questions = eventbrite.get_custom_questions()
+
+    return jsonify({'questions': [q for q in questions]})
