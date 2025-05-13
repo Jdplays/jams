@@ -5,7 +5,7 @@ from sqlalchemy import and_
 
 from common.models import db, JOLTHealthCheck, APIKey, APIKeyEndpoint, Endpoint, JOLTPrintQueue
 from common.util.enums import APIKeyType, JOLTHealthCheckStatus, JOLTPrintJobType, JOLTPrintQueueStatus
-from common.util import helper
+from common.util import helper, redis_utils
 
 
 def last_healthcheck():
@@ -17,9 +17,8 @@ def last_healthcheck():
     if last_healthcheck and last_healthcheck.status == JOLTHealthCheckStatus.SUCCESS.name:
         online = True
     
-    #TODO: Fetch this from Redis
-    #if len(WSS.connected_clients[APIKeyType.JOLT.name]) == 0:
-    #    online = False
+    if redis_utils.get_jolt_status() == 'offline':
+        online = False
 
     return (last_healthcheck, online)
 
