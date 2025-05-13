@@ -20,7 +20,7 @@ COPY jams/default_config ./default_config
 COPY config ./config
 COPY requirements.txt .
 COPY LICENSE .
-COPY VERSION .
+COPY jams/VERSION .
 
 # Entrypoint and DB check
 COPY jams/infra/docker/web/entrypoint.sh ./entrypoint.sh

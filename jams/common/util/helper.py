@@ -411,7 +411,7 @@ def get_api_key_obj(full_api_token):
 
 def get_app_version():
     script_dir = os.path.dirname(__file__)
-    version_file = os.path.abspath(os.path.join(script_dir, "..", "..", "..", "VERSION"))
+    version_file = os.path.abspath(os.path.join(script_dir, "..", "..", "VERSION"))
     try:
         with open(version_file, "r") as f:
             return f.read().strip()
