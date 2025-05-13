@@ -8,11 +8,13 @@ from urllib.parse import urlparse, parse_qs
 
 from common.util.enums import APIKeyType
 from common.util import helper
+from common.extensions import get_logger
 
 class WebsocketServer:
     def __init__(self):
         self.connected_clients = defaultdict(list)
         self.loop = None
+        self.logger = get_logger('WSS')
     
     def init_app(self, app):
         self.app = app
@@ -38,10 +40,10 @@ class WebsocketServer:
         with self.app.app_context():
             if not helper.validate_api_key(api_token, require_websocket=True):
                 await websocket.close(code=1008)
-                print("Connection closed: invalid API Key")
+                self.logger.info("Connection closed: invalid API Key")
                 return
 
-            print("WebSocket connection established with valid token")
+            self.logger.info("WebSocket connection established with valid token")
             api_key_obj = helper.get_api_key_obj(api_token)
             self.add_client(api_key_obj.type, websocket)
 
@@ -59,19 +61,19 @@ class WebsocketServer:
                     db.session.commit()
 
             except Exception as e:
-                print(f"Error in websocket handler: {e}")
+                self.logger.error(f"Error in websocket handler: {e}")
                 await websocket.close(code=1008)
                 self.remove_client(api_key_obj.type, websocket)
             finally:
                 self.remove_client(api_key_obj.type, websocket)
-                print("Client disconnected")
+                self.logger.info("Client disconnected")
     
     # Internal method for sending a message to a specified group
     async def send_message_to_group(self, message, group):
         if self.connected_clients:
             await asyncio.gather(*[client.send(message) for client in self.connected_clients[group]])
         else:
-            print("No clients are connected to receive the message.")
+            self.logger.warning("No clients are connected to receive the message.")
 
     # Public method to send message to a specified group
     def notify_clients(self, message, group):
@@ -96,7 +98,7 @@ class WebsocketServer:
                     if self.connected_clients[APIKeyType.JOLT.name]:
                         jolt.websocket_loop()
                 except Exception as e:
-                    print(f"Error in websocket Loop: {e}")
+                    self.logger.error(f"Error in websocket Loop: {e}")
     
         
     # A function that processes incoming messages and route them depending on the group the client is in
@@ -106,7 +108,7 @@ class WebsocketServer:
         try:
             json_data = json.loads(message)
         except Exception as e:
-            print(f'Error loading JSON: {e}')
+            self.logger.error(f'Error loading JSON: {e}')
             return
         
         match group:
@@ -117,10 +119,10 @@ class WebsocketServer:
     # The method that starts the websocket server
     def run(self):
         if self.loop is not None and self.loop.is_running():
-            print("WebSocket server already running, skipping.")
+            self.logger.warning("WebSocket server already running, skipping.")
             return
 
-        print('Starting Websocket Server...')
+        self.logger.info('Starting Websocket Server...')
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
 

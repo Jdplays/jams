@@ -50,10 +50,20 @@ oauth = OAuth()
 minio_client = create_minio_client()
 redis_client = create_redis_client()
 
+
 # Dynamically created per app
 def get_logger(name='app'):
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
+
+    # Check if it already has handlers (to avoid duplicates)
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        handler.setLevel(logging.INFO)  # <- ensure handler emits INFO
+        formatter = logging.Formatter('%(asctime)s [%(name)s] %(levelname)s: %(message)s')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+        
     return logger
 
 def create_bucket(minio_client, name, versioning=True):

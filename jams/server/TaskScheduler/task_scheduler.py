@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from common.models import db, TaskSchedulerModel
 from common.util.enums import TaskActionEnum
+from common.extensions import get_logger
 
 from server.TaskScheduler import task_scheduler_funcs
 
@@ -15,12 +16,13 @@ class TaskScheduler:
         self.interval = interval
         self.stop_event = threading.Event()
         self.executor = ThreadPoolExecutor(max_workers=max_workers)
+        self.logger = get_logger('Task-Scheduler')
     
     def init_app(self, app):
         self.app = app
 
     def run(self):
-        print('Starting Task Scheduler...')
+        self.logger.info('Starting Task Scheduler...')
 
         # Reset tasks running state to false
         with self.app.app_context():
@@ -38,7 +40,7 @@ class TaskScheduler:
                 self.check_tasks()
         
     def stop(self):
-        print('Stopping Task Scheduler...')
+        self.logger.info('Stopping Task Scheduler...')
         self.stop_event.set()
         self.executor.shutdown(wait=True)
 

@@ -1,13 +1,10 @@
 import json
-from uuid import uuid4
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta, UTC
 
-from common.models import db, JOLTPrintQueue, JOLTHealthCheck, APIKey, APIKeyEndpoint, Endpoint
-from common.util import helper
-from common.util.enums import JOLTPrintQueueStatus, JOLTPrintJobType, JOLTRequestType, JOLTHealthCheckStatus, APIKeyType
+from common.models import db, JOLTPrintQueue
+from common.util.enums import JOLTPrintQueueStatus, JOLTRequestType, JOLTHealthCheckStatus, APIKeyType
 from common.configuration import ConfigType, get_config_value
-from common.integrations.jolt import last_healthcheck
 
 from server import WSS
 
