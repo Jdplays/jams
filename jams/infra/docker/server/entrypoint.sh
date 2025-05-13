@@ -27,7 +27,7 @@ seed_database(app)
 EOF
 
     # Start Gunicorn
-    exec gunicorn -b 0.0.0.0:5001 "server:create_app()"
+    exec gunicorn -b 127.0.0.1:5001 "server:create_app()"
 else
     echo "Database is not ready. Waiting 10 seconds..."
     sleep 10
