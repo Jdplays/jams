@@ -22,8 +22,9 @@ def clear_rbac():
 
 def generate_endpoints_structure():
     script_dir = os.path.dirname(__file__)
-    pages_yaml_path = os.path.join(script_dir, 'default_config', 'endpoints.yaml')
-    data = load_yaml(pages_yaml_path)
+    jams_root = os.path.abspath(os.path.join(script_dir, '..', '..'))  # goes to jams/
+    endpoints_yaml_path = os.path.join(jams_root, 'default_config', 'endpoints.yaml')
+    data = load_yaml(endpoints_yaml_path)
     groups = data.get('groups', {})
 
     if groups:
@@ -74,7 +75,8 @@ def generate_endpoints_structure():
 
 def generate_page_endpoints_structure():
     script_dir = os.path.dirname(__file__)
-    pages_yaml_path = os.path.join(script_dir, 'default_config', 'pages.yaml')
+    jams_root = os.path.abspath(os.path.join(script_dir, '..', '..'))  # goes to jams/
+    pages_yaml_path = os.path.join(jams_root, 'default_config', 'pages.yaml')
     data = load_yaml(pages_yaml_path)
     pages = data.get('pages', {})
 
@@ -158,7 +160,8 @@ def assign_role_to_page_recursive(role, page, default=False):
 def generate_roles(folder, parent_folder=None, default=False):
     added_roles_names = []
     if not parent_folder:
-        parent_folder = os.path.dirname(__file__)
+        # Go two levels up from this script (from util/ to common/ to jams/)
+        parent_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
     roles_yaml_path = os.path.join(parent_folder, folder, 'roles.yaml')
     data = load_yaml(roles_yaml_path)
     roles = data.get('roles', {})
@@ -190,7 +193,7 @@ def load_all_roles():
 
     added_role_names.extend(generate_roles(folder='default_config', default=True))
     script_dir = os.path.dirname(__file__)
-    parent_dir = os.path.abspath(os.path.join(script_dir, os.pardir))
+    parent_dir = os.path.abspath(os.path.join(script_dir, "..", "..", ".."))  # back to jams/
     added_role_names.extend(generate_roles(folder='config', parent_folder=parent_dir))
 
     current_roles_in_db = Role.query.all()
