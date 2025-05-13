@@ -417,3 +417,6 @@ def get_app_version():
             return f.read().strip()
     except FileNotFoundError:
         return "Unknown"
+    
+def get_hmac_secret():
+    return get_config_value(ConfigType.HMAC_SECRET_KEY)

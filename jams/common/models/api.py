@@ -173,11 +173,11 @@ class APIKey(db.Model):
         self.expiration = expiration
 
     def generate_hmac(self, key):
-        from web import hmac_secret
+        hmac_secret = helper.get_hmac_secret()
         return hmac.new(hmac_secret, key.encode(), hashlib.sha256).hexdigest()
     
     def verify_hmac(self, provided_key):
-        from web import hmac_secret
+        hmac_secret = helper.get_hmac_secret()
         
         calculated_hmac = hmac.new(hmac_secret, provided_key.encode(), hashlib.sha256).hexdigest()
         return hmac.compare_digest(calculated_hmac, self.hmac_key)
