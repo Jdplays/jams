@@ -5,7 +5,7 @@ import base64
 from flask import Flask
 
 from common.app_config import get_app_config
-from common.extensions import db, migrate, minio_client, redis_client, create_bucket
+from common.extensions import db, migrate, redis_client
 from common.configuration import ConfigType, get_config_value, set_config_value, config_entry_exists
 from common import models
 from common.util.helper import get_app_version
@@ -66,10 +66,6 @@ def prep_app(app):
         set_config_value(ConfigType.HTTP_SCHEME, 'https')
     else:
         set_config_value(ConfigType.HTTP_SCHEME, 'http')
-
-    # Make sure required MinIO buckets exist
-    create_bucket(minio_client, 'jams-workshops', True)
-    create_bucket(minio_client, 'user-data', True)
     
     # Setup the task scheduler
     TS.init_app(app)

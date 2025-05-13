@@ -2,7 +2,7 @@ from flask import Flask
 from flask_security import Security, SQLAlchemyUserDatastore
 
 from common.app_config import get_app_config
-from common.extensions import LoginManager, db, migrate, oauth, redis_client
+from common.extensions import LoginManager, db, migrate, oauth, minio_client, redis_client, create_bucket
 from common.configuration import get_config_value
 from common import models
 from common.util.helper import get_app_version
@@ -52,6 +52,10 @@ def create_app():
         # Store the version in Redis
         current_app_version = get_app_version()
         redis_client.set('web:version', current_app_version)
+
+        # Make sure required MinIO buckets exist
+        create_bucket(minio_client, 'jams-workshops', True)
+        create_bucket(minio_client, 'user-data', True)
 
         setup_oauth()
         
