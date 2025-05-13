@@ -16,7 +16,7 @@ class TaskScheduler:
         self.interval = interval
         self.stop_event = threading.Event()
         self.executor = ThreadPoolExecutor(max_workers=max_workers)
-        self.logger = get_logger('Task-Scheduler')
+        self.logger = get_logger('TaskScheduler')
     
     def init_app(self, app):
         self.app = app

@@ -9,10 +9,13 @@ from common.extensions import db, migrate, redis_client
 from common.configuration import ConfigType, get_config_value, set_config_value, config_entry_exists
 from common import models
 from common.util.helper import get_app_version
+from common.redis.router import RedisRouter
+from common.redis.keys import RedisChannels
 
 from server.util.seeder import preform_seed
 from server.TaskScheduler.task_scheduler import TaskScheduler
 from server.WebSocketServer.websocket_server import WebsocketServer
+from server.redis.handlers import handle_webhook_trigger
 
 app_type = 'server'
 TS = TaskScheduler()
@@ -78,3 +81,14 @@ def prep_app(app):
     websocket_server_thread = threading.Thread(target=WSS.run)
     websocket_server_thread.daemon = True
     websocket_server_thread.start()
+
+    # Setup the redis router
+    router = RedisRouter(channels=[
+        RedisChannels.WEBHOOK_TRIGGER
+    ])
+    router.register(RedisChannels.WEBHOOK_TRIGGER, handle_webhook_trigger)
+    router.init_app(app)
+
+    router_thread = threading.Thread(target=router.start)
+    router_thread.daemon = True
+    router_thread.start()

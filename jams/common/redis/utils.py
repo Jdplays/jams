@@ -1,5 +1,5 @@
 from common.extensions import redis_client as client
-from common.util.redis_keys import RedisKeys
+from common.redis.keys import RedisKeys
 
 def set_app_version(type='server', version='unknown'):
     key = RedisKeys.SERVER_VERSION

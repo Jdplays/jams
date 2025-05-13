@@ -1,10 +1,9 @@
 # Webhooks allow external applications to "poke" JAMS if there is a change in something on their end. They are used to trigger events on JAMS
 from flask import Blueprint, request, abort
 
-from common.models import  Webhook
+from common.models import Webhook
 
-def execute_webhook():
-    pass
+from web.redis.utils import trigger_webhook
 
 bp = Blueprint('webhooks', __name__, url_prefix='/webhooks')
 
@@ -29,7 +28,5 @@ def get_config(id):
         webhook.log(message='has no action assigned', success=False)
         abort(400, description='Webhook has no action assigned')
     
-    # TODO: Use REDIS for this
-    execute_webhook(webhook, data)
-
+    trigger_webhook(webhook.id, data)
     return 'Webhook executed', 200

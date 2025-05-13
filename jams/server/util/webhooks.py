@@ -1,9 +1,5 @@
-from enum import Enum
 import common.integrations.eventbrite as eventbrite
 from common.util.enums import WebhookActionEnum
-
-
-
 
 def execute_webhook(webhook, request_body):
     match webhook.action_enum:

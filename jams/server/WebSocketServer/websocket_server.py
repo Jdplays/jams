@@ -10,13 +10,13 @@ from common.util.enums import APIKeyType
 from common.util import helper
 from common.extensions import get_logger
 
-from server.util import redis
+from server.redis import utils
 
 class WebsocketServer:
     def __init__(self):
         self.connected_clients = defaultdict(list)
         self.loop = None
-        self.logger = get_logger('WSS')
+        self.logger = get_logger('WebSocketServer')
     
     def init_app(self, app):
         self.app = app
@@ -26,7 +26,7 @@ class WebsocketServer:
         self.connected_clients[group].append(client)
 
         if group == APIKeyType.JOLT.name:
-            redis.set_jolt_status(True)
+            utils.set_jolt_status(True)
     
     # Removes a client from the connected clients dictionary
     def remove_client(self, group, client):
@@ -38,7 +38,7 @@ class WebsocketServer:
                 del self.connected_clients[group]
         
         if group == APIKeyType.JOLT.name:
-            redis.set_jolt_status(False)
+            utils.set_jolt_status(False)
 
     # Handles an websocket connections
     async def websocket_handler(self, websocket, path):
