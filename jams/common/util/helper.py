@@ -419,4 +419,5 @@ def get_app_version():
         return "Unknown"
     
 def get_hmac_secret():
-    return get_config_value(ConfigType.HMAC_SECRET_KEY)
+    secret = get_config_value(ConfigType.HMAC_SECRET_KEY)
+    return secret.encode('utf-8')
