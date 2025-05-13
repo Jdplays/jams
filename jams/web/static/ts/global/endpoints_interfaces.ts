@@ -324,7 +324,8 @@ export interface AttendeeSignup {
 }
 
 export interface GeneralConfig {
-    APP_VERSION?:string
+    WEB_VERSION?:string
+    SERVER_VERSION?:string
     TIMEZONE?:string
     STREAKS_ENABLED?:boolean
     EVENT_PREFIX_FILTER?:string

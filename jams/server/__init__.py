@@ -5,9 +5,10 @@ import base64
 from flask import Flask
 
 from common.app_config import get_app_config
-from common.extensions import db, migrate
+from common.extensions import db, migrate, minio_client, redis_client, create_bucket
 from common.configuration import ConfigType, get_config_value, set_config_value, config_entry_exists
 from common import models
+from common.util.helper import get_app_version
 
 from server.util.seeder import preform_seed
 from server.TaskScheduler.task_scheduler import TaskScheduler
@@ -38,17 +39,10 @@ def seed_database(app):
     with app.app_context():
         preform_seed()
 
-def get_app_version():
-    version_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "VERSION")
-    try:
-        with open(version_file, "r") as f:
-            return f.read().strip()
-    except FileNotFoundError:
-        return "Unknown"
-
 def prep_app(app):
-    # Store the version in the DB
-    set_config_value(ConfigType.APP_VERSION, get_app_version())
+    # Store the version in Redis
+    current_app_version = get_app_version()
+    redis_client.set('server:version', current_app_version)
 
     # Create the minio buckets
 
@@ -72,6 +66,10 @@ def prep_app(app):
         set_config_value(ConfigType.HTTP_SCHEME, 'https')
     else:
         set_config_value(ConfigType.HTTP_SCHEME, 'http')
+
+    # Make sure required MinIO buckets exist
+    create_bucket(minio_client, 'jams-workshops', True)
+    create_bucket(minio_client, 'user-data', True)
     
     # Setup the task scheduler
     TS.init_app(app)

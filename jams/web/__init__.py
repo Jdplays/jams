@@ -2,9 +2,10 @@ from flask import Flask
 from flask_security import Security, SQLAlchemyUserDatastore
 
 from common.app_config import get_app_config
-from common.extensions import LoginManager, db, migrate, oauth, minio_client, create_bucket
+from common.extensions import LoginManager, db, migrate, oauth, redis_client
 from common.configuration import get_config_value
 from common import models
+from common.util.helper import get_app_version
 
 from web.routes import routes_bp
 from web.forms.flask_security import CustomLoginForm, CustomRegisterForm
@@ -48,9 +49,9 @@ def create_app():
         # Create database tables
         db.create_all()
 
-        # Create required buckets
-        workshop_bucket = create_bucket(minio_client, 'jams-workshops', True)
-        user_data_bucket = create_bucket(minio_client, 'user-data', True)
+        # Store the version in Redis
+        current_app_version = get_app_version()
+        redis_client.set('web:version', current_app_version)
 
         setup_oauth()
         

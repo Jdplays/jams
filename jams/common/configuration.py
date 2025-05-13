@@ -4,7 +4,6 @@ from typing import Union
 from sqlalchemy import exists
 
 class ConfigType(Enum):
-    APP_VERSION = 'APP_VERSION'
     HMAC_SECRET_KEY = 'HMAC_SECRET_KEY'
     EVENTBRITE_ENABLED = 'EVENTBRITE_ENABLED'
     EVENTBRITE_BEARER_TOKEN = 'EVENTBRITE_BEARER_TOKEN'

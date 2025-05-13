@@ -19,38 +19,55 @@ function checkIfContentUpdated() {
     }
 }
 
+function changeVersionTextIcon(textElement:HTMLElement, iconName:string, colourType:string) {
+    const parent = textElement.parentElement
+    const icon = parent.querySelector('i')
+    icon.className = `ti ti-${iconName} text-${colourType}`
+}
+
 async function populateVersionSection() {
     const releaseData = await getLatestRelease()
-    const upToDateVersionBlock = document.getElementById('version-block-utd') as HTMLDivElement
-    const outOfDateVersionBlock = document.getElementById('version-block-ood') as HTMLDivElement
+    const serverVersionText = document.getElementById('server-version-text') as HTMLSpanElement
+    const webVersionText = document.getElementById('web-version-text') as HTMLSpanElement
 
-    const upToDateVersionText = document.getElementById('version-text-utd') as HTMLSpanElement
-    const outOfDateVersionText = document.getElementById('version-text-ood') as HTMLSpanElement
+    const viewReleaseNotesButton = document.getElementById('view-release-notes-button') as HTMLButtonElement
 
     if ((releaseData === null || releaseData === undefined) || isNullEmptyOrSpaces(releaseData.version)) {
-        upToDateVersionBlock.style.display = 'block'
-        upToDateVersionText.innerHTML = `v${currentConfig.APP_VERSION} (Cannot connect to GitHub)`
-        const parent = upToDateVersionText.parentElement
-        const icon = parent.querySelector('i')
-        icon.className = 'ti ti-cloud-off text-danger'
+        // Server Version
+        serverVersionText.innerHTML = `Server: v${currentConfig.SERVER_VERSION} (Cannot connect to GitHub)`
+        changeVersionTextIcon(serverVersionText, 'cloud-off', 'danger')
+
+        // Web Version
+        webVersionText.innerHTML = `Web: v${currentConfig.WEB_VERSION} (Cannot connect to GitHub)`
+        changeVersionTextIcon(webVersionText, 'cloud-off', 'danger')
         return
     }
 
-    if (currentConfig.APP_VERSION !== releaseData.version) {
-        upToDateVersionBlock.style.display = 'none'
-        outOfDateVersionBlock.style.display = 'block'
+    let outOfDate = false
 
-        outOfDateVersionText.innerHTML = `v${currentConfig.APP_VERSION} (out of date)`
-
-        if (releaseData.release_notes) {
-            document.getElementById('release-notes').innerHTML = releaseData.release_notes
-        }
-        (document.getElementById('release-btn') as HTMLAnchorElement).href = releaseData.url
+    if (currentConfig.SERVER_VERSION !== releaseData.version) {
+        serverVersionText.innerHTML = `Server: v${currentConfig.SERVER_VERSION} (out of date)`
+        changeVersionTextIcon(serverVersionText, 'alert-circle', 'warning')
+        outOfDate = true
     } else {
-        upToDateVersionBlock.style.display = 'block'
-        outOfDateVersionBlock.style.display = 'none'
+        serverVersionText.innerHTML = `Server: v${currentConfig.SERVER_VERSION} (up to date)`
+        changeVersionTextIcon(serverVersionText, 'circle-check', 'success')
+    }
 
-        upToDateVersionText.innerHTML = `v${currentConfig.APP_VERSION} (up to date)`
+    if (currentConfig.WEB_VERSION !== releaseData.version) {
+        webVersionText.innerHTML = `Web: v${currentConfig.WEB_VERSION} (out of date)`
+        changeVersionTextIcon(webVersionText, 'alert-circle', 'warning')
+        outOfDate = true
+    } else {
+        webVersionText.innerHTML = `Web: v${currentConfig.WEB_VERSION} (up to date)`
+        changeVersionTextIcon(webVersionText, 'circle-check', 'success')
+    }
+
+    if (outOfDate) {
+        viewReleaseNotesButton.style.display = 'block'
+        document.getElementById('release-notes').innerHTML = releaseData.release_notes
+    } else {
+        viewReleaseNotesButton.style.display = 'none'
     }
 }
 

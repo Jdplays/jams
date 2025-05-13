@@ -3,7 +3,7 @@ from flask import Blueprint, abort, jsonify, request
 from flask_security import login_required, current_user
 
 from common.configuration import get_config_value, set_config_value, ConfigType
-from common.util import helper
+from common.util import helper, redis_utils
 
 from web.util.decorators import api_route
 
@@ -27,8 +27,11 @@ def get_current_user_data():
 @bp.route('/app/config', methods=['GET'])
 @api_route
 def get_general_config():
+    web_version = redis_utils.get_app_version('web')
+    server_version = redis_utils.get_app_version('server')
     data = {
-        ConfigType.APP_VERSION.name: get_config_value(ConfigType.APP_VERSION),
+        'WEB_VERSION': web_version,
+        'SERVER_VERSION': server_version,
         ConfigType.TIMEZONE.name: get_config_value(ConfigType.TIMEZONE),
         ConfigType.STREAKS_ENABLED.name: get_config_value(ConfigType.STREAKS_ENABLED),
         ConfigType.EVENT_PREFIX_FILTER.name: get_config_value(ConfigType.EVENT_PREFIX_FILTER)

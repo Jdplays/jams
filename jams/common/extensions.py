@@ -19,6 +19,11 @@ try:
 except ImportError:
     Minio = None
 
+try:
+    import redis
+except ImportError:
+    redis = None
+
 load_dotenv()
 
 # Initialise client MinIO for object storage
@@ -32,12 +37,18 @@ def create_minio_client():
         secure=os.getenv('MINIO_SECURE', False)
     )
 
+def create_redis_client():
+    if not redis:
+        raise RuntimeError('MinIO not available in this environment')
+    redis_url = os.getenv('REDIS_URL', 'jams-redis:6379')
+    return redis.Redis.from_url(redis_url, decode_responses=True)
 
 # Shared across all apps
 db = SQLAlchemy()
 migrate = Migrate()
 oauth = OAuth()
 minio_client = create_minio_client()
+redis_client = create_redis_client()
 
 # Dynamically created per app
 def get_logger(name='app'):
