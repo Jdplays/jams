@@ -196,6 +196,7 @@ pages:
       archive_event:
       activate_event:
       regenerate_event_tasks:
+      sync_eventbrite_event:
 
   schedule_planner:
     endpoint: routes.frontend.private.event.schedule_planner

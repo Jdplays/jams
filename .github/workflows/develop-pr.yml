@@ -34,23 +34,25 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and Push PR Containers
-        if: github.event_name == 'pull_request'
+      # Build and push the server image
+      - name: Build and Push Server Image
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./docker/Dockerfile
+          file: ./jams/infra/docker/server/Dockerfile
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BRANCH_NAME }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-server:${{ env.BRANCH_NAME }}
+      
+      # Build and push the web image
+      - name: Build and Push Web Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./jams/infra/docker/web/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-web:${{ env.BRANCH_NAME }}
 
-      - name: Build and Push Develop Container
-        if: github.ref == 'refs/heads/develop'
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./docker/Dockerfile
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop
+
 
       - name: Clean up
         run: |

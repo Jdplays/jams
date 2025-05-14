@@ -18,5 +18,6 @@ websockets==13.0
 markdown
 Pillow
 gevent
+redis
 discord.py
 babel
