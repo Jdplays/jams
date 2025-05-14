@@ -25,5 +25,4 @@ migrations
 config/*.yaml
 node_modules
 package-lock.json
-jams/static/js
-*.js
+jams/web/static/js

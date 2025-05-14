@@ -1,0 +1,472 @@
+
+from datetime import UTC, datetime, timedelta
+from flask import abort, request, send_file
+from flask_login import current_user
+from sqlalchemy import Boolean, DateTime, Integer, String, asc, desc, nullsfirst, or_
+
+from common.util.helper import contains_value, convert_datetime_to_local_timezone, convert_time_to_local_timezone
+from common.models import db, EventLocation, EventTimeslot, Timeslot, Session, EndpointRule, RoleEndpointRule, RolePage, Page, Event, Role
+from common.util import files
+from common.models.api import APIKey, Endpoint
+
+class DefaultRequestArgs():
+    pagination_block_size = int
+    pagination_start_index = int
+    order_by = str
+    order_direction = str
+    all_rows = bool
+
+    def __init__(self, pagination_block_size=50, pagination_start_index=0, order_by='id', order_direction='ASC', all_rows=False):
+        self.pagination_block_size = pagination_block_size
+        self.pagination_start_index = pagination_start_index
+        self.order_by = order_by
+        self.order_direction = order_direction
+        self.all_rows = all_rows
+    
+    @staticmethod
+    def list():
+        return ['$pagination_block_size', '$pagination_start_index', '$order_by', '$order_direction', '$all_rows']
+
+
+def get_ordered_event_locations(event_id):
+    return EventLocation.query.filter_by(event_id=event_id).order_by(EventLocation.order).all()
+
+def get_ordered_event_timeslots(event_id, public=None):
+    if public == None:
+        return EventTimeslot.query.join(Timeslot, EventTimeslot.timeslot_id == Timeslot.id).filter(EventTimeslot.event_id == event_id).order_by(Timeslot.start).all()
+    return EventTimeslot.query.join(Timeslot, EventTimeslot.timeslot_id == Timeslot.id).filter(EventTimeslot.event_id == event_id, EventTimeslot.publicly_visible == public).order_by(Timeslot.start).all() 
+
+def session_exists(location_id, timeslot_id):
+    exists = db.session.query(Session.query.filter_by(event_location_id=location_id, event_timeslot_id=timeslot_id).exists()).scalar()
+    return exists
+
+def prep_delete_event_location(event_location_id):
+    event_location = EventLocation.query.filter_by(id=event_location_id).first()
+    event_sessions = event_location.sessions
+    for event_session in event_sessions:
+        if not prep_delete_session(event_session.id):
+            return False
+        db.session.delete(event_session)
+    
+    # TODO: Remove anything else here in future (Not needed at the time of writing)
+    db.session.commit()
+
+    # Check if there are no sessions for this event_location
+    if len(event_location.sessions) > 0:
+        # There are still sessions, so return false
+        return False
+    
+    # Everything is removed, so return true
+    return True
+
+
+def prep_delete_event_Timeslot(event_timeslot_id):
+    event_timeslot = EventTimeslot.query.filter_by(id=event_timeslot_id).first()
+    event_sessions = event_timeslot.sessions
+    for event_session in event_sessions:
+        if not prep_delete_session(event_session.id):
+            return False
+        db.session.delete(event_session)
+    
+    # TODO: Remove anything else here in future (Not needed at the time of writing)
+    db.session.commit()
+
+    # Check if there are no sessions for this event_timeslot
+    if len(event_timeslot.sessions) > 0:
+        # There are still sessions, so return false
+        return False
+    
+    # Everything is removed, so return true
+    return True
+
+def prep_delete_session(session_id):
+    session = Session.query.filter_by(id=session_id).first()
+    session_volunteer_signups = session.volunteer_signups
+
+    for volunteer_signup in session_volunteer_signups:
+        db.session.delete(volunteer_signup)
+    
+    # TODO: Remove anything else here in future (Not needed at the time of writing)
+    db.session.commit()
+    
+    # Everything is removed, so return true
+    return True
+    
+
+def reorder_ids(id_list, target_id, new_index):
+    if target_id not in id_list:
+        return "Target ID not in list"
+    
+    if new_index < 0 or new_index > len(id_list):
+        return "New index is out of range"
+    
+    id_list_copy = list(id_list)
+    
+    current_idex = id_list_copy.index(target_id)
+
+    if current_idex == new_index:
+        return id_list_copy
+
+    id_list_copy.pop(current_idex)
+
+    id_list_copy.insert(new_index, target_id)
+
+    return id_list_copy
+
+def remove_id_from_list(id_list, target_id):
+    if target_id not in id_list:
+        return "Target ID not in list"
+    
+    current_index = id_list.index(target_id)
+    id_list.pop(current_index)
+
+    return id_list
+
+def build_multi_object_paginated_return_obj(data_list, pagination_block_size, pagination_start_index, pagination_order_by, pagination_order_direction, pagination_record_count):
+    return_obj = {
+        'data': data_list,
+        'pagination': {
+            'pagination_block_size': pagination_block_size,
+            'pagination_start_index': pagination_start_index,
+            'order_by': pagination_order_by,
+            'order_direction': pagination_order_direction,
+            'pagination_total_records': pagination_record_count
+        }
+    }
+
+    return return_obj
+
+def extract_default_args_from_request(request_args)->DefaultRequestArgs:
+    default_args = DefaultRequestArgs()
+    for search_field, search_value in request_args.items():
+        try:
+            if search_field == '$pagination_block_size':
+                default_args.pagination_block_size = int(search_value)
+
+            if search_field == '$pagination_start_index':
+                default_args.pagination_start_index = int(search_value)
+            
+            if search_field == '$order_by':
+                default_args.order_by = search_value
+            
+            if search_field == '$order_direction':
+                default_args.order_direction = search_value
+            
+            if search_field == '$all_rows':
+                default_args.all_rows = search_value.lower() == 'true'
+            
+        except ValueError:
+            abort(400, description=f"Invalid value for field '{search_field}': {search_value}")
+    
+    return default_args
+
+def filter_model_by_query_and_properties(model, request_args=None, requested_field=None, input_data=None, return_objects=False):
+    query = model.query
+    objects = []
+    properties_values = {}
+
+    # Default parameters
+    pagination_block_size = 50
+    pagination_start_index = 0
+    pagination_order_by = 'id'
+    pagination_order_direction = 'ASC'
+
+    if input_data is not None:
+        if len(input_data) <= 0 and not return_objects:
+            return_obj = build_multi_object_paginated_return_obj(input_data, pagination_block_size, pagination_start_index, pagination_order_by, pagination_order_direction, 0)
+            return return_obj
+    
+    if model.query.count() <= 0:
+        return_obj = []
+        if not return_objects:
+            return_obj = build_multi_object_paginated_return_obj([], pagination_block_size, pagination_start_index, pagination_order_by, pagination_order_direction, 0)
+        return (return_obj, 0)
+    
+    allowed_fields = list(model.query.first_or_404().to_dict().keys())
+
+    order_by = model.id
+    order_direction = pagination_order_direction
+
+    # Check if things are being searched for
+    if request_args:
+        # Check for default fields
+        default_args = extract_default_args_from_request(request_args)
+        pagination_block_size = default_args.pagination_block_size
+        pagination_start_index = default_args.pagination_start_index
+        order_by = getattr(model, default_args.order_by)
+        order_direction = str(default_args.order_direction).upper()
+        if default_args.all_rows:
+            row_count = query.count()
+            pagination_block_size = row_count
+
+        filters = []
+
+        for search_field, search_value in request_args.items():
+            field_conditions = []
+
+            # Split the search fields and values on the pipe char '|'
+            search_fields = search_field.split('|')
+            search_values = search_value.split('|')
+
+
+            for field in search_fields:
+                if field == '':
+                    continue
+
+                if field in DefaultRequestArgs.list():
+                    continue
+
+                if field not in allowed_fields:
+                    abort(404, description=f"Search field '{field}' not found or allowed")
+                
+                field_attr = getattr(model, field)
+
+                if isinstance(field_attr, property):
+                    properties_values.update({search_field: search_value})
+                    continue
+                
+                field_type = field_attr.property.columns[0].type
+
+                for value in search_values:
+                    if value == '':
+                        abort(400, description='All query values must have a value')
+                    elif value == 'null' or value == 'None':
+                        field_conditions.append(field_attr == None)
+                    elif isinstance(field_type, String):
+                        field_conditions.append(field_attr.ilike(f'%{value}%'))
+                    elif isinstance(field_type, Boolean):
+                        field_conditions.append(field_attr == (value.lower() in ['true', '1', 't', 'y', 'yes']))
+                    elif isinstance(field_type, Integer):
+                        try:
+                            field_conditions.append(field_attr == int(value))
+                        except ValueError:
+                            abort(400, description=f"Invalid value for integer field '{field}': {value}")
+                    elif isinstance(field_type, DateTime):
+                        try:
+                            datetime_value = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
+                            date_value = datetime_value.date()
+
+                            start_datetime = datetime.combine(date_value, datetime.min.time())
+                            end_datetime = start_datetime + timedelta(days=1)
+                            
+                            field_conditions.append(field_attr.between(start_datetime, end_datetime))
+                            #field_conditions.append(field_attr < end_datetime)
+                        except ValueError as e:
+                            abort(400, description=f"Invalid value for DateTime field '{field}': {value}")
+                    else:
+                        # For other types, add appropriate handling if needed
+                        field_conditions.append(field_attr == value)
+
+            if field_conditions:
+                filters.append(or_(*field_conditions))
+        
+        if filters:
+            query = query.filter(*filters)
+    
+    pagination_record_count = query.count()
+    if input_data == None:
+        if order_direction == 'ASC':
+            query = query.order_by(asc(order_by))
+        elif order_direction == 'DESC':
+            query = query.order_by(desc(order_by))
+        else:
+            abort(400, description=f"Invalid Order Direction value: {order_direction}")
+    else:
+        objects = input_data
+    
+    if not properties_values:
+        query = query.offset(pagination_start_index).limit(pagination_block_size)
+    
+    if input_data == None or (request_args and len(request_args) > 0):
+        objects = query.all()
+
+    if properties_values:
+        for obj in objects[:]:
+            for prop, value in properties_values.items():
+                if not contains_value(getattr(obj, prop), value):
+                    objects.remove(obj)
+    
+        objects = objects[pagination_start_index:pagination_start_index+pagination_block_size]
+
+    data_list = []
+
+    if requested_field:
+        if requested_field not in allowed_fields:
+            abort(404, description=f"Field '{requested_field}' not found or allowed")
+        for obj in objects:
+            value = getattr(obj, requested_field)
+            if 'time' in requested_field:
+                value = convert_time_to_local_timezone(value)
+            elif 'date' in requested_field:
+                value = convert_datetime_to_local_timezone(value)
+            data_list.append({
+                'id': obj.id,
+                requested_field: str(value)
+            })
+    else:
+        data_list = [obj.to_dict() for obj in objects]
+
+    return_obj = build_multi_object_paginated_return_obj(data_list, pagination_block_size, pagination_start_index, pagination_order_by, pagination_order_direction, pagination_record_count)
+
+    if return_objects:
+        return (objects, pagination_record_count)
+    
+    return return_obj
+
+
+def check_roles(user_role_ids, role_id):
+    if role_id in user_role_ids:
+        return True
+    
+    return False
+
+def extract_endpoint():
+    endpoint = request.endpoint
+    return endpoint
+
+def get_endpoint_rules_for_roles(endpoint_id, role_ids, public=False):
+    query = db.session.query(EndpointRule).filter(EndpointRule.endpoint_id == endpoint_id, EndpointRule.public == public)
+    
+    if not public:
+        query = query.join(RoleEndpointRule, EndpointRule.id == RoleEndpointRule.endpoint_rule_id)
+        query = query.filter(RoleEndpointRule.role_id.in_(role_ids))
+
+    query = query.order_by(nullsfirst(EndpointRule.allowed_fields))
+
+    return query.all()
+
+
+def user_has_access_to_page(*names):
+    user_role_ids = current_user.role_ids
+    for name in names:
+        page = Page.query.filter_by(name=name).first()
+        if not page:
+            return False
+        
+        page_role_ids = [page_role.role_id for page_role in page.role_pages]
+        for role_id in user_role_ids:
+            if role_id in page_role_ids:
+                return True
+    return False
+
+def get_and_prepare_file(bucket_name, file_name, version_id):
+    file_data = files.get_file(bucket_name=bucket_name, file_name=file_name, version_id=version_id)
+
+    mime_type = 'application/octet-stream'  # Default MIME type
+    if file_name.endswith('.txt'):
+        mime_type = 'text/plain'
+    elif file_name.endswith('.pdf'):
+        mime_type = 'application/pdf'
+    elif file_name.endswith('.jpg') or file_name.endswith('.jpeg'):
+        mime_type = 'image/jpeg'
+    elif file_name.endswith('.png'):
+        mime_type = 'image/png'
+    elif file_name.endswith('.mp4'):
+        mime_type = 'video/mp4'
+    elif file_name.endswith('.html'):
+        mime_type = 'text/html'
+    elif file_name.endswith('.md'):
+        mime_type = 'text/markdown'
+        
+    # Return the file as an inline response
+    return send_file(
+        file_data,
+        mimetype=mime_type,
+        as_attachment=False,  # This ensures the file is displayed inline
+        download_name=file_name
+    )
+
+def get_required_roles_for_endpoint(endpoint):
+    role_names = []
+
+    page = Page.query.filter_by(endpoint=endpoint).first()
+    if page:
+        role_page_objs = RolePage.query.filter_by(page_id=page.id).all()
+        roles = Role.query.filter(Role.id.in_([rp.role_id for rp in role_page_objs]))
+        role_names = [r.name for r in roles]
+        return role_names
+
+
+    endpoint_obj = Endpoint.query.filter_by(endpoint=endpoint).first()
+    if not endpoint_obj:
+        return role_names
+    
+    endpoint_rule = EndpointRule.query.filter_by(endpoint_id=endpoint_obj.id).first()
+    page = Page.query.filter_by(endpoint=endpoint).first()
+    if not endpoint_rule and not page:
+        return role_names
+    
+    if not page:
+        role_endpoint_rules = endpoint_rule.role_endpoint_rules
+
+        if not role_endpoint_rules:
+            return role_names
+        
+        for role_endpoint_rule in role_endpoint_rules:
+            role = role_endpoint_rule.role
+            role_names.append(role.name)
+    else:
+        role_pages = page.role_pages
+
+        if not role_pages:
+            return role_names
+        
+        for role_page in role_pages:
+            role = role_page.role
+            role_names.append(role.name)
+    
+    return role_names
+
+def update_session_event_location_visibility(source_session:Session):
+    event_location:EventLocation = source_session.event_location
+    event_timeslot:EventTimeslot = source_session.event_timeslot
+
+    update_event_location_visibility(event_location)
+    update_event_timeslot_visibility(event_timeslot)
+
+def update_event_location_visibility(event_location:EventLocation):
+    sessions = event_location.sessions
+
+    visibility = False
+    for session in sessions:
+        if session.publicly_visible and session.has_workshop:
+            visibility = True
+
+    event_location.publicly_visible = visibility
+
+    db.session.commit()
+
+def update_event_timeslot_visibility(event_timeslot:EventTimeslot):
+    sessions = event_timeslot.sessions
+
+    visibility = False
+    for session in sessions:
+        if session.publicly_visible and session.has_workshop:
+            visibility = True
+
+    event_timeslot.publicly_visible = visibility
+
+    db.session.commit()
+
+def fetch_event_sessions(event_id):
+    # Check if the event exists
+    Event.query.filter_by(id=event_id).first_or_404()
+    sessions = Session.query.filter_by(event_id=event_id).all()
+
+    mutable_args = request.args.to_dict()
+    mutable_args['event_id'] = str(event_id)
+    show_private_text = mutable_args.pop('show_private', None)
+    show_private = False
+    if show_private_text:
+        show_private = show_private_text.lower() == 'true'
+    
+    data, row_count = filter_model_by_query_and_properties(Session, mutable_args, input_data=sessions, return_objects=True)
+    
+    tmp_data = data.copy()
+    for session in tmp_data:
+        if (not session.event_location.publicly_visible and not show_private) or (not session.event_timeslot.publicly_visible and not show_private) and not session.event_timeslot.timeslot.is_break:
+
+            data.remove(session)
+
+    return_obj = [session.to_dict() for session in data]
+    return return_obj

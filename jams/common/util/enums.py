@@ -1,0 +1,49 @@
+from enum import Enum
+
+class TaskActionEnum(Enum):
+    UPDATE_EVENTBRITE_EVENT_ATTENDEES = 'update_eventbrite_event_attendees'
+    POST_EVENT_TASK = 'post_event_task'
+
+class WebhookActionEnum(Enum):
+    EVENTBRITE_CHECK_IN = 'EVENTBRITE_CHECK_IN'
+    EVENTBRITE_CHECK_OUT = 'EVENTBRITE_CHECK_OUT'
+
+class WebhookOwnerEnum(Enum):
+    SYSTEM = 'SYSTEM'
+    EVENTBRITE = 'EVENTBRITE'
+
+class FireListPersonType(Enum):
+    ATTENDEE = 'ATTENDEE'
+    VOLUNTEER = 'VOLUNTEER'
+    GUEST = 'GUEST'
+
+class AttendeeSource(Enum):
+    LOCAL = 'LOCAL'
+    EVENTBRITE = 'EVENTBRITE'
+
+class APIKeyType(Enum):
+    NORMAL = 'NORMAL',
+    JOLT = 'JOLT'
+
+class JOLTPrintQueueStatus(Enum):
+    QUEUED = 'QUEUED'
+    RECEIVED = 'RECEIVED'
+    PRINTED = 'PRINTED'
+    FAILED = 'FAILED'
+
+class JOLTPrintJobType(Enum):
+    ATTENDEE_LABEL = 'ATTENDEE_LABEL'
+    TEST_ATTENDEE_LABEL = 'TEST_ATTENDEE_LABEL'
+
+class JOLTRequestType(Enum):
+    PRINT_JOB_REQUEST = 'PRINT_JOB_REQUEST'
+    PRINT_JOB_RECEIVED = 'PRINT_JOB_RECEIVED'
+    PRINT_JOB_COMPLETED = 'PRINT_JOB_COMPLETED'
+    PRINT_JOB_ERROR = 'PRINT_JOB_ERROR'
+    HEALTHCHECK_REQUEST = 'HEALTHCHECK_REQUEST'
+    HEALTHCHECK_RESPONSE = 'HEALTHCHECK_RESPONSE'
+
+class JOLTHealthCheckStatus(Enum):
+    PENDING = 'PENDING'
+    SUCCESS = 'SUCCESS'
+    FAILED = 'FAILED'

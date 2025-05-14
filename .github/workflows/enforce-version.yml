@@ -22,23 +22,23 @@ jobs:
 
       - name: Check if VERSION file was modified
         run: |
-          if ! git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep -q '^VERSION$'; then
-            echo "::error ::VERSION file must be updated in this PR before merging into master."
+          if ! git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep -q '^jams/VERSION$'; then
+            echo "::error ::jams/VERSION file must be updated in this PR before merging into master."
             exit 1
           fi
 
       - name: Compare Version with Previous
         run: |
-          PREVIOUS_VERSION=$(git show ${{ github.event.pull_request.base.sha }}:VERSION 2>/dev/null || echo "")
-          NEW_VERSION=$(cat VERSION)
+          PREVIOUS_VERSION=$(git show ${{ github.event.pull_request.base.sha }}:jams/VERSION 2>/dev/null || echo "")
+          NEW_VERSION=$(cat jams/VERSION)
 
           if [ -z "$PREVIOUS_VERSION" ]; then
-            echo "::error ::Could not retrieve previous VERSION file. Ensure it exists in the base branch."
+            echo "::error ::Could not retrieve previous jams/VERSION file. Ensure it exists in the base branch."
             exit 1
           fi
 
           if [ -z "$NEW_VERSION" ]; then
-            echo "::error ::VERSION file is empty in the new commit."
+            echo "::error ::jams/VERSION file is empty in the new commit."
             exit 1
           fi
 
@@ -55,6 +55,6 @@ jobs:
 
           # Compare versions
           if dpkg --compare-versions "$NEW_VERSION" le "$PREVIOUS_VERSION"; then
-            echo "::error ::VERSION file must be incremented. New version ('$NEW_VERSION') must be higher than previous ('$PREVIOUS_VERSION')."
+            echo "::error ::jams/VERSION file must be incremented. New version ('$NEW_VERSION') must be higher than previous ('$PREVIOUS_VERSION')."
             exit 1
           fi

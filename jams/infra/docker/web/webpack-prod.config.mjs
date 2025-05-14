@@ -1,20 +1,17 @@
 import path from 'path';
 import url from 'url';
 import { glob } from 'glob';
-import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
-import pkg from 'webpack';
-const { SourceMapDevToolPlugin } = pkg;
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const entries = glob.sync('./jams/web/static/ts/**/*.ts').reduce((entries, entry) => {
+const entries = glob.sync('./web/static/ts/**/*.ts').reduce((entries, entry) => {
   // Normalize the entry path
   const normalizedEntry = path.normalize(entry);
 
    // Remove the 'jams/static/ts/' prefix using path.relative
-  const entryName = path.relative('jams/web/static/ts', normalizedEntry).replace(/\.ts$/, ''); // Remove the .ts extension
+  const entryName = path.relative('web/static/ts', normalizedEntry).replace(/\.ts$/, ''); // Remove the .ts extension
 
   entries[entryName] = `./${entry}`; // Map entry name to file path
   return entries;
@@ -22,13 +19,11 @@ const entries = glob.sync('./jams/web/static/ts/**/*.ts').reduce((entries, entry
 
 
 export default {
-  watch: true,
-  devtool: 'source-map',
   entry: entries, // Adjust to your TypeScript entry point
   output: {
     filename: '[name].js',
-    path: path.resolve(__dirname, './jams/web/static/js/'), // Output directory for the JavaScript files
-    publicPath: '/static/js/'
+    path: path.resolve(__dirname, './web/static/js/'), // Output directory for the JavaScript files
+    publicPath: '/'
   },
   resolve: {
     extensions: ['.ts', '.js'],
@@ -48,15 +43,7 @@ export default {
     ]
   },
   optimization: {
-    minimize: false,
+    minimize: true,
   },
-  devtool: false,
-  plugins: [
-    new SourceMapDevToolPlugin({
-      append: '\n//# sourceMappingURL=/static/js/[url]',
-      filename: '[name].js.map',
-    }),
-    //new BundleAnalyzerPlugin()
-  ],
-  mode: 'development'
+  mode: 'production'
 };
