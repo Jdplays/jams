@@ -1,10 +1,13 @@
 import os
+import datetime
+from flask_security.utils import hash_password
+
 from common.models import db, User, Role, Workshop, Event, Location, Timeslot, DifficultyLevel, WorkshopType
 from common.util.database import create_event
 from common.util.endpoint_loader import generate_full_rbac
 from common.configuration import ConfigType, set_config_value
-from flask_security.utils import hash_password
-import datetime
+
+from server.TaskScheduler.task_scheduler import create_background_task
 
 def preform_seed():
     generate_full_rbac()

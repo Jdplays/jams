@@ -3,6 +3,7 @@ from enum import Enum
 class TaskActionEnum(Enum):
     UPDATE_EVENTBRITE_EVENT_ATTENDEES = 'update_eventbrite_event_attendees'
     POST_EVENT_TASK = 'post_event_task'
+    BACKGROUND_TASK = 'background_task'
 
 class WebhookActionEnum(Enum):
     EVENTBRITE_CHECK_IN = 'EVENTBRITE_CHECK_IN'
