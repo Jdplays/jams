@@ -15,6 +15,8 @@ function setupPage() {
     const optionsBlock = document.getElementById('discord-config') as HTMLElement
     const footerActions = document.getElementById('discord-config-footer-actions') as HTMLElement
     const tokenInput = document.getElementById('discord-bot-token-input') as HTMLInputElement
+    const loadingBar = document.getElementById('discord-bot-add-loading-bar') as HTMLElement
+    loadingBar.style.display = 'block'
 
     if (!currentConfig || !currentConfig.DISCORD_BOT_ENABLED) {
         setupBlock.style.display = 'block'
@@ -152,8 +154,36 @@ function verifyDiscordBotTokenOnClick() {
     addSpinnerToElement(verifyButton)
 
     verifyDiscordBotToken(tmpToken).then((verified) => {
-        if (verified) {    
-            setupStepTwo()
+        if (verified) {
+            const botAddToServerURL = document.getElementById('discord-bot-add-to-server-url') as HTMLInputElement
+            guildScanSSEHandler = startupDiscordIntegrationGuildList()
+
+            guildScanSSEHandler.onUpdate((data) => {
+                if (data.status === 'READY') {
+                    const verifyButton = document.getElementById('discord-bot-token-verify-button') as HTMLButtonElement
+
+                    successToast('Token Valid')
+                    removeSpinnerFromElement(verifyButton)
+                    const tickIcon = document.createElement('i')
+                    tickIcon.id = 'discord-token-valid-icon'
+                    tickIcon.classList.add('ti', 'ti-check')
+                    verifyButton.appendChild(tickIcon)
+
+                    botAddToServerURL.value = `https://discord.com/oauth2/authorize?client_id=${data.client_id}&permissions=1706588545468480&integration_type=0&scope=bot+applications.commands`
+                    
+                    incrementSetupStep()
+                    
+                    if (data.guild_list.length > 0) {
+                        const loadingBar = document.getElementById('discord-bot-add-loading-bar') as HTMLElement
+                        loadingBar.style.display = 'none'
+                    }
+
+                    if (guildList !== data.guild_list) {
+                        guildList = data.guild_list
+                        updateGuildListDropdown()
+                    }
+                }
+            }) 
         } else {
             return Promise.reject('Token Invalid')
         }
@@ -233,33 +263,6 @@ function secretTextBoxOnInput() {
     } else {
         verifyButton.disabled = false
     }
-}
-
-function setupStepTwo() {
-    const botAddToServerURL = document.getElementById('discord-bot-add-to-server-url') as HTMLInputElement
-    guildScanSSEHandler = startupDiscordIntegrationGuildList()
-
-    guildScanSSEHandler.onUpdate((data) => {
-        if (data.status === 'READY') {
-            const verifyButton = document.getElementById('discord-bot-token-verify-button') as HTMLButtonElement
-
-            successToast('Token Valid')
-            removeSpinnerFromElement(verifyButton)
-            const tickIcon = document.createElement('i')
-            tickIcon.id = 'discord-token-valid-icon'
-            tickIcon.classList.add('ti', 'ti-check')
-            verifyButton.appendChild(tickIcon)
-
-            botAddToServerURL.value = `https://discord.com/oauth2/authorize?client_id=${data.client_id}&permissions=1706588545468480&integration_type=0&scope=bot+applications.commands`
-            
-            incrementSetupStep()
-
-            if (guildList !== data.guild_list) {
-                guildList = data.guild_list
-                updateGuildListDropdown()
-            }
-        }
-    })
 }
 
 function setupStepThree() {

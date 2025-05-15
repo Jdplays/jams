@@ -3,6 +3,7 @@ from flask import Blueprint, request, jsonify
 
 from common.integrations import discord
 from common.configuration import ConfigType, get_config_value, set_config_value, remove_config_entry
+from common.redis import utils as redis_utils
 
 from web.util.decorators import api_route
 from web.util.sse import sse_stream
@@ -96,8 +97,6 @@ def verify_client_secret():
 @bp.route('/setup-status', methods=['GET'])
 @api_route
 def get_setup_status():
-    from jams import DiscordBot
-
     state = {
         'status': 'STARTING',
         'client_id': None,
@@ -105,20 +104,22 @@ def get_setup_status():
     }
 
     def fetch_data():
+        bot_status = redis_utils.get_discord_bot_status()
         if state['status'] == 'STARTING':
-            if not DiscordBot.is_ready():
+            if not bot_status.get('running'):
                 discord.start_server()
                 return {'status': 'STARTING'}
-            else:
+            elif bot_status.get('ready'):
                 state['status'] = 'READY'
 
+        bot_config = redis_utils.get_discord_bot_config()
         if state['status'] == 'READY':
-            client_id = DiscordBot.get_bot_client_id()
+            client_id = bot_config.get('client_id')
             if client_id:
                 state['client_id'] = str(client_id)
         
         if state['status'] == 'READY':
-            guild_list = DiscordBot.get_guild_list()
+            guild_list = bot_config.get('guild_list')
             state['guild_list'] = guild_list
         
         return {
@@ -143,9 +144,9 @@ def enable():
     if not discord.verify_guild_id(guild_id):
         return jsonify({'message': 'Bot is no associated with provided guild'}), 400
     
+    discord.set_bot_guild_id(guild_id)
     set_config_value(ConfigType.DISCORD_BOT_GUILD_ID, guild_id)
     set_config_value(ConfigType.DISCORD_BOT_ENABLED, True)
-    discord.start_server()
 
     discord_config = discord.discord_config_dict()
 

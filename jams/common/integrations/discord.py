@@ -1,6 +1,7 @@
 
 
 import requests
+import time
 from asyncio import run_coroutine_threadsafe
 
 from common.configuration import ConfigType, get_config_value, set_config_value
@@ -8,6 +9,7 @@ from common.extensions import get_logger
 from common.models import db, ExternalAPILog, DiscordBotMessage
 from common.util.enums import DiscordMessageType, DiscordMessageView
 from common.util import helper
+from common.redis.utils import get_discord_bot_status, get_discord_bot_config, discord_bot_control
 
 logger = get_logger('DiscordIntegration')
 base_url = 'https://discord.com/api/v10'
@@ -79,6 +81,7 @@ def verify_client_secret(secret):
         'Content-Type': 'application/x-www-form-urlencoded'
     }
 
+    
     auth=(DISCORD_CLIENT_ID, secret)
 
     try:
@@ -86,6 +89,8 @@ def verify_client_secret(secret):
         if r.status_code == 200:
             set_config_value(ConfigType.DISCORD_CLIENT_SECRET, secret)
             verified = True
+        else:
+            raise Exception(r.text)
     except Exception as e:
         logger.error(f'Error verifying Discord client secret {e}')
     finally:
@@ -122,27 +127,32 @@ def get_discord_user_info(access_token):
 
 # Start the discord server
 def start_server():
-    from jams import DiscordBot
-    DiscordBot.start()
-    DiscordBot.wait_until_ready(timeout=10)
+    discord_bot_control(True)
+
+    timeout = 10
+    start_time = time.time()
+
+    while time.time() - start_time < timeout:
+        status = get_discord_bot_status()
+        if status:
+            if status.get('ready') is True:
+                break
+        time.sleep(0.5)
+    else:
+        logger.error('Bot did not become ready within 10 seconds.')
 
 def stop_server():
-    from jams import DiscordBot
-    DiscordBot.stop()
+    discord_bot_control(False)
 
 def get_bot_client_id():
-    from jams import DiscordBot
-    if not DiscordBot._client.user:
-        return None
-    return DiscordBot._client.user.id
+    return get_discord_bot_config().get('client_id')
 
 def get_bot_guild_list():
-    from jams import DiscordBot
-    return DiscordBot._guild_list
+    return get_discord_bot_config().get('guild_list')
 
 def verify_guild_id(guild_id):
-    from jams import DiscordBot
-    current_guild_ids = {item['id'] for item in DiscordBot._guild_list}
+    guild_list = get_discord_bot_config().get('guild_list')
+    current_guild_ids = {item['id'] for item in guild_list}
     return guild_id in current_guild_ids
 
 def verify_channel_id(channel_id):
@@ -151,21 +161,14 @@ def verify_channel_id(channel_id):
     return str(channel_id) in existing_ids
 
 def get_guild_name(guild_id):
-    from jams import DiscordBot
-    for g in DiscordBot._guild_list:
+    guild_list = get_discord_bot_config().get('guild_list')
+    for g in guild_list:
         if g['id'] == str(guild_id):
             return g['name']
     return None
 
 def get_channels_in_server(guild_id):
-    from jams import DiscordBot
-    guild = DiscordBot._bot.get_guild(int(guild_id))
-    if not guild:
-        return []
-    channels = [c for c in guild.text_channels if c.permissions_for(guild.me).send_messages]
-
-    channels_dict = [{'id': str(c.id), 'name': str(c.name)} for c in channels]
-    return channels_dict
+    return get_discord_bot_config().get('guild_channel_list')
 
 def get_persistent_message(message_db_id):
     message = DiscordBotMessage.query.filter_by(id=message_db_id).first()
@@ -179,8 +182,7 @@ def get_params_for_message(message_db_id):
     return message.view_data
 
 def set_bot_guild_id(guild_id):
-    from jams import DiscordBot
-    DiscordBot._guild_id = guild_id
+    discord_bot_control(config={'guild_id': guild_id})
 
 def fetch_discord_user_nickname(account_id):
     from jams import DiscordBot

@@ -15,6 +15,7 @@ from server.discord import handlers
 from server.discord.interaction_router import INTERACTION_HANDLERS
 from server.discord.ui import VIEW_REGISTRY
 from server.discord.helper import make_stub_view
+from server.redis.utils import set_discord_bot_status, set_discord_bot_config
 
 class DiscordBotServer:
     def __init__(self):
@@ -49,27 +50,29 @@ class DiscordBotServer:
         return self._guild_list if self.is_ready() else []
     
     def run_bot(self):
-        async def main():
-            try:
-                self._is_running = True
-                self._loop = asyncio.get_event_loop()
-                await self._bot.start(self._token)
-            except Exception as e:
-                self.logger.error(f"[DiscordBot] Failed to run: {e}")
-            finally:
-                self.logger.info("[DiscordBot] Cleaning up event loop...")
-                self._is_running = False
-                self._ready_event.clear()
-        
         try:
             self._loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self._loop)
-            self._loop.run_until_complete(main())
+            self._is_running = True
+            
+            # Run the bot in this threads event loop
+            self._loop.run_until_complete(self._bot.start(self._token))
         except Exception as e:
-            self.logger.error(f"[DiscordBot] run_bot crashed: {e}")
+            self.logger.error(f"[DiscordBot] Failed to run: {e}")
         finally:
-            if self._loop:
-                self._loop.close()
+            self.logger.info("[DiscordBot] Cleaning up event loop...")
+            self._is_running = False
+            self._ready_event.clear()
+            self._loop.run_until_complete(self._bot.close())
+            self._loop.run_until_complete(self._loop.shutdown_asyncgens())
+
+            pending = asyncio.all_tasks(loop=self._loop)
+            if pending:
+                self.logger.info(f"[DiscordBot] Awaiting {len(pending)} pending tasks...")
+                self._loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+
+            self._loop.close()
+            self.logger.info("[DiscordBot] Shutdown complete")
 
 
     def start(self):
@@ -112,6 +115,9 @@ class DiscordBotServer:
                 set_config_value(ConfigType.DISCORD_CLIENT_ID, client_id)
                 await self.restore_bot_views()
                 self._guild_id = get_config_value(ConfigType.DISCORD_BOT_GUILD_ID)
+            
+            set_discord_bot_status(self)
+            set_discord_bot_config(self)
 
         @self._bot.event
         async def on_guild_join(guild):
@@ -122,6 +128,7 @@ class DiscordBotServer:
                 await default_channel.send(
                     "👋 Hi! Please return to JAMS to finish linking this Discord server."
                 )
+            set_discord_bot_config(self)
         
         # Interaction Router
         @self._bot.event
@@ -151,27 +158,26 @@ class DiscordBotServer:
         self._thread = threading.Thread(target=self.run_bot, daemon=True)
         self._thread.start()
 
+        set_discord_bot_status(self)
+
+
     def stop(self):
-        if not self._is_running:
+        if not self._is_running or not self._bot or not self._loop:
             self.logger.info("[DiscordBot] Not running.")
             return
 
         self.logger.info("[DiscordBot] Shutting down bot...")
 
-        async def shutdown():
-            await self._bot.close()
-            self.logger.info("[DiscordBot] Bot closed.")
-
-
-        if self._bot:
-            try:
-                future = asyncio.run_coroutine_threadsafe(shutdown(), self._loop)
-                future.result(timeout=10)
-            except Exception as e:
-                self.logger.error(f"[DiscordBot] Failed to shut down bot: {e}")
+        try:
+            # Schedule bot.close() safely in the bot's loop
+            self._loop.call_soon_threadsafe(asyncio.create_task, self._bot.close())
             
-        if self._thread:
-            self._thread.join(timeout=5)
+            # Wait for the bot thread to finish
+            if self._thread and self._thread.is_alive():
+                self._thread.join(timeout=10)
+
+        except Exception as e:
+            self.logger.error(f"[DiscordBot] Failed to shut down bot: {e}")
 
         # Clean up
         self._bot = None
@@ -179,10 +185,13 @@ class DiscordBotServer:
         self._token = None
         self._loop = None
         self._thread = None
-        self._is_running = False
         self._guild_id = None
         self._guild_list = []
         self._ready_event.clear()
+        self._is_running = False
+
+        set_discord_bot_status(self)
+        set_discord_bot_config(self)
 
 
     def send_message_to_channel(self, channel_id, message):
