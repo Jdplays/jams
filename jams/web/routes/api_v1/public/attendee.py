@@ -1,4 +1,4 @@
-# API is for serving data to TypeScript/Javascript
+# API is for serving data to TypeScript/JavaScript
 from flask import Blueprint, redirect, request, jsonify, abort, session, url_for
 from sqlalchemy import func, or_
 

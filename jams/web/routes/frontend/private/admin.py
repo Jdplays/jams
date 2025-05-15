@@ -18,6 +18,12 @@ bp = Blueprint('admin', __name__, url_prefix='admin')
 def settings():
     return render_template(f'{url_prefix}/settings/settings-general.html')
 
+@bp.route('/settings/discord')
+@login_required
+#@role_based_access_control_fe
+def settings_discord():
+    return render_template(f'{url_prefix}/settings/settings-discord.html')
+
 @bp.route('/settings/eventbrite')
 @login_required
 @role_based_access_control_fe

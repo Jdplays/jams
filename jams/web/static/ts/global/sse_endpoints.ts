@@ -1,4 +1,4 @@
-import { AttendeeSignup, LiveEventStats, Session, VolunteerSignup } from "./endpoints_interfaces";
+import { AttendeeSignup, DiscordBotStartupResponse, DiscordGuild, LiveEventStats, Session, VolunteerSignup } from "./endpoints_interfaces";
 import { buildQueryString } from "./helper";
 import { QueryStringData } from "./interfaces";
 import { SSEManager } from "./sse_manager";
@@ -39,6 +39,14 @@ export function getLiveAttendeeSignups(eventId:number):SSEManager<[AttendeeSignu
     const url = `${baseURL}/attendee/signups/stream?${queryString}`
 
     const sse = new SSEManager<[AttendeeSignup]>(url)
+    sse.start()
+    return sse
+}
+
+export function startupDiscordIntegrationGuildList():SSEManager<DiscordBotStartupResponse> {
+    const url = `${baseURL}/integrations/discord/setup-status`
+
+    const sse = new SSEManager<DiscordBotStartupResponse>(url)
     sse.start()
     return sse
 }

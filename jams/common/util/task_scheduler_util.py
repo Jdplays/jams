@@ -3,8 +3,10 @@ from datetime import datetime, timedelta, UTC
 from common.models import db, TaskSchedulerModel
 from common.util.enums import TaskActionEnum
 
-def create_task(name, action_enum:TaskActionEnum, interval, params=None, start_datetime=datetime.now(UTC), end_datetime=datetime.now(UTC), run_quantity=None, private=True):
-    new_task:TaskSchedulerModel = TaskSchedulerModel(name=name, action_enum=action_enum.name, interval=interval, params=params, start_datetime=start_datetime, end_datetime=end_datetime, run_quantity=run_quantity, private=private)
+def create_task(name, action_enum:TaskActionEnum, interval, params=None, start_datetime=datetime.now(UTC), end_datetime=datetime.now(UTC), run_quantity=None, private=True, event_id=None, forever=False, fixed_time=None):
+    if forever:
+        end_datetime = None
+    new_task:TaskSchedulerModel = TaskSchedulerModel(name=name, action_enum=action_enum.name, interval=interval, params=params, start_datetime=start_datetime, end_datetime=end_datetime, run_quantity=run_quantity, private=private, event_id=event_id, fixed_time=fixed_time)
     existing_task:TaskSchedulerModel = TaskSchedulerModel.query.filter_by(name=name).first()
 
     if existing_task:
@@ -16,6 +18,8 @@ def create_task(name, action_enum:TaskActionEnum, interval, params=None, start_d
         existing_task.end_datetime = new_task.end_datetime
         existing_task.next_run_datetime = new_task.next_run_datetime
         existing_task.private = new_task.private
+        existing_task.event_id = event_id
+        existing_task.fixed_time = fixed_time
 
         db.session.commit()
         return

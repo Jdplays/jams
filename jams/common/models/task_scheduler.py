@@ -1,5 +1,5 @@
 from . import db
-from sqlalchemy  import Column, ForeignKey, String, Integer, DateTime, Boolean, JSON
+from sqlalchemy  import Column, ForeignKey, String, Integer, DateTime, Boolean, JSON, Time
 from sqlalchemy.dialects.postgresql import INTERVAL
 from sqlalchemy.orm import relationship
 from datetime import datetime, UTC
@@ -23,8 +23,10 @@ class TaskSchedulerModel(db.Model):
     active = Column(Boolean(), nullable=False, default=True, server_default='true')
     running = Column(Boolean(), nullable=False, default=False, server_default='false')
     queued = Column(Boolean(), nullable=False, default=False, server_default='false')
+    event_id = Column(Integer, ForeignKey('event.id'), nullable=True)
+    fixed_time = Column(Time, nullable=True)
 
-    def __init__(self, name, action_enum, interval, params=None, start_datetime=datetime.now(UTC), end_datetime=datetime.now(UTC), run_quantity=None, private=True):
+    def __init__(self, name, action_enum, interval, params=None, start_datetime=datetime.now(UTC), end_datetime=datetime.now(UTC), run_quantity=None, private=True, event_id=None, fixed_time=None):
         self.name = name
         self.start_datetime = start_datetime
         if not run_quantity:
@@ -42,6 +44,8 @@ class TaskSchedulerModel(db.Model):
         self.active = True
         self.running = False
         self.queued = False
+        self.event_id = event_id
+        self.fixed_time = fixed_time
 
     def enable_task(self):
         self.active = True
@@ -59,7 +63,7 @@ class TaskSchedulerModel(db.Model):
         self.log('has started')
 
     def log_finished(self):
-        self.log(f'has successfully fininshed after taking {helper.format_timedelta(self.last_run_duration)}')
+        self.log(f'has successfully finished after taking {helper.format_timedelta(self.last_run_duration)}')
 
 class TaskSchedulerLog(db.Model):
     __tablename__ = 'task_scheduler_log'

@@ -19,3 +19,5 @@ markdown
 Pillow
 gevent
 redis
+discord.py
+babel

@@ -1,4 +1,4 @@
-# API is for serving data to TypeScript/Javascript
+# API is for serving data to TypeScript/JavaScript
 import io
 from datetime import timedelta
 from PIL import Image
@@ -181,6 +181,41 @@ def activate_user(user_id):
     db.session.commit()
 
     return jsonify({'message': 'The user has been successfully activated'})
+
+
+@bp.route('/users/me/config', methods=['POST'])
+@api_route
+def update_user_config():
+    user = User.query.filter_by(id=current_user.id).first_or_404()
+
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
+    
+    try:
+        user.update_config(data)
+    except Exception as e:
+        logger.error(f'An error occurred when updating user config: {e}')
+        return jsonify({'message': 'Unknown error occurred'}), 400
+
+    return jsonify({
+        'message': 'The user config has been successfully updated',
+        'data': user.to_dict()})
+
+@bp.route('/users/me/discord/unlink', methods=['POST'])
+@api_route
+def unlink_user_discord():
+    user = User.query.filter_by(id=current_user.id).first_or_404()
+    
+    try:
+        user.config.unlink_discord()
+    except Exception as e:
+        logger.error(f'An error occurred when unlinking user discord: {e}')
+        return jsonify({'message': 'Unknown error occurred'}), 400
+
+    return jsonify({
+        'message': 'Discord Account unlinked',
+        'data': user.to_dict()})
 
 #------------------------------------------ ROLE ------------------------------------------#
 
