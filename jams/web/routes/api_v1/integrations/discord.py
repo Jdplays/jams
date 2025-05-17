@@ -38,6 +38,9 @@ def get_config():
 @bp.route('/config', methods=['POST'])
 @api_route
 def edit_config():
+    if not discord.is_bot_ready():
+        return jsonify({'message': 'Discord Bot is not ready or running'}), 400
+    
     data = request.get_json()
     if not data:
         return jsonify({'message': 'No data provided'}), 400
@@ -178,3 +181,13 @@ def disable():
         'message': 'Discord Integration disabled',
         'data': discord_config
     })
+
+@bp.route('/sync-nicknames', methods=['POST'])
+@api_route
+def sync_nicknames():
+    if not discord.is_bot_ready():
+        return jsonify({'message': 'Discord Bot is not ready or running'}), 400
+    
+    discord.sync_user_nicknames()
+
+    return jsonify({'message': 'Username Sync queued'})

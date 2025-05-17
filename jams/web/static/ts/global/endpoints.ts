@@ -2531,6 +2531,22 @@ export function disableDiscordIntegrationConfig():Promise<ApiResponse<DiscordInt
     });
 }
 
+export function discordIntegrationSyncNicknames():Promise<ApiResponse<any>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/discord/sync-nicknames`,
+            type: 'POST',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
 // #endregion
 
 // #region Config

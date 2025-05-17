@@ -13,6 +13,7 @@ from common.integrations.eventbrite import deactivate_event_update_tasks, sync_a
 from common.util.database import create_event
 from common.util.task_scheduler_util import create_event_tasks, update_scheduled_post_event_task_date
 from common.extensions import get_logger
+from common.integrations.discord import sync_user_nicknames
 
 from web.util.decorators import api_route, protect_user_updates
 from web.util import helper
@@ -101,6 +102,8 @@ def edit_user(user_id):
                 if current_user.id == user_id:
                     abort(400, description='User cannot update their own badge')
                     continue
+            if field == any(['first_name', 'last_name', 'username']):
+                sync_user_nicknames(user_id)
             setattr(user, field, value)
     
     db.session.commit()

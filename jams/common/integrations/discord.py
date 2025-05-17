@@ -2,14 +2,13 @@
 
 import requests
 import time
-from asyncio import run_coroutine_threadsafe
 
 from common.configuration import ConfigType, get_config_value, set_config_value
 from common.extensions import get_logger
 from common.models import db, ExternalAPILog, DiscordBotMessage
-from common.util.enums import DiscordMessageType, DiscordMessageView
+from common.redis import utils as redis_utils
 from common.util import helper
-from common.redis.utils import get_discord_bot_status, get_discord_bot_config, discord_bot_control
+from common.util.enums import DiscordMessageType, DiscordMessageView
 
 logger = get_logger('DiscordIntegration')
 base_url = 'https://discord.com/api/v10'
@@ -81,7 +80,7 @@ def verify_client_secret(secret):
         'Content-Type': 'application/x-www-form-urlencoded'
     }
 
-    
+
     auth=(DISCORD_CLIENT_ID, secret)
 
     try:
@@ -127,13 +126,13 @@ def get_discord_user_info(access_token):
 
 # Start the discord server
 def start_server():
-    discord_bot_control(True)
+    redis_utils.discord_bot_control(True)
 
     timeout = 10
     start_time = time.time()
 
     while time.time() - start_time < timeout:
-        status = get_discord_bot_status()
+        status = redis_utils.get_discord_bot_status()
         if status:
             if status.get('ready') is True:
                 break
@@ -142,16 +141,19 @@ def start_server():
         logger.error('Bot did not become ready within 10 seconds.')
 
 def stop_server():
-    discord_bot_control(False)
+    redis_utils.discord_bot_control(False)
+
+def is_bot_ready():
+    return redis_utils.get_discord_bot_status().get('ready')
 
 def get_bot_client_id():
-    return get_discord_bot_config().get('client_id')
+    return redis_utils.get_discord_bot_config().get('client_id')
 
 def get_bot_guild_list():
-    return get_discord_bot_config().get('guild_list')
+    return redis_utils.get_discord_bot_config().get('guild_list')
 
 def verify_guild_id(guild_id):
-    guild_list = get_discord_bot_config().get('guild_list')
+    guild_list = redis_utils.get_discord_bot_config().get('guild_list')
     current_guild_ids = {item['id'] for item in guild_list}
     return guild_id in current_guild_ids
 
@@ -161,14 +163,14 @@ def verify_channel_id(channel_id):
     return str(channel_id) in existing_ids
 
 def get_guild_name(guild_id):
-    guild_list = get_discord_bot_config().get('guild_list')
+    guild_list = redis_utils.get_discord_bot_config().get('guild_list')
     for g in guild_list:
         if g['id'] == str(guild_id):
             return g['name']
     return None
 
 def get_channels_in_server(guild_id):
-    return get_discord_bot_config().get('guild_channel_list')
+    return redis_utils.get_discord_bot_config().get('guild_channel_list')
 
 def get_persistent_message(message_db_id):
     message = DiscordBotMessage.query.filter_by(id=message_db_id).first()
@@ -182,21 +184,16 @@ def get_params_for_message(message_db_id):
     return message.view_data
 
 def set_bot_guild_id(guild_id):
-    discord_bot_control(config={'guild_id': guild_id})
+    redis_utils.discord_bot_control(config={'guild_id': guild_id})
 
-def fetch_discord_user_nickname(account_id):
-    from jams import DiscordBot
-    future = run_coroutine_threadsafe(DiscordBot.fetch_discord_user_nickname_async(account_id), DiscordBot._loop)
-    return future.result(timeout=5)
-
-def set_discord_user_nickname(account_id, new_nick):
-    from jams import DiscordBot
-    future = run_coroutine_threadsafe(DiscordBot.set_discord_user_nickname_async(account_id, new_nick), DiscordBot._loop)
-    return future.result(timeout=5)
+def sync_user_nicknames(user_id=None):
+    data = None
+    if user_id is not None:
+        data = {'user_id': user_id}
+    
+    redis_utils.discord_bot_action('username_sync', data)
 
 def send_or_update_latest_rsvp_reminder_to_confirm(volunteer_attendance):
-    from jams import DiscordBot
-
     attending_setup = volunteer_attendance.setup
     attending_main = volunteer_attendance.main
     attending_packdown = volunteer_attendance.packdown
@@ -241,7 +238,7 @@ def send_or_update_latest_rsvp_reminder_to_confirm(volunteer_attendance):
     ).first()
 
     if latest_reminder:
-        DiscordBot.update_dm_to_user(
+        redis_utils.discord_bot_update_message(
             message_db_id=latest_reminder.id,
             new_content=full_message,
             new_view_type=DiscordMessageView.RSVP_COMPLETE_VIEW,
@@ -250,14 +247,12 @@ def send_or_update_latest_rsvp_reminder_to_confirm(volunteer_attendance):
         )
     else:
         attendance_url = helper.get_volunteer_attendance_url()
-        DiscordBot.send_dm_to_user(
-            user_id=volunteer_attendance.user_id,
-            discord_user_id=volunteer_attendance.user.config.discord_account_id,
+        redis_utils.discord_bot_send_message(
             message=full_message,
             message_type=DiscordMessageType.RSVP_COMPLETE,
+            user_id=volunteer_attendance.user_id,
             view_type=DiscordMessageView.RSVP_COMPLETE_VIEW,
             view_data={'url': attendance_url},
             event_id=volunteer_attendance.event_id,
             active=False
-
         )

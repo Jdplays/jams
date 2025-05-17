@@ -1,4 +1,4 @@
-import { disableDiscordIntegrationConfig, enableDiscordIntegration, getDiscordIntegrationConfig, saveDiscordIntegrationConfig, verifyDiscordBotToken, verifyDiscordClientSecret } from "@global/endpoints"
+import { disableDiscordIntegrationConfig, discordIntegrationSyncNicknames, enableDiscordIntegration, getDiscordIntegrationConfig, saveDiscordIntegrationConfig, verifyDiscordBotToken, verifyDiscordClientSecret } from "@global/endpoints"
 import { DiscordBotStartupResponse, DiscordGuild, DiscordIntegrationConfig } from "@global/endpoints_interfaces"
 import { addSpinnerToElement, createDropdown, emptyElement, errorToast, isDefined, isNullEmptyOrSpaces, removeSpinnerFromElement, successToast } from "@global/helper"
 import { startupDiscordIntegrationGuildList } from "@global/sse_endpoints"
@@ -343,6 +343,15 @@ function copyDiscordBotAddURL() {
     
 }
 
+function syncNicknamesOnClick() {
+    discordIntegrationSyncNicknames().then((response) => {
+        successToast(response.message)
+    }).catch((error) => {
+        const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
+        errorToast(errorMessage)
+    })
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     tokenTextBoxOnInput()
 
@@ -370,5 +379,6 @@ document.addEventListener("DOMContentLoaded", () => {
         (<any>window).disableDiscordIntegrationOnClick = disableDiscordIntegrationOnClick;
         (<any>window).verifyDiscordBotSecretOnClick = verifyDiscordBotSecretOnClick;
         (<any>window).secretTextBoxOnInput = secretTextBoxOnInput;
+        (<any>window).syncNicknamesOnClick = syncNicknamesOnClick;
     }
 });

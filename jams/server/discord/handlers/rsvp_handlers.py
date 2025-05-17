@@ -6,7 +6,7 @@ from common.util.helper import add_or_update_volunteer_attendance
 from common.extensions import get_logger
 
 from server.discord.interaction_router import register_handler
-from server.discord.helper import store_rsvp_selection, pop_rsvp_selection
+from server.discord.utils import store_rsvp_selection, pop_rsvp_selection
 from server.discord import ui
 
 logger = get_logger('DiscordBot')

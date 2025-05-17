@@ -3,6 +3,7 @@ from flask import Blueprint, request, jsonify, abort
 from datetime import datetime, UTC
 
 from common.models import db, VolunteerAttendance, VolunteerSignup, Event, User, FireList
+from common.util import helper as common_helper
 
 from web.util import helper
 from web.util.sse import sse_stream
@@ -64,7 +65,7 @@ def edit_user_attendance(user_id, event_id):
     packdown = bool(data.get('packdown'))
     note = data.get('note')
 
-    attendance = helper.add_or_update_volunteer_attendance(
+    attendance = common_helper.add_or_update_volunteer_attendance(
         user_id=user_id,
         event_id=event_id,
         setup=setup,

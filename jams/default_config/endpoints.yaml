@@ -225,5 +225,6 @@ groups:
       verify_discord_client_secret: routes.api_v1.integrations.discord.verify_client_secret
       enable_discord_integration: routes.api_v1.integrations.discord.enable
       disable_discord_integration: routes.api_v1.integrations.discord.disable
+      sync_discord_nicknames: routes.api_v1.integrations.discord.sync_nicknames
 
 

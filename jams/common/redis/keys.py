@@ -12,3 +12,4 @@ class RedisChannels(str, Enum):
     DISCORD_BOT_CONTROL = 'discordbot:control'
     DISCORD_BOT_ACTION = 'discordbot:action'
     DISCORD_BOT_SEND_MESSAGE ='discordbot:send_message'
+    DISCORD_BOT_UPDATE_MESSAGE ='discordbot:update_message'

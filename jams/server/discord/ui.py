@@ -18,7 +18,7 @@ class RSVPSelect(Select):
             min_values=1,
             max_values=3,
             options=options,
-            custom_id=f'open_rsvp_notes_modal:{message_db_id}' 
+            custom_id=f'open_rsvp_notes_modal:{message_db_id}'
         )
 
         self.message_db_id = message_db_id
@@ -36,6 +36,14 @@ class RSVPReminderView(View):
         # Add the link button manually as link buttons cant use @button decorator
         self.add_item(Button(label='Open JAMS', style=ButtonStyle.link, url=url))
 
+class BasicRSVPReminderView(View):
+    def __init__(self, url):
+        super().__init__(timeout=None)
+        self.url = url
+
+        # Add the link button manually as link buttons cant use @button decorator
+        self.add_item(Button(label='Add Attendance', style=ButtonStyle.link, url=url))
+
 
 class RSVPModal(Modal, title='RSVP Form'):
     def __init__(self, url, message_db_id):
@@ -47,15 +55,15 @@ class RSVPModal(Modal, title='RSVP Form'):
         self.add_item(self.notes)
 
 class RSVPCompleteView(View):
-    def __init__(self, message_db_id, url):
+    def __init__(self, url):
         super().__init__(timeout=None)
         self.url = url
-        self.message_db_id = message_db_id
 
         self.add_item(Button(label='Update in JAMS', style=ButtonStyle.link, url=url))
 
 
 VIEW_REGISTRY: Dict[str, View] = {
     DiscordMessageView.RSVP_REMINDER_VIEW.value: RSVPReminderView,
-    DiscordMessageView.RSVP_COMPLETE_VIEW.value: RSVPCompleteView
+    DiscordMessageView.RSVP_COMPLETE_VIEW.value: RSVPCompleteView,
+    DiscordMessageView.BASIC_RSVP_VIEW.value: BasicRSVPReminderView
 }

@@ -50,12 +50,18 @@ class JOLTHealthCheckStatus(Enum):
     FAILED = 'FAILED'
 
 class DiscordMessageType(Enum):
+    BASIC_RSVP_REMINDER = 'BASIC_RSVP_REMINDER'
     RSVP_REMINDER = 'RSVP_REMINDER'
     RSVP_COMPLETE = 'RSVP_COMPLETE'
     RSVP_EXPIRED = 'RSVP_EXPIRED'
     UNKNOWN = 'UNKNOWN'
 
 class DiscordMessageView(Enum):
+    BASIC_RSVP_VIEW = 'BASIC_RSVP_VIEW'
     RSVP_REMINDER_VIEW = 'RSVP_REMINDER_VIEW'
     RSVP_COMPLETE_VIEW = 'RSVP_COMPLETE_VIEW'
     UNKNOWN = 'UNKNOWN'
+
+class DiscordRecipientType(Enum):
+    CHANNEL = 'CHANNEL'
+    DM = 'DM'

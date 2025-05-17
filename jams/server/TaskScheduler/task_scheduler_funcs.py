@@ -6,9 +6,10 @@ from common.models import db, Event, Attendee, User, VolunteerAttendance, Discor
 from common.configuration import ConfigType, get_config_value
 from common.util.helper import calculate_streaks
 from common.util import helper
-from common.integrations import discord
 from common.models.config import UserConfig
 from common.util.enums import DiscordMessageType, DiscordMessageView
+
+from server.discord import utils as discord_utils
 
 def update_event_attendees_task(event_id):
     from common.integrations.eventbrite import sync_all_attendees_at_event
@@ -37,15 +38,15 @@ def post_event_task(event_id):
 
 # BACKGROUND TASK FUNCTIONS
 def background_task():
-    from server import DiscordBot
-    if get_config_value(ConfigType.DISCORD_BOT_ENABLED) and DiscordBot.is_ready():
+    bot = discord_utils._get_discord_bot()
+    if get_config_value(ConfigType.DISCORD_BOT_ENABLED) and bot.is_ready():
         send_attendance_reminders()
-        sync_discord_nicknames()
         expire_old_rsvp_messages()
+        discord_utils.sync_discord_nicknames()
 
 
 def send_attendance_reminders():
-    from server import DiscordBot
+    bot = discord_utils._get_discord_bot()
     event = helper.get_next_event()
     if not event:
         return
@@ -81,7 +82,7 @@ def send_attendance_reminders():
         base_message = get_reminder_message(due_reminder, (len(previous_event_reminders) == 0), event.start_date_time)
         full_message = f'🗓️ **{base_message}**\nPlease fill out the form bellow:'
 
-        DiscordBot.send_dm_to_user(
+        bot.send_dm_to_user(
             user_id=recipient.id,
             discord_user_id=recipient.config.discord_account_id,
             message=full_message,
@@ -92,7 +93,7 @@ def send_attendance_reminders():
         )
 
         for prev_message in previous_event_reminders:
-            DiscordBot.update_dm_to_user(
+            bot.update_message(
                 message_db_id=prev_message.id,
                 expired=True
             )
@@ -174,26 +175,19 @@ def get_reminder_message(due_reminder, first_reminder, event_date):
             return default_message
 
 def expire_old_rsvp_messages():
-    pass
+    bot = discord_utils._get_discord_bot()
+    
+    current_date = datetime.now(UTC).date()
+    days_ago_30 = current_date - timedelta(days=30)
 
-def sync_discord_nicknames():
-    is_global_nickname_sync_enabled = get_config_value(ConfigType.DISCORD_BOT_NAME_SYNC_ENABLED)
+    old_rsvp_messages = DiscordBotMessage.query.filter(
+        DiscordBotMessage.message_type == DiscordMessageType.RSVP_REMINDER.name,
+        DiscordBotMessage.timestamp < days_ago_30
+    ).all()
 
-    discord_enabled_users = (
-        db.session.query(User)
-        .outerjoin(UserConfig, User.id == UserConfig.user_id)
-        .filter(UserConfig.discord_account_id != None)
-        .all()
-    )
 
-    for user in discord_enabled_users:
-        current_nickname = discord.fetch_discord_user_nickname(user.config.discord_account_id)
-        new_nickname = current_nickname
-
-        if is_global_nickname_sync_enabled:
-            new_nickname = user.display_name.strip()
-        
-        if user.config.discord_sync_streaks:
-            new_nickname = f'{new_nickname} - {user.attendance_streak.streak}🔥'.strip()
-        
-        discord.set_discord_user_nickname(user.config.discord_account_id, new_nickname)
+    for message in old_rsvp_messages:
+        bot.update_message(
+            message_db_id=message.id,
+            expired=True
+        )

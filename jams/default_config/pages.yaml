@@ -90,6 +90,7 @@ pages:
       verify_discord_client_secret:
       enable_discord_integration:
       disable_discord_integration:
+      sync_discord_nicknames:
 
   settings_add_role:
     endpoint: routes.frontend.private.admin.settings_add_role
