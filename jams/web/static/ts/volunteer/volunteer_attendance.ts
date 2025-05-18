@@ -9,7 +9,7 @@ import {
 } from '@global/endpoints'
 import { Metadata, Role, User, VolunteerAttendance } from "@global/endpoints_interfaces";
 import { EventDetails, EventDetailsOptions } from '@global/event_details';
-import { animateElement, buildQueryString, emptyElement, errorToast, isTouchDevice, successToast, validateTextInput, warningToast } from '@global/helper';
+import { animateElement, buildQueryString, emptyElement, errorToast, isNullEmptyOrSpaces, isTouchDevice, successToast, validateTextInput, warningToast } from '@global/helper';
 import { QueryStringData } from '@global/interfaces';
 import { addTooltipToElement, buildUserTooltip, hideTooltip } from '@global/tooltips';
 import { CellClickedEvent, CellMouseOverEvent, createGrid, GridApi, GridOptions, ITooltipComp } from 'ag-grid-community';
@@ -410,10 +410,19 @@ async function preloadRoles(role_ids:number[]) {
 
 
 document.addEventListener("DOMContentLoaded", async () => {
-    const eventDetailsOptions:EventDetailsOptions = {
+        const eventDetailsOptions:EventDetailsOptions = {
         dateInclusive: true,
         eventDependentElements: [document.getElementById('update-attendance-button'), document.getElementById('update-attendance-card')],
         eventOnChangeFunc: loadAttendance
+    }
+
+    // Clear Query Parameters
+    window.history.replaceState({}, document.title, window.location.pathname);
+
+    const flags = document.getElementById('page-flags') as HTMLDivElement
+    const eventId = flags.dataset.eventId
+    if (!isNullEmptyOrSpaces(eventId)) {
+        eventDetailsOptions.eventId = Number(eventId)
     }
 
     eventDetails = new EventDetails('event-details', eventDetailsOptions)
@@ -424,6 +433,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     ]);
         
     CurrentUserId = userIdResponse
+
 
     if (eventDetails.eventId === -1) {
         return

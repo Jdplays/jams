@@ -188,8 +188,6 @@ export class ScheduleGrid {
             this.eventMetadata = (await getEventMetadata(this.options.eventId)).data
         }
 
-        console.log(isTouchDevice())
-
         if (isTouchDevice() && this.options.edit) {
             // Editing is currently not available on touch devices due to drag and drop not working well on them
             // TODO: Add mobile friendly way to edit the schedule

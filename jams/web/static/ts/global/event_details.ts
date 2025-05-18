@@ -51,6 +51,8 @@ export class EventDetails {
            }).catch(() => {
             this.eventId = -1
            })
+        } else {
+            this.eventId = this.options.eventId
         }
 
         let infoTextDiv = document.createElement('div')
