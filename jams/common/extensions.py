@@ -63,10 +63,6 @@ oauth = OAuth()
 minio_client = create_minio_client()
 redis_client = create_redis_client()
 
-# Make sure required MinIO buckets exist
-workshop_bucket = create_bucket(minio_client, 'jams-workshops', True)
-user_data_bucket = create_bucket(minio_client, 'user-data', True)
-
 
 # Dynamically created per app
 def get_logger(name='app'):

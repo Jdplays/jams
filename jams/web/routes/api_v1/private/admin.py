@@ -116,6 +116,7 @@ def edit_user(user_id):
 @bp.route('/users/me/avatar', methods=['POST'])
 @api_route
 def upload_user_avatar():
+    from web import user_data_bucket
     if 'file' not in request.files:
         return jsonify({'error': 'No file provided'}), 400
 
@@ -150,7 +151,7 @@ def upload_user_avatar():
 
     # Upload to storage
     file_path = f'users/{current_user.id}/profile.jpg'
-    file_db_obj = files.upload_file(bucket_name=files.user_data_bucket, file_name=file_path, file_data=image_stream)
+    file_db_obj = files.upload_file(bucket_name=user_data_bucket, file_name=file_path, file_data=image_stream)
 
     if not file_db_obj:
         return jsonify({'error': 'An error occurred while uploading the file'}), 500
