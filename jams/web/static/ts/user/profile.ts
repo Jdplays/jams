@@ -75,7 +75,7 @@ function editOnClick() {
     const discordSettingsBlock = document.getElementById('discord-settings-block') as HTMLElement
     const discordSyncStreakPreview = document.getElementById('discord-sync-streak-preview') as HTMLElement
 
-    if (userData.config.discord_account_id === null) {
+    if (!userData.config || userData.config.discord_account_id == null) {
         discordLinkBlock.style.display = 'block'
         discordSettingsBlock.style.display = 'none'
     } else {
