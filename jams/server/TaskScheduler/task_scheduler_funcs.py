@@ -63,7 +63,7 @@ def send_attendance_reminders():
         .all()
     )
 
-    attendance_url = helper.get_volunteer_attendance_url()
+    attendance_url = helper.get_volunteer_attendance_url(event.id)
 
     for recipient in recipients:
         if not recipient.config or recipient.config.discord_account_id is None:

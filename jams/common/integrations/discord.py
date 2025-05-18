@@ -32,7 +32,7 @@ def discord_config_dict():
         dict[item.name] = get_config_value(item)
     
     if dict[ConfigType.DISCORD_BOT_GUILD_ID.name]:
-        channels_dict = get_channels_in_server(dict[ConfigType.DISCORD_BOT_GUILD_ID.name])
+        channels_dict = get_channels_in_server()
         dict['DISCORD_BOT_CHANNELS'] = channels_dict
      
     return dict
@@ -158,7 +158,7 @@ def verify_guild_id(guild_id):
     return guild_id in current_guild_ids
 
 def verify_channel_id(channel_id):
-    channels = get_channels_in_server(get_config_value(ConfigType.DISCORD_BOT_GUILD_ID))
+    channels = get_channels_in_server()
     existing_ids = [str(item['id']) for item in channels]
     return str(channel_id) in existing_ids
 
@@ -169,7 +169,7 @@ def get_guild_name(guild_id):
             return g['name']
     return None
 
-def get_channels_in_server(guild_id):
+def get_channels_in_server():
     return redis_utils.get_discord_bot_config().get('guild_channel_list')
 
 def get_persistent_message(message_db_id):
@@ -246,7 +246,7 @@ def send_or_update_latest_rsvp_reminder_to_confirm(volunteer_attendance):
             active=False
         )
     else:
-        attendance_url = helper.get_volunteer_attendance_url()
+        attendance_url = helper.get_volunteer_attendance_url(volunteer_attendance.event_id)
         redis_utils.discord_bot_send_message(
             message=full_message,
             message_type=DiscordMessageType.RSVP_COMPLETE,

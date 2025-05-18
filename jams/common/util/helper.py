@@ -437,9 +437,11 @@ def ordinal(n):
         suffix = {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')
     return f'{n}{suffix}'
 
-def get_volunteer_attendance_url():
+def get_volunteer_attendance_url(event_id=None):
     base_url = get_config_value(ConfigType.APP_URL)
     attendance_url = f'{base_url}/private/volunteer/attendance'
+    if event_id is not None:
+        attendance_url += f'?event_id={event_id}'
     return attendance_url
 
 def add_or_update_volunteer_attendance(user_id, event_id, setup, main, packdown, note):
