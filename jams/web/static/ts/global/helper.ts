@@ -696,8 +696,10 @@ export async function preloadUsersInfoMap(role_ids:number[]|null=null) {
 }
 
 export function isTouchDevice() {
-    return (('ontouchstart' in window) ||
-        (navigator.maxTouchPoints > 0));
+    const mediaQuery = window.matchMedia("(pointer: coarse)")
+    let isTouch = mediaQuery.matches
+
+    return isTouch
 }
 
 export function roundNumber(input:number, decimalPoints:number=2) {

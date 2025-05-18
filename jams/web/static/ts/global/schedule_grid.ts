@@ -163,7 +163,7 @@ export class ScheduleGrid {
         }
     }
 
-    // Clear resources and clean up if you ever need to reinitialise schedule grid
+    // Clear resources and clean up if you ever need to re-initialise schedule grid
     public teardown() {
         this.scheduleContainer = null
         this.options = null
@@ -187,6 +187,8 @@ export class ScheduleGrid {
         if (this.options.edit) {
             this.eventMetadata = (await getEventMetadata(this.options.eventId)).data
         }
+
+        console.log(isTouchDevice())
 
         if (isTouchDevice() && this.options.edit) {
             // Editing is currently not available on touch devices due to drag and drop not working well on them

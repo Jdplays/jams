@@ -16,9 +16,6 @@ from web.util.helper import user_has_access_to_page
 
 app_type = 'web'
 
-workshop_bucket = None
-user_data_bucket = None
-
 def create_app():
     app = Flask(__name__)
     app.config.from_object(get_app_config(app_type))
@@ -52,10 +49,6 @@ def create_app():
         # Store the version in Redis
         current_app_version = get_app_version()
         redis_client.set('web:version', current_app_version)
-
-        # Make sure required MinIO buckets exist
-        create_bucket(minio_client, 'jams-workshops', True)
-        create_bucket(minio_client, 'user-data', True)
 
         setup_oauth()
         

@@ -43,12 +43,29 @@ def create_redis_client():
     redis_url = os.getenv('REDIS_URL', 'jams-redis:6379')
     return redis.Redis.from_url(redis_url, decode_responses=True)
 
+def create_bucket(minio_client, name, versioning=True):
+    # Create the bucket if it doesn't already exist
+    try:
+        if not minio_client.bucket_exists(name):
+            minio_client.make_bucket(name)
+        if versioning:
+            minio_client.set_bucket_versioning(name, VersioningConfig(ENABLED))
+        print(f'\'{name}\' bucket successfully setup')
+        return name
+    except S3Error as e:
+        print(f'An Error occurred when creating the bucket \'{name}\': {e}')
+        return None
+
 # Shared across all apps
 db = SQLAlchemy()
 migrate = Migrate()
 oauth = OAuth()
 minio_client = create_minio_client()
 redis_client = create_redis_client()
+
+# Make sure required MinIO buckets exist
+workshop_bucket = create_bucket(minio_client, 'jams-workshops', True)
+user_data_bucket = create_bucket(minio_client, 'user-data', True)
 
 
 # Dynamically created per app
@@ -65,19 +82,6 @@ def get_logger(name='app'):
         logger.addHandler(handler)
         
     return logger
-
-def create_bucket(minio_client, name, versioning=True):
-    # Create the bucket if it doesn't already exist
-    try:
-        if not minio_client.bucket_exists(name):
-            minio_client.make_bucket(name)
-        if versioning:
-            minio_client.set_bucket_versioning(name, VersioningConfig(ENABLED))
-        print(f'\'{name}\' bucket successfully setup')
-        return name
-    except S3Error as e:
-        print(f'An Error occurred when creating the bucket \'{name}\': {e}')
-        return None
 
 def clear_table(model):
     if hasattr(db, 'engine'):

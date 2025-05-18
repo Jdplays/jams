@@ -3,6 +3,7 @@ import io
 
 from common.models import db, File, FileVersion
 from common.extensions import minio_client as client
+from common.extensions import workshop_bucket, user_data_bucket
 
 
 def get_files_name_list(bucket_name):
