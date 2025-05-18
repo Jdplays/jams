@@ -1624,7 +1624,7 @@ export function getExternalApiLogsMetadata():Promise<Partial<Metadata>> {
 
 export function getAttendanceForEvent(eventID:number, queryString:string|null = null):Promise<ApiMultiEntryResponse<[VolunteerAttendance]>> {
     return new Promise((resolve, reject) => {
-        let url = `${baseURL}/events/${eventID}/volunteer_attendences`
+        let url = `${baseURL}/events/${eventID}/volunteer_attendances`
         if (queryString) {
             url += `?${queryString}`
         }
@@ -1645,10 +1645,10 @@ export function getAttendanceForEvent(eventID:number, queryString:string|null = 
 export function getAttendanceForUser(userID:number, eventID:number):Promise<VolunteerAttendance> {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: `${baseURL}/users/${userID}/volunteer_attendences/${eventID}`,
+            url: `${baseURL}/users/${userID}/volunteer_attendances/${eventID}`,
             type: 'GET',
             success: function(response) {
-                resolve(response.volunteer_attendence);   
+                resolve(response.volunteer_attendance);   
             },
             error: function(error) {
                 console.log('Error fetching data:', error);
@@ -1662,7 +1662,7 @@ export function addAttendance(userID:number, eventID:number, data:Partial<Volunt
     return new Promise((resolve, reject) => {
         $.ajax({
             type: 'POST',
-            url: `${baseURL}/users/${userID}/volunteer_attendences/${eventID}`,
+            url: `${baseURL}/users/${userID}/volunteer_attendances/${eventID}`,
             data: JSON.stringify(data),
             contentType: 'application/json',
             success: function (response) {
@@ -1680,7 +1680,7 @@ export function editAttendance(userID:number, eventID:number, data:Partial<Volun
     return new Promise((resolve, reject) => {
         $.ajax({
             type: 'PATCH',
-            url: `${baseURL}/users/${userID}/volunteer_attendences/${eventID}`,
+            url: `${baseURL}/users/${userID}/volunteer_attendances/${eventID}`,
             data: JSON.stringify(data),
             contentType: 'application/json',
             success: function (response) {
@@ -1723,7 +1723,7 @@ export function getSignupsForUser(eventId:number, userId:number):Promise<ApiMult
             url: `${baseURL}/events/${eventId}/volunteer_signups/${userId}`,
             type: 'GET',
             success: function(response) {
-                resolve(response.volunteer_attendence);   
+                resolve(response.volunteer_attendance);   
             },
             error: function(error) {
                 console.log('Error fetching data:', error);

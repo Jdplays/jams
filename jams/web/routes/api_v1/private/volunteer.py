@@ -15,7 +15,7 @@ bp = Blueprint('volunteer', __name__)
 
 #------------------------------------------ Volunteer Attendance ------------------------------------------#
 
-@bp.route('/events/<int:event_id>/volunteer_attendences', methods=['GET'])
+@bp.route('/events/<int:event_id>/volunteer_attendances', methods=['GET'])
 @api_route
 def get_event_attendance(event_id):
     Event.query.filter_by(id=event_id).first_or_404()
@@ -37,16 +37,16 @@ def get_event_attendance(event_id):
 
     return jsonify(data)
 
-@bp.route('/users/<int:user_id>/volunteer_attendences/<int:event_id>', methods=['GET'])
+@bp.route('/users/<int:user_id>/volunteer_attendances/<int:event_id>', methods=['GET'])
 @api_route
 def get_user_attendance(user_id, event_id):
     Event.query.filter_by(id=event_id).first_or_404()
     attendance = VolunteerAttendance.query.filter_by(user_id=user_id, event_id=event_id).first_or_404()
-    return jsonify({'volunteer_attendence': attendance.to_dict()})
+    return jsonify({'volunteer_attendance': attendance.to_dict()})
 
 
-@bp.route('/users/<int:user_id>/volunteer_attendences/<int:event_id>', methods=['POST'])
-@bp.route('/users/<int:user_id>/volunteer_attendences/<int:event_id>', methods=['PATCH'])
+@bp.route('/users/<int:user_id>/volunteer_attendances/<int:event_id>', methods=['POST'])
+@bp.route('/users/<int:user_id>/volunteer_attendances/<int:event_id>', methods=['PATCH'])
 @protect_user_updates
 @api_route
 def edit_user_attendance(user_id, event_id):
