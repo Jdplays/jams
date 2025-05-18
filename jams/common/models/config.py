@@ -33,10 +33,8 @@ class UserConfig(db.Model):
     discord_username = Column(String(), nullable=True)
     discord_show_username = Column(Boolean(), default=False, server_default='false')
     discord_sync_streaks = Column(Boolean(), default=False, server_default='false')
-    discord_last_reminder_message_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey('discord_bot_message.id'), nullable=True)
 
     user = relationship('User', backref=backref('config', uselist=False))
-    last_discord_reminder_message = relationship('DiscordBotMessage')
 
     def __init__(self, user_id):
         self.user_id = user_id
@@ -46,7 +44,6 @@ class UserConfig(db.Model):
         self.discord_username = None
         self.discord_show_username = False
         self.discord_sync_streaks = False
-        self.discord_last_reminder_message_id = None
 
         db.session.commit()
 
@@ -57,8 +54,7 @@ class UserConfig(db.Model):
             return_obj.update({
                 'discord_account_id': self.discord_account_id,
                 'discord_username': self.discord_username,
-                'discord_show_username': self.discord_show_username,
-                'discord_last_reminder_message_id': self.discord_last_reminder_message_id
+                'discord_show_username': self.discord_show_username
             })
             if get_config_value(ConfigType.STREAKS_ENABLED):
                 return_obj.update({

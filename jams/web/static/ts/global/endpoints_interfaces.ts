@@ -105,7 +105,6 @@ export interface UserConfig {
     discord_username?:string
     discord_show_username?:boolean
     discord_sync_streaks?:boolean
-    discord_last_reminder_timestamp?:string
 }
 
 export interface User {
