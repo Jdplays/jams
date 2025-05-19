@@ -242,7 +242,7 @@ class DiscordBotServer:
         if self._loop and self._is_running:
             self._loop.call_soon_threadsafe(
                 asyncio.create_task,
-                self.send_dm_to_user_async(*args, **kwargs),
+                self.send_message_to_channel_async(*args, **kwargs),
             )
     
     def send_dm_to_user(self, user_id, discord_user_id, message, message_type:str, view_type:str=None, view_data=None, event_id=None, active=True):

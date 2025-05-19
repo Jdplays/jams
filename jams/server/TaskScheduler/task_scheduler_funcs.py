@@ -86,8 +86,8 @@ def send_attendance_reminders():
             user_id=recipient.id,
             discord_user_id=recipient.config.discord_account_id,
             message=full_message,
-            message_type=DiscordMessageType.RSVP_REMINDER,
-            view_type=DiscordMessageView.RSVP_REMINDER_VIEW,
+            message_type=DiscordMessageType.RSVP_REMINDER.name,
+            view_type=DiscordMessageView.RSVP_REMINDER_VIEW.name,
             view_data={'url': attendance_url},
             event_id=event.id
         )
