@@ -15,11 +15,14 @@ from common.redis.keys import RedisChannels
 from server.util.seeder import preform_seed
 from server.TaskScheduler.task_scheduler import TaskScheduler
 from server.WebSocketServer.websocket_server import WebsocketServer
-from server.redis.handlers import handle_webhook_trigger
+from server.redis import handlers
+from server.discord.bot import DiscordBotServer
+from server.redis import utils as redis_utils
 
 app_type = 'server'
 TS = TaskScheduler()
 WSS = WebsocketServer()
+DiscordBot = DiscordBotServer()
 
 def create_app():
     app = Flask(__name__)
@@ -84,11 +87,28 @@ def prep_app(app):
 
     # Setup the redis router
     router = RedisRouter(channels=[
-        RedisChannels.WEBHOOK_TRIGGER
+        RedisChannels.WEBHOOK_TRIGGER,
+        RedisChannels.DISCORD_BOT_CONTROL,
+        RedisChannels.DISCORD_BOT_ACTION,
+        RedisChannels.DISCORD_BOT_SEND_MESSAGE,
+        RedisChannels.DISCORD_BOT_UPDATE_MESSAGE
     ])
-    router.register(RedisChannels.WEBHOOK_TRIGGER, handle_webhook_trigger)
+    router.register(RedisChannels.WEBHOOK_TRIGGER, handlers.handle_webhook_trigger)
+    router.register(RedisChannels.DISCORD_BOT_CONTROL, handlers.handle_discord_bot_control)
+    router.register(RedisChannels.DISCORD_BOT_ACTION, handlers.handle_discord_action)
+    router.register(RedisChannels.DISCORD_BOT_SEND_MESSAGE, handlers.handle_discord_send_message)
+    router.register(RedisChannels.DISCORD_BOT_UPDATE_MESSAGE, handlers.handle_discord_update_message)
     router.init_app(app)
 
     router_thread = threading.Thread(target=router.start)
     router_thread.daemon = True
     router_thread.start()
+
+    # Clear Discord Redis keys
+    redis_utils.clear_discord_keys()
+
+    # Start the discord bot
+    DiscordBot.init_app(app)
+
+    if get_config_value(ConfigType.DISCORD_BOT_ENABLED):
+        DiscordBot.start()

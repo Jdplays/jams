@@ -1,4 +1,4 @@
-# API is for serving data to TypeScript/Javascript
+# API is for serving data to TypeScript/JavaScript
 from flask import Blueprint, request, jsonify, abort
 
 from common.integrations import eventbrite

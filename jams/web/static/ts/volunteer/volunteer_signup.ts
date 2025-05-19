@@ -1,7 +1,7 @@
 import { addAttendance, getAttendanceForEvent, getCurrentUserId, getRoleNames } from "@global/endpoints";
 import { User, VolunteerAttendance } from "@global/endpoints_interfaces";
 import { EventDetails, EventDetailsOptions } from "@global/event_details";
-import { buildUserAvatar, emptyElement, errorToast, preloadUsersInfoMap, successToast } from "@global/helper";
+import { buildUserAvatar, emptyElement, errorToast, isNullEmptyOrSpaces, preloadUsersInfoMap, successToast } from "@global/helper";
 import { ScheduleGrid, ScheduleGridOptions } from "@global/schedule_grid";
 
 const eventDetailsOptions:EventDetailsOptions = {
@@ -178,6 +178,15 @@ async function loadSignupData(reloadGrid:boolean=false) {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
+    // Clear Query Parameters
+    window.history.replaceState({}, document.title, window.location.pathname);
+
+    const flags = document.getElementById('page-flags') as HTMLDivElement
+    const eventId = flags.dataset.eventId
+    if (!isNullEmptyOrSpaces(eventId)) {
+        eventDetailsOptions.eventId = Number(eventId)
+    }
+
     eventDetails = new EventDetails('event-details', eventDetailsOptions)
     await eventDetails.init()
 

@@ -98,6 +98,15 @@ export interface Event {
     external_url:string
 }
 
+export interface UserConfig {
+    id?:number
+    user_id?:number
+    discord_account_id?:string
+    discord_username?:string
+    discord_show_username?:boolean
+    discord_sync_streaks?:boolean
+}
+
 export interface User {
     id:number
     username:string
@@ -114,6 +123,7 @@ export interface User {
     avatar_file_id:string
     badge_text:string
     badge_icon:string
+    config?:UserConfig
 }
 
 export interface Role {
@@ -401,4 +411,33 @@ export interface EventStats {
     created_at:Date
     duration_diff:number
     retention_diff:number
+}
+
+export interface DiscordIntegrationConfig {
+    DISCORD_BOT_ENABLED:boolean
+    DISCORD_CLIENT_ID:string
+    DISCORD_CLIENT_SECRET:string
+    DISCORD_BOT_TOKEN:string
+    DISCORD_BOT_GUILD_ID:string
+    DISCORD_BOT_ANNOUNCEMENT_CHANNEL_ID:string
+    DISCORD_BOT_DM_ENABLED:boolean
+    DISCORD_BOT_NAME_SYNC_ENABLED:boolean
+    DISCORD_BOT_GUILD_NAME?:string
+    DISCORD_BOT_CHANNELS?:DiscordChannel[]
+}
+
+export interface DiscordGuild {
+    id:string
+    name:string
+}
+
+export interface DiscordChannel {
+    id:string
+    name:string
+}
+
+export interface DiscordBotStartupResponse {
+    status?:string
+    client_id?:string
+    guild_list?:DiscordGuild[]
 }

@@ -1,9 +1,11 @@
-import { editUser, getRolesPublicInfo, getUser, uploadUserAvatar } from "@global/endpoints";
-import { Role, User } from "@global/endpoints_interfaces";
+import { editUser, getRolesPublicInfo, getUser, unlinkDiscordAccount, updateUserConfig, uploadUserAvatar } from "@global/endpoints";
+import { Role, User, UserConfig } from "@global/endpoints_interfaces";
 import { buildQueryString, buildRoleBadge, buildUserAvatar, compressImage, emptyElement, errorToast, isDefined, isNullEmptyOrSpaces, removeSpinnerFromElement, successToast } from "@global/helper";
 import { QueryStringData } from "@global/interfaces";
 
 let userId:number = 0;
+let editProfile:boolean = false
+let showDiscordLinkedPopup :boolean = false
 let userData:Partial<User> = null;
 let rolesMap:Record<number,Role> = {};
 
@@ -17,7 +19,16 @@ function checkIfContentUpdated() {
     const bioInput = document.getElementById('bio-input') as HTMLInputElement
     const unsavedWarningText = document.getElementById('unsaved-warning')
 
-    if (firstNameInput.value !== userData.first_name || lastNameInput.value !== userData.last_name || bioInput.value !== userData.bio || userAvatarChanged) {
+    const discordShowUsername = document.getElementById('toggle-discord-show-username') as HTMLInputElement
+    const discordSyncStreak = document.getElementById('toggle-discord-sync-streak') as HTMLInputElement
+
+    if (firstNameInput.value !== userData.first_name ||
+        lastNameInput.value !== userData.last_name ||
+        bioInput.value !== userData.bio ||
+        userAvatarChanged ||
+        discordShowUsername.checked !== userData.config.discord_show_username ||
+        discordSyncStreak.checked !== userData.config.discord_sync_streaks
+    ) {
         saveButton.disabled = false
         unsavedWarningText.style.display = 'block'
     } else {
@@ -59,6 +70,23 @@ function editOnClick() {
     editProfileBlock.style.display = 'block'
     saveActionsRow.style.display = 'block'
     editActions.style.display = 'none'
+
+    const discordLinkBlock = document.getElementById('discord-link-block') as HTMLElement
+    const discordSettingsBlock = document.getElementById('discord-settings-block') as HTMLElement
+    const discordSyncStreakPreview = document.getElementById('discord-sync-streak-preview') as HTMLElement
+
+    if (!userData.config || userData.config.discord_account_id == null) {
+        discordLinkBlock.style.display = 'block'
+        discordSettingsBlock.style.display = 'none'
+    } else {
+        discordLinkBlock.style.display = 'none'
+        discordSettingsBlock.style.display = 'block'
+    }
+
+    if (discordSyncStreakPreview !== null || discordSyncStreakPreview !== undefined) {
+        const userStreak = Number(document.getElementById('streak-count').getAttribute('streak'))
+        discordSyncStreakPreview.innerHTML = `${userData.display_name} - ${userStreak}🔥`
+    }
 }
 
 function cancelEditOnClick() {
@@ -146,6 +174,19 @@ function populateProfilePage() {
         rolesContainer.appendChild(badge)
     }
 
+    const discordUsernameBlock = document.getElementById('discord-username-block') as HTMLElement
+    const discordUsernameLink = document.getElementById('discord-username-link') as HTMLAnchorElement
+
+    if (userData.config.discord_show_username) {
+        discordUsernameBlock.style.display = 'block'
+        discordUsernameLink.innerHTML = `@${userData.config.discord_username}`
+        discordUsernameLink.href = `https://discordapp.com/users/${userData.config.discord_account_id}`
+    } else {
+        discordUsernameBlock.style.display = 'none'
+        discordUsernameLink.innerHTML = ''
+        discordUsernameLink.href = ''
+    }
+
     // Populate Edit elements
     if (editProfileBlock === null || editProfileBlock === undefined) {
         return
@@ -165,6 +206,14 @@ function populateProfilePage() {
 
     emptyElement(editAvatarContainer)
     editAvatarContainer.appendChild(buildUserAvatar(userData, 150))
+
+    const discordShowUsername = document.getElementById('toggle-discord-show-username') as HTMLInputElement
+    const discordSyncStreak = document.getElementById('toggle-discord-sync-streak') as HTMLInputElement
+    const discordLinkedUsername = document.getElementById('discord-linked-username') as HTMLElement
+
+    discordShowUsername.checked = userData.config.discord_show_username
+    discordSyncStreak.checked = userData.config.discord_sync_streaks
+    discordLinkedUsername.innerHTML = `@${userData.config.discord_username}`
 
     syncInputs('desktop')
 }
@@ -216,6 +265,9 @@ async function saveButtonOnClick() {
     const bioInput = document.getElementById('bio-input') as HTMLInputElement
     const imageInput = document.getElementById('upload-photo') as HTMLInputElement
 
+    const discordShowUsername = document.getElementById('toggle-discord-show-username') as HTMLInputElement
+    const discordSyncStreak = document.getElementById('toggle-discord-sync-streak') as HTMLInputElement
+
     let avatarUpdated = false
 
     let loadingModal = $('#loading-modal')
@@ -250,34 +302,68 @@ async function saveButtonOnClick() {
     }
 
     try {
-        const response = await editUser(userId, updatedUserData)
-        successToast(response.message)
-        userData = response.data
+        await editUser(userId, updatedUserData);
 
-        if (avatarUpdated) {
-            await new Promise((resolve) => setTimeout(resolve, 1000))
-        }
+        const updatedUserConfigData: UserConfig = {
+            discord_show_username: discordShowUsername.checked,
+            discord_sync_streaks: discordSyncStreak.checked
+        };
 
-        populateProfilePage()
-        const navRefreshElement = document.getElementById('nav-refresh')
-        navRefreshElement.setAttribute('refresh', 'true')
+        const response = await updateUserConfig(updatedUserConfigData);
+        userData = response.data;
+
+        successToast('User updated successfully');
     } catch (error:any) {
         const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
-        errorToast(errorMessage)
-    }
+        errorToast(errorMessage);
+    } finally {
+        if (avatarUpdated) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
 
-    loadingModal.modal('hide')
+        editProfile = false
+        loadingModal.modal('hide')
+        populateProfilePage();
+        const navRefreshElement = document.getElementById('nav-refresh');
+        navRefreshElement.setAttribute('refresh', 'true');
+    }
+}
+
+function unLinkDiscordOnClick() {
+    unlinkDiscordAccount().then((response) => {
+        userData = response.data
+        successToast(response.message)
+        populateProfilePage()
+        editOnClick()
+    }).catch((error) => {
+        const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
+        errorToast(errorMessage)
+    })
 }
 
 // Event listeners
 document.addEventListener("DOMContentLoaded", async function () {
-    const userIdElement = document.getElementById('user-id') as HTMLDivElement
-    userId = Number(userIdElement.getAttribute('data-user-id'))
+    // Clear Query Parameters
+    window.history.replaceState({}, document.title, window.location.pathname);
+
+    const flags = document.getElementById('profile-flags') as HTMLDivElement
+    userId = Number(flags.dataset.userId)
+    editProfile = Boolean(flags.dataset.edit === 'true')
+    showDiscordLinkedPopup = Boolean(flags.dataset.discordLinkPopup === 'true')
 
     userData = await getUser(userId)
     rolesMap = await preloadRoles(userData.role_ids)
 
     populateProfilePage()
+
+    if (editProfile) {
+        editOnClick()
+
+        if (showDiscordLinkedPopup) {
+            let discordLinkConfirmationModal = $('#discord-link-confirmation')
+            discordLinkConfirmationModal.modal('show')
+        }
+    }
 });
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -287,5 +373,7 @@ document.addEventListener("DOMContentLoaded", () => {
         (<any>window).uploadProfileImageOnChange = uploadProfileImageOnChange;
         (<any>window).saveButtonOnClick = saveButtonOnClick;
         (<any>window).syncInputs = syncInputs;
+        (<any>window).checkIfContentUpdated = checkIfContentUpdated;
+        (<any>window).unLinkDiscordOnClick = unLinkDiscordOnClick;
     }
 });

@@ -41,7 +41,8 @@ import {
     StreakData,
     GitHubReleaseResponse,
     EventMetadata,
-    EventStats
+    EventStats,
+    DiscordIntegrationConfig
 } from "@global/endpoints_interfaces";
 import { formatDate } from "./helper";
 
@@ -1275,6 +1276,41 @@ export function activateUser(userID:number):Promise<ApiResponse<User>> {
         });
     });
 }
+
+export function updateUserConfig(data:Partial<User>):Promise<ApiResponse<User>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: `${baseURL}/users/me/config`,
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function unlinkDiscordAccount():Promise<ApiResponse<User>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: `${baseURL}/users/me/discord/unlink`,
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
 // #endregion
 
 // #region Roles
@@ -1588,7 +1624,7 @@ export function getExternalApiLogsMetadata():Promise<Partial<Metadata>> {
 
 export function getAttendanceForEvent(eventID:number, queryString:string|null = null):Promise<ApiMultiEntryResponse<[VolunteerAttendance]>> {
     return new Promise((resolve, reject) => {
-        let url = `${baseURL}/events/${eventID}/volunteer_attendences`
+        let url = `${baseURL}/events/${eventID}/volunteer_attendances`
         if (queryString) {
             url += `?${queryString}`
         }
@@ -1609,10 +1645,10 @@ export function getAttendanceForEvent(eventID:number, queryString:string|null = 
 export function getAttendanceForUser(userID:number, eventID:number):Promise<VolunteerAttendance> {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: `${baseURL}/users/${userID}/volunteer_attendences/${eventID}`,
+            url: `${baseURL}/users/${userID}/volunteer_attendances/${eventID}`,
             type: 'GET',
             success: function(response) {
-                resolve(response.volunteer_attendence);   
+                resolve(response.volunteer_attendance);   
             },
             error: function(error) {
                 console.log('Error fetching data:', error);
@@ -1626,7 +1662,7 @@ export function addAttendance(userID:number, eventID:number, data:Partial<Volunt
     return new Promise((resolve, reject) => {
         $.ajax({
             type: 'POST',
-            url: `${baseURL}/users/${userID}/volunteer_attendences/${eventID}`,
+            url: `${baseURL}/users/${userID}/volunteer_attendances/${eventID}`,
             data: JSON.stringify(data),
             contentType: 'application/json',
             success: function (response) {
@@ -1644,7 +1680,7 @@ export function editAttendance(userID:number, eventID:number, data:Partial<Volun
     return new Promise((resolve, reject) => {
         $.ajax({
             type: 'PATCH',
-            url: `${baseURL}/users/${userID}/volunteer_attendences/${eventID}`,
+            url: `${baseURL}/users/${userID}/volunteer_attendances/${eventID}`,
             data: JSON.stringify(data),
             contentType: 'application/json',
             success: function (response) {
@@ -1687,7 +1723,7 @@ export function getSignupsForUser(eventId:number, userId:number):Promise<ApiMult
             url: `${baseURL}/events/${eventId}/volunteer_signups/${userId}`,
             type: 'GET',
             success: function(response) {
-                resolve(response.volunteer_attendence);   
+                resolve(response.volunteer_attendance);   
             },
             error: function(error) {
                 console.log('Error fetching data:', error);
@@ -2366,6 +2402,142 @@ export function sendJoltTestPrintRequest():Promise<string> {
             type: 'POST',
             success: function (response) {
                 resolve(response.message)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+// #endregion
+
+// #region Discord Integration
+
+export function getDiscordIntegrationConfig():Promise<ApiResponse<DiscordIntegrationConfig>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/discord/config`,
+            type: 'GET',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function saveDiscordIntegrationConfig(data:Partial<DiscordIntegrationConfig>):Promise<ApiResponse<DiscordIntegrationConfig>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/discord/config`,
+            type: 'POST',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function verifyDiscordBotToken(token:string):Promise<boolean> {
+    return new Promise((resolve) => {
+        const data:Partial<DiscordIntegrationConfig> = {
+            DISCORD_BOT_TOKEN: token
+        }
+
+        $.ajax({
+            url: `${baseURL}/integrations/discord/verify`,
+            type: 'POST',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response.verified)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(false)
+            }
+        });
+    });
+}
+
+export function verifyDiscordClientSecret(secret:string):Promise<boolean> {
+    return new Promise((resolve) => {
+        const data:Partial<DiscordIntegrationConfig> = {
+            DISCORD_CLIENT_SECRET: secret
+        }
+
+        $.ajax({
+            url: `${baseURL}/integrations/discord/verify_secret`,
+            type: 'POST',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response.verified)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                resolve(false)
+            }
+        });
+    });
+}
+
+export function enableDiscordIntegration(guildId:string):Promise<ApiResponse<DiscordIntegrationConfig>> {
+    return new Promise((resolve, reject) => {
+        const data:Partial<DiscordIntegrationConfig> = {
+            DISCORD_BOT_GUILD_ID: guildId
+        }
+
+        $.ajax({
+            url: `${baseURL}/integrations/discord/enable`,
+            type: 'POST',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(false)
+            }
+        });
+    });
+}
+
+export function disableDiscordIntegrationConfig():Promise<ApiResponse<DiscordIntegrationConfig>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/discord/disable`,
+            type: 'POST',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function discordIntegrationSyncNicknames():Promise<ApiResponse<any>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/discord/sync-nicknames`,
+            type: 'POST',
+            success: function (response) {
+                resolve(response)
             },
             error: function (error) {
                 console.log('Error fetching data:', error);

@@ -1,18 +1,23 @@
-# API is for serving data to TypeScript/Javascript
+# API is for serving data to TypeScript/JavaScript
 import io
 from datetime import timedelta
 from PIL import Image
 from flask import Blueprint, request, jsonify, abort
 from flask_security import login_required, current_user
+from babel.dates import format_date
 
 from common.models import db, User, Role, Event, EventLocation, EventTimeslot, Session, Page, Config, Workshop, AttendanceStreak
-from common.util import helper as global_helper
+from common.util import helper as common_helper
 from common.util import files
 from common.util.endpoint_loader import generate_roles_file_from_db, update_pages_assigned_to_role
 from common.integrations.eventbrite import deactivate_event_update_tasks, sync_all_attendees_at_event
 from common.util.database import create_event
 from common.util.task_scheduler_util import create_event_tasks, update_scheduled_post_event_task_date
 from common.extensions import get_logger
+from common.integrations.discord import sync_user_nicknames
+from common.redis import utils as redis_utils
+from common.util.enums import DiscordMessageType, DiscordMessageView
+from common import configuration
 
 from web.util.decorators import api_route, protect_user_updates
 from web.util import helper
@@ -101,6 +106,8 @@ def edit_user(user_id):
                 if current_user.id == user_id:
                     abort(400, description='User cannot update their own badge')
                     continue
+            if field == any(['first_name', 'last_name', 'username']):
+                sync_user_nicknames(user_id)
             setattr(user, field, value)
     
     db.session.commit()
@@ -113,6 +120,7 @@ def edit_user(user_id):
 @bp.route('/users/me/avatar', methods=['POST'])
 @api_route
 def upload_user_avatar():
+    from web import user_data_bucket
     if 'file' not in request.files:
         return jsonify({'error': 'No file provided'}), 400
 
@@ -147,7 +155,7 @@ def upload_user_avatar():
 
     # Upload to storage
     file_path = f'users/{current_user.id}/profile.jpg'
-    file_db_obj = files.upload_file(bucket_name=files.user_data_bucket, file_name=file_path, file_data=image_stream)
+    file_db_obj = files.upload_file(bucket_name=user_data_bucket, file_name=file_path, file_data=image_stream)
 
     if not file_db_obj:
         return jsonify({'error': 'An error occurred while uploading the file'}), 500
@@ -181,6 +189,41 @@ def activate_user(user_id):
     db.session.commit()
 
     return jsonify({'message': 'The user has been successfully activated'})
+
+
+@bp.route('/users/me/config', methods=['POST'])
+@api_route
+def update_user_config():
+    user = User.query.filter_by(id=current_user.id).first_or_404()
+
+    data = request.get_json()
+    if not data:
+        abort(400, description="No data provided")
+    
+    try:
+        user.update_config(data)
+    except Exception as e:
+        logger.error(f'An error occurred when updating user config: {e}')
+        return jsonify({'message': 'Unknown error occurred'}), 400
+
+    return jsonify({
+        'message': 'The user config has been successfully updated',
+        'data': user.to_dict()})
+
+@bp.route('/users/me/discord/unlink', methods=['POST'])
+@api_route
+def unlink_user_discord():
+    user = User.query.filter_by(id=current_user.id).first_or_404()
+    
+    try:
+        user.config.unlink_discord()
+    except Exception as e:
+        logger.error(f'An error occurred when unlinking user discord: {e}')
+        return jsonify({'message': 'Unknown error occurred'}), 400
+
+    return jsonify({
+        'message': 'Discord Account unlinked',
+        'data': user.to_dict()})
 
 #------------------------------------------ ROLE ------------------------------------------#
 
@@ -288,7 +331,7 @@ def edit_role(role_id):
 def delete_role(role_id):
     role = Role.query.filter_by(id=role_id).first_or_404()
     
-    if not global_helper.prep_delete_role(role):
+    if not common_helper.prep_delete_role(role):
         abort(500, description="An error occurred when trying to remove role")
 
     db.session.delete(role)
@@ -368,14 +411,28 @@ def add_event():
     if not name or not description or not date or not start_date_time or not end_date_time or not capacity or not password :
         abort(400, description="No 'name' or'description' or 'date' or 'start_time' or 'end_time' or 'capacity' or 'password' provided")
     
-    start_date_time = global_helper.convert_local_datetime_to_utc(start_date_time)
-    end_date_time = global_helper.convert_local_datetime_to_utc(end_date_time)
+    start_date_time = common_helper.convert_local_datetime_to_utc(start_date_time)
+    end_date_time = common_helper.convert_local_datetime_to_utc(end_date_time)
 
     new_event = create_event(name=name, description=description, date=date, start_date_time=start_date_time, end_date_time=end_date_time, capacity=capacity, password=password, external=external, external_id=external_id, external_url=external_url)
     db.session.add(new_event)
     db.session.commit()
 
     create_event_tasks(new_event)
+
+    attendance_url = common_helper.get_volunteer_attendance_url(new_event.id)
+    weekday = format_date(new_event.start_date_time, format="EEEE", locale="en_GB")
+    month = format_date(new_event.start_date_time, format="MMMM", locale="en_GB")
+    day_with_suffix = common_helper.ordinal(new_event.start_date_time.day)
+    message = f'Hey @everyone, the next Jam will be on {weekday} the {day_with_suffix} of {month}. Please fill out your attendance on JAMS'
+    redis_utils.discord_bot_send_message(
+        message=message,
+        message_type=DiscordMessageType.BASIC_RSVP_REMINDER,
+        channel_id=configuration.get_config_value(configuration.ConfigType.DISCORD_BOT_ANNOUNCEMENT_CHANNEL_ID),
+        view_type=DiscordMessageView.BASIC_RSVP_VIEW,
+        view_data={'url': attendance_url},
+        event_id=new_event.id
+    )
 
     return jsonify({
         'message': 'New event has been successfully added',
@@ -396,7 +453,7 @@ def edit_event(event_id):
     for field, value in data.items():
         if field in allowed_fields:
             if field == 'start_date_time' or field == 'end_date_time':
-                value = global_helper.convert_local_datetime_to_utc(value)
+                value = common_helper.convert_local_datetime_to_utc(value)
 
                 # If the end datetime has changed, update the post event task run datetime
                 if field == 'end_date_time':
@@ -736,7 +793,7 @@ def add_workshop_to_session(session_id):
     session.publicly_visible = workshop.publicly_visible
     db.session.commit()
 
-    session.capacity = global_helper.calculate_session_capacity(session)
+    session.capacity = common_helper.calculate_session_capacity(session)
     db.session.commit()
 
     helper.update_session_event_location_visibility(session)
@@ -770,7 +827,7 @@ def remove_workshop_from_session(session_id):
 @api_route
 def recalculate_session_capacity(session_id):
     session = Session.query.filter_by(id=session_id).first_or_404()
-    session.capacity = global_helper.calculate_session_capacity(session)
+    session.capacity = common_helper.calculate_session_capacity(session)
     
     db.session.commit()
 

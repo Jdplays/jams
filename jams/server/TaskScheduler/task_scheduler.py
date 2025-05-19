@@ -2,11 +2,14 @@ import threading
 import time
 import functools
 from datetime import datetime, timedelta, UTC
+from datetime import time as dt_time
 from concurrent.futures import ThreadPoolExecutor
+from sqlalchemy import or_
 
 from common.models import db, TaskSchedulerModel
 from common.util.enums import TaskActionEnum
 from common.extensions import get_logger
+from common.util.task_scheduler_util import create_task
 
 from server.TaskScheduler import task_scheduler_funcs
 
@@ -72,6 +75,12 @@ class TaskScheduler:
 
                 task.queued = False
 
+                if task.fixed_time is not None:
+                    task.next_run_datetime = datetime.combine(
+                        task.next_run_datetime.date(),
+                        task.fixed_time
+                    )
+
                 db.session.commit()
 
     def check_tasks(self):
@@ -90,7 +99,7 @@ class TaskScheduler:
 
         tasks = TaskSchedulerModel.query.filter(
             TaskSchedulerModel.next_run_datetime <= now,
-            TaskSchedulerModel.end_datetime >= now,
+            or_(TaskSchedulerModel.end_datetime == None, TaskSchedulerModel.end_datetime >= now),
             TaskSchedulerModel.running == False,
             TaskSchedulerModel.active == True,
             TaskSchedulerModel.queued == False
@@ -118,12 +127,28 @@ class TaskScheduler:
 
                 match task.action_enum:
                     case TaskActionEnum.UPDATE_EVENTBRITE_EVENT_ATTENDEES.name:
-                        task_scheduler_funcs.update_event_attendees_task(**task.params)
+                        task_scheduler_funcs.update_event_attendees_task(**task.params or {})
                         return
                     case TaskActionEnum.POST_EVENT_TASK.name:
-                        task_scheduler_funcs.post_event_task(**task.params)
+                        task_scheduler_funcs.post_event_task(**task.params or {})
+                        return
+                    case TaskActionEnum.BACKGROUND_TASK.name:
+                        task_scheduler_funcs.background_task(**task.params or {})
                         return
                     
             except Exception as e:
                 db.session.rollback()
                 raise e
+
+# Create background task
+def create_background_task():
+    task_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+    fixed_time = dt_time(hour=0, minute=0, second=0, microsecond=0)
+    create_task(
+        name='background_task',
+        start_datetime=task_start,
+        interval=timedelta(days=1),
+        forever=True,
+        action_enum=TaskActionEnum.BACKGROUND_TASK,
+        fixed_time=fixed_time
+    )

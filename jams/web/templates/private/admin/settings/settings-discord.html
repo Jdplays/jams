@@ -1,0 +1,210 @@
+{% extends './private/admin/settings/settings-layout.html' %}
+
+{% block settings_title %}Discord{% endblock %}
+
+{% block settings_name %}Discord{% endblock %}
+
+{% block settings_content %}
+
+<div id="discord-settings-content" class="settings-content-container">
+    <p>Connect your JAMS instance to your Discord server to enhance volunteer coordination and engagement.
+        The JAMS bot can send announcements, notify volunteers, track attendance, and recognize streaks with optional nickname updates and badges.
+        Setup is quick and flexible, giving you powerful tools to keep your community informed and involved.</p>
+
+    <div id="form-container">
+        <div id="discord-setup-form" style="display: none;">
+            <form>
+                <ul class="steps steps-counter steps-vertical mb-3">
+                    <li id="discord-setup-step-1" class="step-item">
+                        <h2>Set Up Your Discord Bot</h2>
+                        <ol>
+                            <li>
+                                <strong>Go to the <a href="https://discord.com/developers/applications"
+                                        target="_blank">Discord Developer Portal</a>.</strong>
+                                <br>
+                                Log in with your Discord account.
+                            </li>
+                            <li>
+                                <strong>Click “New Application”.</strong>
+                                <br>
+                                Give your bot a name (e.g. <code>JAMS</code>) and click “Create”.
+                            </li>
+                            <li>
+                                <strong>Go to the <em>Bot</em> tab (left sidebar).</strong>
+                            </li>
+                            <li>
+                                <strong>Enable the following permissions under “Privileged Gateway Intents”:</strong>
+                                <ul>
+                                    <li><code>Server Members Intent</code></li>
+                                    <li><code>Message Content Intent</code> (optional, for advanced commands)</li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>Reset and copy the Bot Token</strong> and paste it bellow.
+                                <br>
+                                <em>⚠️ Never share this token. It acts like a password for your bot.</em>
+                            </li>
+                        </ol>
+                        <p><em>Need help? Contact your JAMS system administrator or visit the documentation.</em></p>
+
+                        <div id="discord-bot-token-block" class="mt-2">
+                            <label class="form-label">Discord Bot Token</label>
+                            <div class="input-group">
+                                <input id="discord-bot-token-input" type="password" class="form-control"
+                                    autocomplete="off" oninput="tokenTextBoxOnInput()">
+                                <button id="discord-bot-token-verify-button" type="button" class="btn" onclick="verifyDiscordBotTokenOnClick()">Verify</button>
+                            </div>
+                        </div>
+
+                    </li>
+                    <li id="discord-setup-step-2" class="step-item">
+                        <h2>Add your Client Secret</h2>
+                        <ol>
+                            <li>
+                                <strong>Go back to the <a href="https://discord.com/developers/applications"
+                                        target="_blank">Discord Developer Portal and select your Application”</a>.</strong>
+                            </li>
+                            <li>
+                                <strong>Go to the <em>OAuth2</em> tab (left sidebar).</strong>
+                            </li>
+                            <li>
+                                <strong>Under Client Secret, click "Reset Secret" (recommended) and copy the new value.</strong>
+                            </li>
+                            <li>
+                                <strong>Paste the Client Secret below</strong>
+                                <br>
+                                <em>⚠️ Never share this secret. It acts like a password for your application.</em>
+                            </li>
+                        </ol>
+
+                        <div id="discord-bot-secret-block" class="mt-2">
+                            <label class="form-label">Discord Client Secret</label>
+                            <div class="input-group">
+                                <input id="discord-bot-secret-input" type="password" class="form-control"
+                                    autocomplete="off" oninput="secretTextBoxOnInput()">
+                                <button id="discord-bot-secret-verify-button" type="button" class="btn" onclick="verifyDiscordBotSecretOnClick()">Verify</button>
+                            </div>
+                        </div>
+
+                    </li>
+                    <li id="discord-setup-step-3" class="step-item">
+                        <h2>Add the Bot to your Server</h2>
+                        <div class="input-group mb-3">
+                            <input id="discord-bot-add-to-server-url" type="text" class="form-control"
+                                value="loading...."
+                                disabled>
+                            <button id="discord-bot-copy-add-url-button" type="button" onclick="copyDiscordBotAddURL()" class="btn">
+                                <i class="ti ti-copy"></i>
+                            </button>
+                        </div>
+
+                        <div id="discord-bot-add-loading-bar">
+                            <div class="progress mb-2">
+                                <div class="progress-bar progress-bar-indeterminate bg-green"></div>
+                            </div>
+                        </div>
+                    </li>
+                    <li id="discord-setup-step-4" class="step-item">
+                        <h2>Select Discord Server</h2>
+                        <p>Select the discord server you want to link to this JAMS instance from the dropdown bellow:
+                        </p>
+                        <div id="discord-bot-server-section-container" class="mb-3"></div>
+                        <button id="discord-enable-button" type="button" class="btn btn-primary" style="display: none;" onclick="discordIntegrationEnableOnClick()">
+                            <i class="ti ti-power"></i>
+                            <span class="btn-text ms-2">Enable</span>
+                        </button>
+                    </li>
+                </ul>
+            </form>
+        </div>
+    </div>
+
+    <div id="discord-config" style="display: none;">
+        <p id="discord-bot-enabled-text">Discord Bot enabled for <strong id="discord-bot-server-name"></strong> server</p>
+        <p id="discord-bot-error-text" class="text-danger">There is an error with the Discord Server in the configuration! Please <strong>disable</strong> and reconfigure the Discord Integration.</p>
+        <h2>Options</h2>
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th class="setting-column">Setting</th>
+                        <th class="description-column">Description</th>
+                        <th class="value-column">Value</th>
+                        <th class="action-column">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="setting-column">
+                            <p>Announcements Channel</p>
+                        </td>
+                        <td class="description-column">
+                            <label class="text-secondary">This is the text channel within your discord server
+                                that JAMS will use to send announcements to.</label>
+                        </td>
+                        <td class="value-column">
+                            <div id="discord-bot-ann-channel-select-container"></div>
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td class="setting-column">
+                            <p>Enable DM Reminders</p>
+                        </td>
+                        <td class="description-column">
+                            <label class="text-secondary">Enabling this will DM (Direct Message) volunteers who have not
+                                filled out their attendance. This will be done periodically coming up to an
+                                event.</label>
+                        </td>
+                        <td class="value-column">
+                            <label class="form-check form-switch">
+                                <input id="discord-bot-toggle-dm-switch" class="form-check-input" type="checkbox"
+                                    oninput="checkIfContentUpdated()">
+                            </label>
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td class="setting-column">
+                            <p>Enable Name Sync</p>
+                        </td>
+                        <td class="description-column">
+                            <label class="text-secondary">Enabling this will sync users names (first and last
+                                name) from JAMS to their Discord nickname within the server.</label>
+                        </td>
+                        <td class="value-column">
+                            <label class="form-check form-switch">
+                                <input id="discord-bot-toggle-sync-switch" class="form-check-input" type="checkbox"
+                                    oninput="checkIfContentUpdated()">
+                            </label>
+                        </td>
+                        <td>
+                            <button id="discord-bot-toggle-sync-Button" class="btn btn-warning" onclick="syncNicknamesOnClick()">
+                                <i class="ti ti-refresh"></i>
+                                <span class="btn-text ms-2">Sync now</span>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block settings_content_footer %}
+<div id="discord-config-footer-actions">
+    <button id="discord-save-button" class="btn btn-primary" onclick="saveDiscordConfigOnClick()" disabled>
+        <i class="ti ti-device-floppy"></i>
+        <span class="btn-text ms-2">Save</span>
+    </button>
+    <button id="discord-disable-button" class="btn btn-danger ms-2" onclick="disableDiscordIntegrationOnClick()">
+        <i class="ti ti-power"></i>
+        <span class="btn-text ms-2">Disable</span>
+    </button>
+</div>
+
+<script src="{{ url_for('static', filename='js/admin/settings/settings-int-discord.js') }}" type="module"
+    defer></script>
+{% endblock %}

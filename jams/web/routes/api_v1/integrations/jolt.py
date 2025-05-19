@@ -1,4 +1,4 @@
-# API is for serving data to TypeScript/Javascript
+# API is for serving data to TypeScript/JavaScript
 from datetime import UTC, datetime, timedelta
 from flask import Blueprint, abort, jsonify
 from sqlalchemy import and_, or_

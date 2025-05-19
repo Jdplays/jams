@@ -1,4 +1,4 @@
-# API is for serving data to TypeScript/Javascript
+# API is for serving data to TypeScript/JavaScript
 from flask import Blueprint, request, jsonify, abort
 
 from common.models import db, Workshop, Location, Timeslot, DifficultyLevel, File, WorkshopFile, WorkshopType
@@ -127,11 +127,12 @@ def activate_workshop(workshop_id):
 @bp.route('/workshops/<int:workshop_id>/files', methods=['POST'])
 @api_route
 def add_workshop_file(workshop_id):
+    from web import workshop_bucket
     workshop = Workshop.query.filter_by(id=workshop_id).first_or_404()
     file = request.files['file']
     folder_name = workshop.name.replace(" ", "_")
     file_path = f'{folder_name}/{file.filename}'
-    file_db_obj = files.upload_file(bucket_name=files.workshop_bucket, file_name=file_path, file_data=file.stream)
+    file_db_obj = files.upload_file(bucket_name=workshop_bucket, file_name=file_path, file_data=file.stream)
 
     if not file_db_obj:
         abort(400, description='An error occured while uploading the file')

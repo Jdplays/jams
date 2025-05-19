@@ -28,6 +28,14 @@ class ConfigType(Enum):
     JOLT_API_KEY_ID = 'JOLT_API_KEY_ID'
     STREAKS_ENABLED = 'STREAKS_ENABLED'
     EVENT_PREFIX_FILTER = 'EVENT_PREFIX_FILTER'
+    DISCORD_BOT_ENABLED = 'DISCORD_BOT_ENABLED'
+    DISCORD_BOT_TOKEN = 'DISCORD_BOT_TOKEN'
+    DISCORD_CLIENT_ID = 'DISCORD_CLIENT_ID'
+    DISCORD_CLIENT_SECRET = 'DISCORD_CLIENT_SECRET'
+    DISCORD_BOT_GUILD_ID = 'DISCORD_BOT_GUILD_ID'
+    DISCORD_BOT_ANNOUNCEMENT_CHANNEL_ID = 'DISCORD_BOT_ANNOUNCEMENT_CHANNEL_ID'
+    DISCORD_BOT_DM_ENABLED = 'DISCORD_BOT_DM_ENABLED'
+    DISCORD_BOT_NAME_SYNC_ENABLED = 'DISCORD_BOT_NAME_SYNC_ENABLED'
 
 
 def config_entry_exists(key:Union[str, ConfigType]):
@@ -89,3 +97,14 @@ def remove_config_entry(key:ConfigType):
         return
     db.session.delete(config)
     db.session.commit()
+
+## USER Config
+
+def get_user_config(user_id):
+    user_config = UserConfig.query.filter(UserConfig.user_id == user_id).first()
+    if not user_config:
+        user_config = UserConfig(user_id)
+        db.session.add(user_config)
+        db.session.commit()
+    
+    return user_config

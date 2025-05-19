@@ -3,6 +3,7 @@ from enum import Enum
 class TaskActionEnum(Enum):
     UPDATE_EVENTBRITE_EVENT_ATTENDEES = 'update_eventbrite_event_attendees'
     POST_EVENT_TASK = 'post_event_task'
+    BACKGROUND_TASK = 'background_task'
 
 class WebhookActionEnum(Enum):
     EVENTBRITE_CHECK_IN = 'EVENTBRITE_CHECK_IN'
@@ -47,3 +48,20 @@ class JOLTHealthCheckStatus(Enum):
     PENDING = 'PENDING'
     SUCCESS = 'SUCCESS'
     FAILED = 'FAILED'
+
+class DiscordMessageType(Enum):
+    BASIC_RSVP_REMINDER = 'BASIC_RSVP_REMINDER'
+    RSVP_REMINDER = 'RSVP_REMINDER'
+    RSVP_COMPLETE = 'RSVP_COMPLETE'
+    RSVP_EXPIRED = 'RSVP_EXPIRED'
+    UNKNOWN = 'UNKNOWN'
+
+class DiscordMessageView(Enum):
+    BASIC_RSVP_VIEW = 'BASIC_RSVP_VIEW'
+    RSVP_REMINDER_VIEW = 'RSVP_REMINDER_VIEW'
+    RSVP_COMPLETE_VIEW = 'RSVP_COMPLETE_VIEW'
+    UNKNOWN = 'UNKNOWN'
+
+class DiscordRecipientType(Enum):
+    CHANNEL = 'CHANNEL'
+    DM = 'DM'

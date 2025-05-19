@@ -38,6 +38,7 @@ async function populateStreakWidget() {
     }
 
     streakCount.innerHTML = String(streakData.streak)
+    streakCount.setAttribute('streak', String(streakData.streak))
     
     if (freezeCount) {
         freezeCount.innerHTML = String(streakData.freezes)
@@ -90,8 +91,9 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     await populateStreakWidget()
 
-    getNextEvent().then(async (response) => {
-        const nextEventId = response.data
+    if (timeUntilText !== null || timeUntilText !== undefined) {
+        getNextEvent().then(async (response) => {
+            const nextEventId = response.data
 
         const event = await getEventField(nextEventId, 'end_date_time')
         
@@ -99,13 +101,14 @@ document.addEventListener("DOMContentLoaded", async function () {
         const nextStreakUpdateDate = new Date(eventEnd)
         nextStreakUpdateDate.setHours(eventEnd.getHours() + 1)
 
-        if (timeUntilText !== null) {
-            window.setInterval(() => {
-                const timeUntilString = timeUntil(nextStreakUpdateDate.toISOString())
-                timeUntilText.innerHTML = `Next Update in: ${timeUntilString}`
-            })
-        }
-    }).catch(() => {
-        timeUntilText.style.display = 'none'
-    })
+            if (timeUntilText !== null) {
+                window.setInterval(() => {
+                    const timeUntilString = timeUntil(nextStreakUpdateDate.toISOString())
+                    timeUntilText.innerHTML = `Next Update in: ${timeUntilString}`
+                })
+            }
+        }).catch(() => {
+            timeUntilText.style.display = 'none'
+        })
+    }
 });
