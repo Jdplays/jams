@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, send_from_directory
 from flask_security import current_user
 
-from common.util import helper as global_helper
+from common.util import helper as common_helper
 from common.models import db, PrivateAccessLog, APILog
 
 from web.util import helper
@@ -28,7 +28,7 @@ def after_all_requests(response):
 
     api_key = request.headers.get('Authorization')
     if api_key:
-        api_key_obj = global_helper.get_api_key_obj(api_key)
+        api_key_obj = common_helper.get_api_key_obj(api_key)
         if api_key_obj:
             log = APILog(url=request.full_path, internal_endpoint = endpoint, api_key_id=api_key_obj.id, status_code=status_code)
             db.session.add(log)

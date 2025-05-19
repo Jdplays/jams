@@ -3,7 +3,7 @@ from flask import abort, redirect, request, current_app, url_for, jsonify
 from flask_login.config import EXEMPT_METHODS
 from functools import wraps
 
-from common.util import helper as global_helper
+from common.util import helper as common_helper
 from common.models import db, Page, Attendee, Endpoint, EndpointRule, APIKeyEndpoint
 from common.configuration import ConfigType, get_config_value
 
@@ -98,7 +98,7 @@ def api_route(func):
         endpoint_obj = Endpoint.query.filter_by(endpoint=endpoint).first()
         api_key = request.headers.get('Authorization')
         if api_key:
-            api_key_obj = global_helper.get_api_key_obj(api_key)
+            api_key_obj = common_helper.get_api_key_obj(api_key)
             if not api_key_obj:
                 return jsonify({'error': 'Invalid API key'}), 403
             

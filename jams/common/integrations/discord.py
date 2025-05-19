@@ -253,6 +253,5 @@ def send_or_update_latest_rsvp_reminder_to_confirm(volunteer_attendance):
             user_id=volunteer_attendance.user_id,
             view_type=DiscordMessageView.RSVP_COMPLETE_VIEW,
             view_data={'url': attendance_url},
-            event_id=volunteer_attendance.event_id,
-            active=False
+            event_id=volunteer_attendance.event_id
         )

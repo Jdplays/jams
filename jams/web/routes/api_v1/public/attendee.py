@@ -3,7 +3,7 @@ from flask import Blueprint, redirect, request, jsonify, abort, session, url_for
 from sqlalchemy import func, or_
 
 from common.models import db, AttendeeAccount, AttendeeAccountEvent, Attendee, AttendeeSignup, Event, Session
-from common.util import helper as global_helper
+from common.util import helper as common_helper
 
 from web.util import helper
 from web.util.decorators import attendee_login_required, protect_attendee_updates
@@ -28,7 +28,7 @@ def login():
     order_id = data.get('order_id')
     password = data.get('password')
 
-    next_event = global_helper.get_next_event()
+    next_event = common_helper.get_next_event()
 
     account = None
 
