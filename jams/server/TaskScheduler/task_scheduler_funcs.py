@@ -71,7 +71,7 @@ def send_attendance_reminders():
 
         due_reminder = get_due_reminder(event, recipient)
         if not due_reminder:
-            return
+            continue
 
         previous_event_reminders = DiscordBotMessage.query.filter(
             DiscordBotMessage.user_id == recipient.id,
