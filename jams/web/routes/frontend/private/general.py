@@ -6,6 +6,7 @@ from datetime import datetime
 
 from common.configuration import ConfigType, get_config_value
 from common.integrations import discord
+from common.models import User
 
 from web.util.decorators import role_based_access_control_fe
 
@@ -37,6 +38,8 @@ def user_profile(user_id=None):
 
     if user_id is None:
         user_id = current_user.id
+    
+    User.query.filter_by(id=user_id).first_or_404()
 
     is_current_user = (user_id == current_user.id)
 
