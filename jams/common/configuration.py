@@ -97,14 +97,3 @@ def remove_config_entry(key:ConfigType):
         return
     db.session.delete(config)
     db.session.commit()
-
-## USER Config
-
-def get_user_config(user_id):
-    user_config = UserConfig.query.filter(UserConfig.user_id == user_id).first()
-    if not user_config:
-        user_config = UserConfig(user_id)
-        db.session.add(user_config)
-        db.session.commit()
-    
-    return user_config
