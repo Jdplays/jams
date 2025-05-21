@@ -59,11 +59,14 @@ def add_attendee_to_print_queue(attendee):
 
     if existing_jobs:
         return (False, 'Another print for this attendee is in the queue')
+    
+    magic_link = helper.create_attendee_magic_link(attendee.attendee_account.id, attendee.event_id)
 
     body = {
         'attendee_id': attendee.id,
         'event_id': attendee.event_id,
-        'name': attendee.name
+        'name': attendee.name,
+        'qr_url': magic_link.url
     }
 
     print_job = JOLTPrintQueue(body, JOLTPrintJobType.ATTENDEE_LABEL.name)

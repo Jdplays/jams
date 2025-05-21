@@ -487,3 +487,13 @@ def add_or_update_volunteer_attendance(user_id, event_id, setup, main, packdown,
         send_or_update_latest_rsvp_reminder_to_confirm(attendance)
     
     return attendance
+
+def create_attendee_magic_link(attendee_account_id, event_id):
+    from common.models import AttendeeMagicLink
+    magic_link = AttendeeMagicLink.query.filter(AttendeeMagicLink.attendee_account_id == attendee_account_id, AttendeeMagicLink.event_id == event_id).first()
+
+    if not magic_link:
+        magic_link = AttendeeMagicLink(attendee_account_id=attendee_account_id, event_id=event_id)
+        db.session.add(magic_link)
+    
+    return magic_link
