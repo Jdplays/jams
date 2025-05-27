@@ -27,7 +27,12 @@ def login():
         if next_url:
             session['next'] = next_url
             
-        return client.authorize_redirect(redirect_uri)
+        # Trigger the authorization redirect and capture the state
+        response = client.authorize_redirect(redirect_uri)
+        session['oauth_state'] = request.args.get('state')  # Store the generated state in session
+        print("Initial state:", session['oauth_state'])  # Print the initial state
+        
+        return response
     elif local_auth_enabled:
         form = CustomLoginForm()
         return render_template('/security/login_user.html', login_user_form=form, next=next_url)
@@ -54,22 +59,47 @@ def register():
 @bp.route('/authorise')
 def authorise():
     client = oauth.create_client(get_config_value(ConfigType.OAUTH_PROVIDER_NAME))
+
+    # Retrieve and print both stored and received state
+    stored_state = session.get('oauth_state')
+    received_state = request.args.get('state')
+    print("Stored state:", stored_state)
+    print("Received state:", received_state)
+    
+    if stored_state != received_state:
+        print("State mismatch error!")
+        #return "State mismatch error", 400
+    
     token = client.authorize_access_token()
     
     user_info = token['userinfo']
-    user_email = user_info['email']
+    user_email = None
+    if 'email' not in user_info:
+        if 'emails' in user_info:
+            user_emails = user_info['emails']
+            user_email = user_emails[0]
+    else:
+        user_email = user_info['email']
     user_sub = user_info['sub']
 
     user = User.query.filter_by(open_id_sub=user_sub).first()
     if not user:
-        random_password = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
-        user = User(
-            email=user_email,
-            username=user_email,
-            password=hash_password(random_password),
-            open_id_sub=user_sub)
-        db.session.add(user)
-        user.activate()
+        user = User.query.filter_by(email=user_email).first()
+        if not user:
+            random_password = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
+            user = User(
+                email=user_email,
+                username=user_email,
+                password=hash_password(random_password),
+                open_id_sub=user_sub)
+            db.session.add(user)
+            user.activate()
+        else:
+            if user.open_id_migration:
+                user.open_id_sub = user_sub
+                user.open_id_migration = False
+            else:
+                abort(403)
         db.session.commit()
     
     login_user(user)
