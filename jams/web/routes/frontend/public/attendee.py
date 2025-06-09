@@ -1,5 +1,5 @@
 # Frontend is just for serving pages
-from flask import Blueprint, redirect, render_template, url_for
+from flask import Blueprint, redirect, render_template, url_for, request
 
 from web.util.decorators import attendee_login_required
 from web.util import attendee_auth
@@ -10,6 +10,11 @@ bp = Blueprint('attendee', __name__, url_prefix='/attendee')
 
 @bp.route('/login')
 def login():
+    request_args = request.args
+    magic_link_id = request_args.get('magic', None)
+    if magic_link_id:
+        attendee_auth.login_attendee_magic(magic_link_id)
+        
     if attendee_auth.is_authenticated():
         return redirect(url_for('routes.frontend.public.attendee.signup'))
     return render_template(f'public/attendee/attendee_login.html')

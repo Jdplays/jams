@@ -1,9 +1,12 @@
 from . import db
-from sqlalchemy  import Boolean, Column, DateTime, ForeignKey, String, Integer, UniqueConstraint
+from sqlalchemy  import Boolean, Column, DateTime, ForeignKey, String, Integer, text
 from sqlalchemy.orm import relationship
-from datetime import datetime, UTC
+from datetime import datetime, timedelta, UTC
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from uuid import UUID
+
 from common.util.enums import AttendeeSource
-from common.util import helper
 
 class Attendee(db.Model):
     __tablename__ = 'attendee'
@@ -194,6 +197,7 @@ class AttendeeCheckInLog(db.Model):
         self.timestamp = datetime.now(UTC)
     
     def to_dict(self):
+        from common.util import helper
         timestamp = helper.convert_datetime_to_local_timezone(self.timestamp)
         return {
             'id': self.id,
@@ -201,4 +205,48 @@ class AttendeeCheckInLog(db.Model):
             'event_id': self.event_id,
             'checked_in': self.checked_in,
             'timestamp': timestamp.isoformat()
+        }
+    
+
+class AttendeeMagicLink(db.Model):
+    __tablename__ = 'attendee_magic_link'
+
+    id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, server_default=text('gen_random_uuid()'))
+    attendee_account_id = Column(Integer(), ForeignKey('attendee_account.id'), nullable=False)
+    event_id = Column(Integer(), ForeignKey('event.id'), nullable=False)
+    created_at = Column(DateTime, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    used = Column(Boolean, nullable=False, default=False)
+
+    attendee_account = relationship('AttendeeAccount', backref='magic_links')
+
+    @property
+    def url(self):
+        from common.configuration import ConfigType, get_config_value
+        base_url = get_config_value(ConfigType.APP_URL)
+        full_url = f'{base_url}/attendee/login?magic={self.id}'
+        return full_url
+
+
+    def __init__(self, attendee_account_id, event_id, expires_at=None):
+        self.attendee_account_id = attendee_account_id
+        self.event_id = event_id
+        self.created_at = datetime.now(UTC)
+        self.used = False
+
+        if not expires_at:
+            expires_at = (datetime.now(UTC) + timedelta(days=30)).replace(hour=0, minute=0, second=0, microsecond=0)
+        self.expires_at = expires_at
+    
+    def to_dict(self):
+        from common.util import helper
+        created_at = helper.convert_datetime_to_local_timezone(self.created_at)
+        expires_at = helper.convert_datetime_to_local_timezone(self.expires_at)
+        return {
+            'id': self.id,
+            'attendee_account_id': self.attendee_account_id,
+            'event_id': self.event_id,
+            'created_at': created_at,
+            'expires_at': expires_at,
+            'used': self.used
         }
