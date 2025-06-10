@@ -193,8 +193,8 @@ def load_all_roles():
 
     added_role_names.extend(generate_roles(folder='default_config', default=True))
     script_dir = os.path.dirname(__file__)
-    parent_dir = os.path.abspath(os.path.join(script_dir, "..", "..", ".."))  # back to jams/
-    added_role_names.extend(generate_roles(folder='config', parent_folder=parent_dir))
+    parent_dir = os.path.abspath(os.path.join(script_dir, "..", ".."))  # back to jams/
+    added_role_names.extend(generate_roles(folder='common/config', parent_folder=parent_dir))
 
     current_roles_in_db = Role.query.all()
 

@@ -9,7 +9,7 @@ from sqlalchemy import or_
 from common.models import db, TaskSchedulerModel
 from common.util.enums import TaskActionEnum
 from common.extensions import get_logger
-from common.util.task_scheduler_util import create_task
+from common.util.task_scheduler_util import task_exists, create_task
 
 from server.TaskScheduler import task_scheduler_funcs
 
@@ -142,6 +142,8 @@ class TaskScheduler:
 
 # Create background task
 def create_background_task():
+    if task_exists:
+        return
     task_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
     fixed_time = dt_time(hour=0, minute=0, second=0, microsecond=0)
     create_task(
