@@ -1,0 +1,78 @@
+{% extends '_layout.html' %}
+
+{% block title %}{% block settings_title %}{% endblock %} - Settings{% endblock %}
+
+{% block content %}
+
+<h1>Settings</h1>
+
+<div class="card">
+    <div class="row g-0">
+        <div class="col-12 col-md-3 border-end">
+            <div class="card-body">
+                <div class="accordion" id="settings-accordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="heading-1">
+                            <a class="btn w-100 btn-custom" href="{{ url_for('routes.frontend.private.admin.settings')}}">General</a>
+                        </h2>
+                    </div>
+                    <div id="integrations-section" class="accordion-item">
+                        <h2 class="accordion-header" id="heading-2">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapse-2" aria-expanded="false">
+                                Integrations
+                            </button>
+                        </h2>
+                        <div id="collapse-2" class="accordion-collapse collapse"
+                            data-bs-parent="#settings-accordion">
+                            <div class="accordion-body pt-0">
+                                <a id="discord-link" class="dropdown-item settings-nav-item" href="{{ url_for('routes.frontend.private.admin.settings_discord')}}">Discord</a>
+                            </div>
+                            <div class="accordion-body pt-0">
+                                <a id="eventbrite-link" class="dropdown-item settings-nav-item" href="{{ url_for('routes.frontend.private.admin.settings_eventbrite')}}">Eventbrite</a>
+                            </div>
+                            <div class="accordion-body pt-0">
+                                <a id="jolt-link" class="dropdown-item settings-nav-item" href="{{ url_for('routes.frontend.private.admin.settings_jolt')}}">JOLT</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="identity-access-section" class="accordion-item">
+                        <h2 class="accordion-header" id="heading-3">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapse-3" aria-expanded="false">
+                                Identity & Access
+                            </button>
+                        </h2>
+                        <div id="collapse-3" class="accordion-collapse collapse" data-bs-parent="#settings-accordion">
+                            <div class="accordion-body pt-0">
+                                <a id="auth_sources-link" class="dropdown-item settings-nav-item" href="{{ url_for('routes.frontend.private.admin.settings_auth_sources')}}">Authentication Sources</a>
+                                <br>
+                                <a id="roles-link" class="dropdown-item settings-nav-item" href="{{ url_for('routes.frontend.private.admin.settings_roles')}}">Roles</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-9 d-flex flex-column">
+            <div class="settings-content-container">
+                <div class="card-header">
+                    <div class="card-title">{% block settings_name %}{% endblock %}</div>
+                </div>
+                <div class="card-body">
+                    {% block settings_content %}{% endblock %}
+                </div>
+
+                <div class="card-footer">
+                    {% block settings_content_footer %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<script src="{{ url_for('static', filename='js/admin/settings/settings_base.js') }}" type="module" defer></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin/settings/settings_layout.css') }}">
+
+{% endblock %}

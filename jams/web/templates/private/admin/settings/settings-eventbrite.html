@@ -1,0 +1,135 @@
+{% extends './private/admin/settings/settings-layout.html' %}
+
+{% block settings_title %}Eventbrite{% endblock %}
+
+{% block settings_name %}Eventbrite{% endblock %}
+
+{% block settings_content %}
+
+<div id="eventbrite-settings-content" class="settings-content-container">
+    <p>You can enable the eventbrite API integration in order to import events and automatically have attendees accounts
+        created for registration</p>
+
+    <div id="form-container">
+        <div id="eventbrite-config-form" style="display: none;">
+            <form>
+                <label class="form-check form-switch">
+                    <input id="toggle-eventbrite-switch" class="form-check-input" type="checkbox"
+                        oninput="toggleEventbriteIntegrationOnChange()">
+                    <span class="form-check-label">Enable Eventbrite API integration</span>
+                </label>
+
+                <div id="eventbrite-token-block" style="display: none;">
+                    <label class="form-label">Private API Token</label>
+                    <div class="input-group">
+                        <input id="eventbrite-api-token-input" type="password" class="form-control" autocomplete="off">
+                        <button id="eventbrite-api-token-verify-button" type="button" class="btn">Verify</button>
+                    </div>
+                </div>
+
+                <div id="eventbrite-org-selection-block" style="display: none;">
+                    <div class="mb-3">
+                        <label class="form-label">Select Organisation to pull events from</label>
+                        <select id="eventbrite-org-select" class="form-control form-select"
+                            onchange="orgSelectOnChange()"></select>
+                    </div>
+                </div>
+                <div id="eventbrite-advanced-config-block" class="mb-3" style="display: none;">
+                    <h2 class="mb-3">Advanced Configuration</h2>
+                    <div id="eventbrite-event-select-container" class="mb-3">
+                        <label class="form-label">Select Event from Eventbrite</label>
+                        <p>This event will be used to configure settings that depend on an event. It is recommend that
+                            you use a template event that you create all of your events from.</p>
+                        <select id="eventbrite-event-select" class="form-control form-select"
+                            onchange="eventSelectOnChange()"></select>
+                    </div>
+
+                    <div id="attendee-import-options-block" class="mb-3" style="display: none;">
+                        <h3>Attendee Import Options</h3>
+                        <div id="eventbrite-ticket-types" class="mb-3">
+                            <label class="form-label">Registerable Ticket Types</label>
+                            <p>Select which ticket types are registerable (can sign up to workshops)</p>
+                            <div id="ticket-type-selection-container" class="form-selectgroup-boxes row mb-3"></div>
+                        </div>
+                        <div id="eventbrite-optional-import-fields" class="mb-3">
+                            <label class="form-label">Optional Imports</label>
+                            <p>These are pieces of data that aren't usually collected by eventbrite. But if your tickets
+                                have a custom form, you can map the answer of that question. JAMS will then import that
+                                data into the attendee.</p>
+                            <div class="table-responsive">
+                                <table class="table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Attribute</th>
+                                            <th>Enabled</th>
+                                            <th>Form Question</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <p>Gender</p>
+                                            </td>
+                                            <td>
+                                                <label class="form-check form-switch">
+                                                    <input id="eventbrite-gender-toggle" type="checkbox"
+                                                        class="form-check-input" onchange="genderToggleOnChange()">
+                                                </label>
+                                            </td>
+                                            <td>
+                                                <p>N/A</p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <p>Age</p>
+                                            </td>
+                                            <td>
+                                                <label class="form-check form-switch">
+                                                    <input id="eventbrite-age-toggle" type="checkbox"
+                                                        class="form-check-input" onchange="ageToggleOnChange()">
+                                                </label>
+                                            </td>
+                                            <td>
+                                                <select id="eventbrite-age-form-question-select"
+                                                    class="form-control form-select" disabled
+                                                    onchange="ageFieldSelectOnChange()">
+                                                </select>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block settings_content_footer %}
+<button id="eventbrite-save-button" class="btn btn-primary" onclick="eventbriteIntegrationSaveOnClick()" disabled
+    style="display: none;">
+    <i class="ti ti-device-floppy"></i>
+    <span class="btn-text">Save</span>
+</button>
+<button id="eventbrite-enable-button" class="btn btn-primary" onclick="eventbriteIntegrationEnableOnClick()"
+    style="display: none;">
+    <i class="ti ti-power"></i>
+    <span class="btn-text">Enable</span>
+</button>
+<button id="eventbrite-disable-button" class="btn btn-danger" onclick="eventbriteIntegrationDisableOnClick()"
+    style="display: none;">
+    <i class="ti ti-power"></i>
+    <span class="btn-text">Disable</span>
+</button>
+
+
+<script src="{{ url_for('static', filename='js/admin/settings/settings-int-eventbrite.js') }}" type="module"
+    defer></script>
+
+
+{% endblock %}

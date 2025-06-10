@@ -100,13 +100,14 @@ groups:
       upload_user_avatar: routes.api_v1.private.admin.upload_user_avatar
       activate_user: routes.api_v1.private.admin.activate_user
       archive_user: routes.api_v1.private.admin.archive_user
+      update_user_config: routes.api_v1.private.admin.update_user_config
+      unlink_user_discord: routes.api_v1.private.admin.unlink_user_discord
   
   volunteer:
     description: Manages volunteer information
     read:
       get_user_attendance: routes.api_v1.private.volunteer.get_user_attendance
     write:
-      add_user_attendance: routes.api_v1.private.volunteer.add_user_attendance
       edit_user_attendance: routes.api_v1.private.volunteer.edit_user_attendance
       add_volunteer_signup: routes.api_v1.private.volunteer.add_volunteer_signup
       remove_volunteer_signup: routes.api_v1.private.volunteer.remove_volunteer_signup
@@ -193,6 +194,7 @@ groups:
       edit_eventbrite_integration_config: routes.api_v1.integrations.eventbrite.edit_config
       enable_eventbrite_integration: routes.api_v1.integrations.eventbrite.enable
       disable_eventbrite_integration: routes.api_v1.integrations.eventbrite.disable
+  
   auth:
     description: Manages auth integrations
     read:
@@ -200,6 +202,7 @@ groups:
     write:
       edit_auth_config: routes.api_v1.integrations.auth.edit_config
       delete_auth_config: routes.api_v1.integrations.auth.delete_config
+  
   jolt:
     description: Manages interactions for JOLT
     read:
@@ -210,4 +213,18 @@ groups:
       disable_jolt_integration: routes.api_v1.integrations.jolt.disable
       refresh_jolt_integration_api_token: routes.api_v1.integrations.jolt.refresh_api_token
       send_jolt_test_print: routes.api_v1.integrations.jolt.test_print
+  
+  discord:
+    description: Manages discord integration
+    read:
+      get_discord_config: routes.api_v1.integrations.discord.get_config
+      get_discord_setup_status: routes.api_v1.integrations.discord.get_setup_status
+    write:
+      edit_discord_config: routes.api_v1.integrations.discord.edit_config
+      verify_discord_bot_token: routes.api_v1.integrations.discord.verify_bot_token
+      verify_discord_client_secret: routes.api_v1.integrations.discord.verify_client_secret
+      enable_discord_integration: routes.api_v1.integrations.discord.enable
+      disable_discord_integration: routes.api_v1.integrations.discord.disable
+      sync_discord_nicknames: routes.api_v1.integrations.discord.sync_nicknames
+
 

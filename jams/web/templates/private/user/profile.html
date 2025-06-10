@@ -1,0 +1,357 @@
+{% extends '_layout.html' %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div id="profile-flags" data-edit="{{ edit|tojson }}" data-discord-link-popup="{{ discord_link_popup|tojson }}"
+    data-user-id="{{ user_id }}" style="display: none;">
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Profile</h3>
+        {% if is_current_user %}
+        <div id="edit-actions" class="card-actions" style="display: block;">
+            <button class="btn btn-outline-primary" onclick="editOnClick()">
+                <i class="ti ti-edit"></i>
+                <span class="ms-2 action-text">Edit</span>
+            </button>
+        </div>
+        {% endif %}
+    </div>
+    <div class="row g-0">
+        <div class="col-12 border-end">
+            <div class="card-body">
+                <div class="row">
+                    <div id="view-profile" class="col-12 col-md-9" style="display: block;">
+                        <div class="mb-4">
+                            <div class="d-flex align-items-top">
+                                <div id="user-avatar-container" class="m-3"></div>
+                                <div>
+                                    <h2 id="user-display-name" class="mb-1 mt-2"></h2>
+                                    <div id="discord-username-block" class="mb-2" style="display: none;">
+                                        <div class="d-flex align-items-center">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                viewBox="0 0 24 24" fill="currentColor"
+                                                class="icon icon-tabler icons-tabler-filled icon-tabler-brand-discord">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                <path
+                                                    d="M14.983 3l.123 .006c2.014 .214 3.527 .672 4.966 1.673a1 1 0 0 1 .371 .488c1.876 5.315 2.373 9.987 1.451 12.28c-1.003 2.005 -2.606 3.553 -4.394 3.553c-.732 0 -1.693 -.968 -2.328 -2.045a21.512 21.512 0 0 0 2.103 -.493a1 1 0 1 0 -.55 -1.924c-3.32 .95 -6.13 .95 -9.45 0a1 1 0 0 0 -.55 1.924c.717 .204 1.416 .37 2.103 .494c-.635 1.075 -1.596 2.044 -2.328 2.044c-1.788 0 -3.391 -1.548 -4.428 -3.629c-.888 -2.217 -.39 -6.89 1.485 -12.204a1 1 0 0 1 .371 -.488c1.439 -1.001 2.952 -1.459 4.966 -1.673a1 1 0 0 1 .935 .435l.063 .107l.651 1.285l.137 -.016a12.97 12.97 0 0 1 2.643 0l.134 .016l.65 -1.284a1 1 0 0 1 .754 -.54l.122 -.009zm-5.983 7a2 2 0 0 0 -1.977 1.697l-.018 .154l-.005 .149l.005 .15a2 2 0 1 0 1.995 -2.15zm6 0a2 2 0 0 0 -1.977 1.697l-.018 .154l-.005 .149l.005 .15a2 2 0 1 0 1.995 -2.15z" />
+                                            </svg>
+                                            <a id="discord-username-link" href="#"
+                                                class="discord-link ms-2">@username</a>
+
+
+                                        </div>
+                                    </div>
+
+                                    <div id="user-roles-container" class="d-flex flex-wrap mb-2"></div>
+                                    <p id="user-bio" class="text-muted mb-0 bio-desktop"></p>
+                                </div>
+                            </div>
+                            <p id="user-bio" class="text-muted mb-0 bio-mobile"></p>
+                        </div>
+                    </div>
+
+                    {% if is_current_user %}
+                    <div id="edit-profile" class="col-12 col-md-9 mb-3" style="display: none;">
+                        <div class="d-flex align-items-top">
+                            <div class="me-3 position-relative" style="width: 150px; height: 150px;">
+                                <label for="upload-photo" class="m-3 position-relative" style="cursor: pointer;">
+                                    <!-- Profile Image -->
+                                    <div id="user-avatar-container-edit" class="position-relative"
+                                        style="width: 150px; height: 150px;"></div>
+
+                                    <!-- Always Visible Overlay with Plus Icon -->
+                                    <div class="position-absolute rounded d-flex justify-content-center align-items-center"
+                                        style="background-color: rgba(0, 0, 0, 0.5); width: 150px; height: 150px; top: 0;">
+                                        <i class="ti ti-plus"
+                                            style="color: rgba(255, 255, 255, 150); font-size: 2rem;"></i>
+                                    </div>
+
+                                    <!-- Hidden File Input -->
+                                    <input type="file" id="upload-photo" class="d-none" accept="image/*"
+                                        onchange="uploadProfileImageOnChange()">
+                                </label>
+                            </div>
+
+                            <div class="flex-grow-1">
+                                <div class="input-block-desktop gap-3 m-3 mb-2">
+                                    <div class="flex-grow-1">
+                                        <label for="first-name-input" class="form-label">First Name</label>
+                                        <input type="text" id="first-name-input" class="form-control"
+                                            oninput="syncInputs('desktop')">
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <label for="last-name-input" class="form-label">Last Name</label>
+                                        <input type="text" id="last-name-input" class="form-control"
+                                            oninput="syncInputs('desktop')">
+                                    </div>
+                                </div>
+                                <div class="input-block-mobile m-3">
+                                    <div class="flex-grow-1">
+                                        <label for="first-name-input-mobile" class="form-label">First Name</label>
+                                        <input type="text" id="first-name-input-mobile" class="form-control"
+                                            oninput="syncInputs('mobile')">
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <label for="last-name-input-mobile" class="form-label">Last Name</label>
+                                        <input type="text" id="last-name-input-mobile" class="form-control"
+                                            oninput="syncInputs('mobile')">
+                                    </div>
+                                </div>
+                                <div class="bio-input-desktop m-3">
+                                    <label for="bio-input" class="form-label">Bio</label>
+                                    <textarea id="bio-input" class="form-control" rows="3"
+                                        oninput="syncInputs('desktop')"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-block-mobile m-3 mb-0">
+                            <label for="bio-input-mobile" class="form-label">Bio</label>
+                            <textarea id="bio-input-mobile" class="form-control" rows="5"
+                                oninput="syncInputs('mobile')"></textarea>
+                        </div>
+
+                        <div>
+                            <h3>Options</h3>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="card mb-3">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Discord</h5>
+                                            <div id="discord-link-block">
+                                                <p class="card-text">Link your Discord account to JAMS</p>
+                                                <button id="link-discord-button" class="btn btn-primary"
+                                                    data-bs-toggle="modal" data-bs-target="#discord-link-info">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                        viewBox="0 0 24 24" fill="currentColor"
+                                                        class="icon icon-tabler icons-tabler-filled icon-tabler-brand-discord">
+                                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                        <path
+                                                            d="M14.983 3l.123 .006c2.014 .214 3.527 .672 4.966 1.673a1 1 0 0 1 .371 .488c1.876 5.315 2.373 9.987 1.451 12.28c-1.003 2.005 -2.606 3.553 -4.394 3.553c-.732 0 -1.693 -.968 -2.328 -2.045a21.512 21.512 0 0 0 2.103 -.493a1 1 0 1 0 -.55 -1.924c-3.32 .95 -6.13 .95 -9.45 0a1 1 0 0 0 -.55 1.924c.717 .204 1.416 .37 2.103 .494c-.635 1.075 -1.596 2.044 -2.328 2.044c-1.788 0 -3.391 -1.548 -4.428 -3.629c-.888 -2.217 -.39 -6.89 1.485 -12.204a1 1 0 0 1 .371 -.488c1.439 -1.001 2.952 -1.459 4.966 -1.673a1 1 0 0 1 .935 .435l.063 .107l.651 1.285l.137 -.016a12.97 12.97 0 0 1 2.643 0l.134 .016l.65 -1.284a1 1 0 0 1 .754 -.54l.122 -.009zm-5.983 7a2 2 0 0 0 -1.977 1.697l-.018 .154l-.005 .149l.005 .15a2 2 0 1 0 1.995 -2.15zm6 0a2 2 0 0 0 -1.977 1.697l-.018 .154l-.005 .149l.005 .15a2 2 0 1 0 1.995 -2.15z" />
+                                                    </svg>
+                                                    <span class="btn-text ms-2">Link Discord</span>
+                                                </button>
+                                            </div>
+                                            <div id="discord-settings-block">
+                                                <p class="mb-3">Linked account: <strong
+                                                        id="discord-linked-username"></strong></p>
+                                                <div class="mb-3">
+                                                    <label class="form-check form-switch">
+                                                        <input id="toggle-discord-show-username"
+                                                            class="form-check-input" type="checkbox"
+                                                            oninput="checkIfContentUpdated()">
+                                                        <span class="form-check-label">Show Discord username on
+                                                            profile</span>
+                                                    </label>
+                                                    {% if get_config_value('STREAKS_ENABLED') %}
+                                                    <label class="form-check form-switch">
+                                                        <input id="toggle-discord-sync-streak" class="form-check-input"
+                                                            type="checkbox" oninput="checkIfContentUpdated()">
+                                                        <span class="form-check-label">Show JAMS Streak in Server
+                                                            Nickname:<br><code
+                                                                id="discord-sync-streak-preview"></code></span>
+                                                    </label>
+                                                    {% endif %}
+                                                </div>
+                                                <button id="un-link-discord-button" class="btn btn-danger"
+                                                    data-bs-toggle="modal" data-bs-target="#discord-unlink-check">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                        viewBox="0 0 24 24" fill="currentColor"
+                                                        class="icon icon-tabler icons-tabler-filled icon-tabler-brand-discord">
+                                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                        <path
+                                                            d="M14.983 3l.123 .006c2.014 .214 3.527 .672 4.966 1.673a1 1 0 0 1 .371 .488c1.876 5.315 2.373 9.987 1.451 12.28c-1.003 2.005 -2.606 3.553 -4.394 3.553c-.732 0 -1.693 -.968 -2.328 -2.045a21.512 21.512 0 0 0 2.103 -.493a1 1 0 1 0 -.55 -1.924c-3.32 .95 -6.13 .95 -9.45 0a1 1 0 0 0 -.55 1.924c.717 .204 1.416 .37 2.103 .494c-.635 1.075 -1.596 2.044 -2.328 2.044c-1.788 0 -3.391 -1.548 -4.428 -3.629c-.888 -2.217 -.39 -6.89 1.485 -12.204a1 1 0 0 1 .371 -.488c1.439 -1.001 2.952 -1.459 4.966 -1.673a1 1 0 0 1 .935 .435l.063 .107l.651 1.285l.137 -.016a12.97 12.97 0 0 1 2.643 0l.134 .016l.65 -1.284a1 1 0 0 1 .754 -.54l.122 -.009zm-5.983 7a2 2 0 0 0 -1.977 1.697l-.018 .154l-.005 .149l.005 .15a2 2 0 1 0 1.995 -2.15zm6 0a2 2 0 0 0 -1.977 1.697l-.018 .154l-.005 .149l.005 .15a2 2 0 1 0 1.995 -2.15z" />
+                                                    </svg>
+                                                    <span class="btn-text ms-2">Un-link Discord</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    {% endif %}
+                    {% if get_config_value('STREAKS_ENABLED') %}
+                    {% set hide_elements = true %}
+                    {% set user_id = user_id %}
+                    {% include 'widgets/streak.html'%}
+                    {% endif %}
+                </div>
+
+                <div id="activity-block" style="display: none;">
+                    <h3>Activity</h3>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Workshops</h5>
+                                    <p class="card-text">Overview of workshops ran by this user.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Stats</h5>
+                                    <p class="card-text">Key profile statistics</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h5 class="card-title">Other</h5>
+                                    <p class="card-text">Other info about the user</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    {% if is_current_user %}
+    <div id="save-actions" class="card-footer" style="display: none; position: relative;">
+        <p id="unsaved-warning" class="mb-0 text-warning" style="display: none; position: absolute;">Unsaved changes*
+        </p>
+        <div class="card-actions d-flex justify-content-end gap-2">
+            <button class="btn btn-outline-danger" onclick="cancelEditOnClick()">
+                <i class="ti ti-x"></i>
+                <span class="ms-2">Cancel</span>
+            </button>
+            <button id="save-button" class="btn btn-outline-primary" onclick="saveButtonOnClick()" disabled>
+                <i class="ti ti-device-floppy"></i>
+                <span class="ms-2">Save</span>
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div id="loading-modal" class="modal modal-blur fade" id="modal-small" tabindex="-1" style="display: none;"
+    aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="text-secondary mb-3">Saving...</div>
+                <div class="progress progress-sm">
+                    <div class="progress-bar progress-bar-indeterminate"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="discord-link-info" class="modal modal-blur fade" id="modal-small" tabindex="-1" style="display: none;"
+    aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-status bg-primary"></div>
+            <div class="modal-body text-center py-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"
+                    class="icon icon-tabler icons-tabler-filled icon-tabler-brand-discord icon-lg">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path
+                        d="M14.983 3l.123 .006c2.014 .214 3.527 .672 4.966 1.673a1 1 0 0 1 .371 .488c1.876 5.315 2.373 9.987 1.451 12.28c-1.003 2.005 -2.606 3.553 -4.394 3.553c-.732 0 -1.693 -.968 -2.328 -2.045a21.512 21.512 0 0 0 2.103 -.493a1 1 0 1 0 -.55 -1.924c-3.32 .95 -6.13 .95 -9.45 0a1 1 0 0 0 -.55 1.924c.717 .204 1.416 .37 2.103 .494c-.635 1.075 -1.596 2.044 -2.328 2.044c-1.788 0 -3.391 -1.548 -4.428 -3.629c-.888 -2.217 -.39 -6.89 1.485 -12.204a1 1 0 0 1 .371 -.488c1.439 -1.001 2.952 -1.459 4.966 -1.673a1 1 0 0 1 .935 .435l.063 .107l.651 1.285l.137 -.016a12.97 12.97 0 0 1 2.643 0l.134 .016l.65 -1.284a1 1 0 0 1 .754 -.54l.122 -.009zm-5.983 7a2 2 0 0 0 -1.977 1.697l-.018 .154l-.005 .149l.005 .15a2 2 0 1 0 1.995 -2.15zm6 0a2 2 0 0 0 -1.977 1.697l-.018 .154l-.005 .149l.005 .15a2 2 0 1 0 1.995 -2.15z" />
+                </svg>
+                <h3>Link Your Discord Account</h3>
+                <div class="text-secondary">By linking your Discord account, you'll be able to receive updates and event
+                    notifications directly via Discord. This might include reminders, announcements, or messages from
+                    event organizers.<br><br>We'll only send relevant messages, and you can unlink at any time.</div>
+            </div>
+            <div class="modal-footer">
+                <div class="w-100">
+                    <div class="row">
+                        <div class="col">
+                            <a href="https://discord.com/oauth2/authorize?client_id={{ DISCORD_CLIENT_ID }}&redirect_uri={{ discord_bot_redirect_uri | urlencode }}&response_type=code&scope=identify"
+                                class="btn btn-primary w-100">Link Discord</a>
+                        </div>
+                        <div class="col">
+                            <a href="#" class="btn btn-link link-secondary w-100" data-bs-dismiss="modal">Cancel</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="discord-link-confirmation" class="modal modal-blur fade" id="modal-small" tabindex="-1" style="display: none;"
+    aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-status bg-success"></div>
+            <div class="modal-body text-center py-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="icon mb-2 text-green icon-lg">
+                    <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path>
+                    <path d="M9 12l2 2l4 -4"></path>
+                </svg>
+                <h3>Discord Linked!</h3>
+                <div class="text-secondary">Your Discord account has been successfully linked.<br>You'll now receive
+                    event updates and notifications via Discord.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="w-100">
+                    <div class="row">
+                        <div class="col">
+                            <a href="#" class="btn btn-outline-secondary w-100" data-bs-dismiss="modal">Done</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="discord-unlink-check" class="modal modal-blur fade" id="modal-small" tabindex="-1" style="display: none;"
+    aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-status bg-danger"></div>
+            <div class="modal-body text-center py-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-alert-triangle text-danger icon-lg">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M12 9v4" />
+                    <path
+                        d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z" />
+                    <path d="M12 16h.01" />
+                </svg>
+                <h3>Un-Link Discord</h3>
+                <div class="text-secondary">Are you sure you want to Un-Link your Discord account from JAMS?<br>You will
+                    no longer receive update notifications
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="w-100">
+                    <div class="row">
+                        <div class="col">
+                            <a onclick="unLinkDiscordOnClick()" class="btn btn-danger w-100" data-bs-dismiss="modal">Un-Link Discord</a>
+                        </div>
+                        <div class="col">
+                            <a href="#" class="btn btn-link link-secondary w-100" data-bs-dismiss="modal">Cancel</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/user/profile.js') }}" defer></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/user/profile.css') }}">
+
+{% endblock %}

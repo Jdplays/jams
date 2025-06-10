@@ -31,22 +31,34 @@ jobs:
 
       - name: Extract and Validate Version
         run: |
-          VERSION=$(cat VERSION)
+          VERSION=$(cat jams/VERSION)
           if ! echo "$VERSION" | grep -E '^[0-9]+(\.[0-9]+)*$' > /dev/null; then
             echo "::error ::Invalid version format in VERSION file: '$VERSION'. Must be numeric (e.g., 1.0.0)."
             exit 1
           fi
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Build and Push Docker Images
+      # Build and push the server image
+      - name: Build and Push Server Image
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./docker/Dockerfile
+          file: ./jams/infra/docker/server/Dockerfile
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-server:${{ env.VERSION }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-server:latest
+
+      # Build and push the web image
+      - name: Build and Push Web Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./jams/infra/docker/web/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-web:${{ env.VERSION }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-web:latest
 
       - name: Clean up
         run: |
@@ -62,7 +74,7 @@ jobs:
 
       - name: Extract and Validate Version
         run: |
-          VERSION=$(cat VERSION)
+          VERSION=$(cat jams/VERSION)
           if ! echo "$VERSION" | grep -E '^[0-9]+(\.[0-9]+)*$' > /dev/null; then
             echo "::error ::Invalid version format in VERSION file: '$VERSION'. Must be numeric (e.g., 1.0.0)."
             exit 1
