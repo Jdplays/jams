@@ -149,12 +149,14 @@ def attendee_login_required(f):
 def protect_attendee_updates(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        current_attendee_account_id = attendee_auth.current_attendee().id
+        account = attendee_auth.current_attendee()
+        if not account:
+            return jsonify({'error': 'Not authenticated'}), 401
+        
         requested_attendee_id = int(kwargs.get('attendee_id'))
-
         requested_attendee = Attendee.query.filter_by(id=requested_attendee_id).first()
 
-        if not requested_attendee or requested_attendee.attendee_account_id is not current_attendee_account_id:
+        if not requested_attendee or requested_attendee.attendee_account_id != account.id:
             return jsonify({'error': 'You do not have access to the requested resource'}), 403
         return func(*args, **kwargs)
     return wrapper
