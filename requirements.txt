@@ -10,7 +10,7 @@ gevent
 python-dotenv
 pyyaml
 minio
-setuptools
+setuptools==81.0.0
 requests
 Authlib
 pytz
