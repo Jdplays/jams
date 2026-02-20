@@ -14,6 +14,7 @@ roles:
       - locations_timeslots
       - attendee_list
       - fire_list
+      - wrangler
   Admin:
     description: An Administrator
     pages:

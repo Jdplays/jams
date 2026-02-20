@@ -760,12 +760,34 @@ def get_workshop_for_session(session_id):
     session = Session.query.filter_by(id=session_id).first_or_404()
     
     if not session.has_workshop:
-        abort(400, description="Session has no workshop")
+        abort(404, description="Session has no workshop")
 
     workshop = session.workshop
     
     return jsonify({
         'workshop': workshop.to_dict()
+    })
+
+@bp.route('/sessions/<int:session_id>/timeslot', methods=['GET'])
+@api_route
+def get_timeslot_for_session(session_id):
+    session = Session.query.filter_by(id=session_id).first_or_404()
+
+    timeslot = session.event_timeslot.timeslot
+    
+    return jsonify({
+        'timeslot': timeslot.to_dict()
+    })
+
+@bp.route('/sessions/<int:session_id>/location', methods=['GET'])
+@api_route
+def get_location_for_session(session_id):
+    session = Session.query.filter_by(id=session_id).first_or_404()
+
+    location = session.event_location.location
+    
+    return jsonify({
+        'location': location.to_dict()
     })
 
 
