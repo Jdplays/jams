@@ -93,7 +93,6 @@ def get_attendees_for_account():
 
     return jsonify(data)
 
-
 #------------------------------------------ ATTENDEE SIGNUP ------------------------------------------#
 
 @bp.route('/signups')

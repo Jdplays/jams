@@ -82,7 +82,7 @@
         <!-- Other Navigation Items -->
         {% if current_user.is_authenticated %}
         <!--Event-->
-        {% if user_has_access_to_page('fire_list', 'attendee_list', 'schedule_planner') %}
+        {% if user_has_access_to_page('fire_list', 'attendee_list', 'schedule_planner', 'wrangler') %}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" data-bs-auto-close="outside"
             role="button" aria-expanded="false">
@@ -104,6 +104,11 @@
             {% if user_has_access_to_page('attendee_list') %}
             <a class="dropdown-item" href="{{ url_for('routes.frontend.private.event.attendee_list')}}">
               Attendee List
+            </a>
+            {% endif %}
+            {% if user_has_access_to_page('wrangler') %}
+            <a class="dropdown-item" href="{{ url_for('routes.frontend.private.event.wrangler')}}">
+              Wrangler
             </a>
             {% endif %}
             <a class="dropdown-item" href="{{ url_for('routes.frontend.public.general.public_schedule')}}">

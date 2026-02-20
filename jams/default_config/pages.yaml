@@ -135,6 +135,17 @@ pages:
         allowed_fields: id, name
       regenerate_event_tasks:
   
+  session_wrangler:
+    endpoint: routes.frontend.private.event.session_wrangler
+    api_endpoints:
+      get_event_field:
+        allowed_fields: id, filtered_name, date
+      get_session_workshop:
+      get_session_timeslot:
+      get_session_location:
+      get_event_volunteer_signups:
+      get_event_attendees:
+  
   # Logs
   private_access_log:
     endpoint: routes.frontend.private.monitoring.private_access_log
@@ -353,6 +364,26 @@ pages:
       get_event_fire_list:
       check_in_event_fire_list_item:
       check_out_event_fire_list_item:
+  
+  wrangler:
+    endpoint: routes.frontend.private.event.wrangler
+    child_pages:
+      session_wrangler:
+    api_endpoints:
+      get_next_event_id:
+      get_events_field:
+        allowed_fields: id, name, filtered_name, date
+      get_event_field:
+        allowed_fields: id, name, filtered_name, date
+      get_event_timeslots:
+      get_event_locations:
+      get_event_sessions:
+      get_locations:
+      get_timeslots:
+      get_workshops:
+      get_event_volunteer_signups:
+      get_users_field:
+        allowed_fields: id, display_name
       
 
   # -------------------------------- DEFAULT  -------------------------------- #

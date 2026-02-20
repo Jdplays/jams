@@ -10,7 +10,7 @@ COPY jams/common ./common
 COPY jams/default_config ./default_config
 
 # Shared files
-COPY config ./config
+COPY jams/common/config/ ./config
 COPY requirements.txt .
 COPY LICENSE .
 COPY jams/VERSION .

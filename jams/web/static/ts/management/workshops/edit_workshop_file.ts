@@ -293,6 +293,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const backButton = document.getElementById('back-to-workshop-catalog') as HTMLAnchorElement
     backButton.href = `/private/management/workshops/${WorkshopId}/edit`
 });
+
 document.addEventListener("DOMContentLoaded", initialisePage);
 document.addEventListener("DOMContentLoaded", () => {
     if (isDefined(window)) {
