@@ -1,0 +1,52 @@
+{% extends '_layout.html' %}
+
+{% block title %}Wrangler{% endblock %}
+
+{% block content %}
+
+<a id="back-to-wrangler-page" class="btn btn-link link-secondary mb-3">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-left">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M5 12l14 0" />
+        <path d="M5 12l6 6" />
+        <path d="M5 12l6 -6" />
+    </svg>
+    <span class="btn-text">Back</span>
+</a>
+
+<div class="content-wrapper">
+    <div class="main-content">
+        <div class="row row-deck row-cards mb-3">
+            <div class="col-12 col-md-4">
+                <div>
+                    <h1 id="session-wrangler-title"></h1>
+                    <div id="event-details"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="text-secondary">
+    <p id="workshop-description"></p>
+    <p id="workshop-time"></p>
+</div>
+
+<div class="mb-3">
+    <h2>Volunteers</h2>
+    <h3 id="volunteer-names"></h3>
+</div>
+
+<div>
+    <h2>Attendees</h2>
+    <div id="attendees-data-grid-container">
+        <div id="attendees-data-grid" class="ag-theme-quartz"></div>
+    </div>
+</div>
+
+
+<script src="{{ url_for('static', filename='js/event/session_wrangler.js') }}" defer></script>
+
+{% endblock %}

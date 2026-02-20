@@ -702,6 +702,57 @@ export function getSessionsForEvent(eventId:number, queryString:string|null = nu
     });
 }
 
+export function getWorkshopForSession(sessionId:number):Promise<Workshop> {
+    return new Promise((resolve, reject) => {
+        let url = `${baseURL}/sessions/${sessionId}/workshop`
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function (response) {
+                resolve(response.workshop)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function getTimeslotForSession(sessionId:number):Promise<Timeslot> {
+    return new Promise((resolve, reject) => {
+        let url = `${baseURL}/sessions/${sessionId}/timeslot`
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function (response) {
+                resolve(response.timeslot)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
+export function getLocationForSession(sessionId:number):Promise<Location> {
+    return new Promise((resolve, reject) => {
+        let url = `${baseURL}/sessions/${sessionId}/location`
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function (response) {
+                resolve(response.location)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
+
 export function addWorkshopToSession(sessionId:number, workshopId:number, force:boolean = false):Promise<boolean> {
     return new Promise((resolve) => {
         const data:Partial<RequestMultiModelJSONData> = {
@@ -1770,6 +1821,23 @@ export function removeVolunteerSignup(eventId:number, userId:number, session_id:
 // #endregion
 
 // #region Attendees Private
+
+export function getAttendee(attendeeId:number):Promise<ApiMultiEntryResponse<[Attendee]>> {
+    return new Promise((resolve, reject) => {
+        let url = `${baseURL}/attendees/${attendeeId}`
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function (response) {
+                resolve(response.attendee)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        });
+    });
+}
 
 export function getAttendees(eventId:number, queryString:string|null = null):Promise<ApiMultiEntryResponse<[Attendee]>> {
     return new Promise((resolve, reject) => {

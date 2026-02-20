@@ -1,0 +1,25 @@
+{% extends '_layout.html' %}
+
+{% block title %}Wrangler{% endblock %}
+
+{% block content %}
+
+<div class="content-wrapper">
+    <div class="main-content">
+        <div class="row row-deck row-cards mb-3">
+            <div class="col-12 col-md-4">
+                <div>
+                    <h1>Wrangler</h1>
+                    <div id="event-details"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="timeslots-block">
+</div>
+
+<script src="{{ url_for('static', filename='js/event/wrangler.js') }}" defer></script>
+
+{% endblock %}
