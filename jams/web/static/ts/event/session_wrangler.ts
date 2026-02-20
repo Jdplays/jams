@@ -98,6 +98,11 @@ async function loadAttendeeDataForSignups() {
     const signups = attendeeSignupsResponse.data
     const attendeeIds = [...new Set(signups.map((s: any) => s.attendee_id))]
 
+    if (attendeeIds.length === 0) {
+        sessionAttendees = []
+        return
+    }
+
     const attendeeQueryData:Partial<QueryStringData> = {
         '$all_rows': true,
         id: attendeeIds,
