@@ -350,7 +350,7 @@ async function loadAttendeeCountsPerSession() {
     const attendeeSignupsQueryString = buildQueryString(attendeeSignupsQueryData)
     const attendeeSignupsResponse = await getAttendeesSignups(attendeeSignupsQueryString)
 
-    const attendeeSignups = attendeeSignupsResponse.data;
+    const attendeeSignups = attendeeSignupsResponse.data ?? []
 
     const _sessionAttendeeCountMap: Record<number, number> = {};
 
