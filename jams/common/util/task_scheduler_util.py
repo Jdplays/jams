@@ -3,6 +3,10 @@ from datetime import datetime, timedelta, UTC
 from common.models import db, TaskSchedulerModel
 from common.util.enums import TaskActionEnum
 
+def task_exists(name):
+    task = TaskSchedulerModel.query.filter(TaskSchedulerModel.name == name).first()
+    return task is not None
+
 def create_task(name, action_enum:TaskActionEnum, interval, params=None, start_datetime=datetime.now(UTC), end_datetime=datetime.now(UTC), run_quantity=None, private=True, event_id=None, forever=False, fixed_time=None):
     if forever:
         end_datetime = None

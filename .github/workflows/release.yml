@@ -88,8 +88,11 @@ jobs:
           echo "" >> release_notes.md
           echo "📦 **Docker Image:**" >> release_notes.md
           echo "\`\`\`sh" >> release_notes.md
-          echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}" >> release_notes.md
-          echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" >> release_notes.md
+          echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-web:${{ env.VERSION }}" >> release_notes.md
+          echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-web:latest" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-server:${{ env.VERSION }}" >> release_notes.md
+          echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-server:latest" >> release_notes.md
           echo "\`\`\`" >> release_notes.md
           echo "" >> release_notes.md
           echo "📄 **Changelog:**" >> release_notes.md
