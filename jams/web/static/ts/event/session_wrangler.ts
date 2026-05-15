@@ -32,9 +32,10 @@ function initialiseAttendeesAgGrid() {
                 pinned: true,
                 flex: 1
             },
+            {field: "checked_in", minWidth: 50, flex: 1},
             {field: 'email', minWidth:250, tooltipValueGetter: (params:any) => params.value, flex: 1},
-            {field: 'age', minWidth:70, flex: 1},
-            {field: 'gender', minWidth:120, flex: 1},
+            {field: 'age', minWidth:50, flex: 1},
+            {field: 'gender', minWidth:120, flex: 1}
         ]
     }
 
