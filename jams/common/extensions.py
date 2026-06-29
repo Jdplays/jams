@@ -41,7 +41,7 @@ def create_redis_client():
     if not redis:
         raise RuntimeError('MinIO not available in this environment')
     redis_url = os.getenv('REDIS_URL', 'jams-redis:6379')
-    return redis.Redis.from_url(redis_url, decode_responses=True)
+    return redis.Redis.from_url(redis_url, decode_responses=True, socket_timeout=None, socket_connect_timeout=5, health_check_interval=10)
 
 def create_bucket(minio_client, name, versioning=True):
     # Create the bucket if it doesn't already exist
