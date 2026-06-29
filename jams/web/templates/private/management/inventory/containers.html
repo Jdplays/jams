@@ -1,0 +1,41 @@
+{% extends '_layout.html' %}
+
+{% block title %}Inventory containers{% endblock %}
+
+{% block content %}
+{% set inventory_tab = 'containers' %}
+{% set can_manage_inventories = user_has_access_to_page('edit_inventory') %}
+
+{% include 'private/management/inventory/_tabs.html' %}
+
+<div
+    id="inventory-containers-page"
+    data-can-manage-inventories="{{ can_manage_inventories|tojson }}"
+>
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h1 class="card-title">Containers</h1>
+                <div class="text-secondary">Boxes, shelves, rooms and other storage locations.</div>
+            </div>
+            {% if can_manage_inventories %}
+            <a
+                class="btn btn-primary ms-auto"
+                href="{{ url_for('routes.frontend.private.management.add_inventory_container', return_to=url_for('routes.frontend.private.management.inventory_containers')) }}"
+            >
+                <i class="ti ti-plus me-1"></i>
+                New container
+            </a>
+            {% endif %}
+        </div>
+        <div class="card-body border-bottom py-3">
+            <input id="inventory-containers-filter" class="form-control" type="search" placeholder="Search containers…">
+        </div>
+        <div class="card-body p-0">
+            <div id="inventory-containers-grid" class="ag-theme-quartz" style="height: 520px"></div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/management/inventory/containers.js') }}" defer></script>
+{% endblock %}

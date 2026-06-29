@@ -1,0 +1,23 @@
+.theme-dark .ts-control,
+.theme-dark .ts-wrapper.single.input-active .ts-control,
+.theme-dark .ts-dropdown {
+    background: var(--tblr-bg-surface, #182433);
+    border-color: var(--tblr-border-color, #2b3a4a);
+    color: var(--tblr-body-color, #f8fafc);
+}
+
+.theme-dark .ts-control input,
+.theme-dark .ts-dropdown .option,
+.theme-dark .ts-dropdown .create {
+    color: var(--tblr-body-color, #f8fafc);
+}
+
+.theme-dark .ts-dropdown .active,
+.theme-dark .ts-dropdown .option:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--tblr-body-color, #f8fafc);
+}
+
+.theme-dark .ts-control .item {
+    color: var(--tblr-body-color, #f8fafc);
+}

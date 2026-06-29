@@ -1,0 +1,96 @@
+{% extends '_layout.html' %}
+
+{% block title %}Inventory asset{% endblock %}
+
+{% block content %}
+{% set inventory_tab = 'assets' %}
+{% set can_manage_inventories = user_has_access_to_page('edit_inventory') %}
+{% include 'private/management/inventory/_tabs.html' %}
+
+<div
+    id="inventory-asset-detail-page"
+    data-asset-id="{{ asset_id }}"
+    data-can-manage-inventories="{{ can_manage_inventories|tojson }}"
+>
+    <a class="btn btn-link link-secondary mb-3 px-0" href="{{ return_to }}">
+        <i class="ti ti-arrow-left me-1"></i>
+        Back
+    </a>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <div>
+                <h1 id="asset-code" class="card-title">Loading asset…</h1>
+                <div id="asset-item-name" class="text-secondary"></div>
+            </div>
+            <div class="btn-list ms-auto">
+                <div id="asset-state-actions" class="btn-list"></div>
+                <button id="print-asset-label" class="btn btn-outline-primary" type="button">
+                    <i class="ti ti-printer me-1"></i>Print label
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3"><div class="text-secondary">Status</div><strong id="asset-status"></strong></div>
+                <div class="col-md-3"><div class="text-secondary">Inventory</div><strong id="asset-inventory"></strong></div>
+                <div class="col-md-3"><div class="text-secondary">Container</div><strong id="asset-container"></strong></div>
+                <div class="col-md-3"><div class="text-secondary">Archived</div><strong id="asset-archived"></strong></div>
+                <div class="col-12"><div class="text-secondary mb-1">Attributes</div><div id="asset-attributes"></div></div>
+                <div class="col-12"><div class="text-secondary">Notes</div><span id="asset-notes"></span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header"><h2 class="card-title">Inventory history</h2></div>
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+                <thead>
+                    <tr>
+                        <th>Inventory</th>
+                        <th>Date</th>
+                        <th>Container</th>
+                        <th>Linked</th>
+                        {% if can_manage_inventories %}
+                        <th class="w-1">Actions</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody id="asset-inventory-history"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><h2 class="card-title">Asset log</h2></div>
+        <div class="card-body p-0">
+            <div id="asset-logs-grid" class="ag-theme-quartz" style="height: 420px"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal modal-blur fade" id="asset-state-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="asset-state-form">
+                <div class="modal-header">
+                    <h2 id="asset-state-modal-title" class="modal-title">Update asset</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <label id="asset-state-note-label" class="form-label" for="asset-state-note">Note</label>
+                    <textarea id="asset-state-note" class="form-control" rows="4" placeholder="Add some context for this change"></textarea>
+                    <div id="asset-state-note-hint" class="form-hint"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn me-auto" data-bs-dismiss="modal">Cancel</button>
+                    <button id="asset-state-submit" type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/management/inventory/asset_detail.js') }}" defer></script>
+{% endblock %}

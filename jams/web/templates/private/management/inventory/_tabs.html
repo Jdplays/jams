@@ -1,0 +1,38 @@
+<ul class="nav nav-tabs mb-3" role="navigation" aria-label="Inventory sections">
+    <li class="nav-item">
+        <a
+            class="nav-link{% if inventory_tab == 'inventories' %} active{% endif %}"
+            href="{{ url_for('routes.frontend.private.management.inventory') }}"
+        >
+            <i class="ti ti-clipboard-list me-1"></i>
+            Inventories
+        </a>
+    </li>
+    <li class="nav-item">
+        <a
+            class="nav-link{% if inventory_tab == 'items' %} active{% endif %}"
+            href="{{ url_for('routes.frontend.private.management.inventory_items') }}"
+        >
+            <i class="ti ti-package me-1"></i>
+            Items
+        </a>
+    </li>
+    <li class="nav-item">
+        <a
+            class="nav-link{% if inventory_tab == 'containers' %} active{% endif %}"
+            href="{{ url_for('routes.frontend.private.management.inventory_containers') }}"
+        >
+            <i class="ti ti-box me-1"></i>
+            Containers
+        </a>
+    </li>
+    <li class="nav-item">
+        <a
+            class="nav-link{% if inventory_tab == 'assets' %} active{% endif %}"
+            href="{{ url_for('routes.frontend.private.management.inventory_assets') }}"
+        >
+            <i class="ti ti-barcode me-1"></i>
+            Assets
+        </a>
+    </li>
+</ul>

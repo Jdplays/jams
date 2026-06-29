@@ -1,0 +1,210 @@
+{% extends '_layout.html' %}
+
+{% block title %}Inventory{% endblock %}
+
+{% block content %}
+
+{% set can_manage_inventories = user_has_access_to_page('edit_inventory') %}
+
+<div
+    id="inventory-detail-page"
+    data-inventory-id="{{ inventory_id }}"
+    data-can-manage-inventories="{{ can_manage_inventories|tojson }}"
+>
+    <a
+        class="btn btn-link link-secondary mb-3 px-0"
+        href="{{ url_for('routes.frontend.private.management.inventory') }}"
+    >
+        <i class="ti ti-arrow-left me-1"></i>
+        Back to inventories
+    </a>
+
+    <div class="row row-cards mb-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        <span class="avatar avatar-lg bg-blue-lt me-3">
+                            <i class="ti ti-packages fs-1"></i>
+                        </span>
+                        <div class="flex-fill">
+                            <div class="d-flex align-items-start justify-content-between gap-3">
+                                <div>
+                                    <h1 id="inventory-name" class="card-title mb-1">Loading inventory…</h1>
+                                    <div class="text-secondary">
+                                        <i class="ti ti-calendar me-1"></i>
+                                        <span id="inventory-date"></span>
+                                    </div>
+                                </div>
+                                <span id="inventory-status" class="badge"></span>
+                            </div>
+                            <div class="d-flex flex-wrap align-items-center gap-3 mt-3 text-secondary">
+                                <div>
+                                    <i class="ti ti-list-details me-2 fs-3"></i>
+                                    <strong id="inventory-entry-count" class="text-body">0</strong> entries
+                                </div>
+                                <div>
+                                    <i class="ti ti-sum me-2 fs-3"></i>
+                                    <strong id="inventory-total-count" class="text-body">0</strong> total items
+                                </div>
+                                <div>
+                                    <i class="ti ti-barcode me-2 fs-3"></i>
+                                    <strong id="inventory-asset-count" class="text-body">0</strong> assets
+                                </div>
+                                <div id="inventory-coordinator"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if can_manage_inventories %}
+    <div class="card mb-3">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">Add inventory entry</h2>
+                <div class="text-secondary">Choose an item, its variant and where it is stored.</div>
+            </div>
+            <div class="btn-list ms-auto">
+                <a
+                    class="btn btn-outline-primary btn-sm"
+                    href="{{ url_for('routes.frontend.private.management.add_inventory_container', return_to=url_for('routes.frontend.private.management.inventory_detail', inventory_id=inventory_id)) }}"
+                >
+                    <i class="ti ti-box me-1"></i>
+                    New container
+                </a>
+                <a
+                    class="btn btn-outline-secondary btn-sm"
+                    href="{{ url_for('routes.frontend.private.management.add_inventory_item', return_to=url_for('routes.frontend.private.management.inventory_detail', inventory_id=inventory_id)) }}"
+                >
+                    <i class="ti ti-package-import me-1"></i>
+                    New item
+                </a>
+            </div>
+        </div>
+        <form id="add-inventory-entry-form">
+            <div class="card-body">
+                <div class="row g-3 align-items-end">
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label required" for="inventory-item-select">Item</label>
+                        <select id="inventory-item-select" placeholder="Search inventory items…"></select>
+                    </div>
+                    <div class="col-12 col-md-8 col-lg-4">
+                        <label class="form-label" for="inventory-container-select">Container</label>
+                        <select id="inventory-container-select" class="form-select">
+                            <option value="">No container</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4 col-lg-2">
+                        <label class="form-label required" for="inventory-entry-quantity">Quantity</label>
+                        <input
+                            id="inventory-entry-quantity"
+                            class="form-control"
+                            type="number"
+                            min="1"
+                            value="1"
+                            required
+                        >
+                    </div>
+
+                    <div id="inventory-entry-attributes" class="col-12 d-none">
+                        <div class="border-top pt-3 mt-2">
+                            <h3 class="card-title mb-3">Item attributes</h3>
+                            <div id="inventory-entry-attribute-fields" class="row g-3"></div>
+                        </div>
+                    </div>
+
+                    <div id="inventory-asset-selection" class="col-12 d-none">
+                        <div class="border-top pt-3 mt-2">
+                            <div class="d-flex flex-wrap gap-4 mb-3">
+                                <label class="form-check">
+                                    <input class="form-check-input inventory-asset-mode" type="radio" name="inventory-asset-mode" value="create" checked>
+                                    <span class="form-check-label">Create new assets</span>
+                                </label>
+                                <label class="form-check">
+                                    <input class="form-check-input inventory-asset-mode" type="radio" name="inventory-asset-mode" value="existing">
+                                    <span class="form-check-label">Use existing assets</span>
+                                </label>
+                            </div>
+
+                            <div id="inventory-existing-assets" class="d-none">
+                                <div class="d-flex flex-wrap gap-4 mb-3">
+                                    <label class="form-check">
+                                        <input class="form-check-input inventory-existing-asset-selection" type="radio" name="inventory-existing-asset-selection" value="codes" checked>
+                                        <span class="form-check-label">Enter asset numbers</span>
+                                    </label>
+                                    <label class="form-check">
+                                        <input class="form-check-input inventory-existing-asset-selection" type="radio" name="inventory-existing-asset-selection" value="range">
+                                        <span class="form-check-label">Use a starting number and quantity</span>
+                                    </label>
+                                </div>
+
+                                <div id="inventory-existing-asset-codes-container">
+                                    <label class="form-label required" for="inventory-existing-asset-codes">Asset numbers or codes</label>
+                                    <textarea
+                                        id="inventory-existing-asset-codes"
+                                        class="form-control"
+                                        rows="2"
+                                        placeholder="1, 2, 5 or PI5-001, PI5-002, PI5-005"
+                                    ></textarea>
+                                    <div class="form-hint">Separate values with commas, spaces or new lines. Quantity is calculated from this list.</div>
+                                </div>
+
+                                <div id="inventory-existing-asset-range-container" class="d-none">
+                                    <label class="form-label required" for="inventory-existing-asset-start-index">Starting asset number</label>
+                                    <input
+                                        id="inventory-existing-asset-start-index"
+                                        class="form-control"
+                                        type="number"
+                                        min="1"
+                                        value="1"
+                                    >
+                                    <div class="form-hint">The quantity above controls how many consecutive assets are selected.</div>
+                                </div>
+
+                                <div id="inventory-existing-asset-validation" class="alert alert-secondary mt-3 mb-0 d-none" role="status"></div>
+                            </div>
+
+                            <div class="alert alert-info mt-3 mb-0" role="status">
+                                <i class="ti ti-barcode me-2"></i>
+                                <span id="inventory-asset-tracking-message"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="ti ti-plus me-1"></i>
+                    Add entry
+                </button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Entries</h2>
+            <div class="ms-auto">
+                <input
+                    id="inventory-entry-filter"
+                    class="form-control"
+                    type="search"
+                    placeholder="Search entries…"
+                >
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div id="inventory-entries-grid" class="ag-theme-quartz" style="min-height: 420px"></div>
+        </div>
+    </div>
+</div>
+
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/management/inventory.css') }}" rel="stylesheet">
+<script src="{{ url_for('static', filename='js/management/inventory/inventory_detail.js') }}" defer></script>
+
+{% endblock %}

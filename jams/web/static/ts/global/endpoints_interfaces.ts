@@ -441,3 +441,157 @@ export interface DiscordBotStartupResponse {
     client_id?:string
     guild_list?:DiscordGuild[]
 }
+
+export interface Inventory {
+    id:number
+    name:string
+    date:string
+    coordinator_id?:number
+    active:boolean
+}
+
+export interface InventorySummary {
+    entry_count:number
+    total_count:number
+    asset_count:number
+}
+
+export interface InventoryAttributeOption {
+    key:string
+    label:string
+    active:boolean
+}
+
+export interface InventoryAttributeDefinition {
+    key:string
+    label:string
+    type:"select"|"boolean"
+    required:boolean
+    active:boolean
+    values?:InventoryAttributeOption[]
+}
+
+export interface InventoryAttributeSchema {
+    attributes:InventoryAttributeDefinition[]
+}
+
+export interface InventoryItem {
+    id:number
+    name:string
+    description?:string
+    type:"PHYSICAL"|"VIRTUAL"
+    is_asset:boolean
+    asset_code_prefix?:string|null
+    asset_count:number
+    attribute_schema?:InventoryAttributeSchema|null
+    archived?:boolean
+}
+
+export interface InventoryContainer {
+    id:number
+    name:string
+    description?:string
+    parent_container_id?:number
+    archived:boolean
+}
+
+export interface InventoryItemEntry {
+    id:number
+    inventory_id:number
+    inventory_item_id:number
+    container_id?:number
+    attributes:Record<string, unknown>
+    quantity:number
+    asset_count:number
+    asset_ids:number[]
+    asset_codes:string[]
+    item?:InventoryItem
+    container?:InventoryContainer
+}
+
+export type InventoryAssetState = "ACTIVE"|"ARCHIVED"|"BROKEN"
+
+export interface InventoryAsset {
+    id:number
+    asset_code:string
+    inventory_item_id:number
+    inventory_item_entry_id?:number|null
+    inventory_item_entry_ids:number[]
+    inventory_id?:number|null
+    container_id?:number|null
+    inventory_entry_history?:InventoryAssetEntryHistory[]
+    attributes?:Record<string, unknown>|null
+    status:InventoryAssetState
+    notes?:string|null
+    archived:boolean
+    archived_at?:string|null
+    archive_reason?:string|null
+}
+
+export interface InventoryAssetEntryHistory {
+    inventory_asset_entry_id:number
+    inventory_item_entry_id:number
+    inventory_id:number
+    inventory_name:string
+    inventory_date?:string|null
+    container_id?:number|null
+    container_name?:string|null
+    linked_at?:string|null
+}
+
+export interface InventoryAssetLog {
+    id:number
+    inventory_asset_id:number
+    message?:string|null
+    state?:InventoryAssetState|null
+    note?:string|null
+    user_id?:number|null
+    user?:Partial<User>|null
+    date:string
+}
+
+export interface InventoryDetail {
+    inventory:Inventory
+    status:"Active"|"Old"|"Archived"
+    summary:InventorySummary
+    entries:InventoryItemEntry[]
+}
+
+export interface CreateInventoryEntryRequest {
+    inventory_item_id:number
+    container_id?:number|null
+    quantity?:number
+    attributes?:Record<string, unknown>
+    asset_mode?:"create"|"existing"
+    existing_asset_selection?:"codes"|"range"
+    existing_asset_codes?:string[]
+    asset_start_index?:number
+}
+
+export interface CreateInventoryContainerRequest {
+    name:string
+    description?:string
+    parent_container_id?:number|null
+}
+
+export interface ValidateInventoryEntryAssetsResponse {
+    valid:boolean
+    quantity:number
+    asset_codes:string[]
+    valid_asset_codes:string[]
+    invalid_assets:{
+        asset_code:string
+        reason:string
+        code:string
+        inventory_item_entry_id?:number
+    }[]
+}
+
+export interface CreateInventoryItemRequest {
+    name:string
+    description?:string|null
+    type:"PHYSICAL"|"VIRTUAL"
+    is_asset:boolean
+    asset_code_prefix?:string|null
+    attribute_schema?:InventoryAttributeSchema|null
+}
