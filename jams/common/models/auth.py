@@ -232,7 +232,7 @@ class User(UserMixin, db.Model):
             'config': self.config.to_dict() if self.config else {}
         }
     
-    def public_info_dict(self):
+    def public_info(self):
         public_role_ids = [r.id for r in self.roles if not r.hidden]
         return {
             'id': self.id,
