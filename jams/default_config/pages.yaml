@@ -170,6 +170,26 @@ pages:
     api_endpoints:
       get_external_api_logs:
 
+  # Inventory
+  inventory_detail:
+    endpoint: routes.frontend.private.management.inventory_detail
+  inventory_items:
+    endpoint: routes.frontend.private.management.inventory_items
+  add_inventory_item:
+    endpoint: routes.frontend.private.management.add_inventory_item
+  edit_inventory_item:
+    endpoint: routes.frontend.private.management.edit_inventory_item
+  inventory_containers:
+    endpoint: routes.frontend.private.management.inventory_containers
+  add_inventory_container:
+    endpoint: routes.frontend.private.management.add_inventory_container
+  edit_inventory_container:
+    endpoint: routes.frontend.private.management.edit_inventory_container
+  inventory_assets:
+    endpoint: routes.frontend.private.management.inventory_assets
+  inventory_asset_detail:
+    endpoint: routes.frontend.private.management.inventory_asset_detail
+
 # Normal Pages
   # Admin
   settings:
@@ -273,6 +293,21 @@ pages:
       edit_timeslot:
       archive_timeslot:
       activate_timeslot:
+
+  inventory:
+    endpoint: routes.frontend.private.management.inventory
+    child_pages:
+      - inventory_detail
+      - inventory_items
+      - add_inventory_item
+      - edit_inventory_item
+      - inventory_containers
+      - add_inventory_container
+      - edit_inventory_container
+      - inventory_assets
+      - inventory_asset_detail
+
+  edit_inventory: {}
 
   # Volunteer`
   volunteer_attendance:
@@ -430,4 +465,3 @@ pages:
       get_event_sessions_sse:
       get_events_field:
         allowed_fields: id, name, date
-

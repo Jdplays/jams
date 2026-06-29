@@ -65,3 +65,12 @@ class DiscordMessageView(Enum):
 class DiscordRecipientType(Enum):
     CHANNEL = 'CHANNEL'
     DM = 'DM'
+
+class InventoryItemType(Enum):
+    PHYSICAL = 'PHYSICAL',
+    VIRTUAL = 'VIRTUAL'
+
+class InventoryAssetState(Enum):
+    ACTIVE = 'ACTIVE'
+    ARCHIVED = 'ARCHIVED'
+    BROKEN = 'BROKEN'
