@@ -8,6 +8,7 @@ class RedisKeys(str, Enum):
     DISCORD_BOT_CONFIG = 'discordbot:config'
 
 class RedisChannels(str, Enum):
+    INVENTORY_UPDATE = 'inventory:update'
     WEBHOOK_TRIGGER = 'webhook:trigger'
     DISCORD_BOT_CONTROL = 'discordbot:control'
     DISCORD_BOT_ACTION = 'discordbot:action'

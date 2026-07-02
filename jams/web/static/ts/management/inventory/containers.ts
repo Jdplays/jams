@@ -22,6 +22,16 @@ function actionButtons(container:InventoryContainer):HTMLElement {
     const wrapper = document.createElement("div")
     wrapper.classList.add("btn-list", "flex-nowrap")
 
+    const view = document.createElement("a")
+    view.classList.add("btn", "btn-sm", "btn-outline-secondary")
+    view.href = `/private/management/inventory/containers/${container.id}`
+    view.innerHTML = '<i class="ti ti-eye me-1"></i>View'
+    wrapper.appendChild(view)
+
+    if (!canManageInventories) {
+        return wrapper
+    }
+
     const edit = document.createElement("a")
     edit.classList.add("btn", "btn-sm", "btn-outline-primary")
     const returnTo = encodeURIComponent(window.location.pathname + window.location.search)
@@ -76,6 +86,7 @@ function initialiseGrid() {
         throw new Error("Inventory containers grid was not found")
     }
 
+    const isMobile = window.matchMedia("(max-width: 767.98px)").matches
     const options:GridOptions<InventoryContainer> = {
         animateRows: true,
         enableCellTextSelection: true,
@@ -88,8 +99,9 @@ function initialiseGrid() {
                 valueGetter: params => parentName(params.data?.parent_container_id),
                 minWidth: 180,
                 flex: 2,
+                hide: isMobile,
             },
-            { field: "description", headerName: "Description", minWidth: 260, flex: 3 },
+            { field: "description", headerName: "Description", minWidth: 260, flex: 3, hide: isMobile },
             {
                 field: "archived",
                 headerName: "Status",
@@ -97,14 +109,14 @@ function initialiseGrid() {
                 minWidth: 120,
                 flex: 1,
             },
-            ...(canManageInventories ? [{
+            {
                 headerName: "Actions",
                 sortable: false,
                 filter: false,
                 cellRenderer: (params:any) => actionButtons(params.data),
-                minWidth: 210,
-                width: 210,
-            }] : []),
+                minWidth: canManageInventories ? 300 : 110,
+                width: canManageInventories ? 300 : 110,
+            },
         ],
     }
 

@@ -173,6 +173,17 @@ def edit_inventory_container(container_id):
     )
 
 
+@bp.route('/inventory/containers/<int:container_id>')
+@login_required
+@role_based_access_control_fe
+def inventory_container_detail(container_id):
+    InventoryContainer.query.filter_by(id=container_id).first_or_404()
+    return render_template(
+        f'{url_prefix}/inventory/container_detail.html',
+        container_id=container_id,
+    )
+
+
 @bp.route('/inventory/assets')
 @login_required
 @role_based_access_control_fe

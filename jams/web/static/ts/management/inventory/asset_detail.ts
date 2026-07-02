@@ -7,6 +7,7 @@ import {
     getInventoryContainers,
     getInventoryItems,
     getRolesPublicInfo,
+    printInventoryAssetLabel,
     removeInventoryAssetFromEntry,
     updateInventoryAssetState,
 } from "@global/endpoints"
@@ -44,6 +45,14 @@ function setText(id:string, value:string) {
     if (element) {
         element.textContent = value
     }
+}
+
+function wasPrintedWithinLastDay(value?:string|null):boolean {
+    if (!value) {
+        return false
+    }
+    const printedAt = new Date(value).getTime()
+    return Number.isFinite(printedAt) && Date.now() - printedAt < 24 * 60 * 60 * 1000
 }
 
 function latestInventoryHistory(asset:InventoryAsset) {
@@ -194,6 +203,7 @@ function initialiseLogGrid(logs:InventoryAssetLog[]) {
         throw new Error("Asset logs grid was not found")
     }
 
+    const isMobile = window.matchMedia("(max-width: 767.98px)").matches
     const options:GridOptions<InventoryAssetLog> = {
         rowData: logs,
         animateRows: true,
@@ -213,8 +223,8 @@ function initialiseLogGrid(logs:InventoryAssetLog[]) {
                 flex: 2,
             },
             { field: "message", headerName: "Message", minWidth: 240, flex: 3 },
-            { field: "state", headerName: "State", minWidth: 120, flex: 1 },
-            { field: "note", headerName: "Note", minWidth: 220, flex: 2 },
+            { field: "state", headerName: "State", minWidth: 120, flex: 1, hide: isMobile },
+            { field: "note", headerName: "Note", minWidth: 220, flex: 2, hide: isMobile },
             {
                 colId: "user",
                 headerName: "User",
@@ -251,6 +261,7 @@ function initialiseLogGrid(logs:InventoryAssetLog[]) {
                 tooltipValueGetter: params => params.data?.user ?? null,
                 minWidth: 190,
                 flex: 2,
+                hide: isMobile,
             },
         ],
     }
@@ -352,6 +363,13 @@ async function initialisePage() {
         : inventoryResponse.data.find(candidate => candidate.id === asset.inventory_id)
 
     setText("asset-code", asset.asset_code)
+    setText("asset-label", asset.label || "None")
+    setText(
+        "asset-last-printed",
+        asset.last_printed_at
+            ? new Date(asset.last_printed_at).toLocaleString()
+            : "Never"
+    )
     setText("asset-item-name", item?.name ?? `Item #${asset.inventory_item_id}`)
     setText("asset-status", asset.status)
     setText("asset-inventory", latestHistory?.inventory_name ?? inventory?.name ?? "Not assigned")
@@ -365,8 +383,31 @@ async function initialisePage() {
     renderStateActions(asset)
     renderInventoryHistory(asset)
 
-    document.getElementById("print-asset-label")?.addEventListener("click", () => {
-        console.log("Print asset label", asset)
+    const printButton = document.getElementById(
+        "print-asset-label"
+    ) as HTMLButtonElement|null
+    printButton?.addEventListener("click", async () => {
+        let force = false
+        if (wasPrintedWithinLastDay(currentAsset.last_printed_at)) {
+            if (!window.confirm(
+                "This label was printed within the last 24 hours. Are you sure you want to print it again?"
+            )) {
+                return
+            }
+            force = true
+        }
+        printButton.disabled = true
+
+        try {
+            const response = await printInventoryAssetLabel(asset.id, force)
+            successToast(response.message)
+            currentAsset.last_printed_at = new Date().toISOString()
+            setText("asset-last-printed", new Date().toLocaleString())
+        } catch (error) {
+            errorToast(errorMessage(error))
+        } finally {
+            printButton.disabled = false
+        }
     })
     document.getElementById("asset-state-form")
         ?.addEventListener("submit", submitStateChange)

@@ -339,6 +339,7 @@ export interface GeneralConfig {
     TIMEZONE?:string
     STREAKS_ENABLED?:boolean
     EVENT_PREFIX_FILTER?:string
+    ASSET_LABEL_CONTACT_EMAIL?:string
 }
 
 export interface FireListEntry {
@@ -481,6 +482,7 @@ export interface InventoryItem {
     description?:string
     type:"PHYSICAL"|"VIRTUAL"
     is_asset:boolean
+    needs_label:boolean
     asset_code_prefix?:string|null
     asset_count:number
     attribute_schema?:InventoryAttributeSchema|null
@@ -505,8 +507,15 @@ export interface InventoryItemEntry {
     asset_count:number
     asset_ids:number[]
     asset_codes:string[]
+    assets:{
+        id:number
+        asset_code:string
+        label?:string|null
+        last_printed_at?:string|null
+    }[]
     item?:InventoryItem
     container?:InventoryContainer
+    inventory?:Inventory
 }
 
 export type InventoryAssetState = "ACTIVE"|"ARCHIVED"|"BROKEN"
@@ -514,6 +523,7 @@ export type InventoryAssetState = "ACTIVE"|"ARCHIVED"|"BROKEN"
 export interface InventoryAsset {
     id:number
     asset_code:string
+    label?:string|null
     inventory_item_id:number
     inventory_item_entry_id?:number|null
     inventory_item_entry_ids:number[]
@@ -523,6 +533,7 @@ export interface InventoryAsset {
     attributes?:Record<string, unknown>|null
     status:InventoryAssetState
     notes?:string|null
+    last_printed_at?:string|null
     archived:boolean
     archived_at?:string|null
     archive_reason?:string|null
@@ -557,6 +568,14 @@ export interface InventoryDetail {
     entries:InventoryItemEntry[]
 }
 
+export interface InventoryContainerDetail {
+    container:InventoryContainer
+    inventory?:Inventory|null
+    summary:InventorySummary
+    entries:InventoryItemEntry[]
+    assets:InventoryAsset[]
+}
+
 export interface CreateInventoryEntryRequest {
     inventory_item_id:number
     container_id?:number|null
@@ -566,6 +585,7 @@ export interface CreateInventoryEntryRequest {
     existing_asset_selection?:"codes"|"range"
     existing_asset_codes?:string[]
     asset_start_index?:number
+    asset_labels?:string[]
 }
 
 export interface CreateInventoryContainerRequest {
@@ -592,6 +612,7 @@ export interface CreateInventoryItemRequest {
     description?:string|null
     type:"PHYSICAL"|"VIRTUAL"
     is_asset:boolean
+    needs_label:boolean
     asset_code_prefix?:string|null
     attribute_schema?:InventoryAttributeSchema|null
 }

@@ -20,8 +20,8 @@
     </a>
 
     <div class="row row-cards mb-3">
-        <div class="col-12">
-            <div class="card">
+        <div class="col-12 col-lg-9">
+            <div class="card h-100">
                 <div class="card-body">
                     <div class="d-flex align-items-start">
                         <span class="avatar avatar-lg bg-blue-lt me-3">
@@ -58,16 +58,26 @@
                 </div>
             </div>
         </div>
+        {% set jolt_test_label_type = 'asset' %}
+        {% include 'widgets/jolt_status.html' %}
     </div>
 
     {% if can_manage_inventories %}
-    <div class="card mb-3">
+    <div class="inventory-primary-action d-grid d-md-none mb-3">
+        <button id="open-entry-form" type="button" class="btn btn-primary btn-lg">
+            <i class="ti ti-plus me-1"></i>Add item
+        </button>
+    </div>
+    {% endif %}
+
+    {% if can_manage_inventories %}
+    <div id="inventory-entry-panel" class="inventory-entry-panel-closed card mb-3">
         <div class="card-header">
             <div>
                 <h2 class="card-title">Add inventory entry</h2>
                 <div class="text-secondary">Choose an item, its variant and where it is stored.</div>
             </div>
-            <div class="btn-list ms-auto">
+            <div class="btn-list ms-auto flex-wrap justify-content-end">
                 <a
                     class="btn btn-outline-primary btn-sm"
                     href="{{ url_for('routes.frontend.private.management.add_inventory_container', return_to=url_for('routes.frontend.private.management.inventory_detail', inventory_id=inventory_id)) }}"
@@ -82,31 +92,43 @@
                     <i class="ti ti-package-import me-1"></i>
                     New item
                 </a>
+                <button id="close-entry-form" type="button" class="btn btn-ghost-secondary btn-sm d-md-none">
+                    <i class="ti ti-x me-1"></i>Cancel
+                </button>
             </div>
         </div>
         <form id="add-inventory-entry-form">
             <div class="card-body">
-                <div class="row g-3 align-items-end">
-                    <div class="col-12 col-lg-6">
+                <div class="row g-4 align-items-end">
+                    <div class="col-12 col-lg-7">
                         <label class="form-label required" for="inventory-item-select">Item</label>
                         <select id="inventory-item-select" placeholder="Search inventory items…"></select>
                     </div>
-                    <div class="col-12 col-md-8 col-lg-4">
+                    <div class="col-12 col-lg-5">
                         <label class="form-label" for="inventory-container-select">Container</label>
                         <select id="inventory-container-select" class="form-select">
                             <option value="">No container</option>
                         </select>
                     </div>
-                    <div class="col-12 col-md-4 col-lg-2">
-                        <label class="form-label required" for="inventory-entry-quantity">Quantity</label>
-                        <input
-                            id="inventory-entry-quantity"
-                            class="form-control"
-                            type="number"
-                            min="1"
-                            value="1"
-                            required
-                        >
+                    <div class="col-12">
+                        <label class="form-label required text-center" for="inventory-entry-quantity">Quantity</label>
+                        <div class="inventory-quantity-picker mx-auto">
+                            <button id="decrement-entry-quantity" class="btn btn-outline-secondary" type="button" aria-label="Decrease quantity">
+                                <i class="ti ti-minus"></i>
+                            </button>
+                            <input
+                                id="inventory-entry-quantity"
+                                class="form-control"
+                                type="number"
+                                min="1"
+                                value="1"
+                                inputmode="numeric"
+                                required
+                            >
+                            <button id="increment-entry-quantity" class="btn btn-outline-secondary" type="button" aria-label="Increase quantity">
+                                <i class="ti ti-plus"></i>
+                            </button>
+                        </div>
                     </div>
 
                     <div id="inventory-entry-attributes" class="col-12 d-none">
@@ -118,6 +140,7 @@
 
                     <div id="inventory-asset-selection" class="col-12 d-none">
                         <div class="border-top pt-3 mt-2">
+                            <h3 class="card-title mb-3">Choose how asset IDs will be generated</h3>
                             <div class="d-flex flex-wrap gap-4 mb-3">
                                 <label class="form-check">
                                     <input class="form-check-input inventory-asset-mode" type="radio" name="inventory-asset-mode" value="create" checked>
@@ -167,6 +190,12 @@
                                 <div id="inventory-existing-asset-validation" class="alert alert-secondary mt-3 mb-0 d-none" role="status"></div>
                             </div>
 
+                            <div id="inventory-new-asset-labels" class="d-none mt-3">
+                                <h4 class="card-title mb-1">Asset labels</h4>
+                                <div class="text-secondary mb-3">Enter the individual name printed on each asset label.</div>
+                                <div id="inventory-new-asset-label-fields" class="row g-3"></div>
+                            </div>
+
                             <div class="alert alert-info mt-3 mb-0" role="status">
                                 <i class="ti ti-barcode me-2"></i>
                                 <span id="inventory-asset-tracking-message"></span>
@@ -175,8 +204,8 @@
                     </div>
                 </div>
             </div>
-            <div class="card-footer d-flex justify-content-end">
-                <button type="submit" class="btn btn-primary">
+            <div class="card-footer d-grid d-sm-flex justify-content-sm-end">
+                <button type="submit" class="btn btn-primary btn-lg">
                     <i class="ti ti-plus me-1"></i>
                     Add entry
                 </button>
@@ -185,9 +214,40 @@
     </div>
     {% endif %}
 
-    <div class="card">
+    <div class="card mb-3 inventory-overview-content">
         <div class="card-header">
-            <h2 class="card-title">Entries</h2>
+            <div>
+                <h2 class="card-title">Containers in this inventory</h2>
+                <div class="text-secondary">Only containers currently holding entries are shown.</div>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+                <thead>
+                    <tr>
+                        <th>Container</th>
+                        <th class="text-end">Entries</th>
+                        <th class="text-end">Items</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="inventory-container-summary-rows"></tbody>
+            </table>
+        </div>
+        <div id="inventory-container-summary-empty" class="card-body text-secondary d-none">
+            No entries in this inventory have a container yet.
+        </div>
+    </div>
+
+    <div id="inventory-entries-card" class="card inventory-overview-content">
+        <div class="card-header">
+            <div>
+                <h2 class="card-title">Entries</h2>
+                <div id="inventory-container-filter-status" class="text-secondary d-none">
+                    <span id="inventory-container-filter-text"></span>
+                    <button id="clear-inventory-container-filter" type="button" class="btn btn-link btn-sm py-0">Clear filter</button>
+                </div>
+            </div>
             <div class="ms-auto">
                 <input
                     id="inventory-entry-filter"

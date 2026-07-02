@@ -1,4 +1,4 @@
-#card-body {
+.jolt-status-widget #card-body {
     overflow: hidden;
     height: 0;
     padding: 0;
@@ -6,18 +6,18 @@
     transition: height 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
 }
 
-#card-body.expanded {
+.jolt-status-widget #card-body.expanded {
     height: auto;
     padding: 16px 24px;
     opacity: 1;
 }
 
-.card-header {
+.jolt-status-widget .card-header {
     padding: 1rem; /* Default padding for larger screens */
 }
 
 @media (max-width: 768px) { /* Adjust for screens smaller than 768px */
-    .card-header {
+    .jolt-status-widget .card-header {
         padding: 0.5rem; /* Reduced padding for mobile */
     }
 }

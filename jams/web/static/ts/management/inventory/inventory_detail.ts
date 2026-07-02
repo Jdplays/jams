@@ -8,6 +8,7 @@ import {
     getInventoryDetail,
     getInventoryItems,
     getUser,
+    printInventoryEntryLabels,
     updateInventoryEntry,
     validateInventoryEntryAssets,
 } from "@global/endpoints"
@@ -36,6 +37,7 @@ let inventoryItems:InventoryItem[] = []
 let containers:InventoryContainer[] = []
 let inventorySSE:SSEManager<InventoryDetail>
 let assetValidationSequence = 0
+let selectedContainerFilterId:number|null = null
 
 function getErrorMessage(error:any):string {
     return error.responseJSON?.message
@@ -106,6 +108,167 @@ async function renderInventoryHeader(detail:InventoryDetail) {
 function renderInventoryDetail(detail:InventoryDetail) {
     renderInventoryHeader(detail)
     entriesGridApi?.setGridOption("rowData", detail.entries)
+    renderContainerSummary(detail.entries)
+}
+
+function setEntryFormOpen(open:boolean) {
+    const page = document.getElementById("inventory-detail-page")
+    const panel = document.getElementById("inventory-entry-panel")
+    panel?.classList.toggle("inventory-entry-panel-closed", !open)
+    page?.classList.toggle("entry-mode", open)
+
+    if (open) {
+        panel?.scrollIntoView({ behavior: "smooth", block: "start" })
+        window.setTimeout(() => itemSelect?.focus(), 250)
+    }
+}
+
+function changeEntryFormQuantity(amount:number) {
+    const input = document.getElementById("inventory-entry-quantity") as HTMLInputElement
+    if (input.readOnly) {
+        return
+    }
+    const current = Number(input.value) || 1
+    input.value = String(Math.max(1, current + amount))
+    input.dispatchEvent(new Event("input", { bubbles: true }))
+}
+
+function wasPrintedWithinLastDay(value?:string|null):boolean {
+    if (!value) {
+        return false
+    }
+    const printedAt = new Date(value).getTime()
+    return Number.isFinite(printedAt) && Date.now() - printedAt < 24 * 60 * 60 * 1000
+}
+
+function filterEntriesForContainer(containerId:number, containerName:string) {
+    selectedContainerFilterId = containerId
+    entriesGridApi.onFilterChanged()
+    const status = document.getElementById("inventory-container-filter-status")
+    status?.classList.remove("d-none")
+    setText("inventory-container-filter-text", `Showing entries in ${containerName}.`)
+    document.getElementById("inventory-entries-card")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" })
+}
+
+function clearContainerFilter() {
+    selectedContainerFilterId = null
+    entriesGridApi.onFilterChanged()
+    document.getElementById("inventory-container-filter-status")
+        ?.classList.add("d-none")
+}
+
+function renderContainerSummary(entries:InventoryItemEntry[]) {
+    const rows = document.getElementById("inventory-container-summary-rows")
+    if (!rows) {
+        return
+    }
+
+    const summaries = new Map<number, {container:InventoryContainer, entryCount:number, itemCount:number}>()
+    for (const entry of entries) {
+        if (!entry.container_id || !entry.container) {
+            continue
+        }
+        const summary = summaries.get(entry.container_id) ?? {
+            container: entry.container,
+            entryCount: 0,
+            itemCount: 0,
+        }
+        summary.entryCount += 1
+        summary.itemCount += entry.quantity
+        summaries.set(entry.container_id, summary)
+    }
+
+    const tableRows = Array.from(summaries.values())
+        .sort((left, right) => left.container.name.localeCompare(right.container.name))
+        .map(summary => {
+            const row = document.createElement("tr")
+            const name = document.createElement("td")
+            name.textContent = summary.container.name
+            const entryCount = document.createElement("td")
+            entryCount.classList.add("text-end")
+            entryCount.textContent = String(summary.entryCount)
+            const itemCount = document.createElement("td")
+            itemCount.classList.add("text-end")
+            itemCount.textContent = String(summary.itemCount)
+            const actions = document.createElement("td")
+            actions.classList.add("text-end")
+            const wrapper = document.createElement("div")
+            wrapper.classList.add("btn-list", "flex-nowrap", "justify-content-end")
+            const viewEntries = document.createElement("button")
+            viewEntries.type = "button"
+            viewEntries.classList.add("btn", "btn-sm", "btn-outline-secondary")
+            viewEntries.innerHTML = '<i class="ti ti-filter me-1"></i>View entries'
+            viewEntries.onclick = () => filterEntriesForContainer(
+                summary.container.id,
+                summary.container.name
+            )
+            const view = document.createElement("a")
+            view.classList.add("btn", "btn-sm", "btn-outline-primary")
+            view.href = `/private/management/inventory/containers/${summary.container.id}`
+            view.innerHTML = '<i class="ti ti-eye me-1"></i>View'
+            wrapper.append(viewEntries, view)
+            actions.appendChild(wrapper)
+            row.append(name, entryCount, itemCount, actions)
+            return row
+        })
+
+    rows.replaceChildren(...tableRows)
+    document.getElementById("inventory-container-summary-empty")
+        ?.classList.toggle("d-none", tableRows.length > 0)
+}
+
+function buildQuantityEditor(entry:InventoryItemEntry):HTMLElement {
+    if (!canManageInventories || entry.item?.is_asset) {
+        const text = document.createElement("span")
+        text.textContent = String(entry.quantity)
+        if (entry.item?.is_asset) {
+            text.title = "Asset-tracked quantity is changed by adding or removing assets"
+        }
+        return text
+    }
+
+    const wrapper = document.createElement("div")
+    wrapper.classList.add("inventory-entry-quantity-editor")
+    const decrement = document.createElement("button")
+    decrement.type = "button"
+    decrement.classList.add("btn", "btn-sm", "btn-outline-secondary")
+    decrement.innerHTML = '<i class="ti ti-minus"></i>'
+    const input = document.createElement("input")
+    input.classList.add("form-control", "form-control-sm")
+    input.type = "number"
+    input.min = "0"
+    input.inputMode = "numeric"
+    input.value = String(entry.quantity)
+    const increment = document.createElement("button")
+    increment.type = "button"
+    increment.classList.add("btn", "btn-sm", "btn-outline-secondary")
+    increment.innerHTML = '<i class="ti ti-plus"></i>'
+
+    const save = async (quantity:number) => {
+        quantity = Math.max(0, quantity)
+        wrapper.querySelectorAll("button, input").forEach(
+            element => (element as HTMLButtonElement|HTMLInputElement).disabled = true
+        )
+        try {
+            const updated = await updateInventoryEntry(entry.id, { quantity })
+            entry.quantity = updated.quantity
+            input.value = String(updated.quantity)
+            successToast("Entry quantity updated")
+        } catch (error) {
+            input.value = String(entry.quantity)
+            errorToast(getErrorMessage(error))
+        } finally {
+            wrapper.querySelectorAll("button, input").forEach(
+                element => (element as HTMLButtonElement|HTMLInputElement).disabled = false
+            )
+        }
+    }
+    decrement.onclick = () => save(entry.quantity - 1)
+    increment.onclick = () => save(entry.quantity + 1)
+    input.onchange = () => save(Number(input.value))
+    wrapper.append(decrement, input, increment)
+    return wrapper
 }
 
 function buildContainerSelect(entry:InventoryItemEntry):HTMLSelectElement {
@@ -148,11 +311,21 @@ function buildContainerSelect(entry:InventoryItemEntry):HTMLSelectElement {
 
 function buildEntryActions(entry:InventoryItemEntry):HTMLElement {
     const wrapper = document.createElement("div")
-    wrapper.classList.add("btn-list", "flex-nowrap")
+    wrapper.classList.add("btn-list", "flex-wrap")
 
     const viewAssets = document.createElement("a")
-    viewAssets.classList.add("btn", "btn-sm", "btn-outline-primary")
-    viewAssets.href = `/private/management/inventory/assets?entry_id=${entry.id}`
+    viewAssets.classList.add(
+        "btn",
+        "btn-sm",
+        entry.item?.is_asset ? "btn-outline-primary" : "btn-outline-secondary"
+    )
+    if (entry.item?.is_asset) {
+        viewAssets.href = `/private/management/inventory/assets?entry_id=${entry.id}`
+    } else {
+        viewAssets.classList.add("disabled")
+        viewAssets.setAttribute("aria-disabled", "true")
+        viewAssets.tabIndex = -1
+    }
     viewAssets.innerHTML = '<i class="ti ti-barcode me-1"></i>View assets'
     wrapper.appendChild(viewAssets)
 
@@ -161,8 +334,28 @@ function buildEntryActions(entry:InventoryItemEntry):HTMLElement {
     printLabels.classList.add("btn", "btn-sm", "btn-outline-secondary")
     printLabels.disabled = entry.asset_count === 0
     printLabels.innerHTML = '<i class="ti ti-printer me-1"></i>Print labels'
-    printLabels.onclick = () => {
-        console.log("Print labels for inventory entry", entry)
+    printLabels.onclick = async () => {
+        const recentCount = entry.assets.filter(
+            asset => wasPrintedWithinLastDay(asset.last_printed_at)
+        ).length
+        const recentWarning = recentCount
+            ? ` ${recentCount} of these labels were printed within the last 24 hours.`
+            : ""
+        if (!window.confirm(
+            `Are you sure you want to print ${entry.asset_count} labels?${recentWarning}`
+        )) {
+            return
+        }
+        printLabels.disabled = true
+
+        try {
+            const response = await printInventoryEntryLabels(entry.id, true)
+            successToast(response.message)
+        } catch (error) {
+            errorToast(getErrorMessage(error))
+        } finally {
+            printLabels.disabled = entry.asset_count === 0
+        }
     }
     wrapper.appendChild(printLabels)
 
@@ -198,12 +391,18 @@ function initialiseEntriesGrid() {
         throw new Error("Inventory entries grid was not found")
     }
 
+    const isMobile = window.matchMedia("(max-width: 767.98px)").matches
     const gridOptions:GridOptions<InventoryItemEntry> = {
         domLayout: "autoHeight",
         animateRows: true,
         enableCellTextSelection: true,
         suppressMovableColumns: true,
         getRowId: params => String(params.data.id),
+        isExternalFilterPresent: () => selectedContainerFilterId !== null,
+        doesExternalFilterPass: node => (
+            selectedContainerFilterId === null
+            || node.data?.container_id === selectedContainerFilterId
+        ),
         defaultColDef: {
             sortable: true,
             filter: true,
@@ -221,11 +420,16 @@ function initialiseEntriesGrid() {
                 valueGetter: params => params.data?.item?.type ?? "",
                 minWidth: 120,
                 flex: 1,
+                hide: isMobile,
             },
             {
                 field: "quantity",
                 headerName: "Quantity",
-                minWidth: 110,
+                cellRenderer: (params:any) => params.data
+                    ? buildQuantityEditor(params.data)
+                    : "",
+                minWidth: 170,
+                width: 170,
                 flex: 1,
             },
             {
@@ -249,6 +453,7 @@ function initialiseEntriesGrid() {
                 ),
                 minWidth: 200,
                 flex: 2,
+                hide: isMobile,
             },
             {
                 headerName: "Actions",
@@ -282,9 +487,8 @@ function updateEntryFormForSelectedItem() {
     const assetMessage = document.getElementById("inventory-asset-tracking-message")
     assetNotice?.classList.toggle("d-none", !selectedItem?.is_asset)
     if (assetMessage && selectedItem?.is_asset) {
-        const preferredMode = selectedItem.asset_count > 0 ? "existing" : "create"
         const preferredInput = document.querySelector<HTMLInputElement>(
-            `.inventory-asset-mode[value="${preferredMode}"]`
+            '.inventory-asset-mode[value="create"]'
         )
         if (preferredInput) {
             preferredInput.checked = true
@@ -373,6 +577,9 @@ function updateAssetSelectionForm() {
     codesInput.required = useCodes
     startInput.required = useRange
     quantityInput.readOnly = useCodes
+    document.querySelectorAll<HTMLButtonElement>(
+        "#decrement-entry-quantity, #increment-entry-quantity"
+    ).forEach(button => button.disabled = useCodes)
 
     if (useCodes) {
         quantityInput.value = String(parseExistingAssetCodes().length || 1)
@@ -388,6 +595,48 @@ function updateAssetSelectionForm() {
             ? "Existing assets must be active, match this variant, and not already be in this inventory."
             : `${selectedItem.asset_code_prefix}-xxx codes will be generated automatically.`
     }
+    renderNewAssetLabelFields()
+}
+
+function renderNewAssetLabelFields() {
+    const wrapper = document.getElementById("inventory-new-asset-labels")
+    const fields = document.getElementById("inventory-new-asset-label-fields")
+    if (!wrapper || !fields) {
+        return
+    }
+
+    const item = getSelectedItem()
+    const assetMode = selectedRadioValue(".inventory-asset-mode") ?? "create"
+    const showLabels = Boolean(item?.is_asset && item.needs_label && assetMode === "create")
+    wrapper.classList.toggle("d-none", !showLabels)
+    if (!showLabels) {
+        fields.replaceChildren()
+        return
+    }
+
+    const oldValues = Array.from(
+        fields.querySelectorAll<HTMLInputElement>(".inventory-new-asset-label")
+    ).map(input => input.value)
+    const quantity = Math.max(1, Number((document.getElementById(
+        "inventory-entry-quantity"
+    ) as HTMLInputElement).value) || 1)
+    const rows:HTMLElement[] = []
+    for (let index = 0; index < quantity; index += 1) {
+        const column = document.createElement("div")
+        column.classList.add("col-12", "col-md-6")
+        const label = document.createElement("label")
+        label.classList.add("form-label", "required")
+        label.textContent = `Asset ${index + 1}`
+        const input = document.createElement("input")
+        input.classList.add("form-control", "inventory-new-asset-label")
+        input.maxLength = 255
+        input.placeholder = "e.g. Upstairs"
+        input.required = true
+        input.value = oldValues[index] ?? ""
+        column.append(label, input)
+        rows.push(column)
+    }
+    fields.replaceChildren(...rows)
 }
 
 function buildEntryRequest():CreateInventoryEntryRequest|null {
@@ -423,6 +672,14 @@ function buildEntryRequest():CreateInventoryEntryRequest|null {
             ".inventory-asset-mode"
         ) as "create"|"existing"
         data.asset_mode = assetMode
+
+        if (assetMode === "create" && selectedItem.needs_label) {
+            data.asset_labels = Array.from(
+                document.querySelectorAll<HTMLInputElement>(
+                    "#inventory-new-asset-label-fields .inventory-new-asset-label"
+                )
+            ).map(input => input.value.trim())
+        }
 
         if (assetMode === "existing") {
             const selectionMode = selectedRadioValue(
@@ -706,6 +963,8 @@ async function submitInventoryEntry(event:SubmitEvent) {
         ;(document.getElementById(
             "inventory-existing-asset-start-index"
         ) as HTMLInputElement).value = "1"
+        document.getElementById("inventory-new-asset-label-fields")
+            ?.replaceChildren()
         renderExistingAssetValidation("idle", "")
         updateAssetSelectionForm()
         renderEntryAttributeFields(selectedItem)
@@ -730,6 +989,14 @@ async function initialisePage() {
     if (canManageInventories) {
         await Promise.all([loadItems(), loadContainers()])
 
+        document.getElementById("open-entry-form")
+            ?.addEventListener("click", () => setEntryFormOpen(true))
+        document.getElementById("close-entry-form")
+            ?.addEventListener("click", () => setEntryFormOpen(false))
+        document.getElementById("decrement-entry-quantity")
+            ?.addEventListener("click", () => changeEntryFormQuantity(-1))
+        document.getElementById("increment-entry-quantity")
+            ?.addEventListener("click", () => changeEntryFormQuantity(1))
         document.getElementById("add-inventory-entry-form")
             ?.addEventListener("submit", submitInventoryEntry)
         document.querySelectorAll<HTMLInputElement>(
@@ -746,7 +1013,10 @@ async function initialisePage() {
         document.getElementById("inventory-existing-asset-start-index")
             ?.addEventListener("input", () => validateExistingAssetSelectionDebounced())
         document.getElementById("inventory-entry-quantity")
-            ?.addEventListener("input", () => validateExistingAssetSelectionDebounced())
+            ?.addEventListener("input", () => {
+                renderNewAssetLabelFields()
+                validateExistingAssetSelectionDebounced()
+            })
         document.getElementById("inventory-entry-attribute-fields")
             ?.addEventListener("change", () => validateExistingAssetSelectionDebounced())
     } else {
@@ -755,6 +1025,9 @@ async function initialisePage() {
 
     const detail = await getInventoryDetail(inventoryId)
     renderInventoryDetail(detail.data)
+
+    document.getElementById("clear-inventory-container-filter")
+        ?.addEventListener("click", clearContainerFilter)
 
     inventorySSE = getLiveInventoryDetail(inventoryId)
     inventorySSE.onUpdate(renderInventoryDetail)

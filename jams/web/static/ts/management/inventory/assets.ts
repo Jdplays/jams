@@ -104,6 +104,7 @@ function initialiseGrid() {
         throw new Error("Inventory assets grid was not found")
     }
 
+    const isMobile = window.matchMedia("(max-width: 767.98px)").matches
     const options:GridOptions<AssetGridRow> = {
         animateRows: true,
         enableCellTextSelection: true,
@@ -118,6 +119,12 @@ function initialiseGrid() {
                 valueGetter: params => params.data?.asset?.asset_code ?? "",
                 minWidth: 170,
                 flex: 2,
+            },
+            {
+                headerName: "Label",
+                valueGetter: params => params.data?.asset?.label ?? "",
+                minWidth: 150,
+                flex: 1,
             },
             {
                 headerName: "Status",
@@ -143,6 +150,7 @@ function initialiseGrid() {
                 },
                 minWidth: 180,
                 flex: 2,
+                hide: isMobile,
             },
             {
                 headerName: "Container",
@@ -152,6 +160,7 @@ function initialiseGrid() {
                 },
                 minWidth: 180,
                 flex: 2,
+                hide: isMobile,
             },
             {
                 headerName: "Attributes",
@@ -164,6 +173,7 @@ function initialiseGrid() {
                 },
                 minWidth: 220,
                 flex: 2,
+                hide: isMobile,
             },
             {
                 headerName: "Actions",

@@ -71,6 +71,7 @@ function initialiseGrid() {
         throw new Error("Inventory items grid was not found")
     }
 
+    const isMobile = window.matchMedia("(max-width: 767.98px)").matches
     const options:GridOptions<InventoryItem> = {
         animateRows: true,
         enableCellTextSelection: true,
@@ -78,12 +79,12 @@ function initialiseGrid() {
         defaultColDef: { sortable: true, filter: true, resizable: true },
         columnDefs: [
             { field: "name", headerName: "Name", minWidth: 220, flex: 2 },
-            { field: "description", headerName: "Description", minWidth: 260, flex: 3 },
-            { field: "type", headerName: "Type", minWidth: 120, flex: 1 },
+            { field: "description", headerName: "Description", minWidth: 260, flex: 3, hide: isMobile },
+            { field: "type", headerName: "Type", minWidth: 120, flex: 1, hide: isMobile },
             {
                 headerName: "Asset tracking",
                 valueGetter: params => params.data?.is_asset
-                    ? `Yes (${params.data.asset_code_prefix})`
+                    ? `Yes (${params.data.asset_code_prefix})${params.data.needs_label ? ", individual labels" : ""}`
                     : "No",
                 minWidth: 150,
                 flex: 1,
@@ -95,6 +96,7 @@ function initialiseGrid() {
                 ),
                 minWidth: 300,
                 flex: 3,
+                hide: isMobile,
             },
             ...(canManageInventories ? [{
                 headerName: "Actions",

@@ -11,16 +11,16 @@ class Inventory(db.Model):
 
     id = Column(Integer(), primary_key=True)
     name = Column(String(128), nullable=False, unique=False)
-    date = Column(Date, nullable=False, default=datetime.now(UTC).date)
+    date = Column(Date, nullable=False, default=lambda: datetime.now(UTC).date())
     coordinator_id = Column(Integer, ForeignKey('user.id'), nullable=True)
     active = Column(Boolean(), nullable=False, default=True)
 
     user = relationship('User')
 
-    def __init__(self, name, date=datetime.now(UTC).date, coordinator=None):
+    def __init__(self, name, date=None, coordinator_id=None):
         self.name = name
-        self.date = date
-        self.coordinator = coordinator
+        self.date = date or datetime.now(UTC).date()
+        self.coordinator_id = coordinator_id
         self.active = True
 
     def activate(self):
@@ -28,6 +28,15 @@ class Inventory(db.Model):
 
     def archive(self):
         self.active = False
+
+    @classmethod
+    def current(cls):
+        return (
+            cls.query
+            .filter_by(active=True)
+            .order_by(cls.date.desc(), cls.id.desc())
+            .first()
+        )
 
     def to_dict(self):
         return {
@@ -47,6 +56,7 @@ class InventoryItem(db.Model):
     type = Column(String(100), nullable=False, default=InventoryItemType.PHYSICAL.name, server_default=InventoryItemType.PHYSICAL.name)
     is_asset = Column(Boolean(), nullable=False, default=False, server_default='false')
     asset_code_prefix = Column(String(20), nullable=True, unique=True)
+    needs_label = Column(Boolean(), nullable=False, default=False, server_default='false')
     archived = Column(Boolean(), nullable=False, default=False, server_default='false')
     attribute_schema: Mapped[dict] = mapped_column(JSONB, nullable=True, default=dict)
     # TODO: Maybe do group later?
@@ -58,6 +68,7 @@ class InventoryItem(db.Model):
         type=InventoryItemType.PHYSICAL.name,
         is_asset=False,
         asset_code_prefix=None,
+        needs_label=False,
         attribute_schema=None
     ):
         self.name = name
@@ -65,6 +76,7 @@ class InventoryItem(db.Model):
         self.type = type
         self.is_asset = is_asset
         self.asset_code_prefix = asset_code_prefix
+        self.needs_label = needs_label
         self.attribute_schema = attribute_schema
 
     def archive(self):
@@ -81,6 +93,7 @@ class InventoryItem(db.Model):
             'type': self.type,
             'is_asset': self.is_asset,
             'asset_code_prefix': self.asset_code_prefix,
+            'needs_label': self.needs_label,
             'asset_count': len(getattr(self, 'assets', [])),
             'archived': self.archived,
             'attribute_schema': self.attribute_schema
@@ -135,7 +148,19 @@ class InventoryItemEntry(db.Model):
 
             'asset_count': len(assets),
             'asset_ids': [asset.id for asset in assets],
-            'asset_codes': [asset.asset_code for asset in assets]
+            'asset_codes': [asset.asset_code for asset in assets],
+            'assets': [
+                {
+                    'id': asset.id,
+                    'asset_code': asset.asset_code,
+                    'label': asset.label,
+                    'last_printed_at': (
+                        asset.last_printed_at.isoformat()
+                        if asset.last_printed_at else None
+                    ),
+                }
+                for asset in assets
+            ],
         }
 
 class InventoryContainer(db.Model):
@@ -179,6 +204,7 @@ class InventoryAsset(db.Model):
 
     id = Column(Integer(), primary_key=True)
     asset_code = Column(String(100), nullable=False, unique=True)
+    label = Column(String(255), nullable=True)
 
     inventory_item_id = Column(Integer, ForeignKey('inventory_item.id'), nullable=False)
 
@@ -191,6 +217,7 @@ class InventoryAsset(db.Model):
         server_default=InventoryAssetState.ACTIVE.name
     )
     notes = Column(Text, nullable=True)
+    last_printed_at = Column(DateTime, nullable=True)
 
     archived = Column(Boolean, nullable=False, default=False)
     archived_at = Column(DateTime, nullable=True)
@@ -202,11 +229,13 @@ class InventoryAsset(db.Model):
         self,
         asset_code,
         inventory_item_id,
+        label=None,
         attributes=None,
         status=InventoryAssetState.ACTIVE.name,
         notes=None
     ):
         self.asset_code = asset_code
+        self.label = label
         self.inventory_item_id = inventory_item_id
         self.attributes = attributes
         self.status = status
@@ -306,6 +335,7 @@ class InventoryAsset(db.Model):
         return {
             'id': self.id,
             'asset_code': self.asset_code,
+            'label': self.label,
             'inventory_item_id': self.inventory_item_id,
             'inventory_item_entry_id': self.inventory_item_entry_id,
             'inventory_item_entry_ids': self.inventory_item_entry_ids,
@@ -315,6 +345,10 @@ class InventoryAsset(db.Model):
             'attributes': self.attributes,
             'status': self.status,
             'notes': self.notes,
+            'last_printed_at': (
+                self.last_printed_at.isoformat()
+                if self.last_printed_at else None
+            ),
             'archived': self.archived,
             'archived_at': self.archived_at.isoformat() if self.archived_at else None,
             'archive_reason': self.archive_reason

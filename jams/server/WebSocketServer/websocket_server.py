@@ -4,6 +4,7 @@ import asyncio
 from collections import defaultdict
 import json
 import websockets
+from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
 from urllib.parse import urlparse, parse_qs
 
 from common.util.enums import APIKeyType
@@ -68,10 +69,14 @@ class WebsocketServer:
                     db.session.add(log)
                     db.session.commit()
 
-            except Exception as e:
-                self.logger.error(f"Error in websocket handler: {e}")
-                await websocket.close(code=1008)
-                self.remove_client(api_key_obj.type, websocket)
+            except ConnectionClosedOK:
+                self.logger.info("WebSocket connection closed normally")
+            except ConnectionClosedError as error:
+                self.logger.warning(f"WebSocket connection lost: {error}")
+            except Exception:
+                self.logger.exception("Error in websocket handler")
+                if not websocket.closed:
+                    await websocket.close(code=1011)
             finally:
                 self.remove_client(api_key_obj.type, websocket)
                 self.logger.info("Client disconnected")

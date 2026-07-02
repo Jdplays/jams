@@ -49,6 +49,7 @@ import {
     InventoryContainer,
     InventoryItemEntry,
     InventoryDetail,
+    InventoryContainerDetail,
     InventoryAsset,
     InventoryAssetLog,
     InventoryAssetState,
@@ -2492,6 +2493,32 @@ export function sendJoltTestPrintRequest():Promise<string> {
     });
 }
 
+export function sendJoltAssetTestPrintRequest():Promise<string> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/jolt/test_asset_print`,
+            type: 'POST',
+            success: function (response) {
+                resolve(response.message)
+            },
+            error: reject,
+        })
+    })
+}
+
+export function sendJoltContainerTestPrintRequest():Promise<string> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/jolt/test_container_print`,
+            type: 'POST',
+            success: function (response) {
+                resolve(response.message)
+            },
+            error: reject,
+        })
+    })
+}
+
 // #endregion
 
 // #region Discord Integration
@@ -2994,6 +3021,32 @@ export function getInventoryContainer(containerId:number):Promise<InventoryConta
     })
 }
 
+export function getInventoryContainerDetail(
+    containerId:number
+):Promise<ApiResponse<InventoryContainerDetail>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/containers/${containerId}/detail`,
+            type: 'GET',
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function printInventoryContainerLabel(
+    containerId:number
+):Promise<ApiResponse<never>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/containers/${containerId}/print-label`,
+            type: 'POST',
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
 export function createInventoryEntry(
     inventoryId:number,
     data:CreateInventoryEntryRequest
@@ -3063,6 +3116,22 @@ export function deleteInventoryEntry(entryId:number):Promise<ApiResponse<Invento
     })
 }
 
+export function printInventoryEntryLabels(
+    entryId:number,
+    force = false
+):Promise<ApiResponse<{queued_count:number}>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/entry/${entryId}/print-labels`,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ force }),
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
 export function getInventoryAssets():Promise<ApiMultiEntryResponse<InventoryAsset[]>> {
     return new Promise((resolve, reject) => {
         $.ajax({
@@ -3092,6 +3161,22 @@ export function getInventoryAssetLogs(
         $.ajax({
             url: `${baseURL}/inventory/assets/${assetId}/logs`,
             type: 'GET',
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function printInventoryAssetLabel(
+    assetId:number,
+    force = false
+):Promise<ApiResponse<{queued_count:number}>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/assets/${assetId}/print-label`,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ force }),
             success: resolve,
             error: reject,
         })

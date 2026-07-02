@@ -42,6 +42,9 @@ function updateAssetTrackingForm() {
     const typeSelect = document.getElementById(
         "inventory-item-type"
     ) as HTMLSelectElement
+    const needsLabel = document.getElementById(
+        "inventory-item-needs-label"
+    ) as HTMLInputElement
     const virtualOption = typeSelect.querySelector<HTMLOptionElement>(
         'option[value="VIRTUAL"]'
     )
@@ -49,9 +52,12 @@ function updateAssetTrackingForm() {
     prefixContainer.classList.toggle("d-none", !isAsset)
     prefixInput.required = isAsset
     virtualOption?.toggleAttribute("disabled", isAsset)
+    needsLabel.disabled = !isAsset
 
     if (isAsset) {
         typeSelect.value = "PHYSICAL"
+    } else {
+        needsLabel.checked = false
     }
 }
 
@@ -233,6 +239,7 @@ async function loadItem() {
     ;(document.getElementById("inventory-item-type") as HTMLSelectElement).value = item.type
     ;(document.getElementById("inventory-item-is-asset") as HTMLInputElement).checked = item.is_asset
     ;(document.getElementById("inventory-item-asset-prefix") as HTMLInputElement).value = item.asset_code_prefix ?? ""
+    ;(document.getElementById("inventory-item-needs-label") as HTMLInputElement).checked = item.needs_label
     updateAssetTrackingForm()
 
     item.attribute_schema?.attributes
@@ -261,6 +268,9 @@ async function submit(event:SubmitEvent) {
             description: (document.getElementById("inventory-item-description") as HTMLTextAreaElement).value.trim() || null,
             type: (document.getElementById("inventory-item-type") as HTMLSelectElement).value as "PHYSICAL"|"VIRTUAL",
             is_asset: isAsset,
+            needs_label: isAsset && (document.getElementById(
+                "inventory-item-needs-label"
+            ) as HTMLInputElement).checked,
             asset_code_prefix: isAsset
                 ? (document.getElementById("inventory-item-asset-prefix") as HTMLInputElement).value.trim().toUpperCase()
                 : null,

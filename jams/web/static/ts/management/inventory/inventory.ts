@@ -78,14 +78,15 @@ async function buildInventoryList() {
         cardBody.classList.add("card-body")
 
         const cardLayout = document.createElement("div")
-        cardLayout.classList.add("d-flex", "align-items-stretch")
+        cardLayout.classList.add("inventory-list-card-layout", "d-flex", "align-items-stretch")
 
         const mainCardArea = document.createElement("div")
         mainCardArea.classList.add(
             "d-flex",
             "align-items-start",
             "flex-fill",
-            "pe-3"
+            "pe-3",
+            "inventory-list-main"
         )
         mainCardArea.style.cursor = "pointer"
         mainCardArea.onclick = () => {
@@ -215,7 +216,8 @@ async function buildInventoryList() {
                 "justify-content-center",
                 "gap-2",
                 "border-start",
-                "ps-3"
+                "ps-3",
+                "inventory-list-actions"
             )
 
             const editButton = document.createElement("button")

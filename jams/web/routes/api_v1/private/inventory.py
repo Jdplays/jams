@@ -1,7 +1,8 @@
 # API is for serving data to TypeScript/JavaScript
+from datetime import UTC, date as date_type, datetime, timedelta
 import re
 
-from flask import Blueprint, request, jsonify, abort
+from flask import Blueprint, g, request, jsonify, abort
 from flask_security import current_user
 
 from common.models import (
@@ -13,13 +14,17 @@ from common.models import (
     InventoryAsset,
     InventoryAssetEntry,
     InventoryAssetLog,
+    User,
 )
 from common.extensions import get_logger
+from common.configuration import ConfigType, get_config_value
 from common.util.enums import InventoryAssetState, InventoryItemType
+from common.redis.keys import RedisChannels
+from common.redis.utils import publish_inventory_update
 
 from web.util.decorators import api_route
 from web.util import helper
-from web.util.sse import sse_stream
+from web.util.sse import redis_sse_stream
 
 logger = get_logger('web')
 
@@ -32,16 +37,109 @@ def serialize_inventory_entry(entry):
     data = entry.to_dict()
     data["item"] = entry.inventory_item.to_dict() if entry.inventory_item else None
     data["container"] = entry.container.to_dict() if entry.container else None
+    data["inventory"] = entry.inventory.to_dict() if entry.inventory else None
     return data
 
 
 def require_inventory_management_access():
+    if getattr(g, "api_key_authenticated", False):
+        return
     if not helper.user_has_access_to_page("edit_inventory"):
         abort(403, description="You do not have permission to manage inventories")
 
 
 def current_user_id():
     return current_user.id if current_user.is_authenticated else None
+
+
+def publish_entry_update(entry, previous_container_id=None):
+    container_ids = [
+        container_id
+        for container_id in {entry.container_id, previous_container_id}
+        if container_id is not None
+    ]
+    publish_inventory_update(
+        inventory_ids=[entry.inventory_id],
+        container_ids=container_ids
+    )
+
+
+def inventory_update_matches(payload, inventory_id):
+    return (
+        payload.get('refresh_all') is True
+        or inventory_id in payload.get('inventory_ids', [])
+    )
+
+
+def container_update_matches(payload, container_id):
+    return (
+        payload.get('refresh_all') is True
+        or container_id in payload.get('container_ids', [])
+    )
+
+
+def get_asset_label_contact(entry=None):
+    inventory = entry.inventory if entry else None
+    return get_inventory_label_contact(inventory)
+
+
+def get_inventory_label_contact(inventory):
+    coordinator = inventory.user if inventory else None
+    contact_email = get_config_value(ConfigType.ASSET_LABEL_CONTACT_EMAIL)
+
+    if not coordinator:
+        abort(409, description="The inventory has no coordinator for the asset label")
+
+    if not contact_email:
+        abort(409, description="Asset label contact email is not configured")
+
+    return coordinator.display_name, contact_email
+
+
+def queue_asset_labels(assets, entry=None, force=False):
+    assets = list(assets)
+
+    if not get_config_value(ConfigType.JOLT_ENABLED):
+        abort(409, description="JOLT integration is not enabled")
+
+    recent_cutoff = datetime.now(UTC).replace(tzinfo=None) - timedelta(days=1)
+    recently_printed = [
+        asset for asset in assets
+        if asset.last_printed_at and asset.last_printed_at >= recent_cutoff
+    ]
+    if recently_printed and not force:
+        abort(
+            409,
+            description=(
+                "Recently printed labels require confirmation: "
+                + ", ".join(asset.asset_code for asset in recently_printed)
+            )
+        )
+
+    contact_name, contact_email = get_asset_label_contact(entry)
+
+    from common.integrations import jolt
+    status, message = jolt.add_assets_to_print_queue(
+        assets,
+        contact_name,
+        contact_email
+    )
+
+    if status:
+        for asset in assets:
+            add_asset_log(
+                asset,
+                message="Asset label queued for printing",
+                state=asset.status
+            )
+        db.session.commit()
+
+    return jsonify({
+        'message': message,
+        'data': {
+            'queued_count': len(assets) if status else 0
+        }
+    }), 200 if status else 400
 
 
 def add_asset_log(asset, message=None, state=None, note=None):
@@ -68,6 +166,32 @@ def link_asset_to_entry(asset, entry, message=None):
         message=message or f"Added to inventory {entry.inventory.name}",
         state=asset.status
     )
+
+
+def archive_asset_if_unassigned(asset, excluding_entry_id=None):
+    query = (
+        InventoryAssetEntry.query
+        .join(InventoryItemEntry)
+        .filter(
+            InventoryAssetEntry.inventory_asset_id == asset.id,
+            InventoryItemEntry.removed.is_(False)
+        )
+    )
+    if excluding_entry_id is not None:
+        query = query.filter(
+            InventoryAssetEntry.inventory_item_entry_id != excluding_entry_id
+        )
+
+    if query.first() or asset.status == InventoryAssetState.ARCHIVED.name:
+        return False
+
+    asset.archive(reason="No longer assigned to an inventory")
+    add_asset_log(
+        asset,
+        message="Asset archived after its final inventory assignment was removed",
+        state=InventoryAssetState.ARCHIVED.name
+    )
+    return True
 
 
 def remove_asset_from_entry(asset, entry, message=None, note=None):
@@ -97,6 +221,8 @@ def remove_asset_from_entry(asset, entry, message=None, note=None):
         state=asset.status,
         note=note
     )
+
+    archive_asset_if_unassigned(asset, excluding_entry_id=entry.id)
 
 
 def get_request_json_object():
@@ -180,6 +306,17 @@ def validate_inventory_item_configuration(data, item=None):
     if not isinstance(is_asset, bool):
         abort(400, description="is_asset must be true or false")
 
+    needs_label = data.get(
+        "needs_label",
+        item.needs_label if item else False
+    )
+    if not isinstance(needs_label, bool):
+        abort(400, description="needs_label must be true or false")
+    if needs_label and not is_asset:
+        abort(400, description="Only asset-tracked items can require labels")
+    if not is_asset:
+        needs_label = False
+
     prefix = data.get(
         "asset_code_prefix",
         item.asset_code_prefix if item else None
@@ -215,7 +352,39 @@ def validate_inventory_item_configuration(data, item=None):
         if prefix != item.asset_code_prefix:
             abort(409, description="Asset code prefix cannot change after assets exist")
 
-    return item_type, is_asset, prefix
+    return item_type, is_asset, prefix, needs_label
+
+
+def validate_asset_label(item, value):
+    if value is None:
+        if item.needs_label:
+            abort(400, description="label is required for this asset item")
+        return None
+    if not isinstance(value, str):
+        abort(400, description="label must be a string or null")
+    value = value.strip()
+    if not value:
+        if item.needs_label:
+            abort(400, description="label is required for this asset item")
+        return None
+    if len(value) > 255:
+        abort(400, description="label must be 255 characters or fewer")
+    return value
+
+
+def validate_new_asset_labels(item, data, quantity):
+    labels = data.get("asset_labels")
+    if not item.needs_label:
+        if labels not in (None, []):
+            abort(400, description="asset_labels can only be used for items that need labels")
+        return [None] * quantity
+
+    if not isinstance(labels, list) or len(labels) != quantity:
+        abort(
+            400,
+            description=f"asset_labels must contain one label for each of the {quantity} assets"
+        )
+    return [validate_asset_label(item, label) for label in labels]
 
 
 def validate_item_name(value):
@@ -279,12 +448,7 @@ def validate_container_parent(parent_container_id, container=None):
 
 def fetch_inventory_detail(inventory_id):
     inventory = Inventory.query.filter_by(id=inventory_id).first_or_404()
-    current_inventory = (
-        Inventory.query
-        .filter_by(active=True)
-        .order_by(Inventory.date.desc(), Inventory.id.desc())
-        .first()
-    )
+    current_inventory = Inventory.current()
     entries = (
         InventoryItemEntry.query
         .filter_by(inventory_id=inventory_id, removed=False)
@@ -349,18 +513,23 @@ def get_inventory_summary(inventory_id):
 
 
 @bp.route('/inventory/<int:inventory_id>/detail', methods=['GET'])
+@api_route
 def get_inventory_detail(inventory_id):
     return jsonify({"data": fetch_inventory_detail(inventory_id)})
 
 
 @bp.route('/inventory/<int:inventory_id>/entries/stream', methods=['GET'])
+@api_route
 def get_inventory_entries_sse(inventory_id):
     Inventory.query.filter_by(id=inventory_id).first_or_404()
-
-    def fetch_data():
-        return fetch_inventory_detail(inventory_id)
-
-    return sse_stream(fetch_data)
+    return redis_sse_stream(
+        lambda: fetch_inventory_detail(inventory_id),
+        RedisChannels.INVENTORY_UPDATE,
+        should_refresh=lambda payload: inventory_update_matches(
+            payload,
+            inventory_id
+        )
+    )
 
 
 @bp.route('/inventory/<int:inventory_id>/<string:field>', methods=['GET'])
@@ -380,20 +549,39 @@ def get_inventory_field(inventory_id, field):
 @bp.route('/inventory', methods=['POST'])
 @api_route
 def add_inventory():
-    data = request.get_json()
-    if not data:
-        abort(400, description="No data provided")
+    require_inventory_management_access()
+    data = get_request_json_object()
 
-    name = data.get('name')
-    date = data.get('date')
+    name = validate_item_name(data.get('name'))
+    inventory_date = data.get('date')
     coordinator_id = data.get('coordinator_id')
 
-    if not name:
-        abort(400, description="No 'name' provided")
+    if inventory_date is None:
+        inventory_date = datetime.now(UTC).date()
+    elif isinstance(inventory_date, str):
+        try:
+            inventory_date = date_type.fromisoformat(inventory_date)
+        except ValueError:
+            abort(400, description="date must be in YYYY-MM-DD format")
+    elif not isinstance(inventory_date, date_type):
+        abort(400, description="date must be in YYYY-MM-DD format")
 
-    new_inventory = Inventory(name=name, date=date, coordinator=coordinator_id)
+    coordinator_id = validate_integer_id(
+        coordinator_id,
+        "coordinator_id",
+        required=False
+    )
+    if coordinator_id is not None:
+        User.query.filter_by(id=coordinator_id).first_or_404()
+
+    new_inventory = Inventory(
+        name=name,
+        date=inventory_date,
+        coordinator_id=coordinator_id
+    )
     db.session.add(new_inventory)
     db.session.commit()
+    publish_inventory_update(inventory_ids=[new_inventory.id])
 
     return jsonify({
         'message': 'New inventory has been successfully added',
@@ -404,18 +592,36 @@ def add_inventory():
 @bp.route('/inventory/<int:inventory_id>', methods=['PATCH'])
 @api_route
 def edit_inventory(inventory_id):
+    require_inventory_management_access()
     inventory = Inventory.query.filter_by(id=inventory_id).first_or_404()
+    data = get_request_json_object()
 
-    data = request.get_json()
-    if not data:
-        abort(400, description="No data provided")
+    if "name" in data:
+        inventory.name = validate_item_name(data["name"])
 
-    allowed_fields = list(inventory.to_dict().keys())
-    for field, value in data.items():
-        if field in allowed_fields:
-            setattr(inventory, field, value)
+    if "date" in data:
+        try:
+            inventory.date = date_type.fromisoformat(data["date"])
+        except (TypeError, ValueError):
+            abort(400, description="date must be in YYYY-MM-DD format")
+
+    if "coordinator_id" in data:
+        coordinator_id = validate_integer_id(
+            data["coordinator_id"],
+            "coordinator_id",
+            required=False
+        )
+        if coordinator_id is not None:
+            User.query.filter_by(id=coordinator_id).first_or_404()
+        inventory.coordinator_id = coordinator_id
+
+    if "active" in data:
+        if not isinstance(data["active"], bool):
+            abort(400, description="active must be true or false")
+        inventory.active = data["active"]
     
     db.session.commit()
+    publish_inventory_update(inventory_ids=[inventory.id])
 
     return jsonify({
         'message': 'Inventory has be updated successfully',
@@ -429,6 +635,7 @@ def archive_inventory(inventory_id):
     inventory = Inventory.query.filter_by(id=inventory_id).first_or_404()
     inventory.archive()
     db.session.commit()
+    publish_inventory_update(inventory_ids=[inventory.id])
 
     return jsonify({'message': 'The inventory has been successfully archived'})
 
@@ -440,6 +647,7 @@ def activate_inventory(inventory_id):
     inventory = Inventory.query.filter_by(id=inventory_id).first_or_404()
     inventory.activate()
     db.session.commit()
+    publish_inventory_update(inventory_ids=[inventory.id])
 
     return jsonify({'message': 'The inventory has been successfully activated'})
 
@@ -480,7 +688,7 @@ def get_inventory_item_field(item_id, field):
     return jsonify({field: str(value)})
 
 @bp.route('/inventory/items', methods=['POST'])
-# @api_route
+@api_route
 def create_inventory_item():
     require_inventory_management_access()
     data = get_request_json_object()
@@ -494,7 +702,7 @@ def create_inventory_item():
     if description is not None and len(description) > 512:
         abort(400, description="description must be 512 characters or fewer")
 
-    item_type, is_asset, asset_code_prefix = (
+    item_type, is_asset, asset_code_prefix, needs_label = (
         validate_inventory_item_configuration(data)
     )
 
@@ -506,22 +714,24 @@ def create_inventory_item():
         type=item_type,
         is_asset=is_asset,
         asset_code_prefix=asset_code_prefix,
+        needs_label=needs_label,
         attribute_schema=attribute_schema
     )
 
     db.session.add(item)
     db.session.commit()
+    publish_inventory_update(refresh_all=True)
 
     return jsonify(item.to_dict()), 201
 
 @bp.route('/inventory/items/<int:item_id>', methods=['PATCH', 'PUT'])
-# @api_route
+@api_route
 def update_inventory_item(item_id):
     require_inventory_management_access()
     item = InventoryItem.query.filter_by(id=item_id).first_or_404()
     data = get_request_json_object()
 
-    item_type, is_asset, asset_code_prefix = (
+    item_type, is_asset, asset_code_prefix, needs_label = (
         validate_inventory_item_configuration(data, item)
     )
 
@@ -538,6 +748,7 @@ def update_inventory_item(item_id):
     item.type = item_type
     item.is_asset = is_asset
     item.asset_code_prefix = asset_code_prefix
+    item.needs_label = needs_label
 
     if "attribute_schema" in data:
         new_schema = helper.validate_attribute_schema(data["attribute_schema"])
@@ -553,6 +764,7 @@ def update_inventory_item(item_id):
         item.attribute_schema = new_schema
 
     db.session.commit()
+    publish_inventory_update(refresh_all=True)
 
     return jsonify(item.to_dict())
 
@@ -563,6 +775,7 @@ def archive_inventory_item(item_id):
     item = InventoryItem.query.filter_by(id=item_id).first_or_404()
     item.archive()
     db.session.commit()
+    publish_inventory_update(refresh_all=True)
 
     return jsonify({'message': 'The item has been successfully archived'})
 
@@ -574,6 +787,7 @@ def activate_inventory_item(item_id):
     item = InventoryItem.query.filter_by(id=item_id).first_or_404()
     item.activate()
     db.session.commit()
+    publish_inventory_update(refresh_all=True)
 
     return jsonify({'message': 'The item has been successfully activated'})
 
@@ -797,15 +1011,21 @@ def resolve_entry_assets(inventory, item, attributes, data):
     if not item.is_asset:
         if data.get("asset_mode") not in (None, "create"):
             abort(400, description="Only asset-tracked items can select asset modes")
+        if data.get("asset_labels") not in (None, []):
+            abort(400, description="Only asset-tracked items can have asset labels")
         quantity = parse_inventory_quantity(data.get("quantity", 1))
-        return quantity, None, True
+        return quantity, None, True, []
 
     asset_mode = data.get("asset_mode", "create")
     if asset_mode not in {"create", "existing"}:
         abort(400, description="asset_mode must be create or existing")
     if asset_mode == "create":
         quantity = parse_inventory_quantity(data.get("quantity", 1))
-        return quantity, None, True
+        labels = validate_new_asset_labels(item, data, quantity)
+        return quantity, None, True, labels
+
+    if data.get("asset_labels") not in (None, []):
+        abort(400, description="Labels are only supplied when creating new assets")
 
     validation = validate_existing_assets_for_entry(inventory, item, attributes, data)
     abort_for_invalid_asset_validation(validation)
@@ -817,7 +1037,7 @@ def resolve_entry_assets(inventory, item, attributes, data):
         ordered_assets_by_code[code]
         for code in validation["asset_codes"]
     ]
-    return len(ordered_assets), ordered_assets, False
+    return len(ordered_assets), ordered_assets, False, []
 
 
 def create_or_increment_inventory_entry(
@@ -827,7 +1047,8 @@ def create_or_increment_inventory_entry(
     attributes,
     quantity,
     existing_assets=None,
-    create_new_assets=True
+    create_new_assets=True,
+    asset_labels=None
 ):
     if item.is_asset and not item.asset_code_prefix:
         abort(409, description="Asset-tracked item has no asset code prefix")
@@ -863,10 +1084,11 @@ def create_or_increment_inventory_entry(
     if item.is_asset and create_new_assets:
         first_index = next_asset_code_index(item)
         new_assets = []
-        for index in range(first_index, first_index + quantity):
+        for offset, index in enumerate(range(first_index, first_index + quantity)):
             asset = InventoryAsset(
                 asset_code=f"{item.asset_code_prefix}-{index:03d}",
                 inventory_item_id=item.id,
+                label=(asset_labels or [None] * quantity)[offset],
                 attributes=attributes
             )
             db.session.add(asset)
@@ -883,7 +1105,7 @@ def create_or_increment_inventory_entry(
 
 
 @bp.route('/inventory/entry', methods=['POST'])
-# @api_route
+@api_route
 def create_inventory_entry():
     require_inventory_management_access()
     data = get_request_json_object()
@@ -932,7 +1154,7 @@ def create_inventory_entry():
         data.get('attributes')
     )
 
-    quantity, existing_assets, create_new_assets = resolve_entry_assets(
+    quantity, existing_assets, create_new_assets, asset_labels = resolve_entry_assets(
         inventory,
         item,
         attributes,
@@ -946,14 +1168,17 @@ def create_inventory_entry():
         attributes=attributes,
         quantity=quantity,
         existing_assets=existing_assets,
-        create_new_assets=create_new_assets
+        create_new_assets=create_new_assets,
+        asset_labels=asset_labels
     )
     db.session.commit()
+    publish_entry_update(entry)
 
     return jsonify(serialize_inventory_entry(entry)), 201 if created else 200
 
 
 @bp.route('/inventory/<int:inventory_id>/entries', methods=['POST'])
+@api_route
 def create_inventory_entry_for_inventory(inventory_id):
     require_inventory_management_access()
     inventory = Inventory.query.filter_by(id=inventory_id).first_or_404()
@@ -992,7 +1217,7 @@ def create_inventory_entry_for_inventory(inventory_id):
         ).first_or_404()
 
     attributes = helper.validate_entry_attributes(item, data.get("attributes"))
-    quantity, existing_assets, create_new_assets = resolve_entry_assets(
+    quantity, existing_assets, create_new_assets, asset_labels = resolve_entry_assets(
         inventory,
         item,
         attributes,
@@ -1005,10 +1230,12 @@ def create_inventory_entry_for_inventory(inventory_id):
         attributes=attributes,
         quantity=quantity,
         existing_assets=existing_assets,
-        create_new_assets=create_new_assets
+        create_new_assets=create_new_assets,
+        asset_labels=asset_labels
     )
 
     db.session.commit()
+    publish_entry_update(entry)
 
     return jsonify({
         "message": (
@@ -1021,6 +1248,7 @@ def create_inventory_entry_for_inventory(inventory_id):
 
 
 @bp.route('/inventory/<int:inventory_id>/entries/validate-assets', methods=['POST'])
+@api_route
 def validate_inventory_entry_assets(inventory_id):
     require_inventory_management_access()
     inventory = Inventory.query.filter_by(id=inventory_id).first_or_404()
@@ -1058,7 +1286,7 @@ def validate_inventory_entry_assets(inventory_id):
     })
 
 @bp.route('/inventory/entry/<int:entry_id>', methods=['PATCH', 'PUT'])
-# @api_route
+@api_route
 def update_inventory_entry(entry_id):
     require_inventory_management_access()
     entry = InventoryItemEntry.query.filter_by(id=entry_id).first_or_404()
@@ -1068,6 +1296,8 @@ def update_inventory_entry(entry_id):
     item_id = data.get("inventory_item_id", entry.inventory_item_id)
     quantity = data.get("quantity", entry.quantity)
     container_id = data.get("container_id", entry.container_id)
+    previous_inventory_id = entry.inventory_id
+    previous_container_id = entry.container_id
 
     if isinstance(quantity, bool):
         abort(400, description="Quantity must be an integer")
@@ -1113,6 +1343,15 @@ def update_inventory_entry(entry_id):
             )
         entry.remove()
         db.session.commit()
+        publish_inventory_update(
+            inventory_ids=list({previous_inventory_id, duplicate.inventory_id}),
+            container_ids=[
+                value for value in {
+                    previous_container_id,
+                    duplicate.container_id
+                } if value is not None
+            ]
+        )
         return jsonify(serialize_inventory_entry(duplicate))
 
     entry.inventory_id = inventory_id
@@ -1120,13 +1359,22 @@ def update_inventory_entry(entry_id):
     entry.container_id = container_id
     entry.attributes = attributes
     entry.quantity = quantity
+    if quantity == 0:
+        entry.remove()
 
     db.session.commit()
+    publish_inventory_update(
+        inventory_ids=list({previous_inventory_id, entry.inventory_id}),
+        container_ids=[
+            value for value in {previous_container_id, entry.container_id}
+            if value is not None
+        ]
+    )
 
     return jsonify(serialize_inventory_entry(entry))
 
 @bp.route('/inventory/entry/<int:entry_id>/quantity/add', methods=['PATCH'])
-# @api_route
+@api_route
 def add_inventory_entry_quantity(entry_id):
     require_inventory_management_access()
     entry = InventoryItemEntry.query.filter_by(id=entry_id).first_or_404()
@@ -1153,13 +1401,16 @@ def add_inventory_entry_quantity(entry_id):
         abort(400, description="quantity cannot go below 0")
 
     entry.quantity = new_quantity
+    if new_quantity == 0:
+        entry.remove()
 
     db.session.commit()
+    publish_entry_update(entry)
 
     return jsonify(entry.to_dict())
 
 @bp.route('/inventory/entry/<int:entry_id>/quantity', methods=['PATCH'])
-# @api_route
+@api_route
 def set_inventory_entry_quantity(entry_id):
     require_inventory_management_access()
     entry = InventoryItemEntry.query.filter_by(id=entry_id).first_or_404()
@@ -1184,13 +1435,16 @@ def set_inventory_entry_quantity(entry_id):
         abort(400, description="quantity cannot be below 0")
 
     entry.quantity = quantity
+    if quantity == 0:
+        entry.remove()
 
     db.session.commit()
+    publish_entry_update(entry)
 
     return jsonify(entry.to_dict())
 
 @bp.route('/inventory/entry/<int:entry_id>', methods=['DELETE'])
-# @api_route
+@api_route
 def delete_inventory_entry(entry_id):
     require_inventory_management_access()
     entry = InventoryItemEntry.query.filter_by(id=entry_id).first_or_404()
@@ -1214,12 +1468,31 @@ def delete_inventory_entry(entry_id):
             message=f"Removed from inventory {entry.inventory.name}",
             state=asset.status
         )
+        archive_asset_if_unassigned(asset, excluding_entry_id=entry.id)
     db.session.commit()
+    publish_entry_update(entry)
 
     return jsonify({
         "message": "Inventory entry deleted",
         "id": entry_id
     })
+
+
+@bp.route('/inventory/entry/<int:entry_id>/print-labels', methods=['POST'])
+@api_route
+def print_inventory_entry_labels(entry_id):
+    require_inventory_management_access()
+    entry = InventoryItemEntry.query.filter_by(id=entry_id).first_or_404()
+
+    if not entry.inventory_item or not entry.inventory_item.is_asset:
+        abort(400, description="This entry is not asset tracked")
+
+    data = get_request_json_object()
+    force = data.get("force", False)
+    if not isinstance(force, bool):
+        abort(400, description="force must be true or false")
+
+    return queue_asset_labels(entry.assets, entry, force=force)
 
 #------------------------------------------ CONTAINER ------------------------------------------#
 
@@ -1242,6 +1515,95 @@ def get_inventory_containers_field(field):
 def get_inventory_container(container_id):
     container = InventoryContainer.query.filter_by(id=container_id).first_or_404()
     return jsonify(container.to_dict())
+
+
+@bp.route('/inventory/containers/<int:container_id>/detail', methods=['GET'])
+@api_route
+def get_inventory_container_detail(container_id):
+    return jsonify({"data": fetch_inventory_container_detail(container_id)})
+
+
+def fetch_inventory_container_detail(container_id):
+    container = InventoryContainer.query.filter_by(id=container_id).first_or_404()
+    current_inventory = Inventory.current()
+    entries = []
+    if current_inventory:
+        entries = (
+            InventoryItemEntry.query
+            .filter_by(
+                container_id=container.id,
+                inventory_id=current_inventory.id,
+                removed=False
+            )
+            .order_by(InventoryItemEntry.id.asc())
+            .all()
+        )
+    assets_by_id = {
+        asset.id: asset
+        for entry in entries
+        for asset in entry.assets
+        if asset.container_id == container.id
+    }
+
+    return {
+        "container": container.to_dict(),
+        "inventory": (
+            current_inventory.to_dict()
+            if current_inventory else None
+        ),
+        "summary": {
+            "entry_count": len(entries),
+            "total_count": sum(entry.quantity for entry in entries),
+            "asset_count": len(assets_by_id),
+        },
+        "entries": [serialize_inventory_entry(entry) for entry in entries],
+        "assets": [
+            asset.to_dict()
+            for asset in sorted(
+                assets_by_id.values(),
+                key=lambda asset: asset.asset_code
+            )
+        ],
+    }
+
+
+@bp.route('/inventory/containers/<int:container_id>/stream', methods=['GET'])
+@api_route
+def get_inventory_container_detail_sse(container_id):
+    InventoryContainer.query.filter_by(id=container_id).first_or_404()
+    return redis_sse_stream(
+        lambda: fetch_inventory_container_detail(container_id),
+        RedisChannels.INVENTORY_UPDATE,
+        should_refresh=lambda payload: container_update_matches(
+            payload,
+            container_id
+        )
+    )
+
+
+@bp.route('/inventory/containers/<int:container_id>/print-label', methods=['POST'])
+@api_route
+def print_inventory_container_label(container_id):
+    require_inventory_management_access()
+    detail = fetch_inventory_container_detail(container_id)
+    inventory = Inventory.current()
+    if not inventory:
+        abort(409, description="There is no active inventory")
+    if not get_config_value(ConfigType.JOLT_ENABLED):
+        abort(409, description="JOLT integration is not enabled")
+
+    contact_name, contact_email = get_inventory_label_contact(inventory)
+    container = InventoryContainer.query.filter_by(id=container_id).first_or_404()
+    from common.integrations import jolt
+    success, message = jolt.add_container_to_print_queue(
+        container=container,
+        inventory=inventory,
+        item_count=detail["summary"]["total_count"],
+        asset_count=detail["summary"]["asset_count"],
+        contact_name=contact_name,
+        contact_email=contact_email
+    )
+    return jsonify({'message': message}), 200 if success else 400
 
 
 @bp.route('/inventory/containers/<int:container_id>/<string:field>', methods=['GET'])
@@ -1285,6 +1647,7 @@ def create_inventory_container():
 
     db.session.add(container)
     db.session.commit()
+    publish_inventory_update(container_ids=[container.id])
 
     return jsonify(container.to_dict()), 201
 
@@ -1317,6 +1680,7 @@ def update_inventory_container(container_id):
         )
 
     db.session.commit()
+    publish_inventory_update(container_ids=[container.id])
 
     return jsonify(container.to_dict())
 
@@ -1324,9 +1688,11 @@ def update_inventory_container(container_id):
 @bp.route('/inventory/containers/<int:container_id>/archive', methods=['POST'])
 @api_route
 def archive_inventory_container(container_id):
+    require_inventory_management_access()
     container = InventoryContainer.query.filter_by(id=container_id).first_or_404()
     container.archive()
     db.session.commit()
+    publish_inventory_update(container_ids=[container.id])
 
     return jsonify({'message': 'The container has been successfully archived'})
 
@@ -1334,9 +1700,11 @@ def archive_inventory_container(container_id):
 @bp.route('/inventory/containers/<int:container_id>/activate', methods=['POST'])
 @api_route
 def activate_inventory_container(container_id):
+    require_inventory_management_access()
     container = InventoryContainer.query.filter_by(id=container_id).first_or_404()
     container.activate()
     db.session.commit()
+    publish_inventory_update(container_ids=[container.id])
 
     return jsonify({'message': 'The container has been successfully activated'})
 
@@ -1387,6 +1755,7 @@ def get_inventory_asset_by_code(asset_code):
 
 
 @bp.route('/inventory/assets/<int:asset_id>/logs', methods=['GET'])
+@api_route
 def get_inventory_asset_logs(asset_id):
     InventoryAsset.query.filter_by(id=asset_id).first_or_404()
     logs = (
@@ -1398,7 +1767,24 @@ def get_inventory_asset_logs(asset_id):
     return jsonify({"data": [log.to_dict() for log in logs]})
 
 
+@bp.route('/inventory/assets/<int:asset_id>/print-label', methods=['POST'])
+@api_route
+def print_inventory_asset_label(asset_id):
+    require_inventory_management_access()
+    asset = InventoryAsset.query.filter_by(id=asset_id).first_or_404()
+    data = get_request_json_object()
+    force = data.get("force", False)
+    if not isinstance(force, bool):
+        abort(400, description="force must be true or false")
+    return queue_asset_labels(
+        [asset],
+        asset.current_inventory_item_entry,
+        force=force
+    )
+
+
 @bp.route('/inventory/assets/<int:asset_id>/logs', methods=['POST'])
+@api_route
 def create_inventory_asset_log(asset_id):
     require_inventory_management_access()
     asset = InventoryAsset.query.filter_by(id=asset_id).first_or_404()
@@ -1414,6 +1800,7 @@ def create_inventory_asset_log(asset_id):
 
     log = add_asset_log(asset, message=message, state=state, note=note)
     db.session.commit()
+    publish_inventory_update(refresh_all=True)
     return jsonify(log.to_dict()), 201
 
 
@@ -1470,6 +1857,7 @@ def create_inventory_asset():
     asset = InventoryAsset(
         asset_code=asset_code,
         inventory_item_id=inventory_item_id,
+        label=validate_asset_label(item, data.get('label')),
         attributes=helper.validate_entry_attributes(item, data.get('attributes')),
         status=validate_asset_state(
             data.get('status', InventoryAssetState.ACTIVE.name)
@@ -1483,6 +1871,7 @@ def create_inventory_asset():
     if entry:
         link_asset_to_entry(asset, entry)
     db.session.commit()
+    publish_inventory_update(refresh_all=True)
 
     return jsonify(asset.to_dict()), 201
 
@@ -1546,6 +1935,10 @@ def update_inventory_asset(asset_id):
         item = InventoryItem.query.filter_by(id=inventory_item_id).first_or_404()
         asset.attributes = helper.validate_entry_attributes(item, data["attributes"])
 
+    if "label" in data:
+        item = InventoryItem.query.filter_by(id=inventory_item_id).first_or_404()
+        asset.label = validate_asset_label(item, data["label"])
+
     if "status" in data:
         status = validate_asset_state(data["status"])
         if status != asset.status:
@@ -1555,11 +1948,13 @@ def update_inventory_asset(asset_id):
         asset.notes = validate_optional_string(data["notes"], "notes")
 
     db.session.commit()
+    publish_inventory_update(refresh_all=True)
 
     return jsonify(asset.to_dict())
 
 
 @bp.route('/inventory/assets/<int:asset_id>/state', methods=['PATCH'])
+@api_route
 def update_inventory_asset_state(asset_id):
     require_inventory_management_access()
     asset = InventoryAsset.query.filter_by(id=asset_id).first_or_404()
@@ -1570,6 +1965,7 @@ def update_inventory_asset_state(asset_id):
 
     set_asset_state(asset, data["state"], note=data.get("note"))
     db.session.commit()
+    publish_inventory_update(refresh_all=True)
     return jsonify({
         "message": "Asset state updated",
         "data": asset.to_dict()
@@ -1596,6 +1992,7 @@ def move_inventory_asset(asset_id):
         message=f"Moved to inventory {entry.inventory.name}"
     )
     db.session.commit()
+    publish_inventory_update(refresh_all=True)
 
     return jsonify(asset.to_dict())
 
@@ -1604,6 +2001,7 @@ def move_inventory_asset(asset_id):
     '/inventory/assets/<int:asset_id>/entries/<int:entry_id>',
     methods=['DELETE']
 )
+@api_route
 def remove_inventory_asset_from_entry(asset_id, entry_id):
     require_inventory_management_access()
     asset = InventoryAsset.query.filter_by(id=asset_id).first_or_404()
@@ -1624,6 +2022,7 @@ def remove_inventory_asset_from_entry(asset_id, entry_id):
         note=note
     )
     db.session.commit()
+    publish_inventory_update(refresh_all=True)
 
     return jsonify({
         "message": "Asset removed from inventory",
@@ -1643,6 +2042,7 @@ def archive_inventory_asset(asset_id):
         note=data.get("reason")
     )
     db.session.commit()
+    publish_inventory_update(refresh_all=True)
 
     return jsonify({'message': 'The asset has been successfully archived'})
 
@@ -1654,5 +2054,6 @@ def activate_inventory_asset(asset_id):
     asset = InventoryAsset.query.filter_by(id=asset_id).first_or_404()
     set_asset_state(asset, InventoryAssetState.ACTIVE.name)
     db.session.commit()
+    publish_inventory_update(refresh_all=True)
 
     return jsonify({'message': 'The asset has been successfully activated'})

@@ -1,4 +1,5 @@
-<ul class="nav nav-tabs mb-3" role="navigation" aria-label="Inventory sections">
+<div class="inventory-tabs-scroll mb-3">
+<ul class="inventory-tabs nav nav-tabs flex-nowrap mb-0" role="navigation" aria-label="Inventory sections">
     <li class="nav-item">
         <a
             class="nav-link{% if inventory_tab == 'inventories' %} active{% endif %}"
@@ -36,3 +37,5 @@
         </a>
     </li>
 </ul>
+</div>
+<link href="{{ url_for('static', filename='css/management/inventory.css') }}" rel="stylesheet">

@@ -1,0 +1,81 @@
+{% extends '_layout.html' %}
+
+{% block title %}Inventory container{% endblock %}
+
+{% block content %}
+{% set can_manage_inventories = user_has_access_to_page('edit_inventory') %}
+
+<div
+    id="inventory-container-detail-page"
+    data-container-id="{{ container_id }}"
+    data-can-manage-inventories="{{ can_manage_inventories|tojson }}"
+>
+    <a
+        class="btn btn-link link-secondary mb-3 px-0"
+        href="{{ url_for('routes.frontend.private.management.inventory_containers') }}"
+    >
+        <i class="ti ti-arrow-left me-1"></i>Back to containers
+    </a>
+
+    <div class="row row-cards mb-3">
+        <div class="col-12 col-lg-9">
+            <div class="card h-100">
+                <div class="card-body d-flex flex-wrap align-items-start gap-3">
+                    <span class="avatar avatar-lg bg-blue-lt">
+                        <i class="ti ti-box fs-1"></i>
+                    </span>
+                    <div class="flex-fill">
+                        <h1 id="container-name" class="card-title mb-1">Loading container…</h1>
+                        <div id="container-description" class="text-secondary"></div>
+                        <div class="text-secondary mt-2">
+                            Current inventory: <strong id="container-inventory-name" class="text-body">Loading…</strong>
+                        </div>
+                        <div class="d-flex flex-wrap gap-3 mt-3 text-secondary">
+                            <span><strong id="container-entry-count" class="text-body">0</strong> entries</span>
+                            <span><strong id="container-total-count" class="text-body">0</strong> items</span>
+                            <span><strong id="container-asset-count" class="text-body">0</strong> assets</span>
+                        </div>
+                    </div>
+                    <div class="btn-list">
+                        <button id="print-container-label" type="button" class="btn btn-outline-primary">
+                            <i class="ti ti-printer me-1"></i>Print label
+                        </button>
+                        {% if can_manage_inventories %}
+                        <a
+                            id="container-edit-link"
+                            class="btn btn-primary"
+                            href="{{ url_for('routes.frontend.private.management.edit_inventory_container', container_id=container_id, return_to=url_for('routes.frontend.private.management.inventory_container_detail', container_id=container_id)) }}"
+                        >
+                            <i class="ti ti-pencil me-1"></i>Edit container
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% set jolt_test_label_type = 'container' %}
+        {% include 'widgets/jolt_status.html' %}
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <h2 class="card-title">Items in this container</h2>
+        </div>
+        <div class="card-body p-0">
+            <div id="container-entries-grid" class="ag-theme-quartz" style="min-height: 220px"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Assets in this container</h2>
+        </div>
+        <div class="card-body p-0">
+            <div id="container-assets-grid" class="ag-theme-quartz" style="min-height: 220px"></div>
+        </div>
+    </div>
+</div>
+
+<link href="{{ url_for('static', filename='css/management/inventory.css') }}" rel="stylesheet">
+<script src="{{ url_for('static', filename='js/management/inventory/container_detail.js') }}" defer></script>
+{% endblock %}

@@ -21,3 +21,192 @@
 .theme-dark .ts-control .item {
     color: var(--tblr-body-color, #f8fafc);
 }
+
+.inventory-quantity-picker {
+    align-items: stretch;
+    display: grid;
+    gap: .75rem;
+    grid-template-columns: 4rem minmax(6rem, 9rem) 4rem;
+    justify-content: center;
+}
+
+.inventory-quantity-picker .btn {
+    font-size: 1.5rem;
+}
+
+.inventory-quantity-picker .form-control {
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.inventory-entry-quantity-editor {
+    align-items: center;
+    display: flex;
+    gap: .25rem;
+}
+
+.inventory-entry-quantity-editor input {
+    min-width: 4.5rem;
+    text-align: center;
+    width: 4.5rem;
+}
+
+.inventory-tabs-scroll {
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.inventory-tabs {
+    min-width: max-content;
+}
+
+.inventory-tabs .nav-link {
+    white-space: nowrap;
+}
+
+.inventory-form-actions {
+    flex-wrap: wrap;
+}
+
+.inventory-assets-filter-alert:not(.d-none) {
+    display: flex;
+}
+
+@media (min-width: 992px) {
+    #inventory-detail-page > .row.row-cards > .jolt-status-widget,
+    #inventory-container-detail-page > .row.row-cards > .jolt-status-widget {
+        align-self: stretch !important;
+    }
+
+    #inventory-detail-page > .row.row-cards > .jolt-status-widget > .card,
+    #inventory-container-detail-page > .row.row-cards > .jolt-status-widget > .card {
+        height: 100%;
+    }
+}
+
+@media (max-width: 767.98px) {
+    #inventory-entry-panel.inventory-entry-panel-closed {
+        display: none;
+    }
+
+    .inventory-tabs-scroll {
+        margin-left: -.75rem;
+        margin-right: -.75rem;
+        padding: 0 .75rem;
+    }
+
+    .inventory-tabs .nav-link {
+        padding-left: .75rem;
+        padding-right: .75rem;
+    }
+
+    .card-header {
+        align-items: stretch !important;
+        flex-direction: column;
+        gap: .75rem;
+    }
+
+    .card-header > .ms-auto,
+    .card-header > .btn.ms-auto,
+    .card-header > .btn-list.ms-auto {
+        margin-left: 0 !important;
+        width: 100%;
+    }
+
+    .card-header > .btn.ms-auto,
+    .card-header > .btn-list.ms-auto .btn,
+    .inventory-form-actions > .btn {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .inventory-form-actions {
+        display: grid !important;
+        grid-template-columns: 1fr;
+    }
+
+    .ag-theme-quartz {
+        --ag-font-size: 13px;
+        max-width: 100%;
+    }
+
+    .table-responsive .btn-list {
+        flex-wrap: nowrap;
+        min-width: max-content;
+    }
+
+    #inventory-assets-entry-filter {
+        align-items: stretch;
+        flex-direction: column;
+        gap: .75rem;
+    }
+
+    #inventory-assets-entry-filter .ms-auto {
+        margin-left: 0 !important;
+    }
+
+    #inventory-container-detail-page .row.row-cards > .col-lg-9 .card-body {
+        align-items: stretch !important;
+        flex-direction: column;
+    }
+
+    #inventory-container-detail-page .row.row-cards > .col-lg-9 .btn-list,
+    #inventory-container-detail-page .row.row-cards > .col-lg-9 .btn {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .inventory-list-card-layout {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .inventory-list-main {
+        padding-right: 0 !important;
+    }
+
+    .inventory-list-main > .avatar {
+        display: none;
+    }
+
+    .inventory-list-actions {
+        border-left: 0 !important;
+        border-top: var(--tblr-border-width) solid var(--tblr-border-color);
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        padding-left: 0 !important;
+        padding-top: 1rem;
+    }
+
+    #inventory-asset-detail-page .card-header > .btn-list,
+    #inventory-entry-panel .card-header > .btn-list {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    #inventory-asset-detail-page .card-header > .btn-list .btn,
+    #inventory-entry-panel .card-header > .btn-list .btn {
+        justify-content: center;
+        width: 100%;
+    }
+
+    #inventory-detail-page.entry-mode > :not(#inventory-entry-panel) {
+        display: none !important;
+    }
+
+    #inventory-detail-page.entry-mode #inventory-entry-panel {
+        border: 0;
+        box-shadow: none;
+        margin: -.75rem;
+        min-height: 100vh;
+    }
+
+    #inventory-entry-panel .card-header {
+        align-items: flex-start;
+    }
+
+    .inventory-quantity-picker {
+        grid-template-columns: 4.5rem minmax(7rem, 10rem) 4.5rem;
+    }
+}
