@@ -452,6 +452,12 @@ export interface Inventory {
     locked:boolean
 }
 
+export interface CreateInventoryRequest {
+    name:string
+    date:string
+    coordinator_id:number
+}
+
 export interface InventorySummary {
     entry_count:number
     total_count:number

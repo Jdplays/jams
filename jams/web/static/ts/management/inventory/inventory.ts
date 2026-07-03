@@ -7,10 +7,12 @@ import {
 } from '@global/endpoints'
 import {
     buildUserAvatar,
+    buildQueryString,
     errorToast,
     isDefined,
     successToast,
 } from "@global/helper";
+import { QueryStringData } from "@global/interfaces"
 
 function archiveInventoryOnClick(inventoryId:number) {
     archiveInventory(inventoryId).then((response) => {
@@ -47,7 +49,12 @@ async function buildInventoryList() {
     const canManageInventories =
         listContainer.dataset.canManageInventories === "true"
 
-    const resp = await getAllInventory()
+    const queryData:Partial<QueryStringData> = {
+        $all_rows: true,
+        $order_by: "date",
+        $order_direction: "DESC",
+    }
+    const resp = await getAllInventory(buildQueryString(queryData))
     listContainer.replaceChildren()
 
     const activeInventories = resp.data.filter(inventory => inventory.active)
@@ -235,7 +242,7 @@ async function buildInventoryList() {
                 "btn-sm"
             )
             editButton.onclick = () => {
-                console.log("Edit inventory:", inventory.id)
+                window.location.href = `/private/management/inventory/${inventory.id}/edit`
             }
 
             const editIcon = document.createElement("i")

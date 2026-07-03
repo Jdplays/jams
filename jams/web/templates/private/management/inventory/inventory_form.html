@@ -1,0 +1,60 @@
+{% extends '_layout.html' %}
+
+{% block title %}{% if inventory_id %}Edit{% else %}Add{% endif %} inventory{% endblock %}
+
+{% block content %}
+{% set inventory_tab = 'inventories' %}
+{% include 'private/management/inventory/_tabs.html' %}
+
+<div
+    id="inventory-form-page"
+    data-inventory-id="{{ inventory_id or '' }}"
+    data-return-to="{{ return_to }}"
+>
+    <div class="page-header mb-3">
+        <div>
+            <h1>{% if inventory_id %}Edit{% else %}Add{% endif %} inventory</h1>
+            <div class="text-secondary">
+                Set the inventory date and the coordinator responsible for asset labels.
+            </div>
+        </div>
+    </div>
+
+    <a class="btn btn-link link-secondary mb-3 px-0" href="{{ return_to }}">
+        <i class="ti ti-arrow-left me-1"></i>Back
+    </a>
+
+    <form id="inventory-form">
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label required" for="inventory-name">Name</label>
+                    <input id="inventory-name" class="form-control" maxlength="128" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label required" for="inventory-date">Date</label>
+                    <input id="inventory-date" class="form-control" type="date" required>
+                </div>
+                <div>
+                    <label class="form-label required" for="inventory-coordinator">Coordinator</label>
+                    <select id="inventory-coordinator" class="form-select" required>
+                        <option value="">Select a coordinator</option>
+                    </select>
+                    <div class="form-hint">
+                        The coordinator name is used as the contact on inventory labels.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="inventory-form-actions d-flex gap-2">
+            <button id="save-inventory" class="btn btn-primary" type="submit">
+                {% if inventory_id %}Save inventory{% else %}Create inventory{% endif %}
+            </button>
+            <a class="btn btn-outline-secondary" href="{{ return_to }}">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script src="{{ url_for('static', filename='js/management/inventory/inventory_form.js') }}" defer></script>
+{% endblock %}

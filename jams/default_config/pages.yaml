@@ -173,6 +173,17 @@ pages:
       get_external_api_logs:
 
   # Inventory
+  add_inventory_page:
+    endpoint: routes.frontend.private.management.add_inventory
+    api_endpoints:
+      add_inventory:
+      get_users_public_info:
+  edit_inventory_page:
+    endpoint: routes.frontend.private.management.edit_inventory
+    api_endpoints:
+      get_inventory:
+      edit_inventory:
+      get_users_public_info:
   inventory_detail:
     endpoint: routes.frontend.private.management.inventory_detail
     api_endpoints:
@@ -396,6 +407,9 @@ pages:
       get_user:
 
   edit_inventory:
+    child_pages:
+      - add_inventory_page
+      - edit_inventory_page
     api_endpoints:
       add_inventory:
       edit_inventory:

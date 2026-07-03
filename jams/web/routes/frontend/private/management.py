@@ -105,6 +105,33 @@ def inventory():
     return render_template(f'{url_prefix}/inventory/inventory.html')
 
 
+@bp.route('/inventory/add')
+@login_required
+@role_based_access_control_fe
+def add_inventory():
+    return render_template(
+        f'{url_prefix}/inventory/inventory_form.html',
+        inventory_id=None,
+        return_to=get_inventory_return_to(
+            'routes.frontend.private.management.inventory'
+        ),
+    )
+
+
+@bp.route('/inventory/<int:inventory_id>/edit')
+@login_required
+@role_based_access_control_fe
+def edit_inventory(inventory_id):
+    Inventory.query.filter_by(id=inventory_id).first_or_404()
+    return render_template(
+        f'{url_prefix}/inventory/inventory_form.html',
+        inventory_id=inventory_id,
+        return_to=get_inventory_return_to(
+            'routes.frontend.private.management.inventory'
+        ),
+    )
+
+
 @bp.route('/inventory/items')
 @login_required
 @role_based_access_control_fe

@@ -45,6 +45,7 @@ import {
     DiscordIntegrationConfig,
     Inventory,
     InventorySummary,
+    CreateInventoryRequest,
     InventoryItem,
     InventoryContainer,
     InventoryItemEntry,
@@ -2823,10 +2824,16 @@ export function recalculateStreaks():Promise<ApiResponse<any>> {
 // #endregion
 
 // #region Inventory
-export function getAllInventory():Promise<ApiMultiEntryResponse<[Inventory]>> {
+export function getAllInventory(
+    queryString:string|null = null
+):Promise<ApiMultiEntryResponse<Inventory[]>> {
     return new Promise((resolve, reject) => {
+        let url = `${baseURL}/inventory`
+        if (queryString !== null) {
+            url += `?${queryString}`
+        }
         $.ajax({
-            url: `${baseURL}/inventory`,
+            url,
             type: 'GET',
             success: function (response) {
                 resolve(response)
@@ -2839,7 +2846,7 @@ export function getAllInventory():Promise<ApiMultiEntryResponse<[Inventory]>> {
     })
 }
 
-export function getInventory(inventory_id:number):Promise<ApiResponse<Inventory>> {
+export function getInventory(inventory_id:number):Promise<Inventory> {
     return new Promise((resolve, reject) => {
         $.ajax({
             url: `${baseURL}/inventory/${inventory_id}`,
@@ -2867,6 +2874,37 @@ export function getInventorySummary(inventory_id:number):Promise<ApiResponse<Inv
                 console.log('Error fetching data:', error);
                 reject(error)
             }
+        })
+    })
+}
+
+export function createInventory(
+    data:CreateInventoryRequest
+):Promise<ApiResponse<Inventory>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory`,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function updateInventory(
+    inventoryId:number,
+    data:CreateInventoryRequest
+):Promise<ApiResponse<Inventory>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/${inventoryId}`,
+            type: 'PATCH',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: resolve,
+            error: reject,
         })
     })
 }
