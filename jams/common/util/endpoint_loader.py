@@ -8,7 +8,7 @@ def generate_full_rbac():
     #clear_rbac()
     generate_endpoints_structure()
     generate_page_endpoints_structure()
-    load_all_roles()
+    #load_all_roles()
     generate_role_endpoint_rules()
 
 def clear_rbac():
