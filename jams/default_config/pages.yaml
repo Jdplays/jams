@@ -175,24 +175,102 @@ pages:
   # Inventory
   inventory_detail:
     endpoint: routes.frontend.private.management.inventory_detail
+    api_endpoints:
+      get_inventory:
+      get_inventory_summary:
+      get_inventory_detail:
+      get_inventory_entries_sse:
+      get_inventory_field:
+      get_user:
+      get_inventory_items:
+      get_inventory_containers:
+      get_inventory_entries:
+      get_inventory_entries_field:
+      get_inventory_entry:
+      get_inventory_entry_field:
+      create_inventory_entry:
+      create_inventory_entry_for_inventory:
+      validate_inventory_entry_assets:
+      update_inventory_entry:
+      add_inventory_entry_quantity:
+      set_inventory_entry_quantity:
+      delete_inventory_entry:
+      preview_inventory_entry_labels:
+      print_inventory_entry_labels:
   inventory_items:
     endpoint: routes.frontend.private.management.inventory_items
+    api_endpoints:
+      get_inventory_items:
+      get_inventory_items_field:
+      get_inventory_item:
+      get_inventory_item_field:
+      archive_inventory_item:
+      activate_inventory_item:
   add_inventory_item:
     endpoint: routes.frontend.private.management.add_inventory_item
+    api_endpoints:
+      create_inventory_item:
+      validate_inventory_item_asset_code_prefix:
   edit_inventory_item:
     endpoint: routes.frontend.private.management.edit_inventory_item
+    api_endpoints:
+      get_inventory_item:
+      update_inventory_item:
+      validate_inventory_item_asset_code_prefix:
   inventory_containers:
     endpoint: routes.frontend.private.management.inventory_containers
+    api_endpoints:
+      get_inventory_containers:
+      get_inventory_containers_field:
+      get_inventory_container:
+      get_inventory_container_field:
+      archive_inventory_container:
+      activate_inventory_container:
   inventory_container_detail:
     endpoint: routes.frontend.private.management.inventory_container_detail
+    api_endpoints:
+      get_inventory_container:
+      get_inventory_container_detail:
+      get_inventory_container_detail_sse:
+      update_inventory_entry:
+      remove_inventory_asset_from_entry:
+      print_inventory_container_label:
   add_inventory_container:
     endpoint: routes.frontend.private.management.add_inventory_container
+    api_endpoints:
+      get_inventory_containers:
+      create_inventory_container:
   edit_inventory_container:
     endpoint: routes.frontend.private.management.edit_inventory_container
+    api_endpoints:
+      get_inventory_container:
+      get_inventory_containers:
+      update_inventory_container:
   inventory_assets:
     endpoint: routes.frontend.private.management.inventory_assets
+    api_endpoints:
+      get_inventory_assets:
+      get_inventory_assets_field:
+      get_inventory_asset_by_code:
+      create_inventory_asset:
   inventory_asset_detail:
     endpoint: routes.frontend.private.management.inventory_asset_detail
+    api_endpoints:
+      get_inventories:
+      get_inventory_items:
+      get_inventory_containers:
+      get_inventory_asset:
+      get_inventory_asset_logs:
+      get_inventory_asset_field:
+      print_inventory_asset_label:
+      create_inventory_asset_log:
+      update_inventory_asset:
+      update_inventory_asset_state:
+      move_inventory_asset:
+      remove_inventory_asset_from_entry:
+      archive_inventory_asset:
+      activate_inventory_asset:
+      get_roles_public_info:
 
 # Normal Pages
   # Admin
@@ -314,31 +392,8 @@ pages:
     api_endpoints:
       get_inventories:
       get_inventories_field:
-      get_inventory:
       get_inventory_summary:
-      get_inventory_detail:
-      get_inventory_entries_sse:
-      get_inventory_field:
-      get_inventory_items:
-      get_inventory_items_field:
-      get_inventory_item:
-      get_inventory_item_field:
-      get_inventory_entries:
-      get_inventory_entries_field:
-      get_inventory_entry:
-      get_inventory_entry_field:
-      get_inventory_containers:
-      get_inventory_containers_field:
-      get_inventory_container:
-      get_inventory_container_detail:
-      get_inventory_container_detail_sse:
-      get_inventory_container_field:
-      get_inventory_assets:
-      get_inventory_assets_field:
-      get_inventory_asset:
-      get_inventory_asset_by_code:
-      get_inventory_asset_logs:
-      get_inventory_asset_field:
+      get_user:
 
   edit_inventory:
     api_endpoints:
@@ -348,34 +403,6 @@ pages:
       activate_inventory:
       lock_inventory:
       unlock_inventory:
-      create_inventory_item:
-      update_inventory_item:
-      validate_inventory_item_asset_code_prefix:
-      archive_inventory_item:
-      activate_inventory_item:
-      create_inventory_entry:
-      create_inventory_entry_for_inventory:
-      validate_inventory_entry_assets:
-      update_inventory_entry:
-      add_inventory_entry_quantity:
-      set_inventory_entry_quantity:
-      delete_inventory_entry:
-      preview_inventory_entry_labels:
-      print_inventory_entry_labels:
-      print_inventory_container_label:
-      create_inventory_container:
-      update_inventory_container:
-      archive_inventory_container:
-      activate_inventory_container:
-      print_inventory_asset_label:
-      create_inventory_asset_log:
-      create_inventory_asset:
-      update_inventory_asset:
-      update_inventory_asset_state:
-      move_inventory_asset:
-      remove_inventory_asset_from_entry:
-      archive_inventory_asset:
-      activate_inventory_asset:
 
   # Volunteer`
   volunteer_attendance:

@@ -3,7 +3,7 @@
 {% block title %}Inventory container{% endblock %}
 
 {% block content %}
-{% set can_manage_inventories = user_has_access_to_page('edit_inventory') %}
+{% set can_manage_inventories = user_has_access_to_page('inventory') %}
 
 <div
     id="inventory-container-detail-page"

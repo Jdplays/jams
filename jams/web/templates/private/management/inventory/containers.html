@@ -4,7 +4,7 @@
 
 {% block content %}
 {% set inventory_tab = 'containers' %}
-{% set can_manage_inventories = user_has_access_to_page('edit_inventory') %}
+{% set can_manage_inventories = user_has_access_to_page('inventory') %}
 
 {% include 'private/management/inventory/_tabs.html' %}
 

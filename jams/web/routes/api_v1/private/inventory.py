@@ -2,7 +2,7 @@
 from datetime import UTC, date as date_type, datetime, timedelta
 import re
 
-from flask import Blueprint, g, request, jsonify, abort
+from flask import Blueprint, request, jsonify, abort
 from flask_security import current_user
 from sqlalchemy.exc import IntegrityError
 
@@ -40,13 +40,6 @@ def serialize_inventory_entry(entry):
     data["container"] = entry.container.to_dict() if entry.container else None
     data["inventory"] = entry.inventory.to_dict() if entry.inventory else None
     return data
-
-
-def require_inventory_management_access():
-    if getattr(g, "api_key_authenticated", False):
-        return
-    if not helper.user_has_access_to_page("edit_inventory"):
-        abort(403, description="You do not have permission to manage inventories")
 
 
 def require_inventory_unlocked(inventory):
@@ -683,7 +676,6 @@ def get_inventory_field(inventory_id, field):
 @bp.route('/inventory', methods=['POST'])
 @api_route
 def add_inventory():
-    require_inventory_management_access()
     data = get_request_json_object()
 
     name = validate_item_name(data.get('name'))
@@ -726,7 +718,6 @@ def add_inventory():
 @bp.route('/inventory/<int:inventory_id>', methods=['PATCH'])
 @api_route
 def edit_inventory(inventory_id):
-    require_inventory_management_access()
     inventory = Inventory.query.filter_by(id=inventory_id).first_or_404()
     require_inventory_unlocked(inventory)
     data = get_request_json_object()
@@ -766,7 +757,6 @@ def edit_inventory(inventory_id):
 @bp.route('/inventory/<int:inventory_id>/archive', methods=['POST'])
 @api_route
 def archive_inventory(inventory_id):
-    require_inventory_management_access()
     inventory = Inventory.query.filter_by(id=inventory_id).first_or_404()
     require_inventory_unlocked(inventory)
     inventory.archive()
@@ -779,7 +769,6 @@ def archive_inventory(inventory_id):
 @bp.route('/inventory/<int:inventory_id>/activate', methods=['POST'])
 @api_route
 def activate_inventory(inventory_id):
-    require_inventory_management_access()
     inventory = Inventory.query.filter_by(id=inventory_id).first_or_404()
     require_inventory_unlocked(inventory)
     inventory.activate()
@@ -792,7 +781,6 @@ def activate_inventory(inventory_id):
 @bp.route('/inventory/<int:inventory_id>/lock', methods=['POST'])
 @api_route
 def lock_inventory(inventory_id):
-    require_inventory_management_access()
     inventory = Inventory.query.filter_by(id=inventory_id).first_or_404()
     if inventory.locked:
         abort(409, description="The inventory is already locked")
@@ -809,7 +797,6 @@ def lock_inventory(inventory_id):
 @bp.route('/inventory/<int:inventory_id>/unlock', methods=['POST'])
 @api_route
 def unlock_inventory(inventory_id):
-    require_inventory_management_access()
     inventory = Inventory.query.filter_by(id=inventory_id).first_or_404()
     if not inventory.locked:
         abort(409, description="The inventory is already unlocked")
@@ -859,8 +846,6 @@ def get_inventory_item_field(item_id, field):
 @bp.route('/inventory/items/validate-asset-code-prefix', methods=['GET'])
 @api_route
 def validate_inventory_item_asset_code_prefix():
-    require_inventory_management_access()
-
     prefix = request.args.get('value', '').strip().upper()
     exclude_item_id = request.args.get('exclude_item_id', type=int)
 
@@ -895,7 +880,6 @@ def validate_inventory_item_asset_code_prefix():
 @bp.route('/inventory/items', methods=['POST'])
 @api_route
 def create_inventory_item():
-    require_inventory_management_access()
     data = get_request_json_object()
 
     name = validate_item_name(data.get('name'))
@@ -932,7 +916,6 @@ def create_inventory_item():
 @bp.route('/inventory/items/<int:item_id>', methods=['PATCH', 'PUT'])
 @api_route
 def update_inventory_item(item_id):
-    require_inventory_management_access()
     item = InventoryItem.query.filter_by(id=item_id).first_or_404()
     data = get_request_json_object()
 
@@ -976,7 +959,6 @@ def update_inventory_item(item_id):
 @bp.route('/inventory/items/<int:item_id>/archive', methods=['POST'])
 @api_route
 def archive_inventory_item(item_id):
-    require_inventory_management_access()
     item = InventoryItem.query.filter_by(id=item_id).first_or_404()
     item.archive()
     db.session.commit()
@@ -988,7 +970,6 @@ def archive_inventory_item(item_id):
 @bp.route('/inventory/items/<int:item_id>/activate', methods=['POST'])
 @api_route
 def activate_inventory_item(item_id):
-    require_inventory_management_access()
     item = InventoryItem.query.filter_by(id=item_id).first_or_404()
     item.activate()
     db.session.commit()
@@ -1309,7 +1290,6 @@ def create_or_increment_inventory_entry(
 @bp.route('/inventory/entry', methods=['POST'])
 @api_route
 def create_inventory_entry():
-    require_inventory_management_access()
     data = get_request_json_object()
 
     inventory_id = data.get('inventory_id')
@@ -1393,7 +1373,6 @@ def create_inventory_entry():
 @bp.route('/inventory/<int:inventory_id>/entries', methods=['POST'])
 @api_route
 def create_inventory_entry_for_inventory(inventory_id):
-    require_inventory_management_access()
     inventory = Inventory.query.filter_by(id=inventory_id).first_or_404()
     require_inventory_unlocked(inventory)
     data = get_request_json_object()
@@ -1475,7 +1454,6 @@ def create_inventory_entry_for_inventory(inventory_id):
 @bp.route('/inventory/<int:inventory_id>/entries/validate-assets', methods=['POST'])
 @api_route
 def validate_inventory_entry_assets(inventory_id):
-    require_inventory_management_access()
     inventory = Inventory.query.filter_by(id=inventory_id).first_or_404()
     data = get_request_json_object()
 
@@ -1513,7 +1491,6 @@ def validate_inventory_entry_assets(inventory_id):
 @bp.route('/inventory/entry/<int:entry_id>', methods=['PATCH', 'PUT'])
 @api_route
 def update_inventory_entry(entry_id):
-    require_inventory_management_access()
     entry = InventoryItemEntry.query.filter_by(id=entry_id).first_or_404()
     require_inventory_unlocked(entry.inventory)
     data = get_request_json_object()
@@ -1609,7 +1586,6 @@ def update_inventory_entry(entry_id):
 @bp.route('/inventory/entry/<int:entry_id>/quantity/add', methods=['PATCH'])
 @api_route
 def add_inventory_entry_quantity(entry_id):
-    require_inventory_management_access()
     entry = InventoryItemEntry.query.filter_by(id=entry_id).first_or_404()
     require_inventory_unlocked(entry.inventory)
     data = get_request_json_object()
@@ -1646,7 +1622,6 @@ def add_inventory_entry_quantity(entry_id):
 @bp.route('/inventory/entry/<int:entry_id>/quantity', methods=['PATCH'])
 @api_route
 def set_inventory_entry_quantity(entry_id):
-    require_inventory_management_access()
     entry = InventoryItemEntry.query.filter_by(id=entry_id).first_or_404()
     require_inventory_unlocked(entry.inventory)
     data = get_request_json_object()
@@ -1681,7 +1656,6 @@ def set_inventory_entry_quantity(entry_id):
 @bp.route('/inventory/entry/<int:entry_id>', methods=['DELETE'])
 @api_route
 def delete_inventory_entry(entry_id):
-    require_inventory_management_access()
     entry = InventoryItemEntry.query.filter_by(id=entry_id).first_or_404()
     require_inventory_unlocked(entry.inventory)
 
@@ -1756,7 +1730,6 @@ def get_asset_print_recent_mode(data):
 )
 @api_route
 def preview_inventory_entry_labels(entry_id):
-    require_inventory_management_access()
     entry = InventoryItemEntry.query.filter_by(id=entry_id).first_or_404()
 
     if not entry.inventory_item or not entry.inventory_item.is_asset:
@@ -1772,7 +1745,6 @@ def preview_inventory_entry_labels(entry_id):
 @bp.route('/inventory/entry/<int:entry_id>/print-labels', methods=['POST'])
 @api_route
 def print_inventory_entry_labels(entry_id):
-    require_inventory_management_access()
     entry = InventoryItemEntry.query.filter_by(id=entry_id).first_or_404()
     require_inventory_unlocked(entry.inventory)
 
@@ -1880,7 +1852,6 @@ def get_inventory_container_detail_sse(container_id):
 @bp.route('/inventory/containers/<int:container_id>/print-label', methods=['POST'])
 @api_route
 def print_inventory_container_label(container_id):
-    require_inventory_management_access()
     detail = fetch_inventory_container_detail(container_id)
     inventory = Inventory.current()
     if not inventory:
@@ -1918,7 +1889,6 @@ def get_inventory_container_field(container_id, field):
 @bp.route('/inventory/containers', methods=['POST'])
 @api_route
 def create_inventory_container():
-    require_inventory_management_access()
     data = get_request_json_object()
 
     name = data.get('name')
@@ -1951,7 +1921,6 @@ def create_inventory_container():
 @bp.route('/inventory/containers/<int:container_id>', methods=['PATCH', 'PUT'])
 @api_route
 def update_inventory_container(container_id):
-    require_inventory_management_access()
     container = InventoryContainer.query.filter_by(id=container_id).first_or_404()
     data = get_request_json_object()
 
@@ -1984,7 +1953,6 @@ def update_inventory_container(container_id):
 @bp.route('/inventory/containers/<int:container_id>/archive', methods=['POST'])
 @api_route
 def archive_inventory_container(container_id):
-    require_inventory_management_access()
     container = InventoryContainer.query.filter_by(id=container_id).first_or_404()
     container.archive()
     db.session.commit()
@@ -1996,7 +1964,6 @@ def archive_inventory_container(container_id):
 @bp.route('/inventory/containers/<int:container_id>/activate', methods=['POST'])
 @api_route
 def activate_inventory_container(container_id):
-    require_inventory_management_access()
     container = InventoryContainer.query.filter_by(id=container_id).first_or_404()
     container.activate()
     db.session.commit()
@@ -2066,7 +2033,6 @@ def get_inventory_asset_logs(asset_id):
 @bp.route('/inventory/assets/<int:asset_id>/print-label', methods=['POST'])
 @api_route
 def print_inventory_asset_label(asset_id):
-    require_inventory_management_access()
     asset = InventoryAsset.query.filter_by(id=asset_id).first_or_404()
     data = get_request_json_object()
     force = data.get("force", False)
@@ -2083,7 +2049,6 @@ def print_inventory_asset_label(asset_id):
 @bp.route('/inventory/assets/<int:asset_id>/logs', methods=['POST'])
 @api_route
 def create_inventory_asset_log(asset_id):
-    require_inventory_management_access()
     asset = InventoryAsset.query.filter_by(id=asset_id).first_or_404()
     require_asset_inventory_unlocked(asset)
     data = get_request_json_object()
@@ -2118,7 +2083,6 @@ def get_inventory_asset_field(asset_id, field):
 @bp.route('/inventory/assets', methods=['POST'])
 @api_route
 def create_inventory_asset():
-    require_inventory_management_access()
     data = get_request_json_object()
 
     asset_code = data.get('asset_code')
@@ -2183,7 +2147,6 @@ def create_inventory_asset():
 @bp.route('/inventory/assets/<int:asset_id>', methods=['PATCH', 'PUT'])
 @api_route
 def update_inventory_asset(asset_id):
-    require_inventory_management_access()
     asset = InventoryAsset.query.filter_by(id=asset_id).first_or_404()
     require_asset_inventory_unlocked(asset)
     data = get_request_json_object()
@@ -2257,7 +2220,6 @@ def update_inventory_asset(asset_id):
 @bp.route('/inventory/assets/<int:asset_id>/state', methods=['PATCH'])
 @api_route
 def update_inventory_asset_state(asset_id):
-    require_inventory_management_access()
     asset = InventoryAsset.query.filter_by(id=asset_id).first_or_404()
     require_asset_inventory_unlocked(asset)
     data = get_request_json_object()
@@ -2277,7 +2239,6 @@ def update_inventory_asset_state(asset_id):
 @bp.route('/inventory/assets/<int:asset_id>/move', methods=['POST'])
 @api_route
 def move_inventory_asset(asset_id):
-    require_inventory_management_access()
     asset = InventoryAsset.query.filter_by(id=asset_id).first_or_404()
     data = get_request_json_object()
 
@@ -2301,7 +2262,6 @@ def move_inventory_asset(asset_id):
 )
 @api_route
 def remove_inventory_asset_from_entry(asset_id, entry_id):
-    require_inventory_management_access()
     asset = InventoryAsset.query.filter_by(id=asset_id).first_or_404()
     entry = InventoryItemEntry.query.filter_by(
         id=entry_id,
@@ -2331,7 +2291,6 @@ def remove_inventory_asset_from_entry(asset_id, entry_id):
 @bp.route('/inventory/assets/<int:asset_id>/archive', methods=['POST'])
 @api_route
 def archive_inventory_asset(asset_id):
-    require_inventory_management_access()
     asset = InventoryAsset.query.filter_by(id=asset_id).first_or_404()
     require_asset_inventory_unlocked(asset)
     data = get_request_json_object()
@@ -2349,7 +2308,6 @@ def archive_inventory_asset(asset_id):
 @bp.route('/inventory/assets/<int:asset_id>/activate', methods=['POST'])
 @api_route
 def activate_inventory_asset(asset_id):
-    require_inventory_management_access()
     asset = InventoryAsset.query.filter_by(id=asset_id).first_or_404()
     require_asset_inventory_unlocked(asset)
     set_asset_state(asset, InventoryAssetState.ACTIVE.name)
