@@ -14,6 +14,9 @@ import { debounce, errorToast, successToast } from "@global/helper"
 let itemId:number|null = null
 let returnTo = "/private/management/inventory/items"
 let assetPrefixValidationSequence = 0
+const MAX_INVENTORY_ATTRIBUTES = 20
+const MAX_INVENTORY_ATTRIBUTE_VALUES = 100
+const MAX_INVENTORY_ATTRIBUTE_TEXT_LENGTH = 100
 
 function errorMessage(error:any):string {
     return error.responseJSON?.description
@@ -162,6 +165,13 @@ function updateAssetTrackingForm() {
 }
 
 function addValueRow(container:HTMLElement, option?:InventoryAttributeOption) {
+    if (container.children.length >= MAX_INVENTORY_ATTRIBUTE_VALUES) {
+        errorToast(
+            `An attribute cannot have more than ${MAX_INVENTORY_ATTRIBUTE_VALUES} values`
+        )
+        return
+    }
+
     const row = document.createElement("div")
     row.classList.add("input-group", "mb-2", "attribute-value-row")
     if (option?.key) {
@@ -172,6 +182,7 @@ function addValueRow(container:HTMLElement, option?:InventoryAttributeOption) {
     input.classList.add("form-control", "attribute-value-label")
     input.placeholder = "Value, e.g. Large"
     input.value = option?.label ?? ""
+    input.maxLength = MAX_INVENTORY_ATTRIBUTE_TEXT_LENGTH
     input.required = true
 
     const remove = document.createElement("button")
@@ -188,6 +199,11 @@ function addValueRow(container:HTMLElement, option?:InventoryAttributeOption) {
 function addAttributeCard(attribute?:InventoryAttributeDefinition) {
     const container = document.getElementById("inventory-item-attributes")
     if (!container) {
+        return
+    }
+
+    if (container.children.length >= MAX_INVENTORY_ATTRIBUTES) {
+        errorToast(`An item cannot have more than ${MAX_INVENTORY_ATTRIBUTES} attributes`)
         return
     }
 

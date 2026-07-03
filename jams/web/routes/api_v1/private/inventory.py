@@ -345,6 +345,8 @@ VALID_INVENTORY_ASSET_STATES = {
     asset_state.name for asset_state in InventoryAssetState
 }
 ASSET_CODE_PREFIX_PATTERN = re.compile(r"^[A-Z0-9]{3}$")
+MAX_CONTAINER_DESCRIPTION_LENGTH = 1000
+MAX_ASSET_NOTE_LENGTH = 2000
 
 
 def validate_asset_state(value):
@@ -361,7 +363,7 @@ def validate_asset_state(value):
 
 def set_asset_state(asset, state, note=None):
     state = validate_asset_state(state)
-    note = validate_optional_string(note, "note")
+    note = validate_optional_string(note, "note", MAX_ASSET_NOTE_LENGTH)
 
     if asset.status == state:
         abort(409, description=f"Asset is already {state.lower()}")
@@ -504,7 +506,7 @@ def validate_new_asset_labels(item, data, quantity):
     if not item.needs_label:
         if labels not in (None, []):
             abort(400, description="asset_labels can only be used for items that need labels")
-        return [None] * quantity
+        return None
 
     if not isinstance(labels, list) or len(labels) != quantity:
         abort(
@@ -1011,17 +1013,24 @@ def get_inventory_entry_field(entry_id, field):
     return jsonify({field: entry_data[field]})
 
 
-def parse_inventory_quantity(value):
+MAX_INVENTORY_QUANTITY = 500
+MAX_ASSET_START_INDEX = 999999999
+
+
+def parse_inventory_quantity(value, maximum=MAX_INVENTORY_QUANTITY, field="quantity"):
     if isinstance(value, bool):
-        abort(400, description="quantity must be an integer")
+        abort(400, description=f"{field} must be an integer")
 
     try:
         quantity = int(value)
     except (TypeError, ValueError):
-        abort(400, description="quantity must be an integer")
+        abort(400, description=f"{field} must be an integer")
 
     if quantity <= 0:
-        abort(400, description="quantity must be greater than 0")
+        abort(400, description=f"{field} must be greater than 0")
+
+    if maximum is not None and quantity > maximum:
+        abort(400, description=f"{field} cannot exceed {maximum}")
 
     return quantity
 
@@ -1046,7 +1055,11 @@ def next_asset_code_index(item):
 
 
 def normalise_requested_asset_code(item, value):
+    if isinstance(value, bool) or not isinstance(value, (str, int)):
+        abort(400, description="Each asset code must be a string or integer")
     text = str(value).strip().upper()
+    if len(text) > 100:
+        abort(400, description="Each asset code must be 100 characters or fewer")
     if text.isdigit():
         return f"{item.asset_code_prefix}-{int(text):03d}"
 
@@ -1077,6 +1090,14 @@ def build_requested_existing_asset_codes(item, data):
         requested_values = data.get("existing_asset_codes")
         if not isinstance(requested_values, list) or not requested_values:
             abort(400, description="existing_asset_codes must be a non-empty list")
+        if len(requested_values) > MAX_INVENTORY_QUANTITY:
+            abort(
+                400,
+                description=(
+                    "existing_asset_codes cannot contain more than "
+                    f"{MAX_INVENTORY_QUANTITY} assets"
+                )
+            )
         requested_codes = [
             normalise_requested_asset_code(item, value)
             for value in requested_values
@@ -1084,7 +1105,11 @@ def build_requested_existing_asset_codes(item, data):
         quantity = len(requested_codes)
     else:
         quantity = parse_inventory_quantity(data.get("quantity", 1))
-        start_index = parse_inventory_quantity(data.get("asset_start_index"))
+        start_index = parse_inventory_quantity(
+            data.get("asset_start_index"),
+            maximum=MAX_ASSET_START_INDEX,
+            field="asset_start_index"
+        )
         requested_codes = [
             f"{item.asset_code_prefix}-{index:03d}"
             for index in range(start_index, start_index + quantity)
@@ -1268,10 +1293,11 @@ def create_or_increment_inventory_entry(
     if item.is_asset and create_new_assets:
         first_index = next_asset_code_index(item)
         for offset, index in enumerate(range(first_index, first_index + quantity)):
+            label = asset_labels[offset] if asset_labels else None
             asset = InventoryAsset(
                 asset_code=f"{item.asset_code_prefix}-{index:03d}",
                 inventory_item_id=item.id,
-                label=(asset_labels or [None] * quantity)[offset],
+                label=label,
                 attributes=attributes
             )
             db.session.add(asset)
@@ -1899,7 +1925,8 @@ def create_inventory_container():
 
     description = validate_optional_string(
         data.get('description'),
-        "description"
+        "description",
+        MAX_CONTAINER_DESCRIPTION_LENGTH
     )
     parent_container_id = validate_container_parent(
         data.get('parent_container_id')
@@ -1935,7 +1962,8 @@ def update_inventory_container(container_id):
     if "description" in data:
         container.description = validate_optional_string(
             data["description"],
-            "description"
+            "description",
+            MAX_CONTAINER_DESCRIPTION_LENGTH
         )
 
     if "parent_container_id" in data:
@@ -2057,7 +2085,11 @@ def create_inventory_asset_log(asset_id):
     state = data.get("state")
     if state is not None:
         state = validate_asset_state(state)
-    note = validate_optional_string(data.get("note"), "note")
+    note = validate_optional_string(
+        data.get("note"),
+        "note",
+        MAX_ASSET_NOTE_LENGTH
+    )
     if not message and not state and not note:
         abort(400, description="A message, state or note is required")
 
@@ -2128,7 +2160,11 @@ def create_inventory_asset():
         status=validate_asset_state(
             data.get('status', InventoryAssetState.ACTIVE.name)
         ),
-        notes=validate_optional_string(data.get('notes'), "notes")
+        notes=validate_optional_string(
+            data.get('notes'),
+            "notes",
+            MAX_ASSET_NOTE_LENGTH
+        )
     )
 
     db.session.add(asset)
@@ -2209,7 +2245,11 @@ def update_inventory_asset(asset_id):
             set_asset_state(asset, status, note=data.get("notes"))
 
     if "notes" in data:
-        asset.notes = validate_optional_string(data["notes"], "notes")
+        asset.notes = validate_optional_string(
+            data["notes"],
+            "notes",
+            MAX_ASSET_NOTE_LENGTH
+        )
 
     db.session.commit()
     publish_inventory_update(refresh_all=True)
@@ -2272,7 +2312,11 @@ def remove_inventory_asset_from_entry(asset_id, entry_id):
         abort(400, description="Asset and inventory entry items do not match")
 
     data = get_request_json_object()
-    note = validate_optional_string(data.get("note"), "note")
+    note = validate_optional_string(
+        data.get("note"),
+        "note",
+        MAX_ASSET_NOTE_LENGTH
+    )
     remove_asset_from_entry(
         asset,
         entry,

@@ -42,6 +42,7 @@ let inventorySSE:SSEManager<InventoryDetail>
 let assetValidationSequence = 0
 let selectedContainerFilterId:number|null = null
 let inventoryLocked = false
+const MAX_INVENTORY_QUANTITY = 500
 
 function canEditInventory():boolean {
     return canManageInventories && !inventoryLocked
@@ -227,7 +228,10 @@ function changeEntryFormQuantity(amount:number) {
         return
     }
     const current = Number(input.value) || 1
-    input.value = String(Math.max(1, current + amount))
+    input.value = String(Math.min(
+        MAX_INVENTORY_QUANTITY,
+        Math.max(1, current + amount)
+    ))
     input.dispatchEvent(new Event("input", { bubbles: true }))
 }
 
@@ -747,6 +751,9 @@ function renderNewAssetLabelFields() {
     const showLabels = Boolean(item?.is_asset && item.needs_label && assetMode === "create")
     wrapper.classList.toggle("d-none", !showLabels)
     if (!showLabels) {
+        ;(document.getElementById(
+            "inventory-entry-quantity"
+        ) as HTMLInputElement).setCustomValidity("")
         fields.replaceChildren()
         return
     }
@@ -754,9 +761,18 @@ function renderNewAssetLabelFields() {
     const oldValues = Array.from(
         fields.querySelectorAll<HTMLInputElement>(".inventory-new-asset-label")
     ).map(input => input.value)
-    const quantity = Math.max(1, Number((document.getElementById(
+    const quantityInput = document.getElementById(
         "inventory-entry-quantity"
-    ) as HTMLInputElement).value) || 1)
+    ) as HTMLInputElement
+    const quantity = Math.max(1, Number(quantityInput.value) || 1)
+    if (quantity > MAX_INVENTORY_QUANTITY) {
+        quantityInput.setCustomValidity(
+            `Quantity cannot exceed ${MAX_INVENTORY_QUANTITY}`
+        )
+        fields.replaceChildren()
+        return
+    }
+    quantityInput.setCustomValidity("")
     const rows:HTMLElement[] = []
     for (let index = 0; index < quantity; index += 1) {
         const column = document.createElement("div")
@@ -791,12 +807,18 @@ function buildEntryRequest():CreateInventoryEntryRequest|null {
         "inventory-container-select"
     ) as HTMLSelectElement
 
+    const quantity = Number(quantityInput.value)
+    if (quantity > MAX_INVENTORY_QUANTITY) {
+        errorToast(`Quantity cannot exceed ${MAX_INVENTORY_QUANTITY}`)
+        return null
+    }
+
     const data:CreateInventoryEntryRequest = {
         inventory_item_id: selectedItem.id,
         container_id: containerSelect.value
             ? Number(containerSelect.value)
             : null,
-        quantity: Number(quantityInput.value),
+        quantity,
     }
 
     const attributes = collectEntryAttributes()
@@ -830,6 +852,13 @@ function buildEntryRequest():CreateInventoryEntryRequest|null {
                     renderExistingAssetValidation(
                         "error",
                         "Enter at least one existing asset number."
+                    )
+                    return null
+                }
+                if (codes.length > MAX_INVENTORY_QUANTITY) {
+                    renderExistingAssetValidation(
+                        "error",
+                        `Select no more than ${MAX_INVENTORY_QUANTITY} assets.`
                     )
                     return null
                 }
