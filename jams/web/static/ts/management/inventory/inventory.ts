@@ -124,6 +124,12 @@ async function buildInventoryList() {
         titleText.textContent = inventory.name
 
         title.appendChild(titleText)
+        if (inventory.locked) {
+            const lockIcon = document.createElement("i")
+            lockIcon.classList.add("ti", "ti-lock", "ms-2", "text-secondary")
+            lockIcon.title = "Inventory locked"
+            title.appendChild(lockIcon)
+        }
 
         // Inventory date
         const dateDiv = document.createElement("div")
@@ -208,7 +214,7 @@ async function buildInventoryList() {
         mainCardArea.append(iconAvatar, contentDiv)
         cardLayout.appendChild(mainCardArea)
 
-        if (canManageInventories) {
+        if (canManageInventories && !inventory.locked) {
             const managementActions = document.createElement("div")
             managementActions.classList.add(
                 "d-flex",

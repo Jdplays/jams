@@ -346,8 +346,11 @@ pages:
       edit_inventory:
       archive_inventory:
       activate_inventory:
+      lock_inventory:
+      unlock_inventory:
       create_inventory_item:
       update_inventory_item:
+      validate_inventory_item_asset_code_prefix:
       archive_inventory_item:
       activate_inventory_item:
       create_inventory_entry:
@@ -357,6 +360,7 @@ pages:
       add_inventory_entry_quantity:
       set_inventory_entry_quantity:
       delete_inventory_entry:
+      preview_inventory_entry_labels:
       print_inventory_entry_labels:
       print_inventory_container_label:
       create_inventory_container:

@@ -325,9 +325,16 @@ function renderInventoryHistory(asset:InventoryAsset) {
         row.append(inventoryCell, dateCell, containerCell, linkedCell)
         if (canManageInventories) {
             const actionsCell = document.createElement("td")
-            actionsCell.appendChild(
-                removeAssetButton(asset, item.inventory_item_entry_id)
-            )
+            if (!item.inventory_locked) {
+                actionsCell.appendChild(
+                    removeAssetButton(asset, item.inventory_item_entry_id)
+                )
+            } else {
+                const lock = document.createElement("i")
+                lock.classList.add("ti", "ti-lock", "text-secondary")
+                lock.title = "Inventory locked"
+                actionsCell.appendChild(lock)
+            }
             row.appendChild(actionsCell)
         }
         tbody.appendChild(row)
@@ -380,7 +387,11 @@ async function initialisePage() {
         buildAttributeBadges(asset.attributes, item?.attribute_schema)
     )
     setText("asset-notes", asset.notes || "None")
-    renderStateActions(asset)
+    if (!latestHistory?.inventory_locked) {
+        renderStateActions(asset)
+    } else {
+        document.getElementById("asset-state-actions")?.replaceChildren()
+    }
     renderInventoryHistory(asset)
 
     const printButton = document.getElementById(
@@ -401,8 +412,6 @@ async function initialisePage() {
         try {
             const response = await printInventoryAssetLabel(asset.id, force)
             successToast(response.message)
-            currentAsset.last_printed_at = new Date().toISOString()
-            setText("asset-last-printed", new Date().toLocaleString())
         } catch (error) {
             errorToast(errorMessage(error))
         } finally {

@@ -80,36 +80,60 @@ def add_attendee_to_print_queue(attendee):
     return (True, 'Attendee label successfully added to queue')
 
 
+def get_active_asset_label_codes(assets):
+    asset_codes = [asset.asset_code for asset in assets]
+    if not asset_codes:
+        return set()
+
+    active_jobs = JOLTPrintQueue.query.filter(
+        and_(
+            JOLTPrintQueue.type == JOLTPrintJobType.ASSET_LABEL.name,
+            JOLTPrintQueue.data['asset_id'].as_string().in_(asset_codes),
+            JOLTPrintQueue.status.in_([
+                JOLTPrintQueueStatus.QUEUED.name,
+                JOLTPrintQueueStatus.RECEIVED.name,
+            ])
+        )
+    ).all()
+    return {
+        job.data.get('asset_id')
+        for job in active_jobs
+        if job.data.get('asset_id')
+    }
+
+
 def add_assets_to_print_queue(assets, contact_name, contact_email):
     assets = list(assets)
 
     if not assets:
-        return (False, 'There are no asset labels to print')
+        return (False, 'There are no asset labels to print', [], [])
 
     if not print_queue_open():
-        return (False, 'Print Queue is not currently open')
+        return (False, 'Print Queue is not currently open', [], [])
 
     app_url = get_config_value(ConfigType.APP_URL)
     if not app_url:
-        return (False, 'JAMS application URL is not configured')
+        return (False, 'JAMS application URL is not configured', [], [])
 
-    asset_codes = [asset.asset_code for asset in assets]
-    existing_jobs = JOLTPrintQueue.query.filter(
-        and_(
-            JOLTPrintQueue.type == JOLTPrintJobType.ASSET_LABEL.name,
-            JOLTPrintQueue.data['asset_id'].as_string().in_(asset_codes),
-            JOLTPrintQueue.status == JOLTPrintQueueStatus.QUEUED.name
-        )
-    ).all()
-
-    if existing_jobs:
-        queued_codes = sorted(job.data['asset_id'] for job in existing_jobs)
+    queued_codes = get_active_asset_label_codes(assets)
+    assets_to_queue = [
+        asset for asset in assets
+        if asset.asset_code not in queued_codes
+    ]
+    if not assets_to_queue:
+        count = len(queued_codes)
         return (
-            False,
-            'Labels are already queued for: ' + ', '.join(queued_codes)
+            True,
+            (
+                'Asset label is already queued'
+                if count == 1
+                else f'All {count} asset labels are already queued'
+            ),
+            [],
+            sorted(queued_codes),
         )
 
-    for asset in assets:
+    for asset in assets_to_queue:
         body = {
             'item_name': asset.inventory_item.name,
             'item_label': asset.label,
@@ -126,13 +150,17 @@ def add_assets_to_print_queue(assets, contact_name, contact_email):
 
     db.session.commit()
 
-    count = len(assets)
+    count = len(assets_to_queue)
     message = (
         'Asset label successfully added to queue'
         if count == 1
         else f'{count} asset labels successfully added to queue'
     )
-    return (True, message)
+    if queued_codes:
+        message += (
+            f'; {len(queued_codes)} already queued and skipped'
+        )
+    return (True, message, assets_to_queue, sorted(queued_codes))
 
 
 def add_container_to_print_queue(

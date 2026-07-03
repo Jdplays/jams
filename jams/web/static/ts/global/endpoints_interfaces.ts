@@ -449,6 +449,7 @@ export interface Inventory {
     date:string
     coordinator_id?:number
     active:boolean
+    locked:boolean
 }
 
 export interface InventorySummary {
@@ -513,6 +514,12 @@ export interface InventoryItemEntry {
         label?:string|null
         last_printed_at?:string|null
     }[]
+    new_assets?:{
+        id:number
+        asset_code:string
+        label?:string|null
+        last_printed_at?:string|null
+    }[]
     item?:InventoryItem
     container?:InventoryContainer
     inventory?:Inventory
@@ -548,6 +555,7 @@ export interface InventoryAssetEntryHistory {
     container_id?:number|null
     container_name?:string|null
     linked_at?:string|null
+    inventory_locked:boolean
 }
 
 export interface InventoryAssetLog {
@@ -607,6 +615,23 @@ export interface ValidateInventoryEntryAssetsResponse {
     }[]
 }
 
+export interface InventoryLabelPrintPreview {
+    total_count:number
+    recent_count:number
+    recent_asset_codes:string[]
+    queued_count:number
+    queued_asset_codes:string[]
+}
+
+export interface InventoryLabelPrintResult {
+    requested_count:number
+    queued_count:number
+    already_queued_count:number
+    already_queued_asset_codes:string[]
+    recently_printed_count:number
+    skipped_recent_count:number
+}
+
 export interface CreateInventoryItemRequest {
     name:string
     description?:string|null
@@ -615,4 +640,11 @@ export interface CreateInventoryItemRequest {
     needs_label:boolean
     asset_code_prefix?:string|null
     attribute_schema?:InventoryAttributeSchema|null
+}
+
+export interface ValidateInventoryItemAssetCodePrefixResponse {
+    valid:boolean
+    available:boolean
+    normalized:string
+    message:string
 }

@@ -34,8 +34,11 @@ groups:
       edit_inventory: routes.api_v1.private.inventory.edit_inventory
       archive_inventory: routes.api_v1.private.inventory.archive_inventory
       activate_inventory: routes.api_v1.private.inventory.activate_inventory
+      lock_inventory: routes.api_v1.private.inventory.lock_inventory
+      unlock_inventory: routes.api_v1.private.inventory.unlock_inventory
       create_inventory_item: routes.api_v1.private.inventory.create_inventory_item
       update_inventory_item: routes.api_v1.private.inventory.update_inventory_item
+      validate_inventory_item_asset_code_prefix: routes.api_v1.private.inventory.validate_inventory_item_asset_code_prefix
       archive_inventory_item: routes.api_v1.private.inventory.archive_inventory_item
       activate_inventory_item: routes.api_v1.private.inventory.activate_inventory_item
       create_inventory_entry: routes.api_v1.private.inventory.create_inventory_entry
@@ -45,6 +48,7 @@ groups:
       add_inventory_entry_quantity: routes.api_v1.private.inventory.add_inventory_entry_quantity
       set_inventory_entry_quantity: routes.api_v1.private.inventory.set_inventory_entry_quantity
       delete_inventory_entry: routes.api_v1.private.inventory.delete_inventory_entry
+      preview_inventory_entry_labels: routes.api_v1.private.inventory.preview_inventory_entry_labels
       print_inventory_entry_labels: routes.api_v1.private.inventory.print_inventory_entry_labels
       print_inventory_container_label: routes.api_v1.private.inventory.print_inventory_container_label
       create_inventory_container: routes.api_v1.private.inventory.create_inventory_container

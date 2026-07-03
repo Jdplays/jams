@@ -57,11 +57,17 @@
                     <input
                         id="inventory-item-asset-prefix"
                         class="form-control text-uppercase"
-                        maxlength="20"
-                        pattern="[A-Za-z0-9]+"
+                        minlength="3"
+                        maxlength="3"
+                        pattern="[A-Z0-9]{3}"
                         placeholder="PI5"
                     >
-                    <div class="form-hint">Codes will be generated as PI5-001, PI5-002 and so on.</div>
+                    <div class="form-hint">
+                        Codes will be generated as
+                        <span id="inventory-item-asset-prefix-example">PI5-001, PI5-002</span>
+                        and so on.
+                    </div>
+                    <div id="inventory-item-asset-prefix-validation" class="form-hint"></div>
                     <label class="form-check form-switch mt-3">
                         <input id="inventory-item-needs-label" class="form-check-input" type="checkbox">
                         <span class="form-check-label">Ask for an individual label for each asset</span>

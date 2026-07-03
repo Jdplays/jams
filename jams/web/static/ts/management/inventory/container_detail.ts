@@ -22,6 +22,10 @@ let entriesGrid:GridApi<InventoryItemEntry>
 let assetsGrid:GridApi<InventoryAsset>
 let containerSSE:SSEManager<InventoryContainerDetail>
 
+function canEditCurrentInventory():boolean {
+    return canManageInventories && !currentDetail?.inventory?.locked
+}
+
 function errorMessage(error:any):string {
     return error.responseJSON?.description
         ?? error.responseJSON?.message
@@ -36,7 +40,7 @@ function setText(id:string, value:string|number) {
 }
 
 function buildQuantityEditor(entry:InventoryItemEntry):HTMLElement {
-    if (!canManageInventories || entry.item?.is_asset) {
+    if (!canEditCurrentInventory() || entry.item?.is_asset) {
         const value = document.createElement("span")
         value.textContent = String(entry.quantity)
         if (entry.item?.is_asset) {
@@ -92,7 +96,7 @@ function buildAssetActions(asset:InventoryAsset):HTMLElement {
     actions.appendChild(view)
 
     const entry = currentDetail.entries.find(candidate => candidate.asset_ids.includes(asset.id))
-    if (canManageInventories && entry) {
+    if (canEditCurrentInventory() && entry) {
         const remove = document.createElement("button")
         remove.type = "button"
         remove.classList.add("btn", "btn-sm", "btn-outline-danger")
@@ -209,6 +213,8 @@ function render(detail:InventoryContainerDetail) {
     setText("container-entry-count", detail.summary.entry_count)
     setText("container-total-count", detail.summary.total_count)
     setText("container-asset-count", detail.summary.asset_count)
+    document.getElementById("container-edit-link")
+        ?.classList.toggle("d-none", Boolean(detail.inventory?.locked))
     entriesGrid.setGridOption("rowData", detail.entries)
     assetsGrid.setGridOption("rowData", detail.assets)
 }

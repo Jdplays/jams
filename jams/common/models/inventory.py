@@ -14,6 +14,7 @@ class Inventory(db.Model):
     date = Column(Date, nullable=False, default=lambda: datetime.now(UTC).date())
     coordinator_id = Column(Integer, ForeignKey('user.id'), nullable=True)
     active = Column(Boolean(), nullable=False, default=True)
+    locked = Column(Boolean(), nullable=False, default=False, server_default='false')
 
     user = relationship('User')
 
@@ -22,12 +23,19 @@ class Inventory(db.Model):
         self.date = date or datetime.now(UTC).date()
         self.coordinator_id = coordinator_id
         self.active = True
+        self.locked = False
 
     def activate(self):
         self.active = True
 
     def archive(self):
         self.active = False
+
+    def lock(self):
+        self.locked = True
+
+    def unlock(self):
+        self.locked = False
 
     @classmethod
     def current(cls):
@@ -44,7 +52,8 @@ class Inventory(db.Model):
             'name': self.name,
             'date': self.date.isoformat(),
             'coordinator_id': self.coordinator_id,
-            'active': self.active
+            'active': self.active,
+            'locked': self.locked,
         }
 
 class InventoryItem(db.Model):
@@ -55,7 +64,7 @@ class InventoryItem(db.Model):
     description = Column(String(512), nullable=True)
     type = Column(String(100), nullable=False, default=InventoryItemType.PHYSICAL.name, server_default=InventoryItemType.PHYSICAL.name)
     is_asset = Column(Boolean(), nullable=False, default=False, server_default='false')
-    asset_code_prefix = Column(String(20), nullable=True, unique=True)
+    asset_code_prefix = Column(String(3), nullable=True, unique=True)
     needs_label = Column(Boolean(), nullable=False, default=False, server_default='false')
     archived = Column(Boolean(), nullable=False, default=False, server_default='false')
     attribute_schema: Mapped[dict] = mapped_column(JSONB, nullable=True, default=dict)
@@ -301,6 +310,7 @@ class InventoryAsset(db.Model):
                 'container_id': entry.container_id,
                 'container_name': entry.container.name if entry.container else None,
                 'linked_at': link.created_at.isoformat() if link.created_at else None,
+                'inventory_locked': entry.inventory.locked,
             })
 
         return sorted(
@@ -428,7 +438,7 @@ class InventoryAssetLog(db.Model):
         self.user_id = user_id
 
     def to_dict(self):
-        user = self.user.public_info() if self.user else None
+        user = self.user.public_info_dict() if self.user else None
         return {
             'id': self.id,
             'inventory_asset_id': self.inventory_asset_id,

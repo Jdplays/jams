@@ -53,9 +53,12 @@ import {
     InventoryAsset,
     InventoryAssetLog,
     InventoryAssetState,
+    InventoryLabelPrintPreview,
+    InventoryLabelPrintResult,
     CreateInventoryEntryRequest,
     CreateInventoryContainerRequest,
     CreateInventoryItemRequest,
+    ValidateInventoryItemAssetCodePrefixResponse,
     ValidateInventoryEntryAssetsResponse
 } from "@global/endpoints_interfaces";
 import { formatDate } from "./helper";
@@ -2900,6 +2903,28 @@ export function activateInventory(inventory_id:number):Promise<ApiResponse<Inven
     })
 }
 
+export function lockInventory(inventoryId:number):Promise<ApiResponse<Inventory>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: `${baseURL}/inventory/${inventoryId}/lock`,
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function unlockInventory(inventoryId:number):Promise<ApiResponse<Inventory>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: `${baseURL}/inventory/${inventoryId}/unlock`,
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
 export function getInventoryDetail(inventoryId:number):Promise<ApiResponse<InventoryDetail>> {
     return new Promise((resolve, reject) => {
         $.ajax({
@@ -2936,6 +2961,25 @@ export function getInventoryItem(itemId:number):Promise<InventoryItem> {
     return new Promise((resolve, reject) => {
         $.ajax({
             url: `${baseURL}/inventory/items/${itemId}`,
+            type: 'GET',
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function validateInventoryItemAssetCodePrefix(
+    value:string,
+    excludeItemId?:number|null
+):Promise<ValidateInventoryItemAssetCodePrefixResponse> {
+    const params = new URLSearchParams({ value })
+    if (excludeItemId != null) {
+        params.set("exclude_item_id", String(excludeItemId))
+    }
+
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/items/validate-asset-code-prefix?${params}`,
             type: 'GET',
             success: resolve,
             error: reject,
@@ -3118,14 +3162,34 @@ export function deleteInventoryEntry(entryId:number):Promise<ApiResponse<Invento
 
 export function printInventoryEntryLabels(
     entryId:number,
-    force = false
-):Promise<ApiResponse<{queued_count:number}>> {
+    recentMode:"reject"|"skip"|"include" = "reject",
+    assetIds?:number[]
+):Promise<ApiResponse<InventoryLabelPrintResult>> {
     return new Promise((resolve, reject) => {
         $.ajax({
             url: `${baseURL}/inventory/entry/${entryId}/print-labels`,
             type: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify({ force }),
+            data: JSON.stringify({
+                recent_mode: recentMode,
+                asset_ids: assetIds,
+            }),
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function previewInventoryEntryLabels(
+    entryId:number,
+    assetIds?:number[]
+):Promise<{data:InventoryLabelPrintPreview}> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/entry/${entryId}/print-labels/preview`,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ asset_ids: assetIds }),
             success: resolve,
             error: reject,
         })

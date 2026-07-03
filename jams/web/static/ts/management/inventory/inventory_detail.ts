@@ -8,8 +8,11 @@ import {
     getInventoryDetail,
     getInventoryItems,
     getUser,
+    lockInventory,
+    previewInventoryEntryLabels,
     printInventoryEntryLabels,
     updateInventoryEntry,
+    unlockInventory,
     validateInventoryEntryAssets,
 } from "@global/endpoints"
 import {
@@ -38,11 +41,80 @@ let containers:InventoryContainer[] = []
 let inventorySSE:SSEManager<InventoryDetail>
 let assetValidationSequence = 0
 let selectedContainerFilterId:number|null = null
+let inventoryLocked = false
+
+function canEditInventory():boolean {
+    return canManageInventories && !inventoryLocked
+}
 
 function getErrorMessage(error:any):string {
     return error.responseJSON?.message
         ?? error.responseJSON?.description
         ?? "An unknown error occurred"
+}
+
+function labelCount(count:number):string {
+    return `${count} ${count === 1 ? "label" : "labels"}`
+}
+
+type PrintModalChoice = "confirm"|"secondary"|"cancel"
+
+interface PrintModalOptions {
+    title:string
+    message:string
+    tone?:"primary"|"warning"
+    icon?:"printer"|"alert-triangle"
+    confirmText:string
+    confirmClass?:string
+    secondaryText?:string
+    secondaryClass?:string
+    cancelText?:string
+}
+
+function showPrintModal(options:PrintModalOptions):Promise<PrintModalChoice> {
+    const tone = options.tone ?? "primary"
+    const icon = options.icon ?? "printer"
+    const modal = $("#inventory-print-modal")
+    const status = document.getElementById("inventory-print-modal-status")!
+    const iconElement = document.getElementById("inventory-print-modal-icon")!
+    const confirm = document.getElementById(
+        "inventory-print-modal-confirm"
+    ) as HTMLButtonElement
+    const secondary = document.getElementById(
+        "inventory-print-modal-secondary"
+    ) as HTMLButtonElement
+    const secondaryContainer = document.getElementById(
+        "inventory-print-modal-secondary-container"
+    )!
+    const cancel = document.getElementById(
+        "inventory-print-modal-cancel"
+    ) as HTMLButtonElement
+
+    status.className = `modal-status bg-${tone}`
+    iconElement.className = `ti ti-${icon} icon mb-2 text-${tone} icon-lg`
+    document.getElementById("inventory-print-modal-title")!.textContent = options.title
+    document.getElementById("inventory-print-modal-message")!.textContent = options.message
+    confirm.textContent = options.confirmText
+    confirm.className = `btn ${options.confirmClass ?? "btn-primary"} w-100`
+    secondary.textContent = options.secondaryText ?? ""
+    secondary.className = `btn ${options.secondaryClass ?? "btn-outline-warning"} w-100`
+    secondaryContainer.classList.toggle("d-none", !options.secondaryText)
+    cancel.textContent = options.cancelText ?? "Cancel"
+
+    return new Promise(resolve => {
+        let choice:PrintModalChoice = "cancel"
+        confirm.onclick = () => {
+            choice = "confirm"
+            modal.modal("hide")
+        }
+        secondary.onclick = () => {
+            choice = "secondary"
+            modal.modal("hide")
+        }
+        modal.off(".inventoryPrint")
+        modal.one("hidden.bs.modal.inventoryPrint", () => resolve(choice))
+        modal.modal("show")
+    })
 }
 
 function setText(id:string, value:string|number) {
@@ -54,6 +126,7 @@ function setText(id:string, value:string|number) {
 
 async function renderInventoryHeader(detail:InventoryDetail) {
     const inventory = detail.inventory
+    inventoryLocked = inventory.locked
 
     setText("inventory-name", inventory.name)
     setText("inventory-date", inventory.date)
@@ -72,6 +145,31 @@ async function renderInventoryHeader(detail:InventoryDetail) {
         statusBadge.classList.add(statusClass)
         statusBadge.textContent = detail.status
     }
+
+    const lockButton = document.getElementById(
+        "inventory-lock-button"
+    ) as HTMLButtonElement|null
+    if (lockButton) {
+        lockButton.className = inventoryLocked
+            ? "btn btn-sm btn-outline-primary"
+            : "btn btn-sm btn-outline-secondary"
+        lockButton.innerHTML = inventoryLocked
+            ? '<i class="ti ti-lock-open me-1"></i><span>Unlock inventory</span>'
+            : '<i class="ti ti-lock me-1"></i><span>Lock inventory</span>'
+    }
+
+    document.getElementById("inventory-locked-notice")
+        ?.classList.toggle("d-none", !inventoryLocked)
+    document.getElementById("inventory-primary-action")
+        ?.classList.toggle("d-none", inventoryLocked)
+    document.getElementById("inventory-entry-panel")
+        ?.classList.toggle("d-none", inventoryLocked)
+    document.querySelector<HTMLButtonElement>(".jolt-status-widget .jolt-test-print")
+        ?.classList.toggle("d-none", inventoryLocked)
+    if (inventoryLocked) {
+        setEntryFormOpen(false)
+    }
+    entriesGridApi?.refreshCells({ force: true })
 
     const coordinatorContainer = document.getElementById("inventory-coordinator")
     if (!coordinatorContainer) {
@@ -131,14 +229,6 @@ function changeEntryFormQuantity(amount:number) {
     const current = Number(input.value) || 1
     input.value = String(Math.max(1, current + amount))
     input.dispatchEvent(new Event("input", { bubbles: true }))
-}
-
-function wasPrintedWithinLastDay(value?:string|null):boolean {
-    if (!value) {
-        return false
-    }
-    const printedAt = new Date(value).getTime()
-    return Number.isFinite(printedAt) && Date.now() - printedAt < 24 * 60 * 60 * 1000
 }
 
 function filterEntriesForContainer(containerId:number, containerName:string) {
@@ -219,7 +309,7 @@ function renderContainerSummary(entries:InventoryItemEntry[]) {
 }
 
 function buildQuantityEditor(entry:InventoryItemEntry):HTMLElement {
-    if (!canManageInventories || entry.item?.is_asset) {
+    if (!canEditInventory() || entry.item?.is_asset) {
         const text = document.createElement("span")
         text.textContent = String(entry.quantity)
         if (entry.item?.is_asset) {
@@ -329,27 +419,56 @@ function buildEntryActions(entry:InventoryItemEntry):HTMLElement {
     viewAssets.innerHTML = '<i class="ti ti-barcode me-1"></i>View assets'
     wrapper.appendChild(viewAssets)
 
+    if (canEditInventory()) {
     const printLabels = document.createElement("button")
     printLabels.type = "button"
     printLabels.classList.add("btn", "btn-sm", "btn-outline-secondary")
     printLabels.disabled = entry.asset_count === 0
     printLabels.innerHTML = '<i class="ti ti-printer me-1"></i>Print labels'
     printLabels.onclick = async () => {
-        const recentCount = entry.assets.filter(
-            asset => wasPrintedWithinLastDay(asset.last_printed_at)
-        ).length
-        const recentWarning = recentCount
-            ? ` ${recentCount} of these labels were printed within the last 24 hours.`
-            : ""
-        if (!window.confirm(
-            `Are you sure you want to print ${entry.asset_count} labels?${recentWarning}`
-        )) {
-            return
-        }
         printLabels.disabled = true
 
         try {
-            const response = await printInventoryEntryLabels(entry.id, true)
+            const previewResponse = await previewInventoryEntryLabels(entry.id)
+            const preview = previewResponse.data
+            const queuedMessage = preview.queued_count
+                ? ` ${labelCount(preview.queued_count)} already in the queue will be skipped.`
+                : ""
+            const confirmation = await showPrintModal({
+                title: `Print ${labelCount(preview.total_count)}?`,
+                message: `Are you sure you want to continue?${queuedMessage}`,
+                confirmText: "Print labels",
+            })
+            if (confirmation !== "confirm") {
+                return
+            }
+
+            let recentMode:"reject"|"skip"|"include" = "reject"
+            if (preview.recent_count) {
+                const recentConfirmation = await showPrintModal({
+                    title: `${labelCount(preview.recent_count)} recently printed`,
+                    message: (
+                        `${preview.recent_count} of these labels were printed `
+                        + "within the last hour. What would you like to do?"
+                    ),
+                    tone: "warning",
+                    icon: "alert-triangle",
+                    confirmText: "Print remaining",
+                    secondaryText: "Reprint all",
+                })
+                if (recentConfirmation === "confirm") {
+                    recentMode = "skip"
+                } else if (recentConfirmation === "secondary") {
+                    recentMode = "include"
+                } else {
+                    return
+                }
+            }
+
+            const response = await printInventoryEntryLabels(
+                entry.id,
+                recentMode
+            )
             successToast(response.message)
         } catch (error) {
             errorToast(getErrorMessage(error))
@@ -358,8 +477,9 @@ function buildEntryActions(entry:InventoryItemEntry):HTMLElement {
         }
     }
     wrapper.appendChild(printLabels)
+    }
 
-    if (canManageInventories) {
+    if (canEditInventory()) {
         const remove = document.createElement("button")
         remove.type = "button"
         remove.classList.add("btn", "btn-sm", "btn-outline-danger")
@@ -436,7 +556,7 @@ function initialiseEntriesGrid() {
                 headerName: "Container",
                 valueGetter: params => params.data?.container?.name ?? "No container",
                 cellRenderer: (params:any) => {
-                    if (!params.data || !canManageInventories) {
+                    if (!params.data || !canEditInventory()) {
                         return params.value
                     }
                     return buildContainerSelect(params.data)
@@ -532,10 +652,21 @@ function renderExistingAssetValidation(
             : "alert-secondary"
     element.classList.add(colour)
 
-    const list = details.length
-        ? `<ul class="mb-0 mt-2">${details.map(detail => `<li>${detail}</li>`).join("")}</ul>`
-        : ""
-    element.innerHTML = `<div>${message}</div>${list}`
+    element.replaceChildren()
+    const messageElement = document.createElement("div")
+    messageElement.textContent = message
+    element.appendChild(messageElement)
+
+    if (details.length) {
+        const list = document.createElement("ul")
+        list.classList.add("mb-0", "mt-2")
+        for (const detail of details) {
+            const item = document.createElement("li")
+            item.textContent = detail
+            list.appendChild(item)
+        }
+        element.appendChild(list)
+    }
 }
 
 function getSelectedItem():InventoryItem|undefined {
@@ -562,6 +693,12 @@ function updateAssetSelectionForm() {
     const startInput = document.getElementById(
         "inventory-existing-asset-start-index"
     ) as HTMLInputElement
+
+    const assetCodePrefix = selectedItem?.asset_code_prefix ?? "ABC"
+    codesInput.placeholder = (
+        `1, 2, 5 or ${assetCodePrefix}-001, `
+        + `${assetCodePrefix}-002, ${assetCodePrefix}-005`
+    )
 
     const assetMode = selectedRadioValue(".inventory-asset-mode") ?? "create"
     const selectionMode = selectedRadioValue(
@@ -920,6 +1057,36 @@ async function loadContainers() {
     entriesGridApi?.refreshCells({ force: true })
 }
 
+async function offerToPrintNewAssetLabels(entry:InventoryItemEntry) {
+    const newAssets = entry.new_assets ?? []
+    if (!newAssets.length) {
+        return
+    }
+
+    const confirmation = await showPrintModal({
+        title: `Print ${labelCount(newAssets.length)} now?`,
+        message: "The new assets were added successfully. Print their labels now?",
+        confirmText: "Print labels",
+        cancelText: "Not now",
+    })
+    if (confirmation !== "confirm") {
+        return
+    }
+
+    try {
+        const response = await printInventoryEntryLabels(
+            entry.id,
+            "reject",
+            newAssets.map(asset => asset.id)
+        )
+        successToast(response.message)
+    } catch (error) {
+        errorToast(
+            `Assets were added, but labels were not queued: ${getErrorMessage(error)}`
+        )
+    }
+}
+
 async function submitInventoryEntry(event:SubmitEvent) {
     event.preventDefault()
     const form = event.currentTarget as HTMLFormElement
@@ -956,6 +1123,9 @@ async function submitInventoryEntry(event:SubmitEvent) {
 
         const response = await createInventoryEntry(inventoryId, data)
         successToast(response.message)
+        if (selectedItem.needs_label && response.data.new_assets?.length) {
+            await offerToPrintNewAssetLabels(response.data)
+        }
         quantityInput.value = "1"
         ;(document.getElementById(
             "inventory-existing-asset-codes"
@@ -975,6 +1145,34 @@ async function submitInventoryEntry(event:SubmitEvent) {
     }
 }
 
+async function toggleInventoryLock() {
+    const button = document.getElementById(
+        "inventory-lock-button"
+    ) as HTMLButtonElement|null
+    if (!button) {
+        return
+    }
+
+    const action = inventoryLocked ? "unlock" : "lock"
+    if (!window.confirm(`Are you sure you want to ${action} this inventory?`)) {
+        return
+    }
+
+    button.disabled = true
+    try {
+        const response = inventoryLocked
+            ? await unlockInventory(inventoryId)
+            : await lockInventory(inventoryId)
+        successToast(response.message)
+        const detail = await getInventoryDetail(inventoryId)
+        renderInventoryDetail(detail.data)
+    } catch (error) {
+        errorToast(getErrorMessage(error))
+    } finally {
+        button.disabled = false
+    }
+}
+
 async function initialisePage() {
     const page = document.getElementById("inventory-detail-page")
     if (!page) {
@@ -985,6 +1183,9 @@ async function initialisePage() {
     canManageInventories = page.dataset.canManageInventories === "true"
 
     initialiseEntriesGrid()
+
+    document.getElementById("inventory-lock-button")
+        ?.addEventListener("click", toggleInventoryLock)
 
     if (canManageInventories) {
         await Promise.all([loadItems(), loadContainers()])

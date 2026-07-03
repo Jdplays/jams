@@ -4,6 +4,7 @@ import re
 
 from flask import Blueprint, g, request, jsonify, abort
 from flask_security import current_user
+from sqlalchemy.exc import IntegrityError
 
 from common.models import (
     db,
@@ -46,6 +47,23 @@ def require_inventory_management_access():
         return
     if not helper.user_has_access_to_page("edit_inventory"):
         abort(403, description="You do not have permission to manage inventories")
+
+
+def require_inventory_unlocked(inventory):
+    if inventory.locked:
+        abort(
+            409,
+            description=(
+                "This inventory is locked and cannot be changed. "
+                "Unlock it before making changes."
+            )
+        )
+
+
+def require_asset_inventory_unlocked(asset):
+    entry = asset.current_inventory_item_entry
+    if entry:
+        require_inventory_unlocked(entry.inventory)
 
 
 def current_user_id():
@@ -96,18 +114,50 @@ def get_inventory_label_contact(inventory):
     return coordinator.display_name, contact_email
 
 
-def queue_asset_labels(assets, entry=None, force=False):
+def get_recently_printed_assets(assets, hours):
+    recent_cutoff = (
+        datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=hours)
+    )
+    return [
+        asset for asset in assets
+        if asset.last_printed_at and asset.last_printed_at >= recent_cutoff
+    ]
+
+
+def build_asset_label_print_preview(assets, recent_hours=1):
     assets = list(assets)
+    recently_printed = get_recently_printed_assets(assets, recent_hours)
+
+    from common.integrations import jolt
+    queued_codes = jolt.get_active_asset_label_codes(assets)
+
+    return {
+        'total_count': len(assets),
+        'recent_count': len(recently_printed),
+        'recent_asset_codes': sorted(
+            asset.asset_code for asset in recently_printed
+        ),
+        'queued_count': len(queued_codes),
+        'queued_asset_codes': sorted(queued_codes),
+    }
+
+
+def queue_asset_labels(
+    assets,
+    entry=None,
+    recent_mode='reject',
+    recent_hours=24
+):
+    assets = list({asset.id: asset for asset in assets}.values())
 
     if not get_config_value(ConfigType.JOLT_ENABLED):
         abort(409, description="JOLT integration is not enabled")
 
-    recent_cutoff = datetime.now(UTC).replace(tzinfo=None) - timedelta(days=1)
-    recently_printed = [
-        asset for asset in assets
-        if asset.last_printed_at and asset.last_printed_at >= recent_cutoff
-    ]
-    if recently_printed and not force:
+    if recent_mode not in {'reject', 'skip', 'include'}:
+        abort(400, description="recent_mode must be reject, skip or include")
+
+    recently_printed = get_recently_printed_assets(assets, recent_hours)
+    if recently_printed and recent_mode == 'reject':
         abort(
             409,
             description=(
@@ -116,17 +166,37 @@ def queue_asset_labels(assets, entry=None, force=False):
             )
         )
 
+    assets_to_print = (
+        [asset for asset in assets if asset not in recently_printed]
+        if recent_mode == 'skip'
+        else assets
+    )
+    if not assets_to_print:
+        return jsonify({
+            'message': 'No labels were queued; all were recently printed',
+            'data': {
+                'requested_count': len(assets),
+                'queued_count': 0,
+                'already_queued_count': 0,
+                'already_queued_asset_codes': [],
+                'recently_printed_count': len(recently_printed),
+                'skipped_recent_count': len(recently_printed),
+            }
+        })
+
     contact_name, contact_email = get_asset_label_contact(entry)
 
     from common.integrations import jolt
-    status, message = jolt.add_assets_to_print_queue(
-        assets,
-        contact_name,
-        contact_email
+    status, message, queued_assets, already_queued_codes = (
+        jolt.add_assets_to_print_queue(
+            assets_to_print,
+            contact_name,
+            contact_email
+        )
     )
 
     if status:
-        for asset in assets:
+        for asset in queued_assets:
             add_asset_log(
                 asset,
                 message="Asset label queued for printing",
@@ -137,7 +207,14 @@ def queue_asset_labels(assets, entry=None, force=False):
     return jsonify({
         'message': message,
         'data': {
-            'queued_count': len(assets) if status else 0
+            'requested_count': len(assets),
+            'queued_count': len(queued_assets) if status else 0,
+            'already_queued_count': len(already_queued_codes),
+            'already_queued_asset_codes': already_queued_codes,
+            'recently_printed_count': len(recently_printed),
+            'skipped_recent_count': (
+                len(recently_printed) if recent_mode == 'skip' else 0
+            ),
         }
     }), 200 if status else 400
 
@@ -157,6 +234,7 @@ def add_asset_log(asset, message=None, state=None, note=None):
 
 
 def link_asset_to_entry(asset, entry, message=None):
+    require_inventory_unlocked(entry.inventory)
     db.session.add(InventoryAssetEntry(
         inventory_asset_id=asset.id,
         inventory_item_entry_id=entry.id
@@ -165,6 +243,40 @@ def link_asset_to_entry(asset, entry, message=None):
         asset,
         message=message or f"Added to inventory {entry.inventory.name}",
         state=asset.status
+    )
+
+
+def move_asset_to_entry(asset, entry):
+    current_entry = asset.current_inventory_item_entry
+    require_inventory_unlocked(entry.inventory)
+    if current_entry:
+        require_inventory_unlocked(current_entry.inventory)
+    if current_entry and current_entry.id == entry.id:
+        abort(409, description="Asset is already assigned to this inventory entry")
+
+    # Within one inventory an asset can only belong to one active entry. Remove
+    # the previous link so entry counts and container membership stay aligned.
+    # Links to older inventories remain as history.
+    if current_entry and current_entry.inventory_id == entry.inventory_id:
+        current_links = InventoryAssetEntry.query.filter_by(
+            inventory_asset_id=asset.id,
+            inventory_item_entry_id=current_entry.id
+        ).all()
+        for link in current_links:
+            db.session.delete(link)
+
+        if current_entry.quantity > 0:
+            current_entry.quantity -= 1
+        if current_entry.quantity == 0 and not current_entry.removed:
+            current_entry.remove()
+
+    if asset.id not in {linked_asset.id for linked_asset in entry.assets}:
+        entry.quantity += 1
+
+    link_asset_to_entry(
+        asset,
+        entry,
+        message=f"Moved to inventory {entry.inventory.name}"
     )
 
 
@@ -195,6 +307,7 @@ def archive_asset_if_unassigned(asset, excluding_entry_id=None):
 
 
 def remove_asset_from_entry(asset, entry, message=None, note=None):
+    require_inventory_unlocked(entry.inventory)
     links = (
         InventoryAssetEntry.query
         .filter_by(
@@ -238,7 +351,7 @@ VALID_INVENTORY_ITEM_TYPES = {item_type.name for item_type in InventoryItemType}
 VALID_INVENTORY_ASSET_STATES = {
     asset_state.name for asset_state in InventoryAssetState
 }
-ASSET_CODE_PREFIX_PATTERN = re.compile(r"^[A-Z0-9]{1,20}$")
+ASSET_CODE_PREFIX_PATTERN = re.compile(r"^[A-Z0-9]{3}$")
 
 
 def validate_asset_state(value):
@@ -333,7 +446,10 @@ def validate_inventory_item_configuration(data, item=None):
         if not ASSET_CODE_PREFIX_PATTERN.fullmatch(prefix):
             abort(
                 400,
-                description="asset_code_prefix must contain 1-20 letters or numbers"
+                description=(
+                    "asset_code_prefix must contain exactly 3 uppercase "
+                    "letters or numbers"
+                )
             )
 
         duplicate_prefix = InventoryItem.query.filter_by(
@@ -353,6 +469,24 @@ def validate_inventory_item_configuration(data, item=None):
             abort(409, description="Asset code prefix cannot change after assets exist")
 
     return item_type, is_asset, prefix, needs_label
+
+
+def commit_inventory_item(asset_code_prefix, item_id=None):
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+
+        duplicate_prefix = InventoryItem.query.filter_by(
+            asset_code_prefix=asset_code_prefix
+        )
+        if item_id is not None:
+            duplicate_prefix = duplicate_prefix.filter(
+                InventoryItem.id != item_id
+            )
+        if asset_code_prefix and duplicate_prefix.first():
+            abort(409, description="asset_code_prefix is already in use")
+        raise
 
 
 def validate_asset_label(item, value):
@@ -594,6 +728,7 @@ def add_inventory():
 def edit_inventory(inventory_id):
     require_inventory_management_access()
     inventory = Inventory.query.filter_by(id=inventory_id).first_or_404()
+    require_inventory_unlocked(inventory)
     data = get_request_json_object()
 
     if "name" in data:
@@ -633,6 +768,7 @@ def edit_inventory(inventory_id):
 def archive_inventory(inventory_id):
     require_inventory_management_access()
     inventory = Inventory.query.filter_by(id=inventory_id).first_or_404()
+    require_inventory_unlocked(inventory)
     inventory.archive()
     db.session.commit()
     publish_inventory_update(inventory_ids=[inventory.id])
@@ -645,11 +781,46 @@ def archive_inventory(inventory_id):
 def activate_inventory(inventory_id):
     require_inventory_management_access()
     inventory = Inventory.query.filter_by(id=inventory_id).first_or_404()
+    require_inventory_unlocked(inventory)
     inventory.activate()
     db.session.commit()
     publish_inventory_update(inventory_ids=[inventory.id])
 
     return jsonify({'message': 'The inventory has been successfully activated'})
+
+
+@bp.route('/inventory/<int:inventory_id>/lock', methods=['POST'])
+@api_route
+def lock_inventory(inventory_id):
+    require_inventory_management_access()
+    inventory = Inventory.query.filter_by(id=inventory_id).first_or_404()
+    if inventory.locked:
+        abort(409, description="The inventory is already locked")
+
+    inventory.lock()
+    db.session.commit()
+    publish_inventory_update(inventory_ids=[inventory.id])
+    return jsonify({
+        'message': 'The inventory has been locked',
+        'data': inventory.to_dict(),
+    })
+
+
+@bp.route('/inventory/<int:inventory_id>/unlock', methods=['POST'])
+@api_route
+def unlock_inventory(inventory_id):
+    require_inventory_management_access()
+    inventory = Inventory.query.filter_by(id=inventory_id).first_or_404()
+    if not inventory.locked:
+        abort(409, description="The inventory is already unlocked")
+
+    inventory.unlock()
+    db.session.commit()
+    publish_inventory_update(inventory_ids=[inventory.id])
+    return jsonify({
+        'message': 'The inventory has been unlocked',
+        'data': inventory.to_dict(),
+    })
 
 
 #------------------------------------------ ITEM ------------------------------------------#
@@ -678,14 +849,48 @@ def get_inventory_item(item_id):
 @api_route
 def get_inventory_item_field(item_id, field):
     item = InventoryItem.query.filter_by(id=item_id).first_or_404()
-    allowed_fields = list(item.to_dict().keys())
-    if field not in allowed_fields:
+    item_data = item.to_dict()
+    if field not in item_data:
         abort(404, description=f"Field '{field}' not found or allowed")
-    value = getattr(item, field)
-    if field == 'date':
-        value = helper.convert_datetime_to_local_timezone(value)
-    
-    return jsonify({field: str(value)})
+
+    return jsonify({field: item_data[field]})
+
+
+@bp.route('/inventory/items/validate-asset-code-prefix', methods=['GET'])
+@api_route
+def validate_inventory_item_asset_code_prefix():
+    require_inventory_management_access()
+
+    prefix = request.args.get('value', '').strip().upper()
+    exclude_item_id = request.args.get('exclude_item_id', type=int)
+
+    if not ASSET_CODE_PREFIX_PATTERN.fullmatch(prefix):
+        return jsonify({
+            'valid': False,
+            'available': False,
+            'normalized': prefix,
+            'message': 'Use exactly 3 uppercase letters or numbers'
+        })
+
+    duplicate_prefix = InventoryItem.query.filter_by(
+        asset_code_prefix=prefix
+    )
+    if exclude_item_id is not None:
+        duplicate_prefix = duplicate_prefix.filter(
+            InventoryItem.id != exclude_item_id
+        )
+
+    available = duplicate_prefix.first() is None
+    return jsonify({
+        'valid': True,
+        'available': available,
+        'normalized': prefix,
+        'message': (
+            'Asset code prefix is available'
+            if available
+            else 'Asset code prefix is already in use'
+        )
+    })
 
 @bp.route('/inventory/items', methods=['POST'])
 @api_route
@@ -719,7 +924,7 @@ def create_inventory_item():
     )
 
     db.session.add(item)
-    db.session.commit()
+    commit_inventory_item(asset_code_prefix)
     publish_inventory_update(refresh_all=True)
 
     return jsonify(item.to_dict()), 201
@@ -763,7 +968,7 @@ def update_inventory_item(item_id):
 
         item.attribute_schema = new_schema
 
-    db.session.commit()
+    commit_inventory_item(asset_code_prefix, item.id)
     publish_inventory_update(refresh_all=True)
 
     return jsonify(item.to_dict())
@@ -818,14 +1023,11 @@ def get_inventory_entry(entry_id):
 @api_route
 def get_inventory_entry_field(entry_id, field):
     entry = InventoryItemEntry.query.filter_by(id=entry_id).first_or_404()
-    allowed_fields = list(entry.to_dict().keys())
-    if field not in allowed_fields:
+    entry_data = entry.to_dict()
+    if field not in entry_data:
         abort(404, description=f"Field '{field}' not found or allowed")
-    value = getattr(entry, field)
-    if field == 'date':
-        value = helper.convert_datetime_to_local_timezone(value)
-    
-    return jsonify({field: str(value)})
+
+    return jsonify({field: entry_data[field]})
 
 
 def parse_inventory_quantity(value):
@@ -1081,9 +1283,9 @@ def create_or_increment_inventory_entry(
         db.session.add(entry)
         db.session.flush()
 
+    new_assets = []
     if item.is_asset and create_new_assets:
         first_index = next_asset_code_index(item)
-        new_assets = []
         for offset, index in enumerate(range(first_index, first_index + quantity)):
             asset = InventoryAsset(
                 asset_code=f"{item.asset_code_prefix}-{index:03d}",
@@ -1101,7 +1303,7 @@ def create_or_increment_inventory_entry(
         for asset in existing_assets or []:
             link_asset_to_entry(asset, entry)
 
-    return entry, created
+    return entry, created, new_assets
 
 
 @bp.route('/inventory/entry', methods=['POST'])
@@ -1141,6 +1343,7 @@ def create_inventory_entry():
         abort(409, description="Archived items cannot be added to an inventory")
 
     inventory = Inventory.query.filter_by(id=inventory_id).first_or_404()
+    require_inventory_unlocked(inventory)
 
     container = None
     if container_id is not None:
@@ -1161,7 +1364,7 @@ def create_inventory_entry():
         data
     )
 
-    entry, created = create_or_increment_inventory_entry(
+    entry, created, new_assets = create_or_increment_inventory_entry(
         inventory=inventory,
         item=item,
         container=container,
@@ -1174,7 +1377,17 @@ def create_inventory_entry():
     db.session.commit()
     publish_entry_update(entry)
 
-    return jsonify(serialize_inventory_entry(entry)), 201 if created else 200
+    response = serialize_inventory_entry(entry)
+    response['new_assets'] = [
+        {
+            'id': asset.id,
+            'asset_code': asset.asset_code,
+            'label': asset.label,
+            'last_printed_at': None,
+        }
+        for asset in new_assets
+    ]
+    return jsonify(response), 201 if created else 200
 
 
 @bp.route('/inventory/<int:inventory_id>/entries', methods=['POST'])
@@ -1182,6 +1395,7 @@ def create_inventory_entry():
 def create_inventory_entry_for_inventory(inventory_id):
     require_inventory_management_access()
     inventory = Inventory.query.filter_by(id=inventory_id).first_or_404()
+    require_inventory_unlocked(inventory)
     data = get_request_json_object()
 
     inventory_item_id = data.get("inventory_item_id")
@@ -1223,7 +1437,7 @@ def create_inventory_entry_for_inventory(inventory_id):
         attributes,
         data
     )
-    entry, created = create_or_increment_inventory_entry(
+    entry, created, new_assets = create_or_increment_inventory_entry(
         inventory=inventory,
         item=item,
         container=container,
@@ -1237,13 +1451,24 @@ def create_inventory_entry_for_inventory(inventory_id):
     db.session.commit()
     publish_entry_update(entry)
 
+    entry_data = serialize_inventory_entry(entry)
+    entry_data['new_assets'] = [
+        {
+            'id': asset.id,
+            'asset_code': asset.asset_code,
+            'label': asset.label,
+            'last_printed_at': None,
+        }
+        for asset in new_assets
+    ]
+
     return jsonify({
         "message": (
             "Inventory entry has been successfully added"
             if created
             else "Existing inventory entry quantity has been updated"
         ),
-        "data": serialize_inventory_entry(entry)
+        "data": entry_data
     }), 201 if created else 200
 
 
@@ -1290,14 +1515,22 @@ def validate_inventory_entry_assets(inventory_id):
 def update_inventory_entry(entry_id):
     require_inventory_management_access()
     entry = InventoryItemEntry.query.filter_by(id=entry_id).first_or_404()
+    require_inventory_unlocked(entry.inventory)
     data = get_request_json_object()
 
-    inventory_id = data.get("inventory_id", entry.inventory_id)
+    inventory_id = validate_integer_id(
+        data.get("inventory_id", entry.inventory_id),
+        "inventory_id"
+    )
     item_id = data.get("inventory_item_id", entry.inventory_item_id)
     quantity = data.get("quantity", entry.quantity)
     container_id = data.get("container_id", entry.container_id)
     previous_inventory_id = entry.inventory_id
     previous_container_id = entry.container_id
+    destination_inventory = Inventory.query.filter_by(
+        id=inventory_id
+    ).first_or_404()
+    require_inventory_unlocked(destination_inventory)
 
     if isinstance(quantity, bool):
         abort(400, description="Quantity must be an integer")
@@ -1378,6 +1611,7 @@ def update_inventory_entry(entry_id):
 def add_inventory_entry_quantity(entry_id):
     require_inventory_management_access()
     entry = InventoryItemEntry.query.filter_by(id=entry_id).first_or_404()
+    require_inventory_unlocked(entry.inventory)
     data = get_request_json_object()
 
     if entry.inventory_item and entry.inventory_item.is_asset:
@@ -1414,6 +1648,7 @@ def add_inventory_entry_quantity(entry_id):
 def set_inventory_entry_quantity(entry_id):
     require_inventory_management_access()
     entry = InventoryItemEntry.query.filter_by(id=entry_id).first_or_404()
+    require_inventory_unlocked(entry.inventory)
     data = get_request_json_object()
 
     if entry.inventory_item and entry.inventory_item.is_asset:
@@ -1448,6 +1683,7 @@ def set_inventory_entry_quantity(entry_id):
 def delete_inventory_entry(entry_id):
     require_inventory_management_access()
     entry = InventoryItemEntry.query.filter_by(id=entry_id).first_or_404()
+    require_inventory_unlocked(entry.inventory)
 
     asset_links = (
         InventoryAssetEntry.query
@@ -1478,9 +1714,48 @@ def delete_inventory_entry(entry_id):
     })
 
 
-@bp.route('/inventory/entry/<int:entry_id>/print-labels', methods=['POST'])
+def get_entry_assets_for_label_print(entry, data):
+    asset_ids = data.get('asset_ids')
+    if asset_ids is None:
+        return entry.assets
+    if not isinstance(asset_ids, list) or any(
+        isinstance(asset_id, bool) or not isinstance(asset_id, int)
+        for asset_id in asset_ids
+    ):
+        abort(400, description="asset_ids must be a list of integers")
+
+    assets_by_id = {asset.id: asset for asset in entry.assets}
+    unknown_ids = sorted(set(asset_ids) - set(assets_by_id))
+    if unknown_ids:
+        abort(
+            400,
+            description=(
+                "Assets do not belong to this inventory entry: "
+                + ", ".join(str(asset_id) for asset_id in unknown_ids)
+            )
+        )
+    return [assets_by_id[asset_id] for asset_id in dict.fromkeys(asset_ids)]
+
+
+def get_asset_print_recent_mode(data):
+    recent_mode = data.get('recent_mode')
+    if recent_mode is not None:
+        if recent_mode not in {'reject', 'skip', 'include'}:
+            abort(400, description="recent_mode must be reject, skip or include")
+        return recent_mode
+
+    force = data.get('force', False)
+    if not isinstance(force, bool):
+        abort(400, description="force must be true or false")
+    return 'include' if force else 'reject'
+
+
+@bp.route(
+    '/inventory/entry/<int:entry_id>/print-labels/preview',
+    methods=['POST']
+)
 @api_route
-def print_inventory_entry_labels(entry_id):
+def preview_inventory_entry_labels(entry_id):
     require_inventory_management_access()
     entry = InventoryItemEntry.query.filter_by(id=entry_id).first_or_404()
 
@@ -1488,11 +1763,32 @@ def print_inventory_entry_labels(entry_id):
         abort(400, description="This entry is not asset tracked")
 
     data = get_request_json_object()
-    force = data.get("force", False)
-    if not isinstance(force, bool):
-        abort(400, description="force must be true or false")
+    assets = get_entry_assets_for_label_print(entry, data)
+    return jsonify({
+        'data': build_asset_label_print_preview(assets, recent_hours=1)
+    })
 
-    return queue_asset_labels(entry.assets, entry, force=force)
+
+@bp.route('/inventory/entry/<int:entry_id>/print-labels', methods=['POST'])
+@api_route
+def print_inventory_entry_labels(entry_id):
+    require_inventory_management_access()
+    entry = InventoryItemEntry.query.filter_by(id=entry_id).first_or_404()
+    require_inventory_unlocked(entry.inventory)
+
+    if not entry.inventory_item or not entry.inventory_item.is_asset:
+        abort(400, description="This entry is not asset tracked")
+
+    data = get_request_json_object()
+    assets = get_entry_assets_for_label_print(entry, data)
+    recent_mode = get_asset_print_recent_mode(data)
+
+    return queue_asset_labels(
+        assets,
+        entry,
+        recent_mode=recent_mode,
+        recent_hours=1
+    )
 
 #------------------------------------------ CONTAINER ------------------------------------------#
 
@@ -1779,7 +2075,8 @@ def print_inventory_asset_label(asset_id):
     return queue_asset_labels(
         [asset],
         asset.current_inventory_item_entry,
-        force=force
+        recent_mode='include' if force else 'reject',
+        recent_hours=24
     )
 
 
@@ -1788,6 +2085,7 @@ def print_inventory_asset_label(asset_id):
 def create_inventory_asset_log(asset_id):
     require_inventory_management_access()
     asset = InventoryAsset.query.filter_by(id=asset_id).first_or_404()
+    require_asset_inventory_unlocked(asset)
     data = get_request_json_object()
 
     message = validate_optional_string(data.get("message"), "message", 512)
@@ -1854,11 +2152,15 @@ def create_inventory_asset():
     if existing_asset:
         abort(409, description="asset_code already exists")
 
+    attributes = helper.validate_entry_attributes(item, data.get('attributes'))
+    if entry and (attributes or None) != (entry.attributes or None):
+        abort(400, description="Asset attributes must match the inventory entry")
+
     asset = InventoryAsset(
         asset_code=asset_code,
         inventory_item_id=inventory_item_id,
         label=validate_asset_label(item, data.get('label')),
-        attributes=helper.validate_entry_attributes(item, data.get('attributes')),
+        attributes=attributes,
         status=validate_asset_state(
             data.get('status', InventoryAssetState.ACTIVE.name)
         ),
@@ -1869,6 +2171,8 @@ def create_inventory_asset():
     db.session.flush()
     add_asset_log(asset, message="Asset created", state=asset.status)
     if entry:
+        require_inventory_unlocked(entry.inventory)
+        entry.quantity += 1
         link_asset_to_entry(asset, entry)
     db.session.commit()
     publish_inventory_update(refresh_all=True)
@@ -1881,6 +2185,7 @@ def create_inventory_asset():
 def update_inventory_asset(asset_id):
     require_inventory_management_access()
     asset = InventoryAsset.query.filter_by(id=asset_id).first_or_404()
+    require_asset_inventory_unlocked(asset)
     data = get_request_json_object()
 
     inventory_item_id = data.get("inventory_item_id", asset.inventory_item_id)
@@ -1925,11 +2230,7 @@ def update_inventory_asset(asset_id):
         if entry is None:
             abort(400, description="inventory_item_entry_id cannot be null")
         if asset.current_inventory_item_entry_id != entry.id:
-            link_asset_to_entry(
-                asset,
-                entry,
-                message=f"Moved to inventory {entry.inventory.name}"
-            )
+            move_asset_to_entry(asset, entry)
 
     if "attributes" in data:
         item = InventoryItem.query.filter_by(id=inventory_item_id).first_or_404()
@@ -1958,6 +2259,7 @@ def update_inventory_asset(asset_id):
 def update_inventory_asset_state(asset_id):
     require_inventory_management_access()
     asset = InventoryAsset.query.filter_by(id=asset_id).first_or_404()
+    require_asset_inventory_unlocked(asset)
     data = get_request_json_object()
 
     if "state" not in data:
@@ -1986,11 +2288,7 @@ def move_inventory_asset(asset_id):
         asset.inventory_item_id,
         data["inventory_item_entry_id"]
     )
-    link_asset_to_entry(
-        asset,
-        entry,
-        message=f"Moved to inventory {entry.inventory.name}"
-    )
+    move_asset_to_entry(asset, entry)
     db.session.commit()
     publish_inventory_update(refresh_all=True)
 
@@ -2035,6 +2333,7 @@ def remove_inventory_asset_from_entry(asset_id, entry_id):
 def archive_inventory_asset(asset_id):
     require_inventory_management_access()
     asset = InventoryAsset.query.filter_by(id=asset_id).first_or_404()
+    require_asset_inventory_unlocked(asset)
     data = get_request_json_object()
     set_asset_state(
         asset,
@@ -2052,6 +2351,7 @@ def archive_inventory_asset(asset_id):
 def activate_inventory_asset(asset_id):
     require_inventory_management_access()
     asset = InventoryAsset.query.filter_by(id=asset_id).first_or_404()
+    require_asset_inventory_unlocked(asset)
     set_asset_state(asset, InventoryAssetState.ACTIVE.name)
     db.session.commit()
     publish_inventory_update(refresh_all=True)

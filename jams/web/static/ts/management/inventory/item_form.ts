@@ -2,16 +2,18 @@ import {
     createInventoryItem,
     getInventoryItem,
     updateInventoryItem,
+    validateInventoryItemAssetCodePrefix,
 } from "@global/endpoints"
 import {
     CreateInventoryItemRequest,
     InventoryAttributeDefinition,
     InventoryAttributeOption,
 } from "@global/endpoints_interfaces"
-import { errorToast, successToast } from "@global/helper"
+import { debounce, errorToast, successToast } from "@global/helper"
 
 let itemId:number|null = null
 let returnTo = "/private/management/inventory/items"
+let assetPrefixValidationSequence = 0
 
 function errorMessage(error:any):string {
     return error.responseJSON?.description
@@ -21,6 +23,100 @@ function errorMessage(error:any):string {
 
 function normaliseKey(value:string):string {
     return value.trim().toLowerCase().replace(/\s+/g, "_")
+}
+
+function setAssetPrefixValidation(message:string, state:"idle"|"valid"|"invalid") {
+    const validation = document.getElementById(
+        "inventory-item-asset-prefix-validation"
+    )
+    if (!validation) {
+        return
+    }
+
+    validation.textContent = message
+    validation.classList.toggle("text-success", state === "valid")
+    validation.classList.toggle("text-danger", state === "invalid")
+}
+
+function updateAssetPrefixExample() {
+    const prefixInput = document.getElementById(
+        "inventory-item-asset-prefix"
+    ) as HTMLInputElement
+    const prefix = prefixInput.value || "PI5"
+    const example = document.getElementById(
+        "inventory-item-asset-prefix-example"
+    )
+    if (example) {
+        example.textContent = `${prefix}-001, ${prefix}-002`
+    }
+}
+
+async function validateAssetCodePrefix():Promise<boolean> {
+    const prefixInput = document.getElementById(
+        "inventory-item-asset-prefix"
+    ) as HTMLInputElement
+    const isAsset = (document.getElementById(
+        "inventory-item-is-asset"
+    ) as HTMLInputElement).checked
+    const sequence = ++assetPrefixValidationSequence
+
+    prefixInput.setCustomValidity("")
+    if (!isAsset) {
+        setAssetPrefixValidation("", "idle")
+        return true
+    }
+
+    const prefix = prefixInput.value
+    if (!/^[A-Z0-9]{3}$/.test(prefix)) {
+        const message = "Use exactly 3 uppercase letters or numbers"
+        prefixInput.setCustomValidity(message)
+        setAssetPrefixValidation(prefix ? message : "", "invalid")
+        return false
+    }
+
+    setAssetPrefixValidation("Checking availability...", "idle")
+
+    try {
+        const result = await validateInventoryItemAssetCodePrefix(prefix, itemId)
+        if (sequence !== assetPrefixValidationSequence) {
+            return false
+        }
+
+        if (!result.valid || !result.available) {
+            prefixInput.setCustomValidity(result.message)
+            setAssetPrefixValidation(result.message, "invalid")
+            return false
+        }
+
+        setAssetPrefixValidation(result.message, "valid")
+        return true
+    } catch (error) {
+        if (sequence === assetPrefixValidationSequence) {
+            setAssetPrefixValidation(
+                "Availability could not be checked; it will be checked when saved.",
+                "idle"
+            )
+        }
+        return true
+    }
+}
+
+const validateAssetCodePrefixDebounced = debounce(
+    () => validateAssetCodePrefix(),
+    350
+)
+
+function handleAssetPrefixInput() {
+    const prefixInput = document.getElementById(
+        "inventory-item-asset-prefix"
+    ) as HTMLInputElement
+    prefixInput.value = prefixInput.value
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, "")
+        .slice(0, 3)
+    prefixInput.setCustomValidity("")
+    updateAssetPrefixExample()
+    validateAssetCodePrefixDebounced()
 }
 
 function updateEmptyState() {
@@ -58,7 +154,11 @@ function updateAssetTrackingForm() {
         typeSelect.value = "PHYSICAL"
     } else {
         needsLabel.checked = false
+        prefixInput.setCustomValidity("")
+        setAssetPrefixValidation("", "idle")
     }
+
+    updateAssetPrefixExample()
 }
 
 function addValueRow(container:HTMLElement, option?:InventoryAttributeOption) {
@@ -241,6 +341,7 @@ async function loadItem() {
     ;(document.getElementById("inventory-item-asset-prefix") as HTMLInputElement).value = item.asset_code_prefix ?? ""
     ;(document.getElementById("inventory-item-needs-label") as HTMLInputElement).checked = item.needs_label
     updateAssetTrackingForm()
+    await validateAssetCodePrefix()
 
     item.attribute_schema?.attributes
         ?.filter(attribute => attribute.active !== false)
@@ -301,6 +402,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         ?.addEventListener("click", () => addAttributeCard())
     document.getElementById("inventory-item-is-asset")
         ?.addEventListener("change", updateAssetTrackingForm)
+    document.getElementById("inventory-item-asset-prefix")
+        ?.addEventListener("input", handleAssetPrefixInput)
     document.getElementById("inventory-item-form")
         ?.addEventListener("submit", submit)
 

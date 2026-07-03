@@ -36,7 +36,15 @@
                                         <span id="inventory-date"></span>
                                     </div>
                                 </div>
-                                <span id="inventory-status" class="badge"></span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span id="inventory-status" class="badge"></span>
+                                    {% if can_manage_inventories %}
+                                    <button id="inventory-lock-button" type="button" class="btn btn-sm btn-outline-secondary">
+                                        <i class="ti ti-lock me-1"></i>
+                                        <span>Lock inventory</span>
+                                    </button>
+                                    {% endif %}
+                                </div>
                             </div>
                             <div class="d-flex flex-wrap align-items-center gap-3 mt-3 text-secondary">
                                 <div>
@@ -62,8 +70,13 @@
         {% include 'widgets/jolt_status.html' %}
     </div>
 
+    <div id="inventory-locked-notice" class="alert alert-secondary d-none" role="status">
+        <i class="ti ti-lock me-2"></i>
+        This inventory is locked and read-only. Unlock it to make changes.
+    </div>
+
     {% if can_manage_inventories %}
-    <div class="inventory-primary-action d-grid d-md-none mb-3">
+    <div id="inventory-primary-action" class="inventory-primary-action d-grid d-md-none mb-3">
         <button id="open-entry-form" type="button" class="btn btn-primary btn-lg">
             <i class="ti ti-plus me-1"></i>Add item
         </button>
@@ -170,7 +183,7 @@
                                         id="inventory-existing-asset-codes"
                                         class="form-control"
                                         rows="2"
-                                        placeholder="1, 2, 5 or PI5-001, PI5-002, PI5-005"
+                                        placeholder="1, 2, 5 or ABC-001, ABC-002, ABC-005"
                                     ></textarea>
                                     <div class="form-hint">Separate values with commas, spaces or new lines. Quantity is calculated from this list.</div>
                                 </div>
@@ -259,6 +272,41 @@
         </div>
         <div class="card-body p-0">
             <div id="inventory-entries-grid" class="ag-theme-quartz" style="min-height: 420px"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal modal-blur fade" id="inventory-print-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div id="inventory-print-modal-status" class="modal-status bg-primary"></div>
+            <div class="modal-body text-center py-4">
+                <i id="inventory-print-modal-icon" class="ti ti-printer icon mb-2 text-primary icon-lg"></i>
+                <h3 id="inventory-print-modal-title"></h3>
+                <div id="inventory-print-modal-message" class="text-secondary"></div>
+            </div>
+            <div class="modal-footer">
+                <div class="w-100">
+                    <div class="row g-2">
+                        <div class="col-12 col-sm">
+                            <button id="inventory-print-modal-confirm" type="button" class="btn btn-primary w-100">
+                                Print labels
+                            </button>
+                        </div>
+                        <div id="inventory-print-modal-secondary-container" class="col-12 col-sm d-none">
+                            <button id="inventory-print-modal-secondary" type="button" class="btn btn-outline-warning w-100">
+                                Reprint all
+                            </button>
+                        </div>
+                        <div class="col-12 col-sm">
+                            <button id="inventory-print-modal-cancel" type="button" class="btn btn-link link-secondary w-100" data-bs-dismiss="modal">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
