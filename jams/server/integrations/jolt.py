@@ -11,21 +11,8 @@ from common.util.enums import (
     JOLTPrintQueueStatus,
     JOLTRequestType,
 )
-from common.configuration import ConfigType, get_config_value
 
 from server import WSS
-
-config_items = [
-    ConfigType.JOLT_ENABLED,
-    ConfigType.JOLT_API_KEY_ID
-]
-
-def config_dict():
-    dict = {}
-    for item in  config_items:
-        dict[item.name] = get_config_value(item)
-    
-    return dict
 
 # The main JOLT loop that will run when JOLT websocket clients are connected
 def websocket_loop():

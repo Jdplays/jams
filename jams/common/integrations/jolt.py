@@ -10,6 +10,18 @@ from common.util import helper
 from common.redis import utils
 
 
+config_items = [
+    ConfigType.JOLT_ENABLED,
+    ConfigType.JOLT_API_KEY_ID
+]
+
+def config_dict():
+    dict = {}
+    for item in  config_items:
+        dict[item.name] = get_config_value(item)
+    
+    return dict
+
 def last_healthcheck():
     now = datetime.now(UTC).replace(tzinfo=None)
     target_datetime = now - timedelta(seconds=40)
