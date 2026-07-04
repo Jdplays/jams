@@ -86,6 +86,24 @@
                 </tr>
                 <tr>
                     <td class="setting-column">
+                        <p>Asset Label Contact Email</p>
+                    </td>
+                    <td class="description-column">
+                        <label class="text-secondary">Email printed on inventory asset labels. The contact name comes from the current inventory coordinator.</label>
+                    </td>
+                    <td class="value-column">
+                        <input
+                            id="asset-label-contact-email"
+                            class="form-control"
+                            type="email"
+                            placeholder="inventory@example.com"
+                            oninput="checkIfContentUpdated()"
+                        >
+                    </td>
+                    <td>N/A</td>
+                </tr>
+                <tr>
+                    <td class="setting-column">
                         <p>Volunteer Streaks</p>
                     </td>
                     <td class="description-column">
@@ -203,4 +221,3 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/admin/settings/settings_general.css') }}">
 
 {% endblock %}
-

@@ -1,4 +1,4 @@
-import { AttendeeSignup, DiscordBotStartupResponse, DiscordGuild, LiveEventStats, Session, VolunteerSignup } from "./endpoints_interfaces";
+import { AttendeeSignup, DiscordBotStartupResponse, DiscordGuild, InventoryContainerDetail, InventoryDetail, LiveEventStats, Session, VolunteerSignup } from "./endpoints_interfaces";
 import { buildQueryString } from "./helper";
 import { QueryStringData } from "./interfaces";
 import { SSEManager } from "./sse_manager";
@@ -47,6 +47,24 @@ export function startupDiscordIntegrationGuildList():SSEManager<DiscordBotStartu
     const url = `${baseURL}/integrations/discord/setup-status`
 
     const sse = new SSEManager<DiscordBotStartupResponse>(url)
+    sse.start()
+    return sse
+}
+
+export function getLiveInventoryDetail(inventoryId:number):SSEManager<InventoryDetail> {
+    const url = `${baseURL}/inventory/${inventoryId}/entries/stream`
+
+    const sse = new SSEManager<InventoryDetail>(url)
+    sse.start()
+    return sse
+}
+
+export function getLiveInventoryContainerDetail(
+    containerId:number
+):SSEManager<InventoryContainerDetail> {
+    const url = `${baseURL}/inventory/containers/${containerId}/stream`
+
+    const sse = new SSEManager<InventoryContainerDetail>(url)
     sse.start()
     return sse
 }

@@ -56,12 +56,6 @@ def get_user(user_id):
     else:
         return jsonify(user.public_info_dict())
 
-@bp.route('/users/<int:user_id>/public_info', methods=['GET'])
-@api_route
-def get_user_public_info(user_id):
-    user = User.query.filter_by(id=user_id).first_or_404()
-    return jsonify(user.public_info_dict())
-
 @bp.route('/users/public_info', methods=['GET'])
 @api_route
 def get_users_public_info():

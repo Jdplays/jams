@@ -23,7 +23,6 @@ const entries = glob.sync('./jams/web/static/ts/**/*.ts').reduce((entries, entry
 
 export default {
   watch: true,
-  devtool: 'source-map',
   entry: entries, // Adjust to your TypeScript entry point
   output: {
     filename: '[name].js',
@@ -53,7 +52,7 @@ export default {
   devtool: false,
   plugins: [
     new SourceMapDevToolPlugin({
-      append: '\n//# sourceMappingURL=/static/js/[url]',
+      append: '\n//# sourceMappingURL=[url]',
       filename: '[name].js.map',
     }),
     //new BundleAnalyzerPlugin()

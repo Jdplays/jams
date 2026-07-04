@@ -2,23 +2,17 @@ import json
 from sqlalchemy import and_, or_
 from datetime import datetime, timedelta, UTC
 
-from common.models import db, JOLTPrintQueue
-from common.util.enums import JOLTPrintQueueStatus, JOLTRequestType, JOLTHealthCheckStatus, APIKeyType
-from common.configuration import ConfigType, get_config_value
+from common.models import db, InventoryAsset, InventoryAssetLog, JOLTPrintQueue
+from common.redis.utils import publish_inventory_update
+from common.util.enums import (
+    APIKeyType,
+    JOLTHealthCheckStatus,
+    JOLTPrintJobType,
+    JOLTPrintQueueStatus,
+    JOLTRequestType,
+)
 
 from server import WSS
-
-config_items = [
-    ConfigType.JOLT_ENABLED,
-    ConfigType.JOLT_API_KEY_ID
-]
-
-def config_dict():
-    dict = {}
-    for item in  config_items:
-        dict[item.name] = get_config_value(item)
-    
-    return dict
 
 # The main JOLT loop that will run when JOLT websocket clients are connected
 def websocket_loop():
@@ -126,9 +120,33 @@ def process_job_status_update(message, status):
         error = body['ERROR']
     print_job = JOLTPrintQueue.query.filter_by(id=id).first()
     if print_job:
+        already_printed = print_job.status == JOLTPrintQueueStatus.PRINTED.name
         print_job.status = status.name
         print_job.error = error
+
+        printed_asset = None
+        if (
+            status == JOLTPrintQueueStatus.PRINTED
+            and not already_printed
+            and print_job.type == JOLTPrintJobType.ASSET_LABEL.name
+        ):
+            asset_code = print_job.data.get('asset_id')
+            printed_asset = InventoryAsset.query.filter_by(
+                asset_code=asset_code
+            ).first()
+            if printed_asset:
+                printed_asset.last_printed_at = datetime.now(UTC).replace(
+                    tzinfo=None
+                )
+                db.session.add(InventoryAssetLog(
+                    inventory_asset_id=printed_asset.id,
+                    message="Asset label printed",
+                    state=printed_asset.status
+                ))
+
         db.session.commit()
+        if printed_asset:
+            publish_inventory_update(refresh_all=True)
 
 # A method that builds a print request message for JOLT
 def build_print_request_message(print_job):

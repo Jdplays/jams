@@ -99,6 +99,21 @@ def test_print():
         return jsonify({'message': message}), 200
     else:
         return jsonify({'message': message}), 400
+
+
+@bp.route('/test_asset_print', methods=['POST'])
+@api_route
+def test_asset_print():
+    success, message = jolt.add_asset_test_to_print_queue()
+
+    return jsonify({'message': message}), 200 if success else 400
+
+
+@bp.route('/test_container_print', methods=['POST'])
+@api_route
+def test_container_print():
+    success, message = jolt.add_container_test_to_print_queue()
+    return jsonify({'message': message}), 200 if success else 400
     
 @bp.route('/config', methods=['GET'])
 @api_route

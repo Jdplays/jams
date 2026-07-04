@@ -11,8 +11,12 @@ function checkIfContentUpdated() {
     const locationSelect = document.getElementById('loc-select') as HTMLSelectElement
     const streaksSwitch = document.getElementById('toggle-streaks-switch') as HTMLInputElement
     const eventPrefixFilterInput = document.getElementById('prefix-filter-input') as HTMLInputElement
+    const assetLabelContactEmail = document.getElementById('asset-label-contact-email') as HTMLInputElement
 
-    if (locationSelect.value !== currentConfig.TIMEZONE || streaksSwitch.checked !== currentConfig.STREAKS_ENABLED || (eventPrefixFilterInput.value ?? '') !== (currentConfig.EVENT_PREFIX_FILTER ?? '')) {
+    if (locationSelect.value !== currentConfig.TIMEZONE
+        || streaksSwitch.checked !== currentConfig.STREAKS_ENABLED
+        || (eventPrefixFilterInput.value ?? '') !== (currentConfig.EVENT_PREFIX_FILTER ?? '')
+        || assetLabelContactEmail.value !== (currentConfig.ASSET_LABEL_CONTACT_EMAIL ?? '')) {
         saveButton.disabled = false
     } else {
         saveButton.disabled = true
@@ -97,10 +101,12 @@ function populateStreaksSection() {
     const streaksSwitch = document.getElementById('toggle-streaks-switch') as HTMLInputElement
     const refreshButton = document.getElementById('streak-refresh-button') as HTMLButtonElement
     const eventPrefixFilterInput = document.getElementById('prefix-filter-input') as HTMLInputElement
+    const assetLabelContactEmail = document.getElementById('asset-label-contact-email') as HTMLInputElement
 
     streaksSwitch.checked = currentConfig.STREAKS_ENABLED
     refreshButton.disabled = !currentConfig.STREAKS_ENABLED
-    eventPrefixFilterInput.value = currentConfig.EVENT_PREFIX_FILTER
+    eventPrefixFilterInput.value = currentConfig.EVENT_PREFIX_FILTER ?? ''
+    assetLabelContactEmail.value = currentConfig.ASSET_LABEL_CONTACT_EMAIL ?? ''
 }
 
 async function setupPage() {
@@ -117,11 +123,16 @@ function generalConfigSaveOnClick() {
     const locationSelect = document.getElementById('loc-select') as HTMLSelectElement
     const streaksSwitch = document.getElementById('toggle-streaks-switch') as HTMLInputElement
     const eventPrefixFilterInput = document.getElementById('prefix-filter-input') as HTMLInputElement
+    const assetLabelContactEmail = document.getElementById('asset-label-contact-email') as HTMLInputElement
+    if (!assetLabelContactEmail.reportValidity()) {
+        return
+    }
 
     const data:GeneralConfig = {
         TIMEZONE: locationSelect.value,
         STREAKS_ENABLED: streaksSwitch.checked,
-        EVENT_PREFIX_FILTER: eventPrefixFilterInput.value
+        EVENT_PREFIX_FILTER: eventPrefixFilterInput.value,
+        ASSET_LABEL_CONTACT_EMAIL: assetLabelContactEmail.value,
     }
 
     editGeneralConfig(data).then((response) => {
@@ -130,8 +141,8 @@ function generalConfigSaveOnClick() {
 
         populateStreaksSection()
         checkIfContentUpdated()
-    }).catch( () => {
-        errorToast()
+    }).catch((error) => {
+        errorToast(error.responseJSON?.description ?? 'Unable to update configuration')
     }) 
 }
 

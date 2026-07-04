@@ -1,5 +1,5 @@
 from flask_security import current_user
-from flask import abort, redirect, request, current_app, url_for, jsonify
+from flask import abort, g, redirect, request, current_app, url_for, jsonify
 from flask_login.config import EXEMPT_METHODS
 from functools import wraps
 
@@ -107,6 +107,7 @@ def api_route(func):
             if not api_key_valid:
                 return jsonify({'error': 'API key does not have access to the requested resource'}), 403
             else:
+                g.api_key_authenticated = True
                 return func(*args, **kwargs)
         else:
             return rbac_api(func, *args, **kwargs)

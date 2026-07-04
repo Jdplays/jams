@@ -1,4 +1,6 @@
 # API is for serving data to TypeScript/JavaScript
+import re
+
 from flask import Blueprint, abort, jsonify, request
 from flask_security import login_required, current_user
 
@@ -35,7 +37,10 @@ def get_general_config():
         'SERVER_VERSION': server_version,
         ConfigType.TIMEZONE.name: get_config_value(ConfigType.TIMEZONE),
         ConfigType.STREAKS_ENABLED.name: get_config_value(ConfigType.STREAKS_ENABLED),
-        ConfigType.EVENT_PREFIX_FILTER.name: get_config_value(ConfigType.EVENT_PREFIX_FILTER)
+        ConfigType.EVENT_PREFIX_FILTER.name: get_config_value(ConfigType.EVENT_PREFIX_FILTER),
+        ConfigType.ASSET_LABEL_CONTACT_EMAIL.name: get_config_value(
+            ConfigType.ASSET_LABEL_CONTACT_EMAIL
+        ),
     }
 
     return jsonify({'data': data})
@@ -64,11 +69,29 @@ def edit_general_config():
 
     event_prefix_filter = data.get(ConfigType.EVENT_PREFIX_FILTER.name)
     set_config_value(ConfigType.EVENT_PREFIX_FILTER, event_prefix_filter)
+
+    if ConfigType.ASSET_LABEL_CONTACT_EMAIL.name in data:
+        asset_label_contact_email = data[ConfigType.ASSET_LABEL_CONTACT_EMAIL.name]
+        if not isinstance(asset_label_contact_email, str):
+            abort(400, description="Asset label contact email must be a string")
+        asset_label_contact_email = asset_label_contact_email.strip()
+        if asset_label_contact_email and not re.fullmatch(
+            r"[^@\s]+@[^@\s]+\.[^@\s]+",
+            asset_label_contact_email
+        ):
+            abort(400, description="Asset label contact email is invalid")
+        set_config_value(
+            ConfigType.ASSET_LABEL_CONTACT_EMAIL,
+            asset_label_contact_email
+        )
     
     config = {
         ConfigType.TIMEZONE.name: get_config_value(ConfigType.TIMEZONE),
         ConfigType.STREAKS_ENABLED.name: get_config_value(ConfigType.STREAKS_ENABLED),
-        ConfigType.EVENT_PREFIX_FILTER.name: get_config_value(ConfigType.EVENT_PREFIX_FILTER)
+        ConfigType.EVENT_PREFIX_FILTER.name: get_config_value(ConfigType.EVENT_PREFIX_FILTER),
+        ConfigType.ASSET_LABEL_CONTACT_EMAIL.name: get_config_value(
+            ConfigType.ASSET_LABEL_CONTACT_EMAIL
+        ),
     } 
 
     return jsonify({'data': config})

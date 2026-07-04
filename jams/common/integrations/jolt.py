@@ -4,10 +4,23 @@ from uuid import uuid4
 from sqlalchemy import and_
 
 from common.models import db, JOLTHealthCheck, APIKey, APIKeyEndpoint, Endpoint, JOLTPrintQueue
+from common.configuration import ConfigType, get_config_value
 from common.util.enums import APIKeyType, JOLTHealthCheckStatus, JOLTPrintJobType, JOLTPrintQueueStatus
 from common.util import helper
 from common.redis import utils
 
+
+config_items = [
+    ConfigType.JOLT_ENABLED,
+    ConfigType.JOLT_API_KEY_ID
+]
+
+def config_dict():
+    dict = {}
+    for item in  config_items:
+        dict[item.name] = get_config_value(item)
+    
+    return dict
 
 def last_healthcheck():
     now = datetime.now(UTC).replace(tzinfo=None)
@@ -30,6 +43,9 @@ def print_queue_open():
         return True
 
     next_event = helper.get_next_event()
+    if not next_event:
+        return False
+
     now = datetime.now(UTC)
 
     event_date = next_event.date.date()
@@ -75,6 +91,131 @@ def add_attendee_to_print_queue(attendee):
 
     return (True, 'Attendee label successfully added to queue')
 
+
+def get_active_asset_label_codes(assets):
+    asset_codes = [asset.asset_code for asset in assets]
+    if not asset_codes:
+        return set()
+
+    active_jobs = JOLTPrintQueue.query.filter(
+        and_(
+            JOLTPrintQueue.type == JOLTPrintJobType.ASSET_LABEL.name,
+            JOLTPrintQueue.data['asset_id'].as_string().in_(asset_codes),
+            JOLTPrintQueue.status.in_([
+                JOLTPrintQueueStatus.QUEUED.name,
+                JOLTPrintQueueStatus.RECEIVED.name,
+            ])
+        )
+    ).all()
+    return {
+        job.data.get('asset_id')
+        for job in active_jobs
+        if job.data.get('asset_id')
+    }
+
+
+def add_assets_to_print_queue(assets, contact_name, contact_email):
+    assets = list(assets)
+
+    if not assets:
+        return (False, 'There are no asset labels to print', [], [])
+
+    if not print_queue_open():
+        return (False, 'Print Queue is not currently open', [], [])
+
+    app_url = get_config_value(ConfigType.APP_URL)
+    if not app_url:
+        return (False, 'JAMS application URL is not configured', [], [])
+
+    queued_codes = get_active_asset_label_codes(assets)
+    assets_to_queue = [
+        asset for asset in assets
+        if asset.asset_code not in queued_codes
+    ]
+    if not assets_to_queue:
+        count = len(queued_codes)
+        return (
+            True,
+            (
+                'Asset label is already queued'
+                if count == 1
+                else f'All {count} asset labels are already queued'
+            ),
+            [],
+            sorted(queued_codes),
+        )
+
+    for asset in assets_to_queue:
+        body = {
+            'item_name': asset.inventory_item.name,
+            'item_label': asset.label,
+            'contact_name': contact_name,
+            'contact_email': contact_email,
+            'asset_id': asset.asset_code,
+            'qr_url': (
+                f'{app_url}/private/management/inventory/assets/{asset.id}'
+            )
+        }
+        db.session.add(
+            JOLTPrintQueue(body, JOLTPrintJobType.ASSET_LABEL.name)
+        )
+
+    db.session.commit()
+
+    count = len(assets_to_queue)
+    message = (
+        'Asset label successfully added to queue'
+        if count == 1
+        else f'{count} asset labels successfully added to queue'
+    )
+    if queued_codes:
+        message += (
+            f'; {len(queued_codes)} already queued and skipped'
+        )
+    return (True, message, assets_to_queue, sorted(queued_codes))
+
+
+def add_container_to_print_queue(
+    container,
+    inventory,
+    item_count,
+    asset_count,
+    contact_name,
+    contact_email
+):
+    if not print_queue_open():
+        return (False, 'Print Queue is not currently open')
+
+    app_url = get_config_value(ConfigType.APP_URL)
+    if not app_url:
+        return (False, 'JAMS application URL is not configured')
+
+    existing_job = JOLTPrintQueue.query.filter(
+        and_(
+            JOLTPrintQueue.type == JOLTPrintJobType.CONTAINER_LABEL.name,
+            JOLTPrintQueue.data['container_id'].as_integer() == container.id,
+            JOLTPrintQueue.status == JOLTPrintQueueStatus.QUEUED.name
+        )
+    ).first()
+    if existing_job:
+        return (False, 'A label for this container is already in the queue')
+
+    body = {
+        'container_id': container.id,
+        'container_name': container.name,
+        'item_count': item_count,
+        'asset_count': asset_count,
+        'contact_name': contact_name,
+        'contact_email': contact_email,
+        'qr_url': (
+            f'{app_url}/private/management/inventory/containers/{container.id}'
+        ),
+        'date': inventory.date.strftime('%d %b %Y'),
+    }
+    db.session.add(JOLTPrintQueue(body, JOLTPrintJobType.CONTAINER_LABEL.name))
+    db.session.commit()
+    return (True, 'Container label successfully added to queue')
+
 # Adds an attendee to the JOLT print queue
 def add_test_to_print_queue():
     if not print_queue_open():
@@ -97,6 +238,44 @@ def add_test_to_print_queue():
     db.session.commit()
 
     return (True, '"Print Test" Successfully queued')
+
+
+def add_asset_test_to_print_queue():
+    if not print_queue_open():
+        return (False, 'Print Queue is not currently open')
+
+    existing_job = JOLTPrintQueue.query.filter(
+        and_(
+            JOLTPrintQueue.type == JOLTPrintJobType.TEST_ASSET_LABEL.name,
+            JOLTPrintQueue.status == JOLTPrintQueueStatus.QUEUED.name
+        )
+    ).first()
+
+    if existing_job:
+        return (False, 'Another asset label print test is in the queue')
+
+    db.session.add(JOLTPrintQueue({}, JOLTPrintJobType.TEST_ASSET_LABEL.name))
+    db.session.commit()
+
+    return (True, 'Asset label print test successfully queued')
+
+
+def add_container_test_to_print_queue():
+    if not print_queue_open():
+        return (False, 'Print Queue is not currently open')
+
+    existing_job = JOLTPrintQueue.query.filter(
+        and_(
+            JOLTPrintQueue.type == JOLTPrintJobType.TEST_CONTAINER_LABEL.name,
+            JOLTPrintQueue.status == JOLTPrintQueueStatus.QUEUED.name
+        )
+    ).first()
+    if existing_job:
+        return (False, 'Another container label print test is in the queue')
+
+    db.session.add(JOLTPrintQueue({}, JOLTPrintJobType.TEST_CONTAINER_LABEL.name))
+    db.session.commit()
+    return (True, 'Container label print test successfully queued')
 
 
 def generate_api_token():

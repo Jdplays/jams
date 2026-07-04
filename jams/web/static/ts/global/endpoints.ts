@@ -42,7 +42,25 @@ import {
     GitHubReleaseResponse,
     EventMetadata,
     EventStats,
-    DiscordIntegrationConfig
+    DiscordIntegrationConfig,
+    Inventory,
+    InventorySummary,
+    CreateInventoryRequest,
+    InventoryItem,
+    InventoryContainer,
+    InventoryItemEntry,
+    InventoryDetail,
+    InventoryContainerDetail,
+    InventoryAsset,
+    InventoryAssetLog,
+    InventoryAssetState,
+    InventoryLabelPrintPreview,
+    InventoryLabelPrintResult,
+    CreateInventoryEntryRequest,
+    CreateInventoryContainerRequest,
+    CreateInventoryItemRequest,
+    ValidateInventoryItemAssetCodePrefixResponse,
+    ValidateInventoryEntryAssetsResponse
 } from "@global/endpoints_interfaces";
 import { formatDate } from "./helper";
 
@@ -2479,6 +2497,32 @@ export function sendJoltTestPrintRequest():Promise<string> {
     });
 }
 
+export function sendJoltAssetTestPrintRequest():Promise<string> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/jolt/test_asset_print`,
+            type: 'POST',
+            success: function (response) {
+                resolve(response.message)
+            },
+            error: reject,
+        })
+    })
+}
+
+export function sendJoltContainerTestPrintRequest():Promise<string> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/integrations/jolt/test_container_print`,
+            type: 'POST',
+            success: function (response) {
+                resolve(response.message)
+            },
+            error: reject,
+        })
+    })
+}
+
 // #endregion
 
 // #region Discord Integration
@@ -2776,5 +2820,564 @@ export function recalculateStreaks():Promise<ApiResponse<any>> {
             }
         });
     });
+}
+// #endregion
+
+// #region Inventory
+export function getAllInventory(
+    queryString:string|null = null
+):Promise<ApiMultiEntryResponse<Inventory[]>> {
+    return new Promise((resolve, reject) => {
+        let url = `${baseURL}/inventory`
+        if (queryString !== null) {
+            url += `?${queryString}`
+        }
+        $.ajax({
+            url,
+            type: 'GET',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        })
+    })
+}
+
+export function getInventory(inventory_id:number):Promise<Inventory> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/${inventory_id}`,
+            type: 'GET',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        })
+    })
+}
+
+export function getInventorySummary(inventory_id:number):Promise<ApiResponse<InventorySummary>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/${inventory_id}/summary`,
+            type: 'GET',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching data:', error);
+                reject(error)
+            }
+        })
+    })
+}
+
+export function createInventory(
+    data:CreateInventoryRequest
+):Promise<ApiResponse<Inventory>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory`,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function updateInventory(
+    inventoryId:number,
+    data:CreateInventoryRequest
+):Promise<ApiResponse<Inventory>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/${inventoryId}`,
+            type: 'PATCH',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function archiveInventory(inventory_id:number):Promise<ApiResponse<Inventory>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: `${baseURL}/inventory/${inventory_id}/archive`,
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error archiving inventory:', error)
+                reject(error)
+            }
+        })
+    })
+}
+
+export function activateInventory(inventory_id:number):Promise<ApiResponse<Inventory>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: `${baseURL}/inventory/${inventory_id}/activate`,
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error activating inventory:', error)
+                reject(error)
+            }
+        })
+    })
+}
+
+export function lockInventory(inventoryId:number):Promise<ApiResponse<Inventory>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: `${baseURL}/inventory/${inventoryId}/lock`,
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function unlockInventory(inventoryId:number):Promise<ApiResponse<Inventory>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: `${baseURL}/inventory/${inventoryId}/unlock`,
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function getInventoryDetail(inventoryId:number):Promise<ApiResponse<InventoryDetail>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/${inventoryId}/detail`,
+            type: 'GET',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching inventory detail:', error)
+                reject(error)
+            }
+        })
+    })
+}
+
+export function getInventoryItems():Promise<ApiMultiEntryResponse<InventoryItem[]>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/items?$all_rows=true&$order_by=name`,
+            type: 'GET',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching inventory items:', error)
+                reject(error)
+            }
+        })
+    })
+}
+
+export function getInventoryItem(itemId:number):Promise<InventoryItem> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/items/${itemId}`,
+            type: 'GET',
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function validateInventoryItemAssetCodePrefix(
+    value:string,
+    excludeItemId?:number|null
+):Promise<ValidateInventoryItemAssetCodePrefixResponse> {
+    const params = new URLSearchParams({ value })
+    if (excludeItemId != null) {
+        params.set("exclude_item_id", String(excludeItemId))
+    }
+
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/items/validate-asset-code-prefix?${params}`,
+            type: 'GET',
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function createInventoryItem(data:CreateInventoryItemRequest):Promise<InventoryItem> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/items`,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function updateInventoryItem(
+    itemId:number,
+    data:CreateInventoryItemRequest
+):Promise<InventoryItem> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/items/${itemId}`,
+            type: 'PATCH',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function archiveInventoryItem(itemId:number):Promise<ApiResponse<InventoryItem>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/items/${itemId}/archive`,
+            type: 'POST',
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function activateInventoryItem(itemId:number):Promise<ApiResponse<InventoryItem>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/items/${itemId}/activate`,
+            type: 'POST',
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function getInventoryContainers():Promise<ApiMultiEntryResponse<InventoryContainer[]>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/containers?$all_rows=true&$order_by=name`,
+            type: 'GET',
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error fetching inventory containers:', error)
+                reject(error)
+            }
+        })
+    })
+}
+
+export function getInventoryContainer(containerId:number):Promise<InventoryContainer> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/containers/${containerId}`,
+            type: 'GET',
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function getInventoryContainerDetail(
+    containerId:number
+):Promise<ApiResponse<InventoryContainerDetail>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/containers/${containerId}/detail`,
+            type: 'GET',
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function printInventoryContainerLabel(
+    containerId:number
+):Promise<ApiResponse<never>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/containers/${containerId}/print-label`,
+            type: 'POST',
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function createInventoryEntry(
+    inventoryId:number,
+    data:CreateInventoryEntryRequest
+):Promise<ApiResponse<InventoryItemEntry>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/${inventoryId}/entries`,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error creating inventory entry:', error)
+                reject(error)
+            }
+        })
+    })
+}
+
+export function validateInventoryEntryAssets(
+    inventoryId:number,
+    data:CreateInventoryEntryRequest
+):Promise<{data:ValidateInventoryEntryAssetsResponse}> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/${inventoryId}/entries/validate-assets`,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function updateInventoryEntry(
+    entryId:number,
+    data:Partial<InventoryItemEntry>
+):Promise<InventoryItemEntry> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/entry/${entryId}`,
+            type: 'PATCH',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error updating inventory entry:', error)
+                reject(error)
+            }
+        })
+    })
+}
+
+export function deleteInventoryEntry(entryId:number):Promise<ApiResponse<InventoryItemEntry>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/entry/${entryId}`,
+            type: 'DELETE',
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function printInventoryEntryLabels(
+    entryId:number,
+    recentMode:"reject"|"skip"|"include" = "reject",
+    assetIds?:number[]
+):Promise<ApiResponse<InventoryLabelPrintResult>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/entry/${entryId}/print-labels`,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                recent_mode: recentMode,
+                asset_ids: assetIds,
+            }),
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function previewInventoryEntryLabels(
+    entryId:number,
+    assetIds?:number[]
+):Promise<{data:InventoryLabelPrintPreview}> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/entry/${entryId}/print-labels/preview`,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ asset_ids: assetIds }),
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function getInventoryAssets():Promise<ApiMultiEntryResponse<InventoryAsset[]>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/assets?$all_rows=true&$order_by=asset_code`,
+            type: 'GET',
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function getInventoryAsset(assetId:number):Promise<InventoryAsset> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/assets/${assetId}`,
+            type: 'GET',
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function getInventoryAssetLogs(
+    assetId:number
+):Promise<{data:InventoryAssetLog[]}> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/assets/${assetId}/logs`,
+            type: 'GET',
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function printInventoryAssetLabel(
+    assetId:number,
+    force = false
+):Promise<ApiResponse<{queued_count:number}>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/assets/${assetId}/print-label`,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ force }),
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function updateInventoryAssetState(
+    assetId:number,
+    state:InventoryAssetState,
+    note?:string
+):Promise<ApiResponse<InventoryAsset>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/assets/${assetId}/state`,
+            type: 'PATCH',
+            contentType: 'application/json',
+            data: JSON.stringify({ state, note: note || null }),
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function removeInventoryAssetFromEntry(
+    assetId:number,
+    entryId:number,
+    note?:string
+):Promise<ApiResponse<InventoryAsset>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/assets/${assetId}/entries/${entryId}`,
+            type: 'DELETE',
+            contentType: 'application/json',
+            data: JSON.stringify({ note: note || null }),
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function createInventoryContainer(
+    data:CreateInventoryContainerRequest
+):Promise<InventoryContainer> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/containers`,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function (response) {
+                resolve(response)
+            },
+            error: function (error) {
+                console.log('Error creating inventory container:', error)
+                reject(error)
+            }
+        })
+    })
+}
+
+export function updateInventoryContainer(
+    containerId:number,
+    data:CreateInventoryContainerRequest
+):Promise<InventoryContainer> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/containers/${containerId}`,
+            type: 'PATCH',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function archiveInventoryContainer(
+    containerId:number
+):Promise<ApiResponse<InventoryContainer>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/containers/${containerId}/archive`,
+            type: 'POST',
+            success: resolve,
+            error: reject,
+        })
+    })
+}
+
+export function activateInventoryContainer(
+    containerId:number
+):Promise<ApiResponse<InventoryContainer>> {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${baseURL}/inventory/containers/${containerId}/activate`,
+            type: 'POST',
+            success: resolve,
+            error: reject,
+        })
+    })
 }
 // #endregion

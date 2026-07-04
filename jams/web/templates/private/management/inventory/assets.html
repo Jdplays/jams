@@ -1,0 +1,35 @@
+{% extends '_layout.html' %}
+
+{% block title %}Inventory assets{% endblock %}
+
+{% block content %}
+{% set inventory_tab = 'assets' %}
+{% include 'private/management/inventory/_tabs.html' %}
+
+<div id="inventory-assets-page">
+    <div id="inventory-assets-entry-filter" class="inventory-assets-filter-alert alert alert-info d-none align-items-center mb-3">
+        <span id="inventory-assets-entry-filter-text"></span>
+        <a
+            class="btn btn-sm btn-outline-primary ms-auto"
+            href="{{ url_for('routes.frontend.private.management.inventory_assets') }}"
+        >Clear filter</a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <h1 class="card-title">Assets</h1>
+                <div class="text-secondary">Individually tracked inventory, grouped by item.</div>
+            </div>
+        </div>
+        <div class="card-body border-bottom py-3">
+            <input id="inventory-assets-filter" class="form-control" type="search" placeholder="Search assets…">
+        </div>
+        <div class="card-body p-0">
+            <div id="inventory-assets-grid" class="ag-theme-quartz" style="height: 600px"></div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/management/inventory/assets.js') }}" defer></script>
+{% endblock %}

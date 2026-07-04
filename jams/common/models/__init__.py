@@ -13,6 +13,15 @@ from .attendee import Attendee, AttendeeAccount, AttendeeAccountEvent, AttendeeS
 from .integrations import JOLTPrintQueue, JOLTHealthCheck
 from .stats import EventStats
 from .discord import DiscordBotMessage
+from .inventory import (
+    Inventory,
+    InventoryItem,
+    InventoryItemEntry,
+    InventoryContainer,
+    InventoryAsset,
+    InventoryAssetEntry,
+    InventoryAssetLog,
+)
 
 __all__ = [
     name for name in globals().keys() 
