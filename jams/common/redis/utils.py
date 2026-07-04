@@ -1,8 +1,11 @@
 import json
 
 from common.extensions import redis_client as client
+from common.extensions import get_logger
 from common.redis.keys import RedisKeys, RedisChannels
 from common.util.enums import DiscordRecipientType, DiscordMessageType, DiscordMessageView
+
+logger = get_logger('redis')
 
 def set_app_version(type='server', version='unknown'):
     key = RedisKeys.SERVER_VERSION
@@ -40,6 +43,20 @@ def get_discord_bot_config():
         return json.loads(raw)
     except json.JSONDecodeError:
         return {}
+
+
+def publish_inventory_update(inventory_ids=None, container_ids=None, refresh_all=False):
+    payload = {
+        'inventory_ids': sorted(set(inventory_ids or [])),
+        'container_ids': sorted(set(container_ids or [])),
+        'refresh_all': bool(refresh_all),
+    }
+    try:
+        client.publish(RedisChannels.INVENTORY_UPDATE, json.dumps(payload))
+    except Exception as error:
+        # The database commit has already succeeded. Log invalidation failures
+        # without converting a successful inventory write into an API error.
+        logger.error("Unable to publish inventory update: %s", error)
     
 def discord_bot_control(start:bool=None, config:dict=None):
     payload = {}
@@ -112,5 +129,3 @@ def discord_bot_update_message(message_db_id, expired=False, new_content=None, n
         payload['new_message_type'] = new_message_type.name
     
     client.publish(RedisChannels.DISCORD_BOT_UPDATE_MESSAGE, json.dumps(payload))
-
-        

@@ -1,4 +1,70 @@
 groups:
+  inventory:
+    description: Manages inventories, items, containers, entries and assets
+    read:
+      get_inventories: routes.api_v1.private.inventory.get_inventories
+      get_inventories_field: routes.api_v1.private.inventory.get_inventories_field
+      get_inventory: routes.api_v1.private.inventory.get_inventory
+      get_inventory_summary: routes.api_v1.private.inventory.get_inventory_summary
+      get_inventory_detail: routes.api_v1.private.inventory.get_inventory_detail
+      get_inventory_entries_sse: routes.api_v1.private.inventory.get_inventory_entries_sse
+      get_inventory_field: routes.api_v1.private.inventory.get_inventory_field
+      get_inventory_items: routes.api_v1.private.inventory.get_inventory_items
+      get_inventory_items_field: routes.api_v1.private.inventory.get_inventory_items_field
+      get_inventory_item: routes.api_v1.private.inventory.get_inventory_item
+      get_inventory_item_field: routes.api_v1.private.inventory.get_inventory_item_field
+      get_inventory_entries: routes.api_v1.private.inventory.get_inventory_entries
+      get_inventory_entries_field: routes.api_v1.private.inventory.get_inventory_entries_field
+      get_inventory_entry: routes.api_v1.private.inventory.get_inventory_entry
+      get_inventory_entry_field: routes.api_v1.private.inventory.get_inventory_entry_field
+      get_inventory_containers: routes.api_v1.private.inventory.get_inventory_containers
+      get_inventory_containers_field: routes.api_v1.private.inventory.get_inventory_containers_field
+      get_inventory_container: routes.api_v1.private.inventory.get_inventory_container
+      get_inventory_container_detail: routes.api_v1.private.inventory.get_inventory_container_detail
+      get_inventory_container_detail_sse: routes.api_v1.private.inventory.get_inventory_container_detail_sse
+      get_inventory_container_field: routes.api_v1.private.inventory.get_inventory_container_field
+      get_inventory_assets: routes.api_v1.private.inventory.get_inventory_assets
+      get_inventory_assets_field: routes.api_v1.private.inventory.get_inventory_assets_field
+      get_inventory_asset: routes.api_v1.private.inventory.get_inventory_asset
+      get_inventory_asset_by_code: routes.api_v1.private.inventory.get_inventory_asset_by_code
+      get_inventory_asset_logs: routes.api_v1.private.inventory.get_inventory_asset_logs
+      get_inventory_asset_field: routes.api_v1.private.inventory.get_inventory_asset_field
+    write:
+      add_inventory: routes.api_v1.private.inventory.add_inventory
+      edit_inventory: routes.api_v1.private.inventory.edit_inventory
+      archive_inventory: routes.api_v1.private.inventory.archive_inventory
+      activate_inventory: routes.api_v1.private.inventory.activate_inventory
+      lock_inventory: routes.api_v1.private.inventory.lock_inventory
+      unlock_inventory: routes.api_v1.private.inventory.unlock_inventory
+      create_inventory_item: routes.api_v1.private.inventory.create_inventory_item
+      update_inventory_item: routes.api_v1.private.inventory.update_inventory_item
+      validate_inventory_item_asset_code_prefix: routes.api_v1.private.inventory.validate_inventory_item_asset_code_prefix
+      archive_inventory_item: routes.api_v1.private.inventory.archive_inventory_item
+      activate_inventory_item: routes.api_v1.private.inventory.activate_inventory_item
+      create_inventory_entry: routes.api_v1.private.inventory.create_inventory_entry
+      create_inventory_entry_for_inventory: routes.api_v1.private.inventory.create_inventory_entry_for_inventory
+      validate_inventory_entry_assets: routes.api_v1.private.inventory.validate_inventory_entry_assets
+      update_inventory_entry: routes.api_v1.private.inventory.update_inventory_entry
+      add_inventory_entry_quantity: routes.api_v1.private.inventory.add_inventory_entry_quantity
+      set_inventory_entry_quantity: routes.api_v1.private.inventory.set_inventory_entry_quantity
+      delete_inventory_entry: routes.api_v1.private.inventory.delete_inventory_entry
+      preview_inventory_entry_labels: routes.api_v1.private.inventory.preview_inventory_entry_labels
+      print_inventory_entry_labels: routes.api_v1.private.inventory.print_inventory_entry_labels
+      print_inventory_container_label: routes.api_v1.private.inventory.print_inventory_container_label
+      create_inventory_container: routes.api_v1.private.inventory.create_inventory_container
+      update_inventory_container: routes.api_v1.private.inventory.update_inventory_container
+      archive_inventory_container: routes.api_v1.private.inventory.archive_inventory_container
+      activate_inventory_container: routes.api_v1.private.inventory.activate_inventory_container
+      print_inventory_asset_label: routes.api_v1.private.inventory.print_inventory_asset_label
+      create_inventory_asset_log: routes.api_v1.private.inventory.create_inventory_asset_log
+      create_inventory_asset: routes.api_v1.private.inventory.create_inventory_asset
+      update_inventory_asset: routes.api_v1.private.inventory.update_inventory_asset
+      update_inventory_asset_state: routes.api_v1.private.inventory.update_inventory_asset_state
+      move_inventory_asset: routes.api_v1.private.inventory.move_inventory_asset
+      remove_inventory_asset_from_entry: routes.api_v1.private.inventory.remove_inventory_asset_from_entry
+      archive_inventory_asset: routes.api_v1.private.inventory.archive_inventory_asset
+      activate_inventory_asset: routes.api_v1.private.inventory.activate_inventory_asset
+
   difficulty_levels:
     description: Manages difficulty levels for workshops
     read:
@@ -216,6 +282,8 @@ groups:
       disable_jolt_integration: routes.api_v1.integrations.jolt.disable
       refresh_jolt_integration_api_token: routes.api_v1.integrations.jolt.refresh_api_token
       send_jolt_test_print: routes.api_v1.integrations.jolt.test_print
+      send_jolt_asset_test_print: routes.api_v1.integrations.jolt.test_asset_print
+      send_jolt_container_test_print: routes.api_v1.integrations.jolt.test_container_print
   
   discord:
     description: Manages discord integration
@@ -229,5 +297,3 @@ groups:
       enable_discord_integration: routes.api_v1.integrations.discord.enable
       disable_discord_integration: routes.api_v1.integrations.discord.disable
       sync_discord_nicknames: routes.api_v1.integrations.discord.sync_nicknames
-
-

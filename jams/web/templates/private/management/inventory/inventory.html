@@ -1,0 +1,43 @@
+{% extends '_layout.html' %}
+
+{% block title %}Inventory{% endblock %}
+
+{% block content %}
+
+{% set can_manage_inventories = user_has_access_to_page('edit_inventory') %}
+{% set inventory_tab = 'inventories' %}
+
+{% include 'private/management/inventory/_tabs.html' %}
+
+<div class="row row-deck row-cards">
+    <div class="col-12 col-md-4 mb-3">
+        <div class="card">
+            <div class="card-body d-flex align-items-center gap-3" style="height: auto">
+                <div>
+                    <h1>Inventory</h1>
+                    <p class="mb-0">Here you can view/manage inventories for item counts</p>
+                </div>
+                {% if can_manage_inventories %}
+                <a
+                    class="btn btn-primary ms-auto"
+                    href="{{ url_for('routes.frontend.private.management.add_inventory') }}"
+                >
+                    <i class="ti ti-plus me-1"></i>Add inventory
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div
+    id="inventory-list-container"
+    class="row row-cards"
+    data-can-manage-inventories="{{ can_manage_inventories|tojson }}"
+>
+
+</div>
+
+<script src="{{ url_for('static', filename='js/management/inventory/inventory.js') }}" defer></script>
+
+{% endblock %}

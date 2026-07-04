@@ -1,4 +1,7 @@
-<div id="jolt-status-widget" class="col-12 col-md-4 col-lg-3 ms-auto align-self-start">
+<div
+    class="jolt-status-widget col-12 col-md-4 col-lg-3 ms-auto align-self-start"
+    data-test-label-type="{{ jolt_test_label_type|default('attendee') }}"
+>
     <div class="card">
         <div class="card-header d-flex flex-column align-items-start">
             <div class="d-flex align-items-center w-100">
@@ -31,7 +34,7 @@
 
         <div id="card-body" class="card-body">
             <div id="last-checked-sub-header" class="subheader mb-3">Loading...</div>
-            <a href="#" onclick="testPrintOnClick()" class="btn btn-primary">Print Test</a>
+            <button type="button" class="jolt-test-print btn btn-primary">Print Test</button>
         </div>
     </div>
 </div>

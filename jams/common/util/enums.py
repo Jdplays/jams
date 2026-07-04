@@ -35,6 +35,10 @@ class JOLTPrintQueueStatus(Enum):
 class JOLTPrintJobType(Enum):
     ATTENDEE_LABEL = 'ATTENDEE_LABEL'
     TEST_ATTENDEE_LABEL = 'TEST_ATTENDEE_LABEL'
+    TEST_ASSET_LABEL = 'TEST_ASSET_LABEL'
+    ASSET_LABEL = 'ASSET_LABEL'
+    CONTAINER_LABEL = 'CONTAINER_LABEL'
+    TEST_CONTAINER_LABEL = 'TEST_CONTAINER_LABEL'
 
 class JOLTRequestType(Enum):
     PRINT_JOB_REQUEST = 'PRINT_JOB_REQUEST'
@@ -65,3 +69,12 @@ class DiscordMessageView(Enum):
 class DiscordRecipientType(Enum):
     CHANNEL = 'CHANNEL'
     DM = 'DM'
+
+class InventoryItemType(Enum):
+    PHYSICAL = 'PHYSICAL',
+    VIRTUAL = 'VIRTUAL'
+
+class InventoryAssetState(Enum):
+    ACTIVE = 'ACTIVE'
+    ARCHIVED = 'ARCHIVED'
+    BROKEN = 'BROKEN'

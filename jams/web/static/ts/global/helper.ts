@@ -1,10 +1,93 @@
 import {Toast} from "@global/sweet_alert"
 import { dateTimeFormatterOptions, FireListEntryType, InputValidationPattern, QueryStringData } from "./interfaces";
-import { Event, Role, User } from "./endpoints_interfaces";
+import {
+    Event,
+    InventoryAttributeSchema,
+    Role,
+    User,
+} from "./endpoints_interfaces";
 import { getEventsField, getUsersPublicInfo } from "./endpoints";
 
 type QueryStringParams = {[key: string]: any}
 type ModelModityFunc = ((arg1:number) => void)
+
+function attributeDisplayValue(
+    key:string,
+    value:unknown,
+    schema?:InventoryAttributeSchema|null
+):string {
+    if (typeof value === "boolean") {
+        return value ? "Yes" : "No"
+    }
+
+    const definition = schema?.attributes.find(attribute => attribute.key === key)
+    if (definition?.type === "select") {
+        return definition.values?.find(option => option.key === value)?.label
+            ?? String(value)
+    }
+    return String(value)
+}
+
+export function buildAttributeBadges(
+    attributes?:Record<string, unknown>|null,
+    schema?:InventoryAttributeSchema|null
+):HTMLElement {
+    const wrapper = document.createElement("div")
+    wrapper.classList.add("d-flex", "flex-wrap", "gap-1", "align-items-center")
+    const values = Object.entries(attributes ?? {})
+
+    if (!values.length) {
+        const empty = document.createElement("span")
+        empty.classList.add("text-secondary")
+        empty.textContent = "None"
+        wrapper.appendChild(empty)
+        return wrapper
+    }
+
+    for (const [key, value] of values) {
+        const definition = schema?.attributes.find(attribute => attribute.key === key)
+        const badge = document.createElement("span")
+        badge.classList.add("badge", "bg-blue-lt")
+        badge.textContent = `${definition?.label ?? key}: ${attributeDisplayValue(key, value, schema)}`
+        wrapper.appendChild(badge)
+    }
+    return wrapper
+}
+
+export function buildAttributeSchemaBadges(
+    schema?:InventoryAttributeSchema|null
+):HTMLElement {
+    const wrapper = document.createElement("div")
+    wrapper.classList.add("d-flex", "flex-wrap", "gap-1", "align-items-center")
+    const attributes = schema?.attributes.filter(attribute => attribute.active !== false) ?? []
+
+    if (!attributes.length) {
+        const empty = document.createElement("span")
+        empty.classList.add("text-secondary")
+        empty.textContent = "None"
+        wrapper.appendChild(empty)
+        return wrapper
+    }
+
+    for (const attribute of attributes) {
+        const badge = document.createElement("span")
+        badge.classList.add("badge", "bg-blue-lt")
+        if (attribute.type === "boolean") {
+            badge.textContent = `${attribute.label}: Yes / No`
+        } else {
+            const values = attribute.values
+                ?.filter(value => value.active !== false)
+                .map(value => value.label) ?? []
+            badge.textContent = `${attribute.label} (${values.length})`
+            badge.title = values.join(", ")
+        }
+        if (attribute.required) {
+            badge.classList.add("border", "border-blue")
+        }
+        wrapper.appendChild(badge)
+    }
+    return wrapper
+}
 
 interface FieldValues {
     [key: string]: string;

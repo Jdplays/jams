@@ -1,0 +1,112 @@
+{% extends '_layout.html' %}
+
+{% block title %}{% if item_id %}Edit{% else %}Add{% endif %} inventory item{% endblock %}
+
+{% block content %}
+{% set inventory_tab = 'items' %}
+{% include 'private/management/inventory/_tabs.html' %}
+
+<div
+    id="inventory-item-form-page"
+    data-item-id="{{ item_id or '' }}"
+    data-return-to="{{ return_to }}"
+>
+    <div class="page-header mb-3">
+        <div>
+            <h1>{% if item_id %}Edit{% else %}Add{% endif %} inventory item</h1>
+            <div class="text-secondary">
+                Define an item and the variants users choose when adding it to an inventory.
+            </div>
+        </div>
+    </div>
+
+    <a class="btn btn-link link-secondary mb-3 px-0" href="{{ return_to }}">
+        <i class="ti ti-arrow-left me-1"></i>
+        Back
+    </a>
+
+    <form id="inventory-item-form">
+        <div class="card mb-3">
+            <div class="card-header"><h2 class="card-title">Item details</h2></div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label required" for="inventory-item-name">Name</label>
+                    <input id="inventory-item-name" class="form-control" maxlength="128" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="inventory-item-description">Description</label>
+                    <textarea id="inventory-item-description" class="form-control" maxlength="512" rows="4"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label required" for="inventory-item-type">Type</label>
+                    <select id="inventory-item-type" class="form-select" required>
+                        <option value="PHYSICAL">Physical</option>
+                        <option value="VIRTUAL">Virtual</option>
+                    </select>
+                    <div class="form-hint">Physical and virtual describe what kind of stock is being counted.</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-check form-switch">
+                        <input id="inventory-item-is-asset" class="form-check-input" type="checkbox">
+                        <span class="form-check-label">Track each unit as an asset</span>
+                    </label>
+                    <div class="form-hint">Asset-tracked items receive an automatically generated code.</div>
+                </div>
+                <div id="inventory-item-asset-prefix-container" class="d-none">
+                    <label class="form-label required" for="inventory-item-asset-prefix">Asset code prefix</label>
+                    <input
+                        id="inventory-item-asset-prefix"
+                        class="form-control text-uppercase"
+                        minlength="3"
+                        maxlength="3"
+                        pattern="[A-Z0-9]{3}"
+                        placeholder="PI5"
+                    >
+                    <div class="form-hint">
+                        Codes will be generated as
+                        <span id="inventory-item-asset-prefix-example">PI5-001, PI5-002</span>
+                        and so on.
+                    </div>
+                    <div id="inventory-item-asset-prefix-validation" class="form-hint"></div>
+                    <label class="form-check form-switch mt-3">
+                        <input id="inventory-item-needs-label" class="form-check-input" type="checkbox">
+                        <span class="form-check-label">Ask for an individual label for each asset</span>
+                    </label>
+                    <div class="form-hint">Use this for otherwise identical assets that need names such as Upstairs or Downstairs.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <div>
+                    <h2 class="card-title">Attributes</h2>
+                    <div class="text-secondary">Examples: size, colour, connector type or tested status.</div>
+                </div>
+                <button id="add-inventory-attribute" class="btn btn-outline-primary ms-auto" type="button">
+                    <i class="ti ti-plus me-1"></i>Add attribute
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="inventory-item-attributes"></div>
+                <div id="no-inventory-item-attributes" class="empty py-4">
+                    <p class="empty-title">No attributes</p>
+                    <p class="empty-subtitle text-secondary">This item can be added without choosing a variant.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="inventory-form-actions d-flex gap-2">
+            <button id="save-inventory-item" class="btn btn-primary" type="submit">
+                {% if item_id %}Save item{% else %}Create item{% endif %}
+            </button>
+            <a
+                class="btn btn-outline-secondary"
+                href="{{ return_to }}"
+            >Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script src="{{ url_for('static', filename='js/management/inventory/item_form.js') }}" defer></script>
+{% endblock %}

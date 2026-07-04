@@ -8,6 +8,7 @@ from common.util.helper import contains_value, convert_datetime_to_local_timezon
 from common.models import db, EventLocation, EventTimeslot, Timeslot, Session, EndpointRule, RoleEndpointRule, RolePage, Page, Event, Role
 from common.util import files
 from common.models.api import APIKey, Endpoint
+from common.models.inventory import InventoryItem, InventoryItemEntry
 
 class DefaultRequestArgs():
     pagination_block_size = int
@@ -177,10 +178,17 @@ def filter_model_by_query_and_properties(model, request_args=None, requested_fie
             return return_obj
     
     if model.query.count() <= 0:
-        return_obj = []
-        if not return_objects:
-            return_obj = build_multi_object_paginated_return_obj([], pagination_block_size, pagination_start_index, pagination_order_by, pagination_order_direction, 0)
-        return (return_obj, 0)
+        if return_objects:
+            return ([], 0)
+
+        return build_multi_object_paginated_return_obj(
+            [],
+            pagination_block_size,
+            pagination_start_index,
+            pagination_order_by,
+            pagination_order_direction,
+            0
+        )
     
     allowed_fields = list(model.query.first_or_404().to_dict().keys())
 
@@ -470,3 +478,342 @@ def fetch_event_sessions(event_id):
 
     return_obj = [session.to_dict() for session in data]
     return return_obj
+
+# ------------- Inventory -------------
+
+ALLOWED_ATTRIBUTE_TYPES = {"select", "boolean"}
+ALLOWED_ATTRIBUTE_SCHEMA_FIELDS = {"attributes"}
+ALLOWED_ATTRIBUTE_FIELDS = {
+    "key", "label", "type", "required", "active", "values"
+}
+ALLOWED_ATTRIBUTE_VALUE_FIELDS = {"key", "label", "active"}
+MAX_INVENTORY_ATTRIBUTES = 20
+MAX_INVENTORY_ATTRIBUTE_VALUES = 100
+MAX_INVENTORY_ATTRIBUTE_TEXT_LENGTH = 100
+
+def normalise_key(value: str) -> str:
+    return value.strip().lower().replace(" ", "_")
+
+def normalise_attributes(attributes):
+    if not attributes:
+        return None
+
+    if not isinstance(attributes, dict):
+        abort(400, description="attributes must be an object")
+
+    if len(attributes) > MAX_INVENTORY_ATTRIBUTES:
+        abort(
+            400,
+            description=(
+                "attributes cannot contain more than "
+                f"{MAX_INVENTORY_ATTRIBUTES} fields"
+            )
+        )
+
+    for key in attributes:
+        if len(str(key)) > MAX_INVENTORY_ATTRIBUTE_TEXT_LENGTH:
+            abort(
+                400,
+                description=(
+                    "attribute keys must be "
+                    f"{MAX_INVENTORY_ATTRIBUTE_TEXT_LENGTH} characters or fewer"
+                )
+            )
+    
+    return {
+        normalise_key(str(key)): value
+        for key, value in attributes.items()
+        if value is not None and value != ""
+    } or None
+
+def validate_attribute_schema(schema):
+    if schema in (None, {}):
+        return None
+    
+    if not isinstance(schema, dict):
+        abort(400, description="attribute_schema must be an object")
+
+    if set(schema) - ALLOWED_ATTRIBUTE_SCHEMA_FIELDS:
+        abort(400, description="attribute_schema contains unsupported fields")
+    
+    attributes = schema.get("attributes", [])
+
+    if not isinstance(attributes, list):
+        abort(400, description="attribute_schema.attributes must be a list")
+
+    if len(attributes) > MAX_INVENTORY_ATTRIBUTES:
+        abort(
+            400,
+            description=(
+                "attribute_schema cannot contain more than "
+                f"{MAX_INVENTORY_ATTRIBUTES} attributes"
+            )
+        )
+    
+    seen_attr_keys = set()
+
+    for attr in attributes:
+        if not isinstance(attr, dict):
+            abort(400, description="each attribute must be an object")
+        if set(attr) - ALLOWED_ATTRIBUTE_FIELDS:
+            abort(400, description="an attribute contains unsupported fields")
+        
+        label = attr.get("label")
+        key = attr.get("key") or label
+
+        if not isinstance(key, str) or not key.strip():
+            abort(400, description="each attribute must have a key or label")
+
+        if label is not None and not isinstance(label, str):
+            abort(400, description=f"label for {key} must be a string")
+        if label is not None and not label.strip():
+            abort(400, description=f"label for {key} cannot be empty")
+
+        if len(key) > MAX_INVENTORY_ATTRIBUTE_TEXT_LENGTH:
+            abort(
+                400,
+                description=(
+                    "attribute keys must be "
+                    f"{MAX_INVENTORY_ATTRIBUTE_TEXT_LENGTH} characters or fewer"
+                )
+            )
+        if (
+            label is not None
+            and len(label) > MAX_INVENTORY_ATTRIBUTE_TEXT_LENGTH
+        ):
+            abort(
+                400,
+                description=(
+                    "attribute labels must be "
+                    f"{MAX_INVENTORY_ATTRIBUTE_TEXT_LENGTH} characters or fewer"
+                )
+            )
+        
+        key = normalise_key(key)
+
+        if key in seen_attr_keys:
+            abort(400, description=f"duplicate attribute key: {key}")
+        
+        seen_attr_keys.add(key)
+
+        attr["key"] = key
+        attr["label"] = label.strip() if label else key
+        attr["type"] = attr.get("type", "select")
+
+        for boolean_field, default in (("required", False), ("active", True)):
+            value = attr.get(boolean_field, default)
+            if not isinstance(value, bool):
+                abort(
+                    400,
+                    description=f"{boolean_field} for {key} must be true or false"
+                )
+            attr[boolean_field] = value
+
+        if attr["type"] not in ALLOWED_ATTRIBUTE_TYPES:
+            abort(400, description=f"unsupported attribute type: {attr['type']}")
+        
+        if attr["type"] == "select":
+            values = attr.get("values", [])
+
+            if not isinstance(values, list):
+                abort(400, description=f"values for {key} must be a list")
+
+            if len(values) > MAX_INVENTORY_ATTRIBUTE_VALUES:
+                abort(
+                    400,
+                    description=(
+                        f"values for {key} cannot contain more than "
+                        f"{MAX_INVENTORY_ATTRIBUTE_VALUES} options"
+                    )
+                )
+            
+            seen_value_keys = set()
+
+            for value in values:
+                if not isinstance(value, dict):
+                    abort(
+                        400,
+                        description=f"each value for {key} must be an object"
+                    )
+                if set(value) - ALLOWED_ATTRIBUTE_VALUE_FIELDS:
+                    abort(
+                        400,
+                        description=f"a value for {key} contains unsupported fields"
+                    )
+
+                value_label = value.get("label")
+                value_key = value.get("key") or value_label
+
+                if not isinstance(value_key, str) or not value_key.strip():
+                    abort(400, description=f"each value for {key} needs a key or label")
+
+                if value_label is not None and not isinstance(value_label, str):
+                    abort(400, description=f"value labels for {key} must be strings")
+                if value_label is not None and not value_label.strip():
+                    abort(400, description=f"value labels for {key} cannot be empty")
+
+                if len(value_key) > MAX_INVENTORY_ATTRIBUTE_TEXT_LENGTH:
+                    abort(
+                        400,
+                        description=(
+                            f"value keys for {key} must be "
+                            f"{MAX_INVENTORY_ATTRIBUTE_TEXT_LENGTH} characters or fewer"
+                        )
+                    )
+                if (
+                    value_label is not None
+                    and len(value_label) > MAX_INVENTORY_ATTRIBUTE_TEXT_LENGTH
+                ):
+                    abort(
+                        400,
+                        description=(
+                            f"value labels for {key} must be "
+                            f"{MAX_INVENTORY_ATTRIBUTE_TEXT_LENGTH} characters or fewer"
+                        )
+                    )
+                
+                value_key = normalise_key(str(value_key))
+
+                if value_key in seen_value_keys:
+                    abort(400, description=f"duplicate value key for {key}: {value_key}")
+                
+                seen_value_keys.add(value_key)
+
+                value["key"] = value_key
+                value["label"] = value_label.strip() if value_label else value_key
+                value_active = value.get("active", True)
+                if not isinstance(value_active, bool):
+                    abort(400, description=f"active values for {key} must be true or false")
+                value["active"] = value_active
+
+            if attr["active"] and not any(
+                value.get("active", True) for value in values
+            ):
+                abort(
+                    400,
+                    description=f"active select attribute {key} needs an active value"
+                )
+        elif attr["type"] == "boolean":
+            attr.pop("values", None)
+    
+    return {"attributes": attributes}
+
+def get_used_attributes_for_item(item_id):
+    entries = InventoryItemEntry.query.filter_by(inventory_item_id=item_id).all()
+
+    used = {}
+
+    for entry in entries:
+        for key, value in (entry.attributes or {}).items():
+            used.setdefault(key, set()).add(value)
+    
+    return used
+
+def merge_schema_with_used_old_values(old_schema, new_schema, used):
+    """
+    If a used attribute/value was removed from the new schema, keep it but set active=false
+    """
+    old_schema = old_schema or {}
+    new_schema = new_schema or {"attributes": []}
+
+    old_attrs = {
+        attr["key"]: attr
+        for attr in old_schema.get("attributes", [])
+    }
+
+    new_attrs = {
+        attr["key"]: attr
+        for attr in new_schema.get("attributes", [])
+    }
+
+    for used_attr_key, used_values in used.items():
+        old_attr = old_attrs.get(used_attr_key)
+
+        if not old_attr:
+            continue
+
+        if used_attr_key not in new_attrs:
+            archived_attr = dict(old_attr)
+            archived_attr["active"] = False
+
+            if archived_attr.get("type", "select") == "select":
+                archived_attr["values"] = [
+                    {**value, "active":False}
+                    for value in archived_attr.get("values", [])
+                ]
+
+            new_schema["attributes"].append(archived_attr)
+            new_attrs[used_attr_key] = archived_attr
+        
+        new_attr = new_attrs[used_attr_key]
+
+        if new_attr.get("type", "select") != "select":
+            continue
+
+        old_values = {
+            value["key"]: value
+            for value in old_attr.get("values", [])
+        }
+
+        new_values = {
+            value["key"]: value
+            for value in new_attr.get("values", [])
+        }
+
+        for used_value_key in used_values:
+            if used_value_key not in new_values and used_value_key in old_values:
+                archived_value = dict(old_values[used_value_key])
+                archived_value["active"] = False
+                new_attr.setdefault("values", []).append(archived_value)
+    return new_schema
+
+def validate_entry_attributes(item, attributes):
+    attributes = normalise_attributes(attributes)
+
+    schema = item.attribute_schema or {}
+    schema_attrs = schema.get("attributes", [])
+
+    active_attrs = {
+        attr["key"]: attr
+        for attr in schema_attrs
+        if attr.get("active", True)
+    }
+
+    if not active_attrs:
+        if attributes:
+            abort(400, description="this item does not support attributes")
+        return None
+    
+    attributes = attributes or {}
+
+    for key, attr in active_attrs.items():
+        if attr.get("required", False) and key not in attributes:
+            abort(400, description=f"missing required attribute: {attr.get('label', key)}")
+    
+    for key, value in attributes.items():
+        attr = active_attrs.get(key)
+
+        if not attr:
+            abort(400, description=f"unknown or inactive attribute: {key}")
+        
+        attr_type = attr.get("type", "select")
+
+        if attr_type == "select":
+            if not isinstance(value, str):
+                abort(400, description=f"Invalid value for {attr.get('label', key)}")
+            if len(value) > MAX_INVENTORY_ATTRIBUTE_TEXT_LENGTH:
+                abort(400, description=f"Invalid value for {attr.get('label', key)}")
+            valid_values = {
+                option["key"]
+                for option in attr.get("values", [])
+                if option.get("active", True)
+            }
+
+            if value not in valid_values:
+                abort(400, description=f"Invalid value for {attr.get('label', key)}")
+        
+        elif attr_type == "boolean":
+            if not isinstance(value, bool):
+                abort(400, description=f"{attr.get('label', key)} must be true or false")
+    
+    return attributes or None

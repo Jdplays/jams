@@ -1,0 +1,60 @@
+{% extends '_layout.html' %}
+
+{% block title %}{% if container_id %}Edit{% else %}Add{% endif %} inventory container{% endblock %}
+
+{% block content %}
+{% set inventory_tab = 'containers' %}
+{% include 'private/management/inventory/_tabs.html' %}
+
+<div
+    id="inventory-container-form-page"
+    data-container-id="{{ container_id or '' }}"
+    data-return-to="{{ return_to }}"
+>
+    <div class="page-header mb-3">
+        <div>
+            <h1>{% if container_id %}Edit{% else %}Add{% endif %} container</h1>
+            <div class="text-secondary">Create a box, shelf, room or other storage container.</div>
+        </div>
+    </div>
+
+    <a class="btn btn-link link-secondary mb-3 px-0" href="{{ return_to }}">
+        <i class="ti ti-arrow-left me-1"></i>
+        Back
+    </a>
+
+    <form id="inventory-container-form">
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label required" for="inventory-container-name">Name</label>
+                    <input id="inventory-container-name" class="form-control" maxlength="255" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="inventory-container-parent">Parent container</label>
+                    <select id="inventory-container-parent" class="form-select">
+                        <option value="">No parent container</option>
+                    </select>
+                    <div class="form-hint">Use this to put a box inside a room, shelf or larger container.</div>
+                </div>
+                <div>
+                    <label class="form-label" for="inventory-container-description">Description</label>
+                    <textarea id="inventory-container-description" class="form-control" maxlength="1000" rows="4"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="inventory-form-actions d-flex gap-2">
+            <button id="save-inventory-container" class="btn btn-primary" type="submit">
+                {% if container_id %}Save container{% else %}Create container{% endif %}
+            </button>
+            <a
+                class="btn btn-outline-secondary"
+                href="{{ return_to }}"
+            >Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script src="{{ url_for('static', filename='js/management/inventory/container_form.js') }}" defer></script>
+{% endblock %}

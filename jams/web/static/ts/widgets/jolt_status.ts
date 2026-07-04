@@ -1,6 +1,11 @@
-import { getJoltStatus, sendJoltTestPrintRequest } from "@global/endpoints";
+import {
+    getJoltStatus,
+    sendJoltAssetTestPrintRequest,
+    sendJoltContainerTestPrintRequest,
+    sendJoltTestPrintRequest,
+} from "@global/endpoints";
 import { JOLTStatus } from "@global/endpoints_interfaces";
-import { errorToast, isDefined, successToast } from "@global/helper";
+import { errorToast, successToast } from "@global/helper";
 
 let currentStatus:JOLTStatus = null
 let widget:HTMLDivElement = null
@@ -60,7 +65,12 @@ function secondsAgo(dateString: string): number {
 }
 
 async function testPrintOnClick() {
-    sendJoltTestPrintRequest().then((response) => {
+    const request = widget.dataset.testLabelType === "asset"
+        ? sendJoltAssetTestPrintRequest
+        : widget.dataset.testLabelType === "container"
+            ? sendJoltContainerTestPrintRequest
+            : sendJoltTestPrintRequest
+    request().then((response) => {
         successToast(response)
     }).catch((error) => {
         const errorMessage = error.responseJSON ? error.responseJSON.message : 'An unknown error occurred';
@@ -71,7 +81,11 @@ async function testPrintOnClick() {
 
 // Event listeners
 document.addEventListener("DOMContentLoaded", async function () {
-    widget = document.getElementById('jolt-status-widget') as HTMLDivElement
+    widget = document.querySelector('.jolt-status-widget') as HTMLDivElement
+    if (!widget) {
+        return
+    }
+    widget.querySelector('.jolt-test-print')?.addEventListener('click', testPrintOnClick)
     await populateJoltStatus()
 
     window.setInterval(() => {
@@ -83,10 +97,4 @@ document.addEventListener("DOMContentLoaded", async function () {
     window.setInterval(async () => {
         await populateJoltStatus()
     }, 5000)
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-    if (isDefined(window)) {
-        (<any>window).testPrintOnClick = testPrintOnClick;
-    }
 });

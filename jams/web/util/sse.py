@@ -4,7 +4,7 @@ import copy
 from flask import Response, stream_with_context, request
 
 from common.models import db
-from common.extensions import get_logger
+from common.extensions import get_logger, redis_client
 
 logger = get_logger('web')
 
@@ -73,6 +73,63 @@ def sse_stream(fetch_data_func, *, detect_changes=True, sleep_interval=1):
             logger.error(f"SSE error: {e}")
         finally:
             logger.info(f"SSE cleaned up")
+    return Response(
+        generator(),
+        content_type='text/event-stream',
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no"
+        }
+    )
+
+
+def redis_sse_stream(fetch_data_func, channel, should_refresh=None, keepalive_interval=15):
+    """Refresh an SSE snapshot only after a relevant Redis notification."""
+
+    @stream_with_context
+    def generator():
+        logger.info("Redis SSE connected to %s", channel)
+        pubsub = redis_client.pubsub(ignore_subscribe_messages=True)
+
+        try:
+            # Subscribe before fetching so a mutation cannot be missed between the
+            # initial snapshot and subscription setup.
+            pubsub.subscribe(channel)
+            yield f"data: {json.dumps(fetch_data_func())}\n\n"
+            db.session.remove()
+
+            while True:
+                message = pubsub.get_message(timeout=keepalive_interval)
+                if message is None:
+                    yield ": keep-alive\n\n"
+                    continue
+
+                try:
+                    payload = json.loads(message['data'])
+                except (TypeError, json.JSONDecodeError):
+                    logger.warning("Ignoring invalid Redis SSE payload on %s", channel)
+                    continue
+
+                if should_refresh is not None and not should_refresh(payload):
+                    continue
+
+                try:
+                    yield f"data: {json.dumps(fetch_data_func())}\n\n"
+                except Exception as e:
+                    logger.error("Redis SSE refresh error: %s", e)
+                finally:
+                    db.session.remove()
+        except GeneratorExit:
+            logger.info("Redis SSE client disconnected")
+        except (ConnectionResetError, BrokenPipeError):
+            logger.info("Redis SSE client forcibly disconnected")
+        except Exception as e:
+            logger.error("Redis SSE error: %s", e)
+        finally:
+            db.session.remove()
+            pubsub.close()
+            logger.info("Redis SSE cleaned up")
+
     return Response(
         generator(),
         content_type='text/event-stream',

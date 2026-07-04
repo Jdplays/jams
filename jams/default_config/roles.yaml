@@ -15,6 +15,8 @@ roles:
       - attendee_list
       - fire_list
       - wrangler
+      - inventory
+      - edit_inventory
   Admin:
     description: An Administrator
     pages:
